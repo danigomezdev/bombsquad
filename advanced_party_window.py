@@ -318,10 +318,45 @@ def chatloggerstatus():
 def _getTransText(text, isBaLstr=False, same_fb=False):
     global Current_Lang
     global chatlogger
-    if Current_Lang != 'English':
-        Current_Lang = 'English'
+    if Current_Lang != 'Spanish':
+        Current_Lang = 'Spanish'
         global Language_Texts
         Language_Texts = {
+
+            "Spanish": {
+                "Add_a_Quick_Reply": "Agregar una respuesta rápida",
+                "Admin_Command_Kick_Confirm": "¿Estás seguro de usar el comando de administrador para expulsar a %s?",
+                "Ban_For_%d_Seconds": "Prohibido por %d segundo(s).",
+                "Ban_Time_Post": "Ingresa el tiempo que deseas prohibir (en segundos).",
+                "Credits_for_This": "Créditos por esto",
+                "Custom_Action": "Acción personalizada",
+                "Debug_for_Host_Info": "Depuración de información del anfitrión",
+                "Game_Record_Saved": "La repetición del juego %s ha sido guardada.",
+                "Kick_ID": "Expulsar ID:%d",
+                "Mention_this_guy": "Mencionar a esta persona",
+                "Modify_Main_Color": "Modificar color principal",
+                "No_valid_player_found": "No se encontró un jugador válido.",
+                "No_valid_player_id_found": "No se encontró un ID de jugador válido.",
+                "Normal_kick_confirm": "¿Estás seguro de expulsar a %s?",
+                "Remove_a_Quick_Reply": "Eliminar una respuesta rápida",
+                "Restart_Game_Record": "Guardar grabación",
+                "Restart_Game_Record_Confirm": "¿Estás seguro de reiniciar la grabación del juego?",
+                "Send_%d_times": "Enviar %d veces",
+                "Something_is_added": "'%s' ha sido añadido.",
+                "Something_is_removed": "'%s' ha sido eliminado.",
+                "Times": "Veces",
+                "Translator": "Traductor",
+                "chatloggeroff": "Desactivar registro de chat",
+                "chatloggeron": "Activar registro de chat",
+                "screenmsgoff": "Ocultar mensajes en pantalla",
+                "screenmsgon": "Mostrar mensajes en pantalla",
+                "unmutethisguy": "reactivar sonido de esta persona",
+                "mutethisguy": "silenciar a esta persona",
+                "muteall": "Silenciar a todos",
+                "unmuteall": "Reactivar sonido de todos",
+                "discordrcp": "Mostrar Actividad en discord",
+                "discordrcp_confirm": "¿Estás seguro de mostrar tu actividad en discord? Esto Mostrará los siguientes datos:"
+            },
             "Chinese": {
 
             },
@@ -332,32 +367,33 @@ command to kick %s?",
                 "Ban_For_%d_Seconds": "Ban for %d second(s).",
                 "Ban_Time_Post": "Enter the time you want to ban(Seconds).",
                 "Credits_for_This": "Credits for This",
-                                    "Custom_Action": "Custom Action",
-                                    "Debug_for_Host_Info": "Host Info Debug",
-                                    "Game_Record_Saved": "Game replay %s is saved.",
-                                    "Kick_ID": "Kick ID:%d",
-                                    "Mention_this_guy": "Mention this guy",
-                                    "Modify_Main_Color": "Modify Main Color",
-                                    "No_valid_player_found": "Can't find a valid player.",
-                                    "No_valid_player_id_found": "Can't find a valid player ID.",
-                                    "Normal_kick_confirm": "Are you sure to kick %s?",
-                                    "Remove_a_Quick_Reply": "Remove a Quick Reply",
-                                    "Restart_Game_Record": "Save Recording",
-                                    "Restart_Game_Record_Confirm": "Are you sure to restart recording game stream?",
-                                    "Send_%d_times": "Send for %d times",
-                                    "Something_is_added": "'%s' is added.",
-                                    "Something_is_removed": "'%s' is removed.",
-                                    "Times": "Times",
-                                    "Translator": "Translator",
-                                    "chatloggeroff": "Turn off Chat Logger",
-                                    "chatloggeron": "Turn on Chat Logger",
-                                    "screenmsgoff": "Hide ScreenMessage",
-                                    "screenmsgon": "Show ScreenMessage",
-                                    "unmutethisguy": "unmute this guy",
-                                    "mutethisguy": "mute this guy",
-                                    "muteall": "Mute all",
-                                    "unmuteall": "Unmute all"
-
+                "Custom_Action": "Custom Action",
+                "Debug_for_Host_Info": "Host Info Debug",
+                "Game_Record_Saved": "Game replay %s is saved.",
+                "Kick_ID": "Kick ID:%d",
+                "Mention_this_guy": "Mention this guy",
+                "Modify_Main_Color": "Modify Main Color",
+                "No_valid_player_found": "Can't find a valid player.",
+                "No_valid_player_id_found": "Can't find a valid player ID.",
+                "Normal_kick_confirm": "Are you sure to kick %s?",
+                "Remove_a_Quick_Reply": "Remove a Quick Reply",
+                "Restart_Game_Record": "Save Recording",
+                "Restart_Game_Record_Confirm": "Are you sure to restart recording game stream?",
+                "Send_%d_times": "Send for %d times",
+                "Something_is_added": "'%s' is added.",
+                "Something_is_removed": "'%s' is removed.",
+                "Times": "Times",
+                "Translator": "Translator",
+                "chatloggeroff": "Turn off Chat Logger",
+                "chatloggeron": "Turn on Chat Logger",
+                "screenmsgoff": "Hide ScreenMessage",
+                "screenmsgon": "Show ScreenMessage",
+                "unmutethisguy": "unmute this guy",
+                "mutethisguy": "mute this guy",
+                "muteall": "Mute all",
+                "unmuteall": "Unmute all",
+                "discordrcp": "Show Activity on Discord",
+                "discordrcp_confirm": "Are you sure you want to show your Discord activity? This will display the following data:"
             }
         }
 
@@ -615,8 +651,8 @@ class ModifiedPartyWindow(bascenev1lib_party.PartyWindow):
         self._send_msg_times = 1
 
         self._times_button = bui.buttonwidget(parent=self._root_widget,
-                                              size=(50, 35),
-                                              label="Quick",
+                                              size=(60, 35),
+                                              label="Mensaje \n Rápido",
                                               button_type='square',
                                               autoselect=True,
                                               position=(30, 35),
@@ -837,6 +873,14 @@ class ModifiedPartyWindow(bascenev1lib_party.PartyWindow):
             bs.broadcastmessage(babase.Lstr(resource="replayWriteErrorText").evaluate() +
                                 ""+traceback.format_exc(), color=(1, 0, 0))
 
+    def _show_rcp_activity(self) -> None:
+        try:
+            print("Show discord activity init...")
+        except:
+            logging.exception()
+            bs.broadcastmessage(babase.Lstr(resource="replayWriteErrorText").evaluate() +
+                                ""+traceback.format_exc(), color=(1, 0, 0))
+            
     def _on_menu_button_press(self) -> None:
         is_muted = babase.app.config.resolve('Chat Muted')
         global chatlogger
@@ -855,6 +899,10 @@ class ModifiedPartyWindow(bascenev1lib_party.PartyWindow):
 
         choices.append("resetGameRecord")
         DisChoices.append(_getTransText("Restart_Game_Record", isBaLstr=True))
+
+        choices.append("discordrcp")
+        DisChoices.append(_getTransText("discordrcp", isBaLstr=True))
+        
         if self._getCustomSets().get("Enable_HostInfo_Debug", False):
             choices.append("hostInfo_Debug")
             DisChoices.append(_getTransText("Debug_for_Host_Info", isBaLstr=True))
@@ -1505,12 +1553,12 @@ class ModifiedPartyWindow(bascenev1lib_party.PartyWindow):
                 if cfg['Chat Muted']:
                     customchatThread().run()
                 self._update()
-            elif choice in ("credits",):
-                ConfirmWindow(text="AdvancePartyWindow by Mr.Smoothy \n extended version of ModifyPartyWindow(Plasma Boson) \n Version 5.3 \n Dont modify or release the source code \n Discord : \n mr.smoothy#5824    Plasma Boson#4104",
-                              action=self.joinbombspot, width=420, height=200,
-                              cancel_button=False, cancel_is_selected=False,
-                              color=self._bg_color, text_scale=1.0, ok_text="More mods >", cancel_text=None,
-                              origin_widget=self.get_root_widget())
+            # elif choice in ("credits",):
+            #     ConfirmWindow(text="AdvancePartyWindow by Mr.Smoothy \n extended version of ModifyPartyWindow(Plasma Boson) \n Version 5.3 \n Dont modify or release the source code \n Discord : \n mr.smoothy#5824    Plasma Boson#4104",
+            #                   action=self.joinbombspot, width=420, height=200,
+            #                   cancel_button=False, cancel_is_selected=False,
+            #                   color=self._bg_color, text_scale=1.0, ok_text="More mods >", cancel_text=None,
+            #                   origin_widget=self.get_root_widget())
             elif choice == "chatlogger":
                 # ColorPickerExact(parent=self.get_root_widget(), position=self.get_root_widget().get_screen_space_center(),
                 #             initial_color=self._bg_color, delegate=self, tag='')
@@ -1587,7 +1635,12 @@ class ModifiedPartyWindow(bascenev1lib_party.PartyWindow):
             elif choice == "resetGameRecord":
                 ConfirmWindow(text=_getTransText("Restart_Game_Record_Confirm"),
                               action=self._reset_game_record, cancel_button=True, cancel_is_selected=True,
-                              color=self._bg_color, text_scale=1.0,
+                              color=(255, 255, 255), text_scale=1.0,
+                              origin_widget=self.get_root_widget())
+            elif choice == "discordrcp":
+                ConfirmWindow(text= f"{_getTransText("discordrcp_confirm")}\nTeams @ US East C 2",
+                              action=self._show_rcp_activity, cancel_button=True, cancel_is_selected=True,
+                              color=(255, 255, 255), text_scale=2.5,
                               origin_widget=self.get_root_widget())
         elif self._popup_type == "translator_Press":
             pass
@@ -1745,7 +1798,7 @@ class CustomAccountViewerWindow(viewer.AccountViewerWindow):
                                h_align='center',
                                v_align='center',
                                scale=0.55,
-                               text=server,
+                               text=f"servidor: {server}",
                                maxwidth=300)
                 v -= 23
         else:
