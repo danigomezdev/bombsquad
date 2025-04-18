@@ -875,11 +875,43 @@ class ModifiedPartyWindow(bascenev1lib_party.PartyWindow):
 
     def _show_rcp_activity(self) -> None:
         try:
-            print("Show discord activity init...")
-        except:
-            logging.exception()
-            bs.broadcastmessage(babase.Lstr(resource="replayWriteErrorText").evaluate() +
-                                ""+traceback.format_exc(), color=(1, 0, 0))
+            # Get information from the server
+            server_info = bs.get_connection_to_host_info()
+            server_name = server_info.get('name', 'Nombre desconocido')
+            
+            # Get the list of players
+            roster = bs.get_game_roster()
+            
+            print(f"\n=== Información del Servidor: {server_name} ===")
+            
+            if not roster:
+                print("No hay jugadores conectados")
+                return
+                
+            print("\n--- Lista de Usuarios Conectados ---")
+            
+            for index, player in enumerate(roster, 1):
+                display_name = player.get('display_string', 'Sin nombre')
+                client_id = player.get('client_id', 'N/A')
+                players = player.get('players', [])
+                player_names = [p.get('name_full', 'Sin nombre') for p in players]
+                is_host = player.get('client_id', 0) == -1
+                
+                host_tag = " [HOST]" if is_host else ""
+                
+                print(f"\nJugador {index}{host_tag}:")
+                print(f"• ID Cliente: {client_id}")
+                print(f"• Nombre Display: {display_name}")
+                if player_names:
+                    print(f"• Nombres en Juego: {', '.join(player_names)}")
+            
+            print(f"\nTotal de jugadores: {len(roster)}")
+            print(f"====================================\n")
+            
+        except Exception as e:
+            logging.exception("Error al obtener información:")
+            bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
+            print(traceback.format_exc())
             
     def _on_menu_button_press(self) -> None:
         is_muted = babase.app.config.resolve('Chat Muted')
