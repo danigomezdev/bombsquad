@@ -355,7 +355,7 @@ def _getTransText(text, isBaLstr=False, same_fb=False):
                 "muteall": "Silenciar a todos",
                 "unmuteall": "Reactivar sonido de todos",
                 "discordrcp": "Mostrar Actividad en discord",
-                "discordrcp_confirm": "¿Estás seguro de mostrar tu actividad en discord? Esto Mostrará los siguientes datos:"
+                "discordrcp_confirm": "¿Estás seguro de mostrar tu actividad en discord? Esto Mostrará datos de el servidor:"
             },
             "Chinese": {
 
@@ -393,7 +393,7 @@ command to kick %s?",
                 "muteall": "Mute all",
                 "unmuteall": "Unmute all",
                 "discordrcp": "Show Activity on Discord",
-                "discordrcp_confirm": "Are you sure you want to show your Discord activity? This will display the following data:"
+                "discordrcp_confirm": "Are you sure you want to show your activity on Discord? This will display server data:"
             }
         }
 
@@ -875,43 +875,12 @@ class ModifiedPartyWindow(bascenev1lib_party.PartyWindow):
 
     def _show_rcp_activity(self) -> None:
         try:
-            # Get information from the server
-            server_info = bs.get_connection_to_host_info()
-            server_name = server_info.get('name', 'Nombre desconocido')
-            
-            # Get the list of players
-            roster = bs.get_game_roster()
-            
-            print(f"\n=== Información del Servidor: {server_name} ===")
-            
-            if not roster:
-                print("No hay jugadores conectados")
-                return
-                
-            print("\n--- Lista de Usuarios Conectados ---")
-            
-            for index, player in enumerate(roster, 1):
-                display_name = player.get('display_string', 'Sin nombre')
-                client_id = player.get('client_id', 'N/A')
-                players = player.get('players', [])
-                player_names = [p.get('name_full', 'Sin nombre') for p in players]
-                is_host = player.get('client_id', 0) == -1
-                
-                host_tag = " [HOST]" if is_host else ""
-                
-                print(f"\nJugador {index}{host_tag}:")
-                print(f"• ID Cliente: {client_id}")
-                print(f"• Nombre Display: {display_name}")
-                if player_names:
-                    print(f"• Nombres en Juego: {', '.join(player_names)}")
-            
-            print(f"\nTotal de jugadores: {len(roster)}")
-            print(f"====================================\n")
-            
+            # Abrir la ventana de información del servidor
+            ServerInfoWindow(origin_widget=self.get_root_widget())
         except Exception as e:
-            logging.exception("Error al obtener información:")
+            logging.exception("Error al mostrar información:")
             bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
-            print(traceback.format_exc())
+            bui.getsound('error').play()
             
     def _on_menu_button_press(self) -> None:
         is_muted = babase.app.config.resolve('Chat Muted')
@@ -1670,7 +1639,8 @@ class ModifiedPartyWindow(bascenev1lib_party.PartyWindow):
                               color=(255, 255, 255), text_scale=1.0,
                               origin_widget=self.get_root_widget())
             elif choice == "discordrcp":
-                ConfirmWindow(text= f"{_getTransText("discordrcp_confirm")}\nTeams @ US East C 2",
+                ConfirmWindow(text= f"{_getTransText("discordrcp_confirm")}\n{bs.get_connection_to_host_info()["name"]
+}",
                               action=self._show_rcp_activity, cancel_button=True, cancel_is_selected=True,
                               color=(255, 255, 255), text_scale=2.5,
                               origin_widget=self.get_root_widget())
@@ -1792,6 +1762,200 @@ def fetchAccountInfo(account, loading_widget):
     _babase.pushcall(Call(CustomAccountViewerWindow, pbid, account_data,
                           servers, loading_widget), from_other_thread=True)
 
+
+class ServerInfoWindow(bui.Window):
+    def __init__(self, origin_widget=None):
+        # Basic window configuration
+        self._width = 600
+        self._height = 500
+        uiscale = bui.app.ui_v1.uiscale
+        super().__init__(
+            root_widget=bui.containerwidget(
+                size=(self._width, self._height),
+                transition='in_scale',
+                scale=(1.3 if uiscale is babase.UIScale.SMALL else
+                       1.1 if uiscale is babase.UIScale.MEDIUM else 0.9),
+                stack_offset=(0, -25) if uiscale is babase.UIScale.SMALL else (0, 0)
+            )
+        )
+
+        # Get data from the server
+        try:
+            server_info = bs.get_connection_to_host_info()
+            self.server_name = server_info.get('name', 'Nombre desconocido')
+            self.roster = bs.get_game_roster()
+        except Exception as e:
+            self.server_name = "Error obteniendo datos"
+            self.roster = []
+            logging.exception("Error al obtener información del servidor:")
+
+        # Configure UI elements
+        self._setup_ui()
+
+    def _setup_ui(self):
+        # Window title
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height - 40),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text="Información del Servidor",
+            scale=1.2,
+            color=bui.app.ui_v1.title_color
+        )
+
+        # Close button
+        self._close_button = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(30, self._height - 60),
+            size=(50, 50),
+            label='',
+            on_activate_call=self.close,
+            autoselect=True,
+            color=(0.45, 0.63, 0.15),
+            icon=bui.gettexture('crossOut'),
+            iconscale=1.2
+        )
+
+        # Scroll area for content
+        self._scrollwidget = bui.scrollwidget(
+            parent=self._root_widget,
+            size=(self._width - 60, self._height - 120),
+            position=(30, 50),
+            highlight=False
+        )
+
+        self._subcontainer = bui.containerwidget(
+            parent=self._scrollwidget,
+            size=(self._width - 60, self._height * 2),
+            background=False
+        )
+
+        # Show information
+        self._populate_content()
+
+    def _populate_content(self):
+        v = self._height * 2 - 80  # Initial vertical position
+        spacing = 30
+
+        # Server name
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(10, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=1.1,
+            color=(0.6, 0.8, 1.0),
+            text=f"Servidor: {self.server_name}",
+            maxwidth=self._width - 100
+        )
+        v -= spacing * 1.5
+
+        total_players = sum(1 for p in self.roster if p.get('client_id', 0) != -1)
+        session = bs.get_foreground_host_session()
+    
+        # Get maximum players (default 8 if not available)
+        max_players = session.max_players if session else 8
+        
+        # List of players
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(20, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.8, 0.8, 0.8),
+            text=f"Jugadores conectados: ({total_players}/{max_players})", 
+            maxwidth=self._width - 100
+        )
+        v -= spacing
+
+        for index, player in enumerate(self.roster, 1):
+            display_name = player.get('display_string', 'Sin nombre')
+            client_id = player.get('client_id', 'N/A')
+            players = player.get('players', [])
+            is_host = player.get('client_id', 0) == -1
+            host_tag = "" if is_host else ""
+
+            if index == 1:
+                v -= 100
+            
+            # Player card
+            self._create_player_card(
+                pos=(30, v),
+                index=index,
+                display_name=display_name,
+                client_id=client_id,
+                players=players,
+                host_tag=host_tag
+            )
+            v -= 100  # Space between cards
+
+        # Adjust container height
+        bui.containerwidget(
+            edit=self._subcontainer,
+            height=max(self._height * 2, abs(v) + 350)
+        )
+
+    def _create_player_card(self, pos, index, display_name, client_id, players, host_tag):
+        card_width = self._width - 100
+        card_height = 90
+        x, y = pos
+
+        # Card background
+        bui.containerwidget(
+            parent=self._subcontainer,
+            position=(x, y),
+            size=(card_width, card_height),
+            background=True,
+            color=(0.2, 0.2, 0.25)
+        )
+
+        # Player number
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(x + 15, y + card_height - 25),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=1.2,
+            color=(0.8, 0.8, 1.0),
+            text=f"{index}{host_tag}"
+        )
+
+        # Main information
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(x + 100, y + card_height - 25),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.9, 0.9, 0.9),
+            text=f"ID: {client_id}\nCuenta: {display_name}",
+            maxwidth=card_width - 150
+        )
+
+        # Names in play
+        if players:
+            player_names = [p.get('name_full', 'Sin nombre') for p in players]
+            bui.textwidget(
+                parent=self._subcontainer,
+                position=(x + 100, y + 15),
+                size=(0, 0),
+                h_align='left',
+                v_align='bottom',
+                scale=0.7,
+                color=(0.7, 0.7, 0.7),
+                text="Personajes: " + ", ".join(player_names),
+                maxwidth=card_width - 150
+            )
+
+    def close(self):
+        bui.containerwidget(edit=self._root_widget, transition='out_scale')
 
 class CustomAccountViewerWindow(viewer.AccountViewerWindow):
     def __init__(self, account_id, custom_data, servers, loading_widget):
