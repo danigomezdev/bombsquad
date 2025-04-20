@@ -19,6 +19,7 @@ import urllib.request, pickle
 from threading import Thread
 import random
 import datetime
+import logging
 
 _ip = '127.0.0.1'
 _port = 43210
@@ -2187,7 +2188,7 @@ def __popup_menu_window_init__(self,
         self._current_choice = current_choice
         self._color = color
         self._choices_disabled = list(choices_disabled)
-        self._donebuilding = False
+        self._done_building = False
         if not choices:
             raise TypeError('Must pass at least one choice')
         self._width = width
@@ -2275,7 +2276,7 @@ def __popup_menu_window_init__(self,
 
         # ok from now on our delegate can be called
         self._delegate = weakref.ref(delegate)
-        self._donebuilding = True
+        self._done_building = True
 
 original_connect_to_party = bs.connect_to_party
 #original_sign_in = _babase.sign_in
@@ -2307,7 +2308,7 @@ class PingThread(Thread):
         sock: Optional[socket.socket] = None
         try:
             import socket
-            from babase.internal import get_ip_address_type
+            from babase._net import get_ip_address_type
             socket_type = get_ip_address_type(self._address)
             sock = socket.socket(socket_type, socket.SOCK_DGRAM)
             sock.connect((self._address, self._port))
@@ -2333,13 +2334,13 @@ class PingThread(Thread):
             global _ping
             _ping = int((time.time() - starttime) * 1000.0)
         except Exception:
-            logging.exception('Error on gather ping', once=True)
+            logging.exception('Error on gather ping')
         finally:
             try:
                 if sock is not None:
                     sock.close()
             except Exception:
-                logging.exception('Error on gather ping cleanup', once=True)
+                logging.exception('Error on gather ping cleanup')
 
 def _get_store_char_tex(self) -> str:
         _babase.set_party_icon_always_visible(True)

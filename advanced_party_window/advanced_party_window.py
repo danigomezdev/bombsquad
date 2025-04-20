@@ -54,6 +54,8 @@ import urllib.request
 import urllib.parse
 from _thread import start_new_thread
 import threading
+import logging
+
 version_str = "7"
 BCSSERVER = 'mods.ballistica.workers.dev'
 
