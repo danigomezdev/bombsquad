@@ -42,7 +42,7 @@ These mods are built with respect to the original game architecture and communit
    ```
 
 2. Copy the desired mods into your BombSquad user scripts folder. The location depends on your platform:
-   - On Linux: `~/.bombsquad/modss`
+   - On Linux: `~/.bombsquad/mods`
    - On Windows: `%APPDATA%\\BombSquad\\mods`
    - On macOS: `~/Library/Application Support/BombSquad/mods`
 
