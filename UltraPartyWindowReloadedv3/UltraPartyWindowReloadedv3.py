@@ -789,8 +789,8 @@ class PartyWindow(bui.Window):
         self._text_field = txt = bui.textwidget(
             parent=self._root_widget,
             editable=True,
-            size=(500, 40),
-            position=(74, 39),
+            size=(530-140, 40),
+            position=(44+100, 39),
             text='',
             maxwidth=494,
             shadow=0.3,
@@ -859,7 +859,7 @@ class PartyWindow(bui.Window):
                               color=self.bg_color,
                                       button_type='square',
                                       autoselect=True,
-                                      position=(30, 35),
+                                      position=(70, 35),
                                       on_activate_call=_times_button_on_click)
         if babase.app.config['copy button']:
             self._copy_button = bui.buttonwidget(parent=self._root_widget,
