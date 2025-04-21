@@ -178,6 +178,7 @@ class PrivateChatHandler:
     def _login(self, registration_key):
         self.myid = _babase.get_v1_account_misc_read_val_2('resolvedAccountID', '')
         data = dict(pb_id = self.myid, registration_key = registration_key)
+        print(f"[_login]: Test {url}/login")
         response = self._send_request(url = f'{url}/login', data=data)
         if response == 'successful':
             self.logged_in = True
@@ -191,6 +192,7 @@ class PrivateChatHandler:
     def _query(self, pb_id=None):
         if not pb_id:
             pb_id = self.myid
+        print(f"[_query]: Test {url}/query/{pb_id}")
         response = self._send_request(url = f'{url}/query/{pb_id}')
         if response == 'exists':
             return True
@@ -547,7 +549,8 @@ class SettingsWindow:
                     scale=1,
                     value=cfg['IP button'],
                     autoselect=True,
-                    text="IP Button",
+                    #text="IP Button",
+                    text="Botón de IP",
                     on_value_change_call=self.ip_button)
         ping_button = bui.checkboxwidget(
                     parent=self._subcontainer,
@@ -557,7 +560,8 @@ class SettingsWindow:
                     scale=1,
                     value=cfg['ping button'],
                     autoselect=True,
-                    text="Ping Button",
+                    #text="Ping Button",
+                    text="Botón de Ping",
                     on_value_change_call=self.ping_button)
         copy_button = bui.checkboxwidget(
                     parent=self._subcontainer,
@@ -567,7 +571,7 @@ class SettingsWindow:
                     scale=1,
                     value=cfg['copy button'],
                     autoselect=True,
-                    text="Copy Text Button",
+                    text="Botón de Copiar texto",
                     on_value_change_call=self.copy_button)
         direct_send = bui.checkboxwidget(
                     parent=self._subcontainer,
@@ -577,7 +581,8 @@ class SettingsWindow:
                     scale=1,
                     value=cfg['Direct Send'],
                     autoselect=True,
-                    text="Directly Send Custom Commands",
+                    #text="Directly Send Custom Commands",
+                    text="Enviar comandos personalizados directamente",
                     on_value_change_call=self.direct_send)
         colorfulchat = bui.checkboxwidget(
                     parent=self._subcontainer,
@@ -587,12 +592,12 @@ class SettingsWindow:
                     scale=1,
                     value=cfg['Colorful Chat'],
                     autoselect=True,
-                    text="Colorful Chat",
+                    text="Chat colorido",
                     on_value_change_call=self.colorful_chat)
         msg_notification_text = bui.textwidget(parent=self._subcontainer,
                                          scale=0.8,
                                          color=(1, 1, 1),
-                                         text='Message Notifcation:',
+                                         text='Notificación de mensaje:',
                                          size=(100, 30),
                                          h_align='left',
                                          v_align='center')
@@ -931,9 +936,10 @@ class PartyWindow(bui.Window):
         is_muted = babase.app.config['Party Chat Muted']
         uiscale = bui.app.ui_v1.uiscale
         
-        choices = ['muteOption', 'modifyColor', 'addQuickReply', 'removeQuickReply', 'credits']
-        choices_display = ['Mute Option', 'Modify Main Color', 'Add as Quick Reply', 'Remove a Quick Reply', 'Credits']
-        
+        choices = ['muteOption', 'modifyColor', 'addQuickReply', 'removeQuickReply', """'credits'"""]
+        #choices_display = ['Mute Option', 'Modify Main Color', 'Add as Quick Reply', 'Remove a Quick Reply', 'Credits']
+        choices_display = ['Opción de Silencio', 'Modificar Color Principal', 'Agregar como Respuesta Rápida', 'Eliminar una Respuesta Rápida', """'Créditos'"""]
+
         if hasattr(bs.get_foreground_host_activity(), '_map'):
             choices.append('manualCamera')
             choices_display.append('Manual Camera')
@@ -1203,7 +1209,7 @@ class PartyWindow(bui.Window):
             playerinfo = self._get_player_info(self._popup_party_member_client_id)
             if choice == 'kick':
                 name = playerinfo['ds']
-                ConfirmWindow(text=f'Are you sure to kick {name}?',
+                ConfirmWindow(text=f'Estas seguro de iniciar una votación \n para expulsar a {name}?',
                                 action = self._vote_kick_player,
                                 cancel_button=True,
                                 cancel_is_selected=True,
@@ -1233,7 +1239,7 @@ class PartyWindow(bui.Window):
                 self._popup_type = "executeChoice"
             elif choice == 'adminkick':
                 name = playerinfo['ds']
-                ConfirmWindow(text=f'Are you sure to use admin\ncommand to kick {name}',
+                ConfirmWindow(text=f'Estás seguro de usar el comando admin\n para expulsar a {name}',
                               action=self._send_admin_kick_command,
                               cancel_button=True,
                               cancel_is_selected=True,
@@ -1268,6 +1274,16 @@ class PartyWindow(bui.Window):
                                 current_choice=choices[0],
                                 delegate=self)
                 self._popup_type = 'executeChoice'
+
+            elif choice == 'blockplayer':
+                name = playerinfo['ds']
+                ConfirmWindow(text=f'Estás seguro de bloquear a este jugador, \n al hacer esto te sacará de la partida \n cuando esta persona entre {name}',
+                              action=self._send_admin_kick_command,
+                              cancel_button=True,
+                              cancel_is_selected=True,
+                              color=self.bg_color,
+                              text_scale=1.0,
+                              origin_widget=self.get_root_widget())
 
             elif choice == 'addNew':
                 AddNewChoiceWindow()
@@ -1423,9 +1439,11 @@ class PartyWindow(bui.Window):
             kick_str = babase.Lstr(resource='kickVoteText')
         uiscale = bui.app.ui_v1.uiscale
         choices = ['kick', 'mention', 'adminkick']
-        choices_display = [kick_str] + list(self._create_baLstr_list(['Mention this guy', f'Kick ID: {client_id}']))
+        choices_display = [kick_str] + list(self._create_baLstr_list(['Menciona a este jugador', f'Kick ID: {client_id}']))
         choices.append('customCommands')
-        choices_display.append(babase.Lstr(value='Custom Commands'))
+        choices_display.append(babase.Lstr(value='Comandos personalizados'))
+        choices.append('blockplayer')
+        choices_display.append(babase.Lstr(value='Bloquear Jugador'))
         PopupMenuWindow(
             position=widget.get_screen_space_center(),
             color=self.bg_color,
