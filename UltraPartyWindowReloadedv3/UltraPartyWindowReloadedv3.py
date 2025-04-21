@@ -268,6 +268,8 @@ def _get_local_time(utctime):
     d = d.astimezone()
     return d.strftime('%B %d,\t\t%H:%M:%S')
 
+def _creat_Lstr_list(string_list: list = []) -> list:
+    return ([babase.Lstr(resource="??Unknown??", fallback_value=item) for item in string_list])
 
 def update_status():
     if messenger.logged_in:
@@ -816,6 +818,21 @@ class PartyWindow(bui.Window):
                               color=self.bg_color,
                               position=(self._width - 70, 35),
                               on_activate_call=self._send_chat_message)
+
+        def _times_button_on_click():
+            Quickreply = self._get_quick_responds()
+            if len(Quickreply) > 0:
+                PopupMenuWindow(
+                    position=self._times_button.get_screen_space_center(),
+                                scale=self._get_popup_window_scale(),
+                              color=self.bg_color,
+                        
+                                choices=Quickreply,
+                                choices_display=_creat_Lstr_list(Quickreply),
+                                current_choice=Quickreply[0],
+                                delegate=self)
+                self._popup_type = "QuickMessageSelect"
+                
         bui.textwidget(edit=txt, on_return_press_call=btn.activate)
         self._previous_button = bui.buttonwidget(parent=self._root_widget,
                               size=(30, 30),
@@ -835,6 +852,15 @@ class PartyWindow(bui.Window):
                               scale=0.75,
                               position=(38, 28),
                               on_activate_call=self._next_message)
+        
+        self._times_button = bui.buttonwidget(parent=self._root_widget,
+                                      size=(60, 35),
+                                      label="Mensaje \n Rápido",
+                              color=self.bg_color,
+                                      button_type='square',
+                                      autoselect=True,
+                                      position=(30, 35),
+                                      on_activate_call=_times_button_on_click)
         if babase.app.config['copy button']:
             self._copy_button = bui.buttonwidget(parent=self._root_widget,
                                   size=(15, 15),
@@ -1366,19 +1392,23 @@ class PartyWindow(bui.Window):
                 # Get maximum players (default 8 if not available)
                 max_players = 8
 
-                ConfirmWindow(text=
-                    u'Mostrar Actividad de juego en Discord\n\n'
-                    'Al confirmar, está dando acceso para que en su Discord aparezca\n'
-                    'como actividad datos de esta partida:\n\n'
-                    f'- Servidor (Display): {bs.get_connection_to_host_info()["name"]}\n'
-                    f'- Jugadores activos: ({total_players}/{max_players})',
-                    action = self._show_rcp_activity,
-                    width=420,
-                    height=230,
-                    color=(255, 255, 255),
-                    text_scale=1.5,
-                    origin_widget=self.get_root_widget()
-                )  
+                try:
+                    ConfirmWindow(text=
+                        u'Mostrar Actividad de juego en Discord\n\n'
+                        'Al confirmar, está dando acceso para que en su Discord aparezca\n'
+                        'como actividad datos de el servidor:\n\n'
+                        f'{bs.get_connection_to_host_info()["name"]}\n',
+                        #f'- Jugadores activos: ({total_players}/{max_players})',
+                        action = self._show_rcp_activity,
+                        width=420,
+                        height=230,
+                        color=(255, 255, 255),
+                        text_scale=1.5,
+                        origin_widget=self.get_root_widget()
+                    )  
+                except:
+                    bui.screenmessage('¡Parece que no estás en ninguna partida!', (1,0,0))
+                    bui.getsound('error').play()
                 
             elif choice == 'manualCamera':
                 bui.containerwidget(edit=self._root_widget, transition='out_scale')
