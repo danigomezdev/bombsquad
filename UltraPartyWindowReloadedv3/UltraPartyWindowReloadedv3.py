@@ -932,13 +932,38 @@ class PartyWindow(bui.Window):
             first.delete()
         bui.containerwidget(edit=self._columnwidget, visible_child=txt)
 
+    def _show_rcp_activity(self) -> None:
+        try:
+            # Abrir la ventana de información del servidor
+            ServerInfoWindow(origin_widget=self.get_root_widget())
+        except Exception as e:
+            logging.exception("Error al mostrar información:")
+            bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
+            bui.getsound('error').play()
+
     def _on_menu_button_press(self) -> None:
         is_muted = babase.app.config['Party Chat Muted']
         uiscale = bui.app.ui_v1.uiscale
         
-        choices = ['muteOption', 'modifyColor', 'addQuickReply', 'removeQuickReply', """'credits'"""]
+        choices = [
+            'muteOption',
+            'modifyColor',
+            'addQuickReply',
+            'removeQuickReply',
+            #'credits'
+            'discordrpc'
+        ]
+
         #choices_display = ['Mute Option', 'Modify Main Color', 'Add as Quick Reply', 'Remove a Quick Reply', 'Credits']
-        choices_display = ['Opción de Silencio', 'Modificar Color Principal', 'Agregar como Respuesta Rápida', 'Eliminar una Respuesta Rápida', """'Créditos'"""]
+        
+        choices_display = [
+            'Opción de Silencio',
+            'Modificar Color Principal',
+            'Agregar como Respuesta Rápida',
+            'Eliminar una Respuesta Rápida',
+            'Discord RPC'
+            #'Créditos'
+        ]
 
         if hasattr(bs.get_foreground_host_activity(), '_map'):
             choices.append('manualCamera')
@@ -1335,6 +1360,26 @@ class PartyWindow(bui.Window):
                                 text_scale=1.0,
                                 ok_text="Join Discord",
                                 origin_widget=self.get_root_widget())  
+            elif choice == 'discordrpc':
+                total_players = 2
+
+                # Get maximum players (default 8 if not available)
+                max_players = 8
+
+                ConfirmWindow(text=
+                    u'Mostrar Actividad de juego en Discord\n\n'
+                    'Al confirmar, está dando acceso para que en su Discord aparezca\n'
+                    'como actividad datos de esta partida:\n\n'
+                    f'- Servidor (Display): {bs.get_connection_to_host_info()["name"]}\n'
+                    f'- Jugadores activos: ({total_players}/{max_players})',
+                    action = self._show_rcp_activity,
+                    width=420,
+                    height=230,
+                    color=(255, 255, 255),
+                    text_scale=1.5,
+                    origin_widget=self.get_root_widget()
+                )  
+                
             elif choice == 'manualCamera':
                 bui.containerwidget(edit=self._root_widget, transition='out_scale')
                 Manual_camera_window()
@@ -2169,6 +2214,201 @@ class Manual_camera_window:
                center[1] + size[1] / 2,
                center[2] + size[2] / 2)
         node.area_of_interest_bounds = tuple(aoi)
+
+
+class ServerInfoWindow(bui.Window):
+    def __init__(self, origin_widget=None):
+        # Basic window configuration
+        self._width = 600
+        self._height = 500
+        uiscale = bui.app.ui_v1.uiscale
+        super().__init__(
+            root_widget=bui.containerwidget(
+                size=(self._width, self._height),
+                transition='in_scale',
+                scale=(1.3 if uiscale is babase.UIScale.SMALL else
+                       1.1 if uiscale is babase.UIScale.MEDIUM else 0.9),
+                stack_offset=(0, -25) if uiscale is babase.UIScale.SMALL else (0, 0)
+            )
+        )
+
+        # Get data from the server
+        try:
+            server_info = bs.get_connection_to_host_info()
+            self.server_name = server_info.get('name', 'Nombre desconocido')
+            self.roster = bs.get_game_roster()
+        except Exception as e:
+            self.server_name = "Error obteniendo datos"
+            self.roster = []
+            logging.exception("Error al obtener información del servidor:")
+
+        # Configure UI elements
+        self._setup_ui()
+
+    def _setup_ui(self):
+        # Window title
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height - 40),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text="Información del Servidor",
+            scale=1.2,
+            color=bui.app.ui_v1.title_color
+        )
+
+        # Close button
+        self._close_button = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(30, self._height - 60),
+            size=(50, 50),
+            label='',
+            on_activate_call=self.close,
+            autoselect=True,
+            color=(0.45, 0.63, 0.15),
+            icon=bui.gettexture('crossOut'),
+            iconscale=1.2
+        )
+
+        # Scroll area for content
+        self._scrollwidget = bui.scrollwidget(
+            parent=self._root_widget,
+            size=(self._width - 60, self._height - 120),
+            position=(30, 50),
+            highlight=False
+        )
+
+        self._subcontainer = bui.containerwidget(
+            parent=self._scrollwidget,
+            size=(self._width - 60, self._height * 2),
+            background=False
+        )
+
+        # Show information
+        self._populate_content()
+
+    def _populate_content(self):
+        v = self._height * 2 - 80  # Initial vertical position
+        spacing = 30
+
+        # Server name
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(10, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=1.1,
+            color=(0.6, 0.8, 1.0),
+            text=f"Servidor: {self.server_name}",
+            maxwidth=self._width - 100
+        )
+        v -= spacing * 1.5
+
+        total_players = sum(1 for p in self.roster if p.get('client_id', 0) != -1)
+        session = bs.get_foreground_host_session()
+    
+        # Get maximum players (default 8 if not available)
+        max_players = session.max_players if session else 8
+        
+        # List of players
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(20, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.8, 0.8, 0.8),
+            text=f"Jugadores conectados: ({total_players}/{max_players})", 
+            maxwidth=self._width - 100
+        )
+        v -= spacing
+
+        for index, player in enumerate(self.roster, 1):
+            display_name = player.get('display_string', 'Sin nombre')
+            client_id = player.get('client_id', 'N/A')
+            players = player.get('players', [])
+            is_host = player.get('client_id', 0) == -1
+            host_tag = "" if is_host else ""
+
+            if index == 1:
+                v -= 100
+            
+            # Player card
+            self._create_player_card(
+                pos=(30, v),
+                index=index,
+                display_name=display_name,
+                client_id=client_id,
+                players=players,
+                host_tag=host_tag
+            )
+            v -= 100  # Space between cards
+
+        # Adjust container height
+        bui.containerwidget(
+            edit=self._subcontainer,
+            #height=max(self._height * 2, abs(v) + 350)
+        )
+
+    def _create_player_card(self, pos, index, display_name, client_id, players, host_tag):
+        card_width = self._width - 100
+        card_height = 90
+        x, y = pos
+
+        # Card background
+        bui.containerwidget(
+            parent=self._subcontainer,
+            position=(x, y),
+            size=(card_width, card_height),
+            background=True,
+            color=(0.2, 0.2, 0.25)
+        )
+
+        # Player number
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(x + 15, y + card_height - 25),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=1.2,
+            color=(0.8, 0.8, 1.0),
+            text=f"{index}{host_tag}"
+        )
+
+        # Main information
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(x + 100, y + card_height - 25),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.9, 0.9, 0.9),
+            text=f"ID: {client_id}\nCuenta: {display_name}",
+            maxwidth=card_width - 150
+        )
+
+        # Names in play
+        if players:
+            player_names = [p.get('name_full', 'Sin nombre') for p in players]
+            bui.textwidget(
+                parent=self._subcontainer,
+                position=(x + 100, y + 15),
+                size=(0, 0),
+                h_align='left',
+                v_align='bottom',
+                scale=0.7,
+                color=(0.7, 0.7, 0.7),
+                text="Personajes: " + ", ".join(player_names),
+                maxwidth=card_width - 150
+            )
+
+    def close(self):
+        bui.containerwidget(edit=self._root_widget, transition='out_scale')
 
 
 def __popup_menu_window_init__(self,
