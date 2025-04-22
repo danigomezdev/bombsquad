@@ -1769,8 +1769,31 @@ class PartyWindow(bui.Window):
             if name not in namelist:
                 namelist.append(name)
 
-        bui.screenmessage(f'Usuario {namelist[0]} guardado en la blackList ', (0,1,0))
-        bui.getsound('dingSmallHigh').play()
+        try:
+            accountv2name = namelist[0]
+
+            # Read current blacklist content
+            if os.path.exists(blacklist_file):
+                with open(blacklist_file, 'r') as f:
+                    blacklist = set(line.strip() for line in f if line.strip())
+            else:
+                blacklist = set()
+
+            # Check if the name is already in the list
+            if accountv2name not in blacklist:
+                blacklist.add(accountv2name)
+                with open(blacklist_file, 'w') as f:
+                    f.write('\n'.join(sorted(blacklist)))
+
+                bui.screenmessage(f'Usuario {accountv2name} guardado en la blackList', (0, 1, 0))
+                bui.getsound('dingSmallHigh').play()
+            else:
+                bui.screenmessage(f'El usuario {accountv2name} ya está en la blackList', (1, 1, 0))
+
+        except Exception:
+            logging.exception("Error guardando usuario en la blacklist")
+            bui.screenmessage('Error guardando este usuario en la blacklist!', (1, 0, 0))
+            bui.getsound('error').play()
 
 
     def _copy_to_clipboard(self):
