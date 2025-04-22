@@ -30,8 +30,8 @@ last_msg = None
 my_directory = _babase.env()['python_directory_user'] + '/UltraPartyWindowFiles/'
 quick_msg_file = my_directory +  'QuickMessages.txt'
 cookies_file = my_directory + 'cookies.txt'
+blacklist_file = my_directory + 'BlackList.txt'
 saved_ids_file = my_directory + 'saved_ids.json'
-
 
 def initialize():
     config_defaults = {
@@ -496,6 +496,139 @@ class SortQuickMessages:
     def _save(self) -> None:
         try:
             with open(quick_msg_file, 'w') as f:
+                f.write('\n'.join(self.msgs))
+        except:
+            logging.exception()
+            bui.screenmessage('Error!', (1,0,0))
+        bui.containerwidget(
+            edit=self._root_widget,
+            transition='out_right')
+        
+
+class SortBlacklistUsers:
+    def __init__(self):
+        uiscale = bui.app.ui_v1.uiscale
+        bg_color = babase.app.config.get('PartyWindow Main Color', (0.5,0.5,0.5))
+        self._width = 750 if uiscale is babase.UIScale.SMALL else 600
+        self._height = (300 if uiscale is babase.UIScale.SMALL else
+                        325 if uiscale is babase.UIScale.MEDIUM else 350)
+        self._root_widget = bui.containerwidget(
+            size=(self._width, self._height),
+            transition='in_right',
+            on_outside_click_call=self._save,
+            color=bg_color,
+            parent=bui.get_special_widget('overlay_stack'),
+            scale=(2.0 if uiscale is babase.UIScale.SMALL else
+                   1.3 if uiscale is babase.UIScale.MEDIUM else 1.0),
+            stack_offset=(0, -16) if uiscale is babase.UIScale.SMALL else (0,0)
+        )
+        
+        bui.textwidget(parent=self._root_widget,
+            position=(-10, self._height - 50),
+            size=(self._width, 25),
+            text='Sort Quick Messages',
+            color=bui.app.ui_v1.title_color,
+            scale=1.05,
+            h_align='center',
+            v_align='center',
+            maxwidth=270
+        )
+        
+        b_textcolor = (0.4, 0.75, 0.5)
+        up_button = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(10, 170),
+            size=(75, 75),
+            on_activate_call=self._move_up,
+            label=babase.charstr(babase.SpecialChar.UP_ARROW),
+            button_type='square',
+            color=bg_color,
+            textcolor=b_textcolor,
+            autoselect=True,
+            repeat=True
+        )
+
+        down_button = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(10,75),
+            size=(75, 75),
+            on_activate_call=self._move_down,
+            label=babase.charstr(babase.SpecialChar.DOWN_ARROW),
+            button_type='square',
+            color=bg_color,
+            textcolor=b_textcolor,
+            autoselect=True,
+            repeat=True
+        )
+
+        self._scroll_width = self._width - 150
+        self._scroll_height = self._height - 110
+        
+        self._scrollwidget = bui.scrollwidget(
+            parent=self._root_widget,
+            size=(self._scroll_width, self._scroll_height),
+            color=bg_color,
+            position=(100,40)
+        )
+        
+        self._columnwidget = bui.columnwidget(
+            parent=self._scrollwidget,
+            border=2,
+            margin=0
+        )
+        
+        with open(blacklist_file, 'r') as f:
+            self.msgs = f.read().split('\n')
+        
+        self._msg_selected = None
+        self._refresh()
+        
+        bui.containerwidget(
+            edit=self._root_widget,
+            on_cancel_call=self._save
+        )
+
+    def _refresh(self):
+        for child in self._columnwidget.get_children():
+            child.delete()
+        for msg in enumerate(self.msgs):
+            txt = bui.textwidget(
+                parent = self._columnwidget,
+                size=(self._scroll_width - 10, 30),
+                selectable=True,
+                always_highlight=True,
+                on_select_call=babase.Call(self._on_msg_select, msg),
+                text=msg[1],
+                h_align='left',
+                v_align='center',
+                maxwidth=self._scroll_width)
+            if msg == self._msg_selected:
+                bui.columnwidget(edit=self._columnwidget,
+                    selected_child=txt,
+                    visible_child=txt)
+
+    def _on_msg_select(self, msg):
+        self._msg_selected = msg
+
+    def _move_up(self):
+        index = self._msg_selected[0]
+        msg = self._msg_selected[1]
+        if index:
+            self.msgs.insert((index - 1), self.msgs.pop(index))
+            self._msg_selected = (index-1, msg)
+            self._refresh()
+
+    def _move_down(self):
+        index = self._msg_selected[0]
+        msg = self._msg_selected[1]
+        if index + 1 < len(self.msgs):
+            self.msgs.insert((index + 1), self.msgs.pop(index))
+            self._msg_selected = (index+1, msg)
+            self._refresh()
+
+    def _save(self) -> None:
+        try:
+            with open(blacklist_file, 'w') as f:
                 f.write('\n'.join(self.msgs))
         except:
             logging.exception()
@@ -1465,7 +1598,7 @@ class PartyWindow(bui.Window):
                 name = playerinfo['ds']
                 ConfirmWindow(
                     text=f'Estás seguro de bloquear a este jugador, \n al hacer esto te sacará de la partida \n cuando esta persona entre {name}',
-                    action=self._send_admin_kick_command,
+                    action=self._send_user_to_black_list,
                     cancel_button=True,
                     cancel_is_selected=True,
                     color=self.bg_color,
@@ -1483,8 +1616,22 @@ class PartyWindow(bui.Window):
                     position = (self._width - 60, self._height - 47),
                     color=self.bg_color,
                     scale=self._get_popup_window_scale(),
-                    choices=['muteInGameOnly', 'mutePartyWindowOnly', 'muteAll', 'unmuteAll'],
-                    choices_display=self._create_baLstr_list(['Mute In Game Messages Only', 'Mute Party Window Messages Only', 'Mute all', 'Unmute All']),
+                    
+                    choices=[
+                        'muteInGameOnly',
+                        'mutePartyWindowOnly',
+                        'muteAll',
+                        'unmuteAll'
+                    ],
+                    
+                    choices_display=self._create_baLstr_list(
+                         [
+                            'Silenciar solo mensajes del juego',
+                            'Silenciar solo mensajes de la sala',
+                            'Silenciar todo',
+                            'Activar todos los sonidos'
+                        ]
+                    ),
                     current_choice=current_choice,
                     delegate=self
                 )
@@ -1576,6 +1723,10 @@ class PartyWindow(bui.Window):
             else:
                 self._edit_text_msg_box(choice)
 
+        elif self._popup_type == "QuickMessageSelect":
+            # bui.textwidget(edit=self._text_field,text=self._get_quick_responds()[index])
+            self._edit_text_msg_box(choice, "add")
+
         elif self._popup_type == 'removeQuickReplySelect':
             data = self._get_quick_responds()
             data.remove(choice)
@@ -1607,6 +1758,20 @@ class PartyWindow(bui.Window):
 
     def _send_admin_kick_command(self):
         bs.chatmessage('/kick ' + str(self._popup_party_member_client_id))
+
+    def _send_user_to_black_list(self):
+        playerinfo = self._get_player_info(self._popup_party_member_client_id)
+        players = playerinfo['players']
+        namelist = [playerinfo['ds']]
+        
+        for player in players:
+            name = player['name_full']
+            if name not in namelist:
+                namelist.append(name)
+
+        bui.screenmessage(f'Usuario {namelist[0]} guardado en la blackList ', (0,1,0))
+        bui.getsound('dingSmallHigh').play()
+
 
     def _copy_to_clipboard(self):
         msg = bui.textwidget(query=self._text_field)
@@ -1668,7 +1833,7 @@ class PartyWindow(bui.Window):
         choices.append('customCommands')
         choices_display.append(babase.Lstr(value='Comandos personalizados'))
         choices.append('blockplayer')
-        choices_display.append(babase.Lstr(value='Bloquear Jugador'))
+        choices_display.append(babase.Lstr(value='Enviar Jugador a Blacklist'))
         PopupMenuWindow(
             position=widget.get_screen_space_center(),
             color=self.bg_color,
@@ -2934,7 +3099,7 @@ def _get_store_char_tex(self) -> str:
 
 
 # ba_meta export plugin
-class InitalRun(babase.Plugin):
+class byLess(babase.Plugin):
     def __init__(self):
         if _babase.env().get("build_number",0) >= 20124:
             global messenger, listener, displayer, color_tracker
