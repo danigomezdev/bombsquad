@@ -31,6 +31,7 @@ my_directory = _babase.env()['python_directory_user'] + '/UltraPartyWindowFiles/
 quick_msg_file = my_directory +  'QuickMessages.txt'
 cookies_file = my_directory + 'cookies.txt'
 blacklist_file = my_directory + 'BlackList.txt'
+love_file = my_directory + 'Love.txt'
 saved_ids_file = my_directory + 'saved_ids.json'
 
 def initialize():
@@ -991,6 +992,7 @@ class PartyWindow(bui.Window):
         bui.set_party_window_open(False)
 
     def __init__(self, origin: Sequence[float] = (0, 0)):
+
         self._private_chat = False
         self._firstcall = True
         self.ping_server()
@@ -1000,11 +1002,18 @@ class PartyWindow(bui.Window):
         self._popup_party_member_client_id: Optional[int] = None
         self._popup_party_member_is_host: Optional[bool] = None
         self._width = 500
+        
         uiscale = bui.app.ui_v1.uiscale
         self._height = (365 if uiscale is babase.UIScale.SMALL else
                         480 if uiscale is babase.UIScale.MEDIUM else 600)
         self.bg_color = babase.app.config.get('PartyWindow Main Color', (0.5,0.5,0.5))
+
+        self._last_msg_clicked: str = None
+        self._last_time_pressed_msg: float = 0.0
+        self._last_time_pressed_translate: float = 0.0
+        self._double_press_interval: float = 0.3
         #self.ping_timer = bs.Timer(5, bs.WeakCall(self.ping_server), repeat=True)
+        #self._show_love_window()
 
         bui.Window.__init__(self, root_widget=bui.containerwidget(
             size=(self._width, self._height),
@@ -1049,10 +1058,13 @@ class PartyWindow(bui.Window):
             iconscale=1.2)
 
         info = bs.get_connection_to_host_info()
-        print("[PartyWindow]: Abriste el chat")
+        #print("[PartyWindow]: Abriste el chat")
 
         blacklist_manager = BlacklistManager(blacklist_file, bui)
-        blacklist_manager.search_blacklist_users()
+        if info.get('name', '') != '':
+            blacklist_manager.search_blacklist_users()
+        else:
+            print("No party")
 
         if info.get('name', '') != '':
             self.title = babase.Lstr(value=info['name'])
@@ -1279,6 +1291,27 @@ class PartyWindow(bui.Window):
         else:
             self._add_msg(msg)
 
+    def _copy_msg(self, msg: str) -> None:
+        """Copiar texto al portapapeles y mostrar un mensaje visual."""
+        bui.clipboard_set_text(msg)
+        bui.screenmessage("Mensaje copiado", color=(0, 1, 0))
+
+    def _on_message_click(self, msg: str) -> None:
+        now = babase.apptime()
+        print(f"[CLICK] Mensaje: '{msg}' | Tiempo actual: {now:.3f}")
+        print(f"[CLICK] Último mensaje clickeado: '{self._last_msg_clicked}'")
+        print(f"[CLICK] Tiempo desde el último clic: {(now - self._last_time_pressed_msg):.3f}")
+
+        if (now - self._last_time_pressed_msg < self._double_press_interval) and (self._last_msg_clicked == msg):
+            print("[DOUBLE CLICK DETECTADO] Copiando mensaje al portapapeles...")
+            self._copy_msg(msg)
+            self._last_time_pressed_msg = 0.0
+            self._last_msg_clicked = None
+        else:
+            print("[CLICK SIMPLE] Guardando este clic como referencia.")
+            self._last_msg_clicked = msg
+            self._last_time_pressed_msg = now
+
     def _add_msg(self, msg: str, sent=None) -> None:
         if babase.app.config['Colorful Chat']:
             sender = msg.split(': ')[0]
@@ -1287,29 +1320,74 @@ class PartyWindow(bui.Window):
             color = (1, 1, 1)
         maxwidth = self._scroll_width * 0.94
         
+        #txt = bui.textwidget(
+        #    parent=self._columnwidget,
+        #    text="xd" + msg,
+        #    h_align='left',
+        #    v_align='center',
+        #    size=(0, 13),
+        #    scale=0.55,
+        #    color=color,
+        #    maxwidth=maxwidth,
+        #    shadow=0.3,
+        #    flatness=1.0,
+        #    autoselect=True,          # ← necesario para clic
+        #    selectable=True,          # ← necesario para clic,
+        #    on_activate_call=babase.Call(self._on_message_click, msg)
+        #)
+        
         txt = bui.textwidget(
             parent=self._columnwidget,
             text=msg,
             h_align='left',
             v_align='center',
-            size=(0, 13),
+            size=(40, 13),         # ← Caja ocupa todo el ancho del scroll
             scale=0.55,
             color=color,
-            maxwidth=maxwidth,
+            maxwidth=maxwidth,           # ← Máximo ancho = scroll completo
             shadow=0.3,
-            flatness=1.0
+            flatness=1.0,
+            autoselect=True,
+            selectable=True,
+            click_activate=True,
+            on_activate_call=bui.Call(self._on_message_click, msg)
         )
 
-        if sent:
-            bui.textwidget(edit=txt, size=(100,15),
-                selectable=True,
-                click_activate=True,
-                on_activate_call=babase.Call(bui.screenmessage, f'Message sent: {_get_local_time(sent)}'))
+        bui.textwidget(
+            edit=txt,
+            selectable=True,
+            click_activate=True,
+            on_activate_call=babase.Call(self._on_message_click, msg)
+        )
+
         self._chat_texts.append(txt)
         if len(self._chat_texts) > 40:
             first = self._chat_texts.pop(0)
             first.delete()
         bui.containerwidget(edit=self._columnwidget, visible_child=txt)
+
+    def _show_love_window(self) -> None:
+        if not os.path.exists(love_file) or os.path.getsize(love_file) == 0:
+            with open(love_file, 'w') as f:
+                f.write('show_love_message: True')
+        # Read the contents of the file
+        with open(love_file, 'r') as f:
+            content = f.read().strip()
+        # Check and act on the status
+        if content == 'show_love_message: True':
+            try:
+                # Open the server information window
+                ServerInfoWindow(origin_widget=self.get_root_widget())
+            except Exception as e:
+                logging.exception("Error displaying information:")
+                bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
+                bui.getsound('error').play()
+
+            # Update the file to mark that it has already been displayed
+            with open(love_file, 'w') as f:
+                f.write('show_love_message: False')
+        else:
+            print("Esta ventana ya se abrió.")
 
     def _show_rcp_activity(self) -> None:
         try:
