@@ -113,6 +113,7 @@ class PrivateChatHandler:
         self.pending_messages = []
         self.friends_status = {}
         self._ping()
+        print("[PrivateChatHanlder]: Entraste al juego")
 
     def _load_ids(self):
         with open(saved_ids_file, 'r') as f:
@@ -637,6 +638,113 @@ class SortBlacklistUsers:
             edit=self._root_widget,
             transition='out_right')
 
+class BlacklistManager:
+    def __init__(self, blacklist_file, bui):
+        self.blacklist_file = blacklist_file
+        self.bui = bui
+
+    def search_blacklist_users(self):
+        try:
+            # Obtener la lista de jugadores conectados desde el roster del host
+            try:
+                self.roster = bs.get_game_roster()
+            except Exception as e:
+                self.roster = []
+                logging.exception("No se pudo obtener el roster de jugadores")
+
+            # Construir la lista de nombres desde el roster
+            users = []
+            for player in self.roster:
+                display_name = player.get('display_string', '')
+                if display_name:
+                    users.append(display_name)
+                for p in player.get('players', []):
+                    name = p.get('name_full')
+                    if name:
+                        users.append(name)
+
+            # Limpiar caracteres raros y duplicados
+            cleaned_namelist = list(set(name.replace('', '').strip() for name in users if name))
+
+            # Leer la blacklist
+            if os.path.exists(self.blacklist_file):
+                with open(self.blacklist_file, 'r') as f:
+                    blacklist = set(line.strip().replace('', '') for line in f if line.strip())
+            else:
+                blacklist = set()
+
+            # Mostrar ambas listas
+            print("\nLista proporcionada:")
+            for name in cleaned_namelist:
+                print(f"- {name}")
+
+            print("\nBlacklist actual:")
+            for name in blacklist:
+                print(f"- {name}")
+
+            # Comparación
+            intersection = set(cleaned_namelist) & blacklist
+            if intersection:
+                print("\nUsuarios en ambas listas:")
+                for user in intersection:
+                    print(f"✅ {user}")
+            else:
+                print("\n❌ No hay usuarios en ambas listas")
+
+        except Exception:
+            logging.exception("Error comparando listas con la blacklist")
+            self.bui.screenmessage('Error comparando listas con la blacklist!', (1, 0, 0))
+
+    def send_user_to_black_list(self, namelist):
+        try:
+            accountv2name = namelist[0]
+
+            if os.path.exists(self.blacklist_file):
+                with open(self.blacklist_file, 'r') as f:
+                    blacklist = set(line.strip() for line in f if line.strip())
+            else:
+                blacklist = set()
+
+            if accountv2name not in blacklist:
+                blacklist.add(accountv2name)
+                with open(self.blacklist_file, 'w') as f:
+                    f.write('\n'.join(sorted(blacklist)))
+
+                self.bui.screenmessage(f'Usuario {accountv2name} guardado en la blackList', (0, 1, 0))
+                self.bui.getsound('dingSmallHigh').play()
+            else:
+                self.bui.screenmessage(f'El usuario {accountv2name} ya está en la blackList', (1, 1, 0))
+        except Exception:
+            logging.exception("Error guardando usuario en la blacklist")
+            self.bui.screenmessage('Error guardando este usuario en la blacklist!', (1, 0, 0))
+            self.bui.getsound('error').play()
+        finally:
+            self._end_game()
+
+    def _end_game(self) -> None:
+        assert bui.app.classic is not None
+
+        # no-op if our underlying widget is dead or on its way out.
+        if not self._root_widget or self._root_widget.transitioning_out:
+            return
+
+        bui.containerwidget(edit=self._root_widget, transition='out_left')
+        bui.app.classic.return_to_main_menu_session_gracefully(reset_ui=False)
+
+    def start_blacklist_monitor(self):
+        def monitor():
+            while True:
+                if os.path.exists(self.blacklist_file):
+                    with open(self.blacklist_file, 'r') as f:
+                        users = [line.strip() for line in f if line.strip()]
+                        for user in users:
+                            print(f'[BlackList] Usuario: {user}')
+                            # self.bui.screenmessage(f'[BlackList] Usuario: {user}', (1, 1, 1))
+                time.sleep(2)
+
+        t = Thread(target=monitor, daemon=True)
+        t.start()
+
 
 class SettingsWindow:
     """Window for answering simple yes/no questions."""
@@ -941,6 +1049,11 @@ class PartyWindow(bui.Window):
             iconscale=1.2)
 
         info = bs.get_connection_to_host_info()
+        print("[PartyWindow]: Abriste el chat")
+
+        blacklist_manager = BlacklistManager(blacklist_file, bui)
+        blacklist_manager.search_blacklist_users()
+
         if info.get('name', '') != '':
             self.title = babase.Lstr(value=info['name'])
         else:
@@ -1101,7 +1214,7 @@ class PartyWindow(bui.Window):
                 self._ping_button = bui.buttonwidget(
                     parent=self._root_widget,
                     scale=0.7,
-                    position=(self._width - 538, self._height - 57),
+                    position=(self._width - 542, self._height - 57),
                     size=(75, 75),
                     autoselect=True,
                     button_type='square',
@@ -1115,12 +1228,12 @@ class PartyWindow(bui.Window):
             if babase.app.config['IP button']:
                 self._ip_port_button = bui.buttonwidget(
                     parent=self._root_widget,
-                    size=(30, 30),
-                    label='IP',
+                    size=(70, 40),
+                    label='Mostrar\nIP',
                     button_type='square',
                     autoselect=True,
                     color=self.bg_color,
-                    position=(self._width - 530, self._height - 100),
+                    position=(self._width - 550, self._height - 105),
                     on_activate_call=self._ip_port_msg
                 )
 
@@ -1204,6 +1317,17 @@ class PartyWindow(bui.Window):
             ServerInfoWindow(origin_widget=self.get_root_widget())
         except Exception as e:
             logging.exception("Error displaying information:")
+            bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
+            bui.getsound('error').play()
+
+    def _show_love_message(self) -> None:
+        try:
+            # Open the server information window
+            LoveWindow(origin_widget=self.get_root_widget())
+            bui.getsound('aww').play()
+
+        except Exception as e:
+            logging.exception("Error displaying window:")
             bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
             bui.getsound('error').play()
 
@@ -1684,19 +1808,14 @@ class PartyWindow(bui.Window):
                 )
 
             elif choice == 'discordrpc':
-                total_players = 2
-
-                # Get maximum players (default 8 if not available)
-                max_players = 8
-
                 try:
                     ConfirmWindow(text=
                         u'Mostrar Actividad de juego en Discord\n\n'
                         'Al confirmar, está dando acceso para que en su Discord aparezca\n'
                         'como actividad datos de el servidor:\n\n'
                         f'{bs.get_connection_to_host_info()["name"]}\n',
-                        #f'- Jugadores activos: ({total_players}/{max_players})',
-                        action = self._show_rcp_activity,
+                        #action = self._show_rcp_activity,
+                        action = self._show_love_message,
                         width=420,
                         height=230,
                         color=(255, 255, 255),
@@ -1759,41 +1878,31 @@ class PartyWindow(bui.Window):
     def _send_admin_kick_command(self):
         bs.chatmessage('/kick ' + str(self._popup_party_member_client_id))
 
+    def _end_game(self) -> None:
+        assert bui.app.classic is not None
+
+        # no-op if our underlying widget is dead or on its way out.
+        if not self._root_widget or self._root_widget.transitioning_out:
+            return
+
+        bui.containerwidget(edit=self._root_widget, transition='out_left')
+        bui.app.classic.return_to_main_menu_session_gracefully(reset_ui=False)
+
     def _send_user_to_black_list(self):
+        # 1. Obtener el namelist usando lógica existente
         playerinfo = self._get_player_info(self._popup_party_member_client_id)
         players = playerinfo['players']
         namelist = [playerinfo['ds']]
-        
+
         for player in players:
             name = player['name_full']
             if name not in namelist:
                 namelist.append(name)
 
-        try:
-            accountv2name = namelist[0]
-
-            # Read current blacklist content
-            if os.path.exists(blacklist_file):
-                with open(blacklist_file, 'r') as f:
-                    blacklist = set(line.strip() for line in f if line.strip())
-            else:
-                blacklist = set()
-
-            # Check if the name is already in the list
-            if accountv2name not in blacklist:
-                blacklist.add(accountv2name)
-                with open(blacklist_file, 'w') as f:
-                    f.write('\n'.join(sorted(blacklist)))
-
-                bui.screenmessage(f'Usuario {accountv2name} guardado en la blackList', (0, 1, 0))
-                bui.getsound('dingSmallHigh').play()
-            else:
-                bui.screenmessage(f'El usuario {accountv2name} ya está en la blackList', (1, 1, 0))
-
-        except Exception:
-            logging.exception("Error guardando usuario en la blacklist")
-            bui.screenmessage('Error guardando este usuario en la blacklist!', (1, 0, 0))
-            bui.getsound('error').play()
+        # 2. Instanciar y usar BlacklistManager
+        blacklist_manager = BlacklistManager(blacklist_file, bui)
+        blacklist_manager._root_widget = self._root_widget  # necesario para _end_game
+        blacklist_manager.send_user_to_black_list(namelist)
 
 
     def _copy_to_clipboard(self):
@@ -2903,6 +3012,177 @@ class ServerInfoWindow(bui.Window):
 
     def close(self):
         bui.containerwidget(edit=self._root_widget, transition='out_scale')
+
+
+class LoveWindow(bui.Window):
+    def __init__(self, origin_widget=None):
+        # Basic window configuration
+        self._width = 600
+        self._height = 500
+        uiscale = bui.app.ui_v1.uiscale
+        super().__init__(
+            root_widget=bui.containerwidget(
+                size=(self._width, self._height),
+                transition='in_scale',
+                scale=(1.3 if uiscale is babase.UIScale.SMALL else
+                       1.1 if uiscale is babase.UIScale.MEDIUM else 0.9),
+                stack_offset=(0, -25) if uiscale is babase.UIScale.SMALL else (0, 0)
+            )
+        )
+
+        # Get data from the server
+        try:
+            server_info = bs.get_connection_to_host_info()
+            self.server_name = server_info.get('name', 'Nombre desconocido')
+            self.roster = bs.get_game_roster()
+        except Exception as e:
+            self.server_name = "Error obteniendo datos"
+            self.roster = []
+            logging.exception("Error al obtener información del servidor:")
+
+        # Configure UI elements
+        self._setup_ui()
+
+    def _setup_ui(self):
+        # Window title
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height - 40),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text="Recordatorio Importante",
+            scale=1.2,
+            color=bui.app.ui_v1.title_color
+        )
+
+        # Close button
+        self._close_button = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(30, self._height - 60),
+            size=(50, 50),
+            label='',
+            on_activate_call=self.close,
+            autoselect=True,
+            color=(0.45, 0.63, 0.15),
+            icon=bui.gettexture('crossOut'),
+            iconscale=1.2
+        )
+
+        # Scroll area for content
+        self._scrollwidget = bui.scrollwidget(
+            parent=self._root_widget,
+            size=(self._width - 60, self._height - 120),
+            position=(30, 50),
+            highlight=False
+        )
+
+        self._subcontainer = bui.containerwidget(
+            parent=self._scrollwidget,
+            size=(self._width - 60, self._height * 2),
+            background=False
+        )
+
+        # Show information
+        self._populate_content()
+
+    def _populate_content(self):
+        v = self._height * 2 - 80  # Initial vertical position
+        spacing = 30
+
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(20, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.8, 0.8, 0.8),
+            text=f"Perdón si interrumpí tu partida, este es un",
+            maxwidth=self._width - 100
+        )
+
+        v -= spacing * 1.2
+
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(20, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.8, 0.8, 0.8),
+            text=f"recordatorio de que Less te quiere mucho, este",
+            maxwidth=self._width - 100
+        )
+
+        v -= spacing * 1.2
+
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(20, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.8, 0.8, 0.8),
+            text=f"no es un mensaje que reciba cualquier persona, eso",
+            maxwidth=self._width - 100
+        )
+
+        v -= spacing * 1.2
+
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(20, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.8, 0.8, 0.8),
+            text=f"quiere decir que eres muy importante para él.",
+            maxwidth=self._width - 100
+        )
+
+        v -= spacing * 1.2
+
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(20, v),
+            size=(0, 0),
+            h_align='left',
+            v_align='center',
+            scale=0.9,
+            color=(0.8, 0.8, 0.8),
+            text=f"Cuídate mucho y toma agua.",
+            maxwidth=self._width - 100
+        )
+        
+        v -= spacing * 2.3
+
+        bui.buttonwidget(
+            parent=self._subcontainer,
+            position=(20, v),
+            size=(50, 50),
+            label='',
+            on_activate_call=self.soundHeart,
+            autoselect=False,
+            color=(0.45, 0.63, 0.15),
+            icon=bui.gettexture('heart'),
+            iconscale=1.2
+        )
+    
+        # Adjust container height
+        bui.containerwidget(
+            edit=self._subcontainer,
+            # height=max(self._height * 2, abs(v) + 350)
+        )
+
+    def close(self):
+        bui.containerwidget(edit=self._root_widget, transition='out_scale')
+    
+    def soundHeart(seld):
+        bui.getsound('spazOw').play()
 
 
 def __popup_menu_window_init__(
