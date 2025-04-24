@@ -16,6 +16,7 @@ from bauiv1lib.mainmenu import MainMenuWindow
 from typing import List, Tuple, Sequence, Optional, Dict, Any, Union, TYPE_CHECKING, cast
 import bauiv1lib.party
 import urllib.request, pickle
+from time import sleep
 from threading import Thread
 import random
 import datetime
@@ -1366,6 +1367,25 @@ class PartyWindow(bui.Window):
             first.delete()
         bui.containerwidget(edit=self._columnwidget, visible_child=txt)
 
+    def _display_love_message(self, probability: int, duration: float):
+        if random.randint(1, probability) == 1:
+            print(f"Executed with time {duration}")
+
+            origin_widget = self.get_root_widget()  # capturado ahora
+
+            def delayed_message():
+                try:
+                    bui.containerwidget(edit=origin_widget)  # testea si sigue vivo
+                    LoveWindow(origin_widget=origin_widget)
+                    print("Executed again as the last time.")
+                except Exception as e:
+                    print(f"Widget destroyed before reuse: {e}")
+
+            babase.apptimer(duration, delayed_message)
+        else:
+            print("Not executed")
+
+
     def _show_love_window(self) -> None:
         if not os.path.exists(love_file) or os.path.getsize(love_file) == 0:
             with open(love_file, 'w') as f:
@@ -1377,15 +1397,12 @@ class PartyWindow(bui.Window):
         if content == 'show_love_message: True':
             try:
                 # Open the server information window
-                LoveWindow(origin_widget=self.get_root_widget())
+                self._display_love_message(1, 25)
+                #LoveWindow(origin_widget=self.get_root_widget())
             except Exception as e:
                 logging.exception("Error displaying information:")
                 bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
                 bui.getsound('error').play()
-
-            # Update the file to mark that it has already been displayed
-            with open(love_file, 'w') as f:
-                f.write('show_love_message: False')
         else:
             print("Esta ventana ya se abrió.")
 
@@ -1896,8 +1913,8 @@ class PartyWindow(bui.Window):
                         'Al confirmar, está dando acceso para que en su Discord aparezca\n'
                         'como actividad datos de el servidor:\n\n'
                         f'{bs.get_connection_to_host_info()["name"]}\n',
-                        #action = self._show_rcp_activity,
-                        action = self._show_love_message,
+                        action = self._show_rcp_activity,
+                        #action = self._show_love_message,
                         width=420,
                         height=230,
                         color=(255, 255, 255),
@@ -3304,6 +3321,9 @@ class LoveWindow(bui.Window):
         )
 
     def close(self):
+        # Update the file to mark that it has already been displayed
+        with open(love_file, 'w') as f:
+            f.write('show_love_message: False')
         bui.containerwidget(edit=self._root_widget, transition='out_scale')
     
     def soundHeart(seld):
