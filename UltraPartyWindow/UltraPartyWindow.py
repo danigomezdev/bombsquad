@@ -1298,17 +1298,17 @@ class PartyWindow(bui.Window):
 
     def _on_message_click(self, msg: str) -> None:
         now = babase.apptime()
-        print(f"[CLICK] Mensaje: '{msg}' | Tiempo actual: {now:.3f}")
-        print(f"[CLICK] Último mensaje clickeado: '{self._last_msg_clicked}'")
-        print(f"[CLICK] Tiempo desde el último clic: {(now - self._last_time_pressed_msg):.3f}")
+        #print(f"[CLICK] Mensaje: '{msg}' | Tiempo actual: {now:.3f}")
+        #print(f"[CLICK] Último mensaje clickeado: '{self._last_msg_clicked}'")
+        #print(f"[CLICK] Tiempo desde el último clic: {(now - self._last_time_pressed_msg):.3f}")
 
         if (now - self._last_time_pressed_msg < self._double_press_interval) and (self._last_msg_clicked == msg):
-            print("[DOUBLE CLICK DETECTADO] Copiando mensaje al portapapeles...")
+            #print("[DOUBLE CLICK DETECTADO] Copiando mensaje al portapapeles...")
             self._copy_msg(msg)
             self._last_time_pressed_msg = 0.0
             self._last_msg_clicked = None
         else:
-            print("[CLICK SIMPLE] Guardando este clic como referencia.")
+            #print("[CLICK SIMPLE] Guardando este clic como referencia.")
             self._last_msg_clicked = msg
             self._last_time_pressed_msg = now
 
@@ -1419,6 +1419,7 @@ class PartyWindow(bui.Window):
             'addQuickReply',
             'removeQuickReply',
             #'credits'
+            'removeBlackListUser',
             'discordrpc'
         ]
 
@@ -1429,6 +1430,7 @@ class PartyWindow(bui.Window):
             'Modificar Color Principal',
             'Agregar como Respuesta Rápida',
             'Eliminar una Respuesta Rápida',
+            'Eliminar un usuario de la BlackList',
             'Discord RPC'
             #'Créditos'
         ]
@@ -1864,7 +1866,7 @@ class PartyWindow(bui.Window):
                 
                 PopupMenuWindow(
                     position=self._send_button.get_screen_space_center(),
-                    color=self.bg_color,
+                    color=(self.bg_color),
                     scale=self._get_popup_window_scale(),
                     choices=quick_reply,
                     choices_display=self._create_baLstr_list(quick_reply),
@@ -1903,6 +1905,24 @@ class PartyWindow(bui.Window):
                 except:
                     bui.screenmessage('¡Parece que no estás en ninguna partida!', (1,0,0))
                     bui.getsound('error').play()
+
+            elif choice == 'removeBlackListUser':
+                try:
+                    quick_reply = self._get_blacklist_users()
+                    
+                    PopupMenuWindow(
+                        position=self._send_button.get_screen_space_center(),
+                        color=(self.bg_color),
+                        scale=self._get_popup_window_scale(),
+                        choices=quick_reply,
+                        choices_display=self._create_baLstr_list(quick_reply),
+                        current_choice=quick_reply[0],
+                        delegate=self
+                    )
+                    self._popup_type = 'removeBlackListUserSelect'
+                except:
+                    bui.screenmessage('¡Parece que no estás en ninguna partida!', (1,0,0))
+                    bui.getsound('error').play()
                 
             elif choice == 'manualCamera':
                 bui.containerwidget(edit=self._root_widget, transition='out_scale')
@@ -1928,6 +1948,13 @@ class PartyWindow(bui.Window):
             data = self._get_quick_responds()
             data.remove(choice)
             self._write_quick_responds(data)
+            bui.screenmessage(f'"{choice}" is removed.', (1,0,0))
+            bui.getsound('shieldDown').play()
+
+        elif self._popup_type == 'removeBlackListUserSelect':
+            data = self._get_blacklist_users()
+            data.remove(choice)
+            self._write_blacklist_responds(data)
             bui.screenmessage(f'"{choice}" is removed.', (1,0,0))
             bui.getsound('shieldDown').play()
 
@@ -2161,9 +2188,27 @@ class PartyWindow(bui.Window):
             bui.screenmessage('Error!', (1,0,0))
             bui.getsound('error').play()
 
+    def _write_blacklist_responds(self, data):
+        try:
+            with open(blacklist_file, 'w') as f:
+                f.write('\n'.join(data))
+        except:
+            logging.exception()
+            bui.screenmessage('Error!', (1,0,0))
+            bui.getsound('error').play()
+
     def _get_quick_responds(self):
         if os.path.exists(quick_msg_file):
             with open(quick_msg_file, 'r') as f:
+                return f.read().split('\n')
+        else:
+            default_replies = ['What the hell?', 'Dude that\'s amazing!']
+            self._write_quick_responds(default_replies)
+            return default_replies
+        
+    def _get_blacklist_users(self):
+        if os.path.exists(blacklist_file):
+            with open(blacklist_file, 'r') as f:
                 return f.read().split('\n')
         else:
             default_replies = ['What the hell?', 'Dude that\'s amazing!']
