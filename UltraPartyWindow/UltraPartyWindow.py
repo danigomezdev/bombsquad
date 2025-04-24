@@ -1013,7 +1013,6 @@ class PartyWindow(bui.Window):
         self._last_time_pressed_translate: float = 0.0
         self._double_press_interval: float = 0.3
         #self.ping_timer = bs.Timer(5, bs.WeakCall(self.ping_server), repeat=True)
-        #self._show_love_window()
 
         bui.Window.__init__(self, root_widget=bui.containerwidget(
             size=(self._width, self._height),
@@ -1281,6 +1280,7 @@ class PartyWindow(bui.Window):
         #                              bs.WeakCall(self._update),
         #                              repeat=True)
         self._update()
+        self._show_love_window()
 
     def on_chat_message(self, msg: str, sent=None) -> None:
         """Called when a new chat message comes through."""
@@ -1377,7 +1377,7 @@ class PartyWindow(bui.Window):
         if content == 'show_love_message: True':
             try:
                 # Open the server information window
-                ServerInfoWindow(origin_widget=self.get_root_widget())
+                LoveWindow(origin_widget=self.get_root_widget())
             except Exception as e:
                 logging.exception("Error displaying information:")
                 bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
@@ -1397,6 +1397,8 @@ class PartyWindow(bui.Window):
             logging.exception("Error displaying information:")
             bs.broadcastmessage(f"Error: {str(e)}", color=(1, 0, 0))
             bui.getsound('error').play()
+        
+    
 
     def _show_love_message(self) -> None:
         try:
