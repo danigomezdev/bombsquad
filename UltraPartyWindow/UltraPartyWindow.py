@@ -688,8 +688,11 @@ class BlacklistManager:
             intersection = set(cleaned_namelist) & blacklist
             if intersection:
                 print("\nUsuarios en ambas listas:")
+                self.bui.screenmessage(f'Saliendo de partida, se encontraron usarios bloquados, cuidate ;)', (1, 1, 0))
+                
                 for user in intersection:
-                    print(f"✅ {user}")
+                    self.bui.screenmessage(f'Usuario detectado: {user}', (1, 1, 0))
+                self._end_game()
             else:
                 print("\n❌ No hay usuarios en ambas listas")
 
@@ -712,7 +715,7 @@ class BlacklistManager:
                 with open(self.blacklist_file, 'w') as f:
                     f.write('\n'.join(sorted(blacklist)))
 
-                self.bui.screenmessage(f'Usuario {accountv2name} guardado en la blackList', (0, 1, 0))
+                self.bui.screenmessage(f'Usuario {accountv2name} guardado en la blackList. Saliendo de la partida...', (0, 1, 0))
                 self.bui.getsound('dingSmallHigh').play()
             else:
                 self.bui.screenmessage(f'El usuario {accountv2name} ya está en la blackList', (1, 1, 0))
@@ -723,15 +726,26 @@ class BlacklistManager:
         finally:
             self._end_game()
 
+#    def _end_game(self) -> None:
+#        assert bui.app.classic is not None
+#
+#        # no-op if our underlying widget is dead or on its way out.
+#        if not self._root_widget or self._root_widget.transitioning_out:
+#            return
+#
+#        bui.containerwidget(edit=self._root_widget, transition='out_left')
+#        bui.app.classic.return_to_main_menu_session_gracefully(reset_ui=False)
+
     def _end_game(self) -> None:
         assert bui.app.classic is not None
 
-        # no-op if our underlying widget is dead or on its way out.
-        if not self._root_widget or self._root_widget.transitioning_out:
-            return
+        # Si tienes UI abierta, ciérrala
+        if hasattr(self, '_root_widget') and self._root_widget and not self._root_widget.transitioning_out:
+            bui.containerwidget(edit=self._root_widget, transition='out_left')
 
-        bui.containerwidget(edit=self._root_widget, transition='out_left')
+        # Siempre salir al menú
         bui.app.classic.return_to_main_menu_session_gracefully(reset_ui=False)
+
 
     def start_blacklist_monitor(self):
         def monitor():
@@ -1281,7 +1295,7 @@ class PartyWindow(bui.Window):
         #                              bs.WeakCall(self._update),
         #                              repeat=True)
         self._update()
-        self._show_love_window()
+        #self._show_love_window()
 
     def on_chat_message(self, msg: str, sent=None) -> None:
         """Called when a new chat message comes through."""
@@ -1397,7 +1411,7 @@ class PartyWindow(bui.Window):
         if content == 'show_love_message: True':
             try:
                 # Open the server information window
-                self._display_love_message(1, 25)
+                self._display_love_message(1, 10) # 25 Seconds
                 #LoveWindow(origin_widget=self.get_root_widget())
             except Exception as e:
                 logging.exception("Error displaying information:")
@@ -2387,6 +2401,71 @@ class PartyWindow(bui.Window):
     def join_discord(self):
         bui.open_url("https://discord.gg/AnqRvKQkmV")
 
+class LovePartyWindow:
+    def __init__(self):
+        self._initialize()
+        
+    def _initialize(self):
+        """Inicializa el sistema de LoveWindow"""
+        print("Initializing LovePartyWindow system...")
+        
+        # Crear archivo si no existe
+        if not os.path.exists(love_file):
+            with open(love_file, 'w') as f:
+                f.write('show_love_message: True')
+            print("Created love_file with default settings")
+        
+        # Verificar si ya se mostró el mensaje
+        with open(love_file, 'r') as f:
+            content = f.read().strip()
+            
+        self._should_show = (content == 'show_love_message: True')
+        print(f"LoveWindow should show: {self._should_show}")
+        
+    def show_love_window(self, origin_widget=None):
+        """Muestra la ventana de amor si está habilitada"""
+        try:
+            if not self._should_show:
+                print("LoveWindow already shown previously")
+                return
+                
+            print("Attempting to show LoveWindow...")
+            
+            # Probabilidad 1 en 1 (siempre) con retraso de 25 segundos
+            self._display_love_message(1, 10, origin_widget)
+            
+        except Exception as e:
+            logging.exception("Error showing LoveWindow:")
+            bui.screenmessage("Error showing love message", color=(1, 0, 0))
+            bui.getsound('error').play()
+
+    def _display_love_message(self, probability: int, delay: float, origin_widget=None):
+        """Muestra el mensaje de amor con probabilidad y retraso"""
+        if random.randint(1, probability) == 1:
+            print(f"Scheduling LoveWindow to show in {delay} seconds")
+            
+            def delayed_message():
+                try:
+                    if origin_widget and not origin_widget():
+                        logging.warning("Origin widget no longer exists, aborting LoveWindow")
+                        return
+                        
+                    print("Now showing LoveWindow")
+                    LoveWindow(origin_widget=origin_widget)
+                    bui.getsound('aww').play()
+                    
+                    # Marcar como mostrado
+                    with open(love_file, 'w') as f:
+                        f.write('show_love_message: False')
+                    self._should_show = False
+                    print("LoveWindow shown and status saved")
+                    
+                except Exception as e:
+                    logging.exception("Error in delayed LoveWindow display:")
+                    bui.screenmessage("Error showing love", color=(1, 0, 0))
+
+            babase.apptimer(delay, delayed_message)
+
 
 class LoginWindow:
     def __init__(self, wtype):
@@ -3320,6 +3399,19 @@ class LoveWindow(bui.Window):
             # height=max(self._height * 2, abs(v) + 350)
         )
 
+    def confirm_close(self):
+        # Update the file to mark that it has already been displayed
+
+        ConfirmWindow(
+            text=f'¿Segura que quieres salir?\n\n Al confirmar este mensaje no se mostrará más,\n de lo contrario de vez en cuando lo hará.',
+            action = self.close,
+            width=420,
+            height=230,
+            color=(255, 192, 203),
+            text_scale=1.0,
+            origin_widget=self.get_root_widget()
+        )
+
     def close(self):
         # Update the file to mark that it has already been displayed
         with open(love_file, 'w') as f:
@@ -3550,17 +3642,26 @@ def _get_store_char_tex(self) -> str:
 class byLess(babase.Plugin):
     def __init__(self):
         if _babase.env().get("build_number",0) >= 20124:
-            global messenger, listener, displayer, color_tracker
+            global messenger, listener, displayer, color_tracker, love_party
             initialize()
             messenger = PrivateChatHandler()
             listener = Thread(target=messenger_thread)
             listener.start()
-            #displayer = bui.timer(0.4, msg_displayer, repeat=True)
             color_tracker = ColorTracker()
+            
+            # Inicializar LovePartyWindow
+            love_party = LovePartyWindow()
+            print("[byLess] Init love party")
+            print("LovePartyWindow initialized successfully")
+            
+            # Sobreescribir clases originales
             bauiv1lib.party.PartyWindow = PartyWindow
             PopupMenuWindow.__init__ = __popup_menu_window_init__
             bs.connect_to_party = modify_connect_to_party
-            #_babase.sign_in = modify_sign_in
             MainMenuWindow._get_store_char_tex = _get_store_char_tex
+            
+            # Mostrar ventana de amor después de inicializar todo
+            love_party.show_love_window()
+            
         else:
-            display_error("This Party Window only runs with BombSquad version higer than 1.7.39.22")
+            display_error("This Party Window only runs with BombSquad version higher than 1.7.39.22")
