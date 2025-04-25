@@ -115,7 +115,6 @@ class PrivateChatHandler:
         self.pending_messages = []
         self.friends_status = {}
         self._ping()
-        print("[PrivateChatHanlder]: Entraste al juego")
 
     def _load_ids(self):
         with open(saved_ids_file, 'r') as f:
@@ -676,25 +675,25 @@ class BlacklistManager:
                 blacklist = set()
 
             # Mostrar ambas listas
-            print("\nLista proporcionada:")
-            for name in cleaned_namelist:
-                print(f"- {name}")
+            #print("\nLista proporcionada:")
+            #for name in cleaned_namelist:
+            #    print(f"- {name}")
 
-            print("\nBlacklist actual:")
-            for name in blacklist:
-                print(f"- {name}")
+            #print("\nBlacklist actual:")
+            #for name in blacklist:
+            #    print(f"- {name}")
 
             # Comparación
             intersection = set(cleaned_namelist) & blacklist
             if intersection:
-                print("\nUsuarios en ambas listas:")
+                #print("\nUsuarios en ambas listas:")
                 self.bui.screenmessage(f'Saliendo de partida, se encontraron usarios bloquados, cuidate ;)', (1, 1, 0))
                 
                 for user in intersection:
                     self.bui.screenmessage(f'Usuario detectado: {user}', (1, 1, 0))
                 self._end_game()
-            else:
-                print("\n❌ No hay usuarios en ambas listas")
+            #else:
+                #print("\n❌ No hay usuarios en ambas listas")
 
         except Exception:
             logging.exception("Error comparando listas con la blacklist")
@@ -1077,8 +1076,8 @@ class PartyWindow(bui.Window):
         blacklist_manager = BlacklistManager(blacklist_file, bui)
         if info.get('name', '') != '':
             blacklist_manager.search_blacklist_users()
-        else:
-            print("No party")
+        #else:
+        #    print("No party")
 
         if info.get('name', '') != '':
             self.title = babase.Lstr(value=info['name'])
@@ -1411,7 +1410,7 @@ class PartyWindow(bui.Window):
         if content == 'show_love_message: True':
             try:
                 # Open the server information window
-                self._display_love_message(1, 10) # 25 Seconds
+                self._display_love_message(15, 5) # 25 Seconds
                 #LoveWindow(origin_widget=self.get_root_widget())
             except Exception as e:
                 logging.exception("Error displaying information:")
@@ -2407,32 +2406,32 @@ class LovePartyWindow:
         
     def _initialize(self):
         """Inicializa el sistema de LoveWindow"""
-        print("Initializing LovePartyWindow system...")
+        #print("Initializing LovePartyWindow system...")
         
         # Crear archivo si no existe
         if not os.path.exists(love_file):
             with open(love_file, 'w') as f:
                 f.write('show_love_message: True')
-            print("Created love_file with default settings")
+            #print("Created love_file with default settings")
         
         # Verificar si ya se mostró el mensaje
         with open(love_file, 'r') as f:
             content = f.read().strip()
             
         self._should_show = (content == 'show_love_message: True')
-        print(f"LoveWindow should show: {self._should_show}")
+        #print(f"LoveWindow should show: {self._should_show}")
         
     def show_love_window(self, origin_widget=None):
         """Muestra la ventana de amor si está habilitada"""
         try:
             if not self._should_show:
-                print("LoveWindow already shown previously")
+                #print("LoveWindow already shown previously")
                 return
                 
-            print("Attempting to show LoveWindow...")
+            #print("Attempting to show LoveWindow...")
             
             # Probabilidad 1 en 1 (siempre) con retraso de 25 segundos
-            self._display_love_message(1, 10, origin_widget)
+            self._display_love_message(15, 5, origin_widget)
             
         except Exception as e:
             logging.exception("Error showing LoveWindow:")
@@ -2440,17 +2439,16 @@ class LovePartyWindow:
             bui.getsound('error').play()
 
     def _display_love_message(self, probability: int, delay: float, origin_widget=None):
-        """Muestra el mensaje de amor con probabilidad y retraso"""
         if random.randint(1, probability) == 1:
-            print(f"Scheduling LoveWindow to show in {delay} seconds")
+            #print(f"Scheduling LoveWindow to show in {delay} seconds")
             
             def delayed_message():
                 try:
                     if origin_widget and not origin_widget():
-                        logging.warning("Origin widget no longer exists, aborting LoveWindow")
+                        #logging.warning("Origin widget no longer exists, aborting LoveWindow")
                         return
                         
-                    print("Now showing LoveWindow")
+                    #print("Now showing LoveWindow")
                     LoveWindow(origin_widget=origin_widget)
                     bui.getsound('aww').play()
                     
@@ -2458,10 +2456,10 @@ class LovePartyWindow:
                     with open(love_file, 'w') as f:
                         f.write('show_love_message: False')
                     self._should_show = False
-                    print("LoveWindow shown and status saved")
+                    #print("LoveWindow shown and status saved")
                     
                 except Exception as e:
-                    logging.exception("Error in delayed LoveWindow display:")
+                    #logging.exception("Error in delayed LoveWindow display:")
                     bui.screenmessage("Error showing love", color=(1, 0, 0))
 
             babase.apptimer(delay, delayed_message)
@@ -3651,8 +3649,8 @@ class byLess(babase.Plugin):
             
             # Inicializar LovePartyWindow
             love_party = LovePartyWindow()
-            print("[byLess] Init love party")
-            print("LovePartyWindow initialized successfully")
+            #print("[byLess] Init love party")
+            #print("LovePartyWindow initialized successfully")
             
             # Sobreescribir clases originales
             bauiv1lib.party.PartyWindow = PartyWindow
