@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 app = _babase.app
             
 MODS_DIR = _babase.env()['python_directory_user'] 
+SAVED_REPLAYS = MODS_DIR + '/REPLAYS/'
 
 #print("antes dir")
 #print(dir(babase.app))
@@ -69,39 +70,25 @@ class UploadConfirmation(ConfirmWindow):
         #from bauiv1lib.url import ShowURLWindow
         #ShowURLWindow(url)
 
-class InputWindow():
-    def __init__(
-        self, modal: bool = True, origin_widget: bui.Widget | None = None, path = None):
-        super().__init__(modal=modal, origin_widget=origin_widget)
-        bui.textwidget(edit=self._text_field, max_chars=300)
+class ImportFilesWindow:
+    def __init__(self, origin_widget: bui.Widget | None = None, path=None):
         self._path = path
-        self.message_widget = bui.textwidget(
-            parent=self._root_widget,
-            text="put only trusted link",
-            position=(170, 230 - 200 -30 ),
-            color=(0.8, 0.8, 0.8, 1.0),
-            size=(90, 30),
-            h_align='center',
-        )
 
-    def _do_enter(self):
-        url = bui.textwidget(query=self._text_field)
-        if self._path and self._path != "/bombsquad":
-            bui.textwidget(edit=self.message_widget, text="downloading.... wait...")
-            bui.screenmessage("Downloading started")
-            thread = Thread(target = handle_download, args = (url, self._path, self.on_download,))
-            thread.start()
-        else:
-            bui.textwidget(edit=self.message_widget, text="First select folder were to save file.")
-        self.close()
-    def on_download(self, output_path):
-        bui.screenmessage("File Downloaded to path")
-        bui.screenmessage(output_path)
-        bui.screenmessage("GO back and reopen to refresh")
-    def close(self):
-        bui.containerwidget(
-            edit=self._root_widget, transition=self._transition_out
-        )
+        # Create and display file chooser pointing to SAVED_REPLAYS
+        FileSelectorWindow(
+            path=SAVED_REPLAYS,
+            callback=self._file_chosen,
+            show_base_path=False,
+            valid_file_extensions=["brp",
+                                    #"py", "txt", "json"
+                                    ],
+            allow_folders=False,
+        ).get_root_widget()
+
+    def _file_chosen(self, path: str | None):
+        if path is not None:
+            bui.screenmessage(f"Archivo seleccionado: {os.path.basename(path)}")
+            print(f"[INFO] Archivo seleccionado: {path}")
 
 class FileSelectorExtended(FileSelectorWindow):
         
@@ -114,19 +101,19 @@ class FileSelectorExtended(FileSelectorWindow):
         allow_folders: bool = False,
     ):
         super().__init__(path, callback = callback, show_base_path = show_base_path, valid_file_extensions = valid_file_extensions, allow_folders = allow_folders)
-        #self._import_button = bui.buttonwidget(
-        #    parent=self._root_widget,
-        #    button_type='square',
-        #    position=(self._folder_center + 200, self._height - 113),
-        #    color=(0.6, 0.53, 0.63),
-        #    textcolor=(0.75, 0.7, 0.8),
-        #    enable_sound=False,
-        #    size=(55, 35),
-        #    label="Import",
-        #    on_activate_call=self._open_import_menu,
-        #)
+        self._import_button = bui.buttonwidget(
+            parent=self._root_widget,
+            button_type='square',
+            position=(self._folder_center + 200, self._height - 113),
+            color=(0.6, 0.53, 0.63),
+            textcolor=(0.75, 0.7, 0.8),
+            enable_sound=False,
+            size=(55, 35),
+            label="Importar",
+            on_activate_call=self._open_import_menu,
+        )
     def _open_import_menu(self):
-        InputWindow(origin_widget=self._import_button, path = self._path)
+        ImportFilesWindow(origin_widget=self._import_button, path = self._path)
 
     def _on_entry_activated(self, entry: str) -> None:
         # pylint: disable=too-many-branches
@@ -146,8 +133,8 @@ class FileSelectorExtended(FileSelectorWindow):
                     test_path = self._path + entry
                 else:
                     test_path = self._path + '/' + entry
-                if test_path == "/bombsquad/mods":
-                    test_path = MODS_DIR
+                #if test_path == "/bombsquad/mods":
+                #    test_path = MODS_DIR
                 if test_path == "/bombsquad/replays":
                     test_path = REPLAYS_DIR
                 if os.path.isdir(test_path):
@@ -178,10 +165,10 @@ class FileSelectorExtended(FileSelectorWindow):
 org_listdir = os.listdir     
 def custom_listdir(path):
     if path == "/bombsquad":
-        return ["mods","replays"]
+        return [#"mods",
+                "replays"]
     return org_listdir(path)
 os.listdir = custom_listdir
-
 
 import uuid
 import io
@@ -267,13 +254,12 @@ def handle_upload(file, callback, root_widget):
 
     try:
         file_name = os.path.basename(file)
-        my_directory = _babase.env()['python_directory_user'] + '/REPLAYS/'
 
         # Make sure the folder exists
-        if not os.path.exists(my_directory):
-            os.makedirs(my_directory)
+        if not os.path.exists(SAVED_REPLAYS):
+            os.makedirs(SAVED_REPLAYS)
 
-        target_path = os.path.join(my_directory, file_name)
+        target_path = os.path.join(SAVED_REPLAYS, file_name)
         shutil.copy(file, target_path)
 
         bui.screenmessage(f"Archivo exportado con éxico en {target_path}")
