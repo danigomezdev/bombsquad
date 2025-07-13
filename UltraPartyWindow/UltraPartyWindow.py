@@ -638,6 +638,7 @@ class SortBlacklistUsers:
         bui.containerwidget(
             edit=self._root_widget,
             transition='out_right')
+        
 
 class BlacklistManager:
     def __init__(self, blacklist_file, bui):
@@ -646,14 +647,14 @@ class BlacklistManager:
 
     def search_blacklist_users(self):
         try:
-            # Obtener la lista de jugadores conectados desde el roster del host
+            # Get the list of connected players from the host's roster
             try:
                 self.roster = bs.get_game_roster()
             except Exception as e:
                 self.roster = []
                 logging.exception("No se pudo obtener el roster de jugadores")
 
-            # Construir la lista de nombres desde el roster
+            # Build the list of names from the roster
             users = []
             for player in self.roster:
                 display_name = player.get('display_string', '')
@@ -664,17 +665,17 @@ class BlacklistManager:
                     if name:
                         users.append(name)
 
-            # Limpiar caracteres raros y duplicados
+            # Clean up rare and duplicate characters
             cleaned_namelist = list(set(name.replace('', '').strip() for name in users if name))
 
-            # Leer la blacklist
+            # Read the blacklist
             if os.path.exists(self.blacklist_file):
                 with open(self.blacklist_file, 'r') as f:
                     blacklist = set(line.strip().replace('', '') for line in f if line.strip())
             else:
                 blacklist = set()
 
-            # Mostrar ambas listas
+            # Show both lists
             #print("\nLista proporcionada:")
             #for name in cleaned_namelist:
             #    print(f"- {name}")
@@ -683,7 +684,7 @@ class BlacklistManager:
             #for name in blacklist:
             #    print(f"- {name}")
 
-            # Comparación
+            # Comparation
             intersection = set(cleaned_namelist) & blacklist
             if intersection:
                 #print("\nUsuarios en ambas listas:")
@@ -738,27 +739,26 @@ class BlacklistManager:
     def _end_game(self) -> None:
         assert bui.app.classic is not None
 
-        # Si tienes UI abierta, ciérrala
+        # If you have UI open, close it
         if hasattr(self, '_root_widget') and self._root_widget and not self._root_widget.transitioning_out:
             bui.containerwidget(edit=self._root_widget, transition='out_left')
 
-        # Siempre salir al menú
+        # Always exit to menu
         bui.app.classic.return_to_main_menu_session_gracefully(reset_ui=False)
 
-
-    def start_blacklist_monitor(self):
-        def monitor():
-            while True:
-                if os.path.exists(self.blacklist_file):
-                    with open(self.blacklist_file, 'r') as f:
-                        users = [line.strip() for line in f if line.strip()]
-                        for user in users:
-                            print(f'[BlackList] Usuario: {user}')
-                            # self.bui.screenmessage(f'[BlackList] Usuario: {user}', (1, 1, 1))
-                time.sleep(2)
-
-        t = Thread(target=monitor, daemon=True)
-        t.start()
+    #def start_blacklist_monitor(self):
+    #    def monitor():
+    #        while True:
+    #            if os.path.exists(self.blacklist_file):
+    #                with open(self.blacklist_file, 'r') as f:
+    #                    users = [line.strip() for line in f if line.strip()]
+    #                    for user in users:
+    #                        print(f'[BlackList] Usuario: {user}')
+    #                        # self.bui.screenmessage(f'[BlackList] Usuario: {user}', (1, 1, 1))
+    #            time.sleep(2)
+    #
+    #    t = Thread(target=monitor, daemon=True)
+    #    t.start()
 
 
 class SettingsWindow:
@@ -1334,31 +1334,15 @@ class PartyWindow(bui.Window):
             color = (1, 1, 1)
         maxwidth = self._scroll_width * 0.94
         
-        #txt = bui.textwidget(
-        #    parent=self._columnwidget,
-        #    text="xd" + msg,
-        #    h_align='left',
-        #    v_align='center',
-        #    size=(0, 13),
-        #    scale=0.55,
-        #    color=color,
-        #    maxwidth=maxwidth,
-        #    shadow=0.3,
-        #    flatness=1.0,
-        #    autoselect=True,          # ← necesario para clic
-        #    selectable=True,          # ← necesario para clic,
-        #    on_activate_call=babase.Call(self._on_message_click, msg)
-        #)
-        
         txt = bui.textwidget(
             parent=self._columnwidget,
             text=msg,
             h_align='left',
             v_align='center',
-            size=(40, 13),         # ← Caja ocupa todo el ancho del scroll
+            size=(40, 13),         
             scale=0.55,
             color=color,
-            maxwidth=maxwidth,           # ← Máximo ancho = scroll completo
+            maxwidth=maxwidth,        
             shadow=0.3,
             flatness=1.0,
             autoselect=True,
@@ -1452,7 +1436,7 @@ class PartyWindow(bui.Window):
             'removeQuickReply',
             #'credits'
             'removeBlackListUser',
-            'discordrpc'
+            #'discordrpc'
         ]
 
         #choices_display = ['Mute Option', 'Modify Main Color', 'Add as Quick Reply', 'Remove a Quick Reply', 'Credits']
@@ -1463,7 +1447,7 @@ class PartyWindow(bui.Window):
             'Agregar como Respuesta Rápida',
             'Eliminar una Respuesta Rápida',
             'Eliminar un usuario de la BlackList',
-            'Discord RPC'
+            #'Discord RPC'
             #'Créditos'
         ]
 
@@ -1980,14 +1964,14 @@ class PartyWindow(bui.Window):
             data = self._get_quick_responds()
             data.remove(choice)
             self._write_quick_responds(data)
-            bui.screenmessage(f'"{choice}" is removed.', (1,0,0))
+            bui.screenmessage(f'"{choice}" se eliminó de las respuestas rápidas.', (1,0,0))
             bui.getsound('shieldDown').play()
 
         elif self._popup_type == 'removeBlackListUserSelect':
             data = self._get_blacklist_users()
             data.remove(choice)
             self._write_blacklist_responds(data)
-            bui.screenmessage(f'"{choice}" is removed.', (1,0,0))
+            bui.screenmessage(f'"{choice}" se eliminó de la blacklist.', (1,0,0))
             bui.getsound('shieldDown').play()
 
         else:
@@ -2408,13 +2392,13 @@ class LovePartyWindow:
         """Inicializa el sistema de LoveWindow"""
         #print("Initializing LovePartyWindow system...")
         
-        # Crear archivo si no existe
+        # Create file if it doesn't exist
         if not os.path.exists(love_file):
             with open(love_file, 'w') as f:
                 f.write('show_love_message: True')
             #print("Created love_file with default settings")
         
-        # Verificar si ya se mostró el mensaje
+        # Check if the message has already been displayed
         with open(love_file, 'r') as f:
             content = f.read().strip()
             
@@ -2430,7 +2414,6 @@ class LovePartyWindow:
                 
             #print("Attempting to show LoveWindow...")
             
-            # Probabilidad 1 en 1 (siempre) con retraso de 25 segundos
             self._display_love_message(15, 5, origin_widget)
             
         except Exception as e:
@@ -2452,9 +2435,9 @@ class LovePartyWindow:
                     LoveWindow(origin_widget=origin_widget)
                     bui.getsound('aww').play()
                     
-                    # Marcar como mostrado
-                    with open(love_file, 'w') as f:
-                        f.write('show_love_message: False')
+                    # Mark as shown
+                    #with open(love_file, 'w') as f:
+                    #    f.write('show_love_message: False')
                     self._should_show = False
                     #print("LoveWindow shown and status saved")
                     
@@ -3647,18 +3630,18 @@ class byLess(babase.Plugin):
             listener.start()
             color_tracker = ColorTracker()
             
-            # Inicializar LovePartyWindow
+            # Initialize LovePartyWindow
             love_party = LovePartyWindow()
             #print("[byLess] Init love party")
             #print("LovePartyWindow initialized successfully")
             
-            # Sobreescribir clases originales
+            # Overriding original classes
             bauiv1lib.party.PartyWindow = PartyWindow
             PopupMenuWindow.__init__ = __popup_menu_window_init__
             bs.connect_to_party = modify_connect_to_party
             MainMenuWindow._get_store_char_tex = _get_store_char_tex
             
-            # Mostrar ventana de amor después de inicializar todo
+            # Show love window after initializing everything
             love_party.show_love_window()
             
         else:
