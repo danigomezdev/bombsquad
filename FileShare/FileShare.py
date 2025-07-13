@@ -33,7 +33,7 @@ HEADERS = {
     'User-Agent': 'BombSquad Client'
 }
 
-class UploadConfirmation(ConfirmWindow):
+class ExportConfirmation(ConfirmWindow):
     def __init__(
         self,
         file_path = "",
@@ -51,7 +51,7 @@ class UploadConfirmation(ConfirmWindow):
     def _ok(self) -> None:
         if self.status == "init":
             self._cancel()
-            #UploadConfirmation("", "uploading", text = "Uploading file wait !", ok_text= "Wait")
+            #ExportConfirmation("", "uploading", text = "Uploading file wait !", ok_text= "Wait")
             self._upload_file()
             
         elif self.status == "uploading":
@@ -62,7 +62,44 @@ class UploadConfirmation(ConfirmWindow):
     def _upload_file(self):
         self.status = "uploading"
         print(self.root_widget)
-        thread = Thread(target = handle_upload, args = (self.file_path, self.uploaded, self.root_widget,))
+        thread = Thread(target = handle_export, args = (self.file_path, self.uploaded, self.root_widget,))
+        thread.start()
+
+    def uploaded(self, url, root_widget):
+        self.status = "uploaded"
+        #from bauiv1lib.url import ShowURLWindow
+        #ShowURLWindow(url)
+
+class ImportConfirmation(ConfirmWindow):
+    def __init__(
+        self,
+        file_path = "",
+        status = "init",
+        text: str | bui.Lstr = 'Are you sure?',
+        ok_text = "",
+        action: Callable[[], Any] | None = None,
+        origin_widget: bui.Widget | None = None,
+        
+    ):
+        super().__init__(text=text, action=action, origin_widget=origin_widget, ok_text=ok_text)
+        self.status = status
+        self.file_path = file_path
+
+    def _ok(self) -> None:
+        if self.status == "init":
+            self._cancel()
+            #ExportConfirmation("", "uploading", text = "Uploading file wait !", ok_text= "Wait")
+            self._upload_file()
+            
+        elif self.status == "uploading":
+             bui.screenmessage("uploading in progress")
+        elif self.status == "uploaded":
+            pass
+
+    def _upload_file(self):
+        self.status = "uploading"
+        print(self.root_widget)
+        thread = Thread(target = handle_import, args = (self.file_path, self.uploaded, self.root_widget,))
         thread.start()
 
     def uploaded(self, url, root_widget):
@@ -87,8 +124,16 @@ class ImportFilesWindow:
 
     def _file_chosen(self, path: str | None):
         if path is not None:
-            bui.screenmessage(f"Archivo seleccionado: {os.path.basename(path)}")
-            print(f"[INFO] Archivo seleccionado: {path}")
+            #bui.screenmessage(f"Archivo seleccionado: {os.path.basename(path)}")
+            #print(f"[INFO] Archivo seleccionado: {path}")
+
+            ImportConfirmation(
+                path,
+                "init",
+                text= "Quieres importar el archivo " +
+                path.split("/")[-1],
+                ok_text= "Importar"
+            )
 
 class FileSelectorExtended(FileSelectorWindow):
         
@@ -249,7 +294,7 @@ class MultiPartForm:
         buffer.write(b'--' + self.boundary + b'--\r\n')
         return buffer.getvalue()
 
-def handle_upload(file, callback, root_widget):
+def handle_export(file, callback, root_widget):
     import shutil
 
     try:
@@ -263,13 +308,35 @@ def handle_upload(file, callback, root_widget):
         shutil.copy(file, target_path)
 
         bui.screenmessage(f"Archivo exportado con éxico en {target_path}")
-        print(f"[INFO] File saved to: {target_path}")
+        #print(f"[INFO] File saved to: {target_path}")
 
         _babase.pushcall(Call(callback, target_path, root_widget), from_other_thread=True)
 
     except Exception as e:
         bui.screenmessage("Error exportando archivo.")
         print(f"[ERROR] Failed to copy file: {e}")
+
+def handle_import(file, callback, root_widget):
+    import shutil
+
+    try:
+        file_name = os.path.basename(file)
+
+        # Make sure the destination folder exists
+        if not os.path.exists(REPLAYS_DIR):
+            os.makedirs(REPLAYS_DIR)
+
+        target_path = os.path.join(REPLAYS_DIR, file_name)
+        shutil.copy(file, target_path)
+
+        bui.screenmessage(f"Archivo importado con éxito a {target_path}")
+        #print(f"[INFO] Archivo importado a: {target_path}")
+
+        _babase.pushcall(Call(callback, target_path, root_widget), from_other_thread=True)
+
+    except Exception as e:
+        bui.screenmessage("Error importando archivo.")
+        print(f"[ERROR] Fallo al copiar archivo: {e}")
 
 def handle_download(url, path, callback):
     req = urllib.request.Request(url, headers={'accept': '*/*'}, method='GET')
@@ -321,7 +388,7 @@ class byLess(babase.Plugin):
     
     def fileSelected(self, path):
         if path:
-            UploadConfirmation(
+            ExportConfirmation(
                 path,
                 "init",
                 text= "Quieres exportar el archivo " +
