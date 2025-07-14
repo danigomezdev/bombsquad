@@ -146,6 +146,19 @@ class FileSelectorExtended(FileSelectorWindow):
         allow_folders: bool = False,
     ):
         super().__init__(path, callback = callback, show_base_path = show_base_path, valid_file_extensions = valid_file_extensions, allow_folders = allow_folders)
+        
+        self._create_folder_button = bui.buttonwidget(
+            parent=self._root_widget,
+            button_type='square',
+            position=(self._folder_center + 120, self._height - 113),
+            color=(0.6, 0.53, 0.63),
+            textcolor=(0.75, 0.7, 0.8),
+            enable_sound=False,
+            size=(55, 35),
+            label="Crear \n Carpeta",
+            on_activate_call=self._create_folder_replays_menu,
+        )
+
         self._import_button = bui.buttonwidget(
             parent=self._root_widget,
             button_type='square',
@@ -159,6 +172,20 @@ class FileSelectorExtended(FileSelectorWindow):
         )
     def _open_import_menu(self):
         ImportFilesWindow(origin_widget=self._import_button, path = self._path)
+
+    def _create_folder_replays_menu(self):
+        try:
+            if os.path.exists(SAVED_REPLAYS):
+                bui.screenmessage('La carpeta REPLAYS ya existe.', (1, 1, 0))
+                bui.getsound('error').play()
+            else:
+                os.makedirs(SAVED_REPLAYS)
+                bui.screenmessage('Carpeta REPLAYS creada con éxito.', (0, 1, 0))
+                bui.getsound('dingSmallHigh').play()
+        except Exception as e:
+            bui.screenmessage('Error al crear la carpeta REPLAYS.', (1, 0, 0))
+            bui.getsound('error').play()
+            print(f"[ERROR] No se pudo crear la carpeta REPLAYS: {e}")
 
     def _on_entry_activated(self, entry: str) -> None:
         # pylint: disable=too-many-branches
