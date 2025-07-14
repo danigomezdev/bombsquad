@@ -107,33 +107,46 @@ class ImportConfirmation(ConfirmWindow):
         #from bauiv1lib.url import ShowURLWindow
         #ShowURLWindow(url)
 
-class ImportFilesWindow:
+class ImportFilesWindow(FileSelectorWindow):
+    
+    #FileSelectorWindow(
+    #    path=SAVED_REPLAYS,
+    #    callback=self._file_chosen,
+    #    show_base_path=False,
+    #    valid_file_extensions=["brp",
+    #                            #"py", "txt", "json"
+    #                            ],
+    #    allow_folders=False,
+    #).get_root_widget()
+    
     def __init__(self, origin_widget: bui.Widget | None = None, path=None):
-        self._path = path
-
-        # Create and display file chooser pointing to SAVED_REPLAYS
-        FileSelectorWindow(
+        super().__init__(
             path=SAVED_REPLAYS,
             callback=self._file_chosen,
             show_base_path=False,
-            valid_file_extensions=["brp",
-                                    #"py", "txt", "json"
-                                    ],
+            valid_file_extensions=["brp"],
             allow_folders=False,
-        ).get_root_widget()
+            origin_widget=origin_widget
+        )
 
     def _file_chosen(self, path: str | None):
         if path is not None:
-            #bui.screenmessage(f"Archivo seleccionado: {os.path.basename(path)}")
-            #print(f"[INFO] Archivo seleccionado: {path}")
-
             ImportConfirmation(
                 path,
                 "init",
-                text= "Quieres importar el archivo " +
-                path.split("/")[-1],
-                ok_text= "Importar"
+                text="¿Quieres importar el archivo " + path.split("/")[-1] + "?",
+                ok_text="Importar"
             )
+
+    def _cancel(self) -> None:
+        if self._root_widget:
+            bui.containerwidget(
+                edit=self._root_widget,
+                transition='out_right'
+            )
+        if self._callback is not None:
+            self._callback(None)
+
 
 class FileSelectorExtended(FileSelectorWindow):
         
@@ -233,6 +246,15 @@ class FileSelectorExtended(FileSelectorWindow):
 
         if new_path is not None:
             self._set_path(new_path)
+
+    def _cancel(self) -> None:
+        if self._root_widget:
+            bui.containerwidget(
+                edit=self._root_widget,
+                transition='out_right'
+            )
+        if self._callback is not None:
+            self._callback(None)
 
 org_listdir = os.listdir     
 def custom_listdir(path):
