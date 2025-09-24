@@ -226,7 +226,7 @@ class Finder:
 
         iw(
             parent=s.p,
-            size=(2, 400),   # ancho 1, alto igual al de la ventana
+            size=(2, 400),
             position=(455, 0),
             texture=gt('white'),
             color=s.COL2
@@ -236,19 +236,34 @@ class Finder:
             parent=s.p,
             text='Mejores Amigos',
             color=s.COL4,
-            position=(540, 359)   # ajusta la Y según tu layout
+            position=(540, 359)
         )
 
-        # scroll para amigos
-        AMIGOS = ["Less", "Juan", "Maria"]
-        #friends_list = []  # aquí luego metemos tus amigos encontrados
-        friends_list = ["lessdev","Less", "Juan", "Maria"]
-        sy2 = max(len(friends_list)*30, 140)
+        # separator
+        iw(
+            parent=s.p,
+            size=(315,1),
+            position=(465,225),
+            texture=gt('white'),
+            color=s.COL2
+        )
+        
+        # top
+        tw(
+            parent=s.p,
+            text='Amigos Conectados \ue019',
+            color=s.COL4,
+            position=(465,195)
+        )
+
+        friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
+        #friends_connected_list = []
+        sy2 = max(len(friends_connected_list)*30, 140)
 
         p3 = sw(
             parent=s.p,
-            position=(465, 45),
-            size=(190, 300),
+            position=(465, 17),
+            size=(140, 170),
             border_opacity=0.4
         )
         p4 = ocw(
@@ -257,28 +272,51 @@ class Finder:
             background=False
         )
 
-        # si no hay amigos
-        if not friends_list:
+        # if there are no friends
+        if not friends_connected_list:
             tw(
                 parent=p3,
-                position=(465, 70),
-                text='Sin amigos conectados',
+                position=(42, 70),
+                text='Sin amigos \nconectados',
                 color=s.COL3,
-                maxwidth=150,
-                h_align='center'
-            )
-
-        # poblar la lista con nombres de amigos
-        for i, amigo in enumerate(friends_list):
-            tw(
-                parent=p4,
-                size=(180, 30),
-                color=s.COL3,
-                text=amigo,
-                position=(0, sy2-30-30*i),
-                maxwidth=160,
+                maxwidth=135,
+                h_align='center',
                 v_align='center'
             )
+
+        # Populate the list with friends' names
+        for i, friend in enumerate(friends_connected_list):
+            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
+
+            tw(
+                parent=p4,
+                size=(170, 30),
+                color=s.COL3,
+                text=display_name,
+                position=(0, sy2 - 30 - 30 * i),
+                maxwidth=160,
+                selectable=True,
+                click_activate=True,
+                v_align='center'
+            )
+
+        p5 = sw(
+            parent=s.p,
+            position=(615,17),
+            size=(175,170),
+            border_opacity=0.4
+        )
+
+        tw(
+            parent=p5,
+            size=(150, 155),  
+            position=(0, 0),
+            text='Seleccione un amigo \npara ver la información \ndel servidor',
+            color=s.COL4,
+            maxwidth=150,
+            h_align='center',
+            v_align='center'
+        )
 
     def hl(s,_,p):
         [tw(t,color=s.COL3) for t in s.kids]
@@ -387,7 +425,7 @@ class Finder:
         if s.busy: BTW("Still busy!"); return
         c = s.__class__
         if not c.MEM:
-            BTW('Fetch some servers first!')
+            BTW('Primero, busque algunos servidores!')
             return
         t = tw(query=s.top)
         if not t.isdigit():
