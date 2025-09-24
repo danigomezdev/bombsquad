@@ -236,13 +236,49 @@ class Finder:
             parent=s.p,
             text='Mejores Amigos',
             color=s.COL4,
-            position=(540, 359)
+            position=(540, 372)
+        )
+
+        #bw(
+        #    parent=s.p,
+        #    position=(760,375),
+        #    size=(20,20),
+        #    label='+',
+        #    color=s.COL2,
+        #    textcolor=s.COL4,
+        #    oac=s.add_friend
+        #)
+
+        tw(
+            parent=s.p,
+            position=(695,320),
+            size=(120,50),
+            text="",
+            color=s.COL4,
+            editable=True,
+            h_align='center',
+            v_align='center',
+            corner_scale=0.1,
+            scale=10,
+            allow_clear_button=False,
+            shadow=0,
+            flatness=1,
+        )
+
+        bw(
+            parent=s.p,
+            position=(640,250),
+            size=(120,39),
+            label='Agregar \nManualmente',
+            color=s.COL2,
+            textcolor=s.COL4,
+            oac=s.add_friend
         )
 
         # separator
         iw(
             parent=s.p,
-            size=(315,1),
+            size=(320,1),
             position=(465,225),
             texture=gt('white'),
             color=s.COL2
@@ -262,8 +298,8 @@ class Finder:
 
         p3 = sw(
             parent=s.p,
-            position=(465, 17),
-            size=(140, 170),
+            position=(465, 240),
+            size=(140, 130),
             border_opacity=0.4
         )
         p4 = ocw(
@@ -290,6 +326,50 @@ class Finder:
 
             tw(
                 parent=p4,
+                size=(170, 30),
+                color=s.COL3,
+                text=display_name,
+                position=(0, sy2 - 30 - 30 * i),
+                maxwidth=160,
+                selectable=True,
+                click_activate=True,
+                v_align='center'
+            )
+
+        #friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
+        friends_connected_list = []
+        sy3 = max(len(friends_connected_list)*30, 140)
+
+        p4 = sw(
+            parent=s.p,
+            position=(465, 17),
+            size=(140, 170),
+            border_opacity=0.4
+        )
+        p5 = ocw(
+            parent=p4,
+            size=(190, sy3),
+            background=False
+        )
+
+        # if there are no friends
+        if not friends_connected_list:
+            tw(
+                parent=p4,
+                position=(42, 70),
+                text='Sin amigos \nconectados',
+                color=s.COL3,
+                maxwidth=135,
+                h_align='center',
+                v_align='center'
+            )
+
+        # Populate the list with friends' names
+        for i, friend in enumerate(friends_connected_list):
+            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
+
+            tw(
+                parent=p5,
                 size=(170, 30),
                 color=s.COL3,
                 text=display_name,
@@ -349,12 +429,21 @@ class Finder:
             ))
         s.ikids.append(bw(
             parent=s.p,
-            position=(253,30),
-            size=(166,30),
+            position=(250,30),
+            size=(80,30),
             label='Conectar',
             color=s.COL2,
             textcolor=s.COL4,
             oac=Call(CON,i['a'],i['p'],False)
+        ))
+        s.ikids.append(bw(
+            parent=s.p,
+            position=(340,30),
+            size=(90,30),
+            label='Agregar Amigo',
+            color=s.COL2,
+            textcolor=s.COL4,
+            oac=Call(s.add_friend)
         ))
     def copy(s,t):
         s.ding(1,1)
@@ -402,6 +491,11 @@ class Finder:
             callback=s.kang,
         )
         p.run_v1_account_transactions()
+
+    def add_friend(s):
+        TIP('Agregar amigos')
+    
+
     def kang(s,r):
         c = s.__class__
         c.MEM = r['l']
