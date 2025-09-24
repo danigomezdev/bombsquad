@@ -1,11 +1,5 @@
 # ba_meta require api 9
 
-# Made by Vishal / Vishuuu / Vishal338
-# Made for everyone who uses it.
-# Made with "Love".
-# Let's you have a disco party in your game.
-
-# pylint: disable=all
 from __future__ import annotations
 
 import random
@@ -24,9 +18,9 @@ def disco():
         isinstance(activity, bs.GameActivity) and 
         ba.app.config.get('Disco Settings', {}).get('In-Game', True)):
 
-        R = random.random() + random.randint(0, 1)
-        G = random.random() + random.randint(0, 1)
-        B = random.random() + random.randint(0, 1)
+        R = random.uniform(0.0, 0.5)
+        G = random.uniform(0.0, 0.5)
+        B = random.uniform(0.0, 0.5)
 
         bs.get_foreground_host_activity().globalsnode.tint = (R, G, B)
 
@@ -210,7 +204,7 @@ class DiscoSettingsWindow(PopupWindow):
 abc = ba.AppTimer(ba.app.config.get('Disco Color Time', 1.0), disco, repeat=True)
 
 # ba_meta export plugin
-class byVishuuu(bs.Plugin):
+class byLess(bs.Plugin):
     def on_app_running(self) -> None: pass
 
     def has_settings_ui(self):
