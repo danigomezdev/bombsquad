@@ -21,12 +21,19 @@ from bauiv1 import (
     getmesh as gm,
     Call
 )
+
+import _babase
+import os
+
 from bascenev1 import (
     disconnect_from_host as BYE,
     connect_to_party as CON,
     protocol_version as PT,
     get_game_roster as GGR
 )
+
+my_directory = _babase.env()['python_directory_user'] 
+best_friends_file = os.path.join(my_directory, "BestFriends.txt")
 
 class Finder:
     #COL1 = (0,0.3,0.3)
@@ -249,7 +256,7 @@ class Finder:
         #    oac=s.add_friend
         #)
 
-        tw(
+        s.text_input = tw(
             parent=s.p,
             position=(695,320),
             size=(120,50),
@@ -267,12 +274,17 @@ class Finder:
 
         bw(
             parent=s.p,
-            position=(640,250),
-            size=(120,39),
+            position=(640, 250),
+            size=(120, 39),
             label='Agregar \nManualmente',
             color=s.COL2,
             textcolor=s.COL4,
-            oac=s.add_friend
+             oac=lambda: (
+                (lambda friend: (
+                    s.add_friend(friend),           # add
+                    tw(edit=s.text_input, text="")  # clean text
+                ))(tw(query=s.text_input))
+            )
         )
 
         # separator
@@ -443,7 +455,7 @@ class Finder:
             label='Agregar Amigo',
             color=s.COL2,
             textcolor=s.COL4,
-            oac=Call(s.add_friend)
+            oac=Call(s.add_friend("pedro"))
         ))
     def copy(s,t):
         s.ding(1,1)
@@ -492,9 +504,39 @@ class Finder:
         )
         p.run_v1_account_transactions()
 
-    def add_friend(s):
-        TIP('Agregar amigos')
-    
+    def add_friend(s, friend: str):
+        if s.busy:
+            BTW("Todavía Ocupado!")
+            return
+
+        # Validate that it is not empty
+        if not friend or friend.strip() == "":
+            push('El campo está vacío, no se puede agregar', (1,0,0))
+            gs('error').play()
+            return
+
+        # Ensure the file exists
+        if not os.path.exists(best_friends_file):
+            with open(best_friends_file, "w", encoding="utf-8") as f:
+                f.write("")
+
+        #print(f"[BestFriends] File: {best_friends_file}")
+
+        prefixed_friend = f"{friend.strip()}"
+
+        # Read what already exists
+        with open(best_friends_file, "r", encoding="utf-8") as f:
+            existing = [line.strip() for line in f.readlines()]
+
+        # Check for duplicates
+        if prefixed_friend not in existing:
+            with open(best_friends_file, "a", encoding="utf-8") as f:
+                f.write(prefixed_friend + "\n")
+
+            s.ding(1, 0)
+            TIP(f"{prefixed_friend} agregado con éxito")
+        else:
+            TIP(f"{prefixed_friend} ya está en la lista")
 
     def kang(s,r):
         c = s.__class__
