@@ -1,20 +1,4 @@
-# Copyright 2025 - Solely by BrotherBoard
-# Intended for personal use only
-# Bug? Feedback? Telegram >> GalaxyA14user
-
-"""
-Finder v1.0 - Find anyone
-
-Experimental. Feedback is appreciated.
-Useful if you are looking for someone, or just messing around.
-
-Features:
-- Fetch servers: Pings all servers, then sorts them by lowest
-- Ability to cycle through x servers to collect users
-- Ability to connect to servers by player name there
-
-Combine with Power plugin for better control.
-"""
+# ba_meta require api 9
 
 from socket import socket, SOCK_DGRAM
 from random import uniform as uf
@@ -45,11 +29,18 @@ from bascenev1 import (
 )
 
 class Finder:
-    COL1 = (0,0.3,0.3)
-    COL2 = (0,0.55,0.55)
-    COL3 = (0,0.7,0.7)
-    COL4 = (0,1,1)
-    COL5 = (1,1,0)
+    #COL1 = (0,0.3,0.3)
+    #COL2 = (0,0.55,0.55)
+    #COL3 = (0,0.7,0.7)
+    #COL4 = (0,1,1)
+    #COL5 = (1,1,0)
+    
+    COL1 = (0.1, 0.1, 0.1)      # gris oscuro (fondos)
+    COL2 = (0.2, 0.2, 0.2)      # gris medio (botones)
+    COL3 = (0.6, 0.2, 0.4)      # rosa profundo apagado (textos secundarios)
+    COL4 = (1, 0.08, 0.58)      # deep pink brillante (textos importantes)
+    COL5 = (1, 0.3, 0.6)        # rosa más claro (avisos tipo "BTW")
+
     MAX = 0.3
     TOP = 15
     VER = '1.0'
@@ -78,7 +69,7 @@ class Finder:
         # fetch
         tw(
             parent=s.p,
-            text='Fetch Servers',
+            text='Buscar Servidores',
             color=s.COL4,
             position=(19,359)
         )
@@ -86,14 +77,14 @@ class Finder:
             parent=s.p,
             position=(360,343),
             size=(80,39),
-            label='Fetch',
+            label='Buscar',
             color=s.COL2,
             textcolor=s.COL4,
             oac=s.fresh
         )
         tw(
             parent=s.p,
-            text='Fetches, pings, and sorts public servers.',
+            text='Hace ping y ordena servidores públicos.',
             color=s.COL3,
             scale=0.8,
             position=(15,330),
@@ -110,7 +101,7 @@ class Finder:
         # cycle
         tw(
             parent=s.p,
-            text='Cycle Servers',
+            text='Servidores de Ciclo',
             color=s.COL4,
             position=(19,294)
         )
@@ -118,14 +109,14 @@ class Finder:
             parent=s.p,
             position=(360,278),
             size=(80,39),
-            label='Cycle',
+            label='Ciclar',
             color=s.COL2,
             textcolor=s.COL4,
             oac=s.find
         )
         tw(
             parent=s.p,
-            text='Cycles through best servers and saves their players.',
+            text='Recorre los mejores servidores y guarda a sus jugadores.',
             color=s.COL3,
             scale=0.8,
             position=(15,265),
@@ -143,7 +134,7 @@ class Finder:
         # top
         tw(
             parent=s.p,
-            text='Server Cycle Limit',
+            text='Límite de Servidores',
             color=s.COL4,
             position=(19,230)
         )
@@ -164,7 +155,7 @@ class Finder:
         )
         tw(
             parent=s.p,
-            text='Maximum number of servers to cycle.',
+            text='Número máximo de servidores a ciclar.',
             color=s.COL3,
             scale=0.8,
             position=(15,201),
@@ -195,7 +186,7 @@ class Finder:
         0 if pl else tw(
             parent=s.p,
             position=(90,100),
-            text='Cycle some servers\nto collect players',
+            text='Recorre algunos servidores \npara recolectar jugadores',
             color=s.COL4,
             maxwidth=175,
             h_align='center'
@@ -227,7 +218,7 @@ class Finder:
         s.tip = tw(
             parent=s.p,
             position=(310,98),
-            text='Select something to\nview server info',
+            text='Seleccione algo para \nver la información del \nservidor',
             color=s.COL4,
             maxwidth=170,
             h_align='center'
@@ -265,7 +256,7 @@ class Finder:
             parent=s.p,
             position=(253,30),
             size=(166,30),
-            label='Connect',
+            label='Conectar',
             color=s.COL2,
             textcolor=s.COL4,
             oac=Call(CON,i['a'],i['p'],False)
@@ -303,7 +294,7 @@ class Finder:
         teck(0.1,gs('ding'+y).play)
     def fresh(s):
         if s.busy: BTW("Still busy!"); return
-        TIP('Fetching servers...')
+        TIP('Buscando Servidores...')
         s.ding(1,0)
         s.busy = True
         p = app.plus
@@ -332,7 +323,7 @@ class Finder:
         c.MEM = [_ for _ in c.MEM if _['ping']]
         c.MEM.sort(key=lambda _: _['ping'])
         s.thr.clear()
-        TIP(f'Loaded {len(c.MEM)} servers!')
+        TIP(f'Cargado {len(c.MEM)} servidores!')
         s.ding(0,1)
         s.busy = False
     def find(s):
@@ -351,7 +342,7 @@ class Finder:
             return
         c.TOP = top
         s.ding(1,0)
-        TIP('Starting cycle...')
+        TIP('Empezando Ciclado...')
         s.busy = True
         s.ci = s.lr = 0
         c.BST = c.MEM[:top]
@@ -374,7 +365,7 @@ class Finder:
             return
         s.cycle()
     def yay(s):
-        TIP('Cycle finished!')
+        TIP('Ciclado Terminado!')
         s.ding(0,1)
         s.busy = False
         zw('squad_button').activate()
@@ -435,7 +426,6 @@ cw = lambda *,size=None,oac=None,**k: (p:=ocw(
 BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
 TIP = lambda t: push(t,Finder.COL3)
 
-# ba_meta require api 9
 # ba_meta export babase.Plugin
 class byBordd(Plugin):
     BTN = None
@@ -463,7 +453,7 @@ class byBordd(Plugin):
         s.b = s.__class__.BTN = bw(
             parent=p,
             position=(x,y),
-            label='Finder',
+            label='Buscar',
             color=Finder.COL1,
             textcolor=Finder.COL3,
             size=sz,
