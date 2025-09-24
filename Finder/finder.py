@@ -54,7 +54,7 @@ class Finder:
         s.s1 = s.snd('powerup01')
         c = s.__class__
         # parent
-        z = (460,400)
+        z = (800,400)
         s.p = cw(
             scale_origin_stack_offset=src.get_screen_space_center(),
             size=z,
@@ -223,6 +223,63 @@ class Finder:
             maxwidth=170,
             h_align='center'
         ) if c.SL is None else 0
+
+        iw(
+            parent=s.p,
+            size=(2, 400),   # ancho 1, alto igual al de la ventana
+            position=(455, 0),
+            texture=gt('white'),
+            color=s.COL2
+        )
+
+        tw(
+            parent=s.p,
+            text='Mejores Amigos',
+            color=s.COL4,
+            position=(540, 359)   # ajusta la Y según tu layout
+        )
+
+        # scroll para amigos
+        AMIGOS = ["Less", "Juan", "Maria"]
+        #friends_list = []  # aquí luego metemos tus amigos encontrados
+        friends_list = ["lessdev","Less", "Juan", "Maria"]
+        sy2 = max(len(friends_list)*30, 140)
+
+        p3 = sw(
+            parent=s.p,
+            position=(465, 45),
+            size=(190, 300),
+            border_opacity=0.4
+        )
+        p4 = ocw(
+            parent=p3,
+            size=(190, sy2),
+            background=False
+        )
+
+        # si no hay amigos
+        if not friends_list:
+            tw(
+                parent=p3,
+                position=(465, 70),
+                text='Sin amigos conectados',
+                color=s.COL3,
+                maxwidth=150,
+                h_align='center'
+            )
+
+        # poblar la lista con nombres de amigos
+        for i, amigo in enumerate(friends_list):
+            tw(
+                parent=p4,
+                size=(180, 30),
+                color=s.COL3,
+                text=amigo,
+                position=(0, sy2-30-30*i),
+                maxwidth=160,
+                v_align='center'
+            )
+
     def hl(s,_,p):
         [tw(t,color=s.COL3) for t in s.kids]
         tw(s.kids[_],color=s.COL4)
