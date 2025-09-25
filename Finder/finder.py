@@ -508,26 +508,44 @@ class Finder:
                 click_activate=True,
                 on_activate_call=Call(s.copy,t)
             ))
-    
-        s.ikids.append(bw(
-            parent=s.p,
-            position=(250,30),
-            size=(80,30),
-            label='Conectar',
-            color=s.COL2,
-            textcolor=s.COL4,
-            oac=Call(CON,i['a'],i['p'],False)
-        ))
-    
-        s.ikids.append(bw(
-            parent=s.p,
-            position=(340,30),
-            size=(90,30),
-            label='Agregar Amigo',
-            color=s.COL2,
-            textcolor=s.COL4,
-            oac=Call(s.add_friend("pedro"))
-        ))
+
+        if p.startswith(""):
+            # v2: Show both buttons side by side
+            s.ikids.append(bw(
+                parent=s.p,
+                position=(250, 30),
+                size=(80, 30),
+                label='Conectar',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(CON, i['a'], i['p'], False)
+            ))
+
+            s.ikids.append(bw(
+                parent=s.p,
+                position=(340, 30),
+                size=(90, 30),
+                label='Agregar Amigo',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(lambda: (
+                    s.add_friend(p[1:]),  # remove the "" and add it
+                    s._refresh_friends_ui()
+                ))
+            ))
+
+        else:
+            
+            s.ikids.append(bw(
+                parent=s.p,
+                position=(253, 30),
+                size=(166, 30),
+                label='Conectar',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(CON, i['a'], i['p'], False)
+            ))
+
     
     def copy(s,t):
         s.ding(1,1)
