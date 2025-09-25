@@ -37,17 +37,12 @@ my_directory = _babase.env()['python_directory_user']
 best_friends_file = os.path.join(my_directory, "BestFriends.txt")
 
 class Finder:
-    #COL1 = (0,0.3,0.3)
-    #COL2 = (0,0.55,0.55)
-    #COL3 = (0,0.7,0.7)
-    #COL4 = (0,1,1)
-    #COL5 = (1,1,0)
     
-    COL1 = (0.1, 0.1, 0.1)      # gris oscuro (fondos)
-    COL2 = (0.2, 0.2, 0.2)      # gris medio (botones)
-    COL3 = (0.6, 0.2, 0.4)      # rosa profundo apagado (textos secundarios)
-    COL4 = (1, 0.08, 0.58)      # deep pink brillante (textos importantes)
-    COL5 = (1, 0.3, 0.6)        # rosa más claro (avisos tipo "BTW")
+    COL1 = (0.1, 0.1, 0.1)     
+    COL2 = (0.2, 0.2, 0.2)      
+    COL3 = (0.6, 0.2, 0.4)     
+    COL4 = (1, 0.08, 0.58)      
+    COL5 = (1, 0.3, 0.6)        
 
     MAX = 0.3
     TOP = 15
@@ -289,7 +284,7 @@ class Finder:
                 (lambda friend: (
                     s.add_friend(friend),
                     tw(edit=s.text_input, text=""),
-                    s._refresh_friends_ui()   # <- aquí refresca
+                    s._refresh_friends_ui()
                 ))(tw(query=s.text_input))
             )
         )
@@ -317,7 +312,7 @@ class Finder:
             size=(140, 130),
             border_opacity=0.4
         )
-        s.p4 = None  # inicializar vacío
+        s.p4 = None  # Init empty
         s._refresh_friends_ui()
 
         #friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
@@ -394,7 +389,7 @@ class Finder:
             size=(190, sy2),
             background=False
         )
-             # si no hay amigos
+        # if there are no friends
         if not friends_connected_list:
             tw(
                 parent=s.p3,
@@ -407,7 +402,6 @@ class Finder:
             )
             return
 
-        # dibujar lista
         for i, friend in enumerate(friends_connected_list):
             display_name = friend if len(friend) <= 7 else friend[:7] + "..."
             pos_y = sy2 - 30 - 30 * i
@@ -426,7 +420,7 @@ class Finder:
             )
 
     def _show_friend_popup(s, friend: str, pos: tuple[float, float]):
-        # popup con opción "Eliminar"
+        
         popup = PopupMenuWindow(
             position=pos,
             choices=["Eliminar"],
@@ -443,23 +437,22 @@ class Finder:
             color=s.COL2,
             textcolor=s.COL4,
             oac=lambda: (
-                s.remove_friend(friend),  # eliminas
-                s._refresh_friends_ui()   # refrescas UI
+                s.remove_friend(friend),
+                s._refresh_friends_ui()   
             )
         )
         
 
-        s._popup_target = friend  # guardamos a quién se aplica
+        s._popup_target = friend  
 
     def popup_menu_selected_choice(s, popup_window, choice: str) -> None:
         if choice == "Eliminar":
             push(f"Amigo eliminado: {s._popup_target}", color=(1, 0.2, 0.2))
-            # ejemplo: removerlo de tu lista
+            
             if hasattr(s, "friends_connected_list") and s._popup_target in s.friends_connected_list:
                 s.friends_connected_list.remove(s._popup_target)
             s._popup_target = None
 
-    # 👇 Método requerido por PopupMenuWindow
     def popup_menu_closing(s, popup_window) -> None:
         s._popup_target = None
 
