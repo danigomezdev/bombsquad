@@ -50,6 +50,7 @@ class Finder:
     MEM = []
     BST = []
     SL = None
+
     def __init__(s,src):
         s.thr = []
         s.ikids = []
@@ -65,12 +66,14 @@ class Finder:
         )[0]
 
         s._popup_target = None
+
         # footing
         sw(
             parent=s.p,
             size=z,
             border_opacity=0
         )
+
         # fetch
         tw(
             parent=s.p,
@@ -78,6 +81,7 @@ class Finder:
             color=s.COL4,
             position=(19,359)
         )
+
         bw(
             parent=s.p,
             position=(360,343),
@@ -87,6 +91,7 @@ class Finder:
             textcolor=s.COL4,
             oac=s.fresh
         )
+
         tw(
             parent=s.p,
             text='Hace ping y ordena servidores públicos.',
@@ -95,6 +100,7 @@ class Finder:
             position=(15,330),
             maxwidth=320
         )
+
         # separator
         iw(
             parent=s.p,
@@ -103,6 +109,7 @@ class Finder:
             texture=gt('white'),
             color=s.COL2
         )
+
         # cycle
         tw(
             parent=s.p,
@@ -110,6 +117,7 @@ class Finder:
             color=s.COL4,
             position=(19,294)
         )
+
         bw(
             parent=s.p,
             position=(360,278),
@@ -119,6 +127,7 @@ class Finder:
             textcolor=s.COL4,
             oac=s.find
         )
+
         tw(
             parent=s.p,
             text='Recorre los mejores servidores y guarda a sus jugadores.',
@@ -128,6 +137,7 @@ class Finder:
             maxwidth=320,
             v_align='center'
         )
+
         # separator
         iw(
             parent=s.p,
@@ -136,6 +146,7 @@ class Finder:
             texture=gt('white'),
             color=s.COL2
         )
+
         # top
         tw(
             parent=s.p,
@@ -143,6 +154,7 @@ class Finder:
             color=s.COL4,
             position=(19,230)
         )
+
         s.top = tw(
             parent=s.p,
             position=(398,228),
@@ -158,6 +170,7 @@ class Finder:
             shadow=0,
             flatness=1,
         )
+
         tw(
             parent=s.p,
             text='Número máximo de servidores a ciclar.',
@@ -166,6 +179,7 @@ class Finder:
             position=(15,201),
             maxwidth=320
         )
+
         # separator
         iw(
             parent=s.p,
@@ -174,20 +188,25 @@ class Finder:
             texture=gt('white'),
             color=s.COL2
         )
+
         # players
         pl = s.plys()
+
         sy = max(len(pl)*30,140)
+        
         p1 = sw(
             parent=s.p,
             position=(20,18),
             size=(205,172),
             border_opacity=0.4
         )
+        
         p2 = ocw(
             parent=p1,
             size=(205,sy),
             background=False
         )
+        
         0 if pl else tw(
             parent=s.p,
             position=(90,100),
@@ -196,6 +215,7 @@ class Finder:
             maxwidth=175,
             h_align='center'
         )
+        
         s.kids = []
         for _,g in enumerate(pl):
             p,a = g
@@ -211,6 +231,7 @@ class Finder:
                 on_activate_call=Call(s.hl,_,p),
                 v_align='center'
             ))
+        
         # info
         iw(
             parent=s.p,
@@ -220,6 +241,7 @@ class Finder:
             mesh_transparent=gm('softEdgeOutside'),
             opacity=0.4
         )
+        
         s.tip = tw(
             parent=s.p,
             position=(310,98),
@@ -325,6 +347,7 @@ class Finder:
             size=(140, 170),
             border_opacity=0.4
         )
+        
         p5 = ocw(
             parent=p4,
             size=(190, sy3),
@@ -352,7 +375,7 @@ class Finder:
                 size=(170, 30),
                 color=s.COL3,
                 text=display_name,
-                position=(0, sy2 - 30 - 30 * i),
+                position=(0, sy3 - 30 - 30 * i),
                 maxwidth=160,
                 selectable=True,
                 click_activate=True,
@@ -389,6 +412,7 @@ class Finder:
             size=(190, sy2),
             background=False
         )
+        
         # if there are no friends
         if not friends_connected_list:
             tw(
@@ -441,8 +465,6 @@ class Finder:
                 s._refresh_friends_ui()   
             )
         )
-        
-
         s._popup_target = friend  
 
     def popup_menu_selected_choice(s, popup_window, choice: str) -> None:
@@ -460,6 +482,7 @@ class Finder:
         [tw(t,color=s.COL3) for t in s.kids]
         tw(s.kids[_],color=s.COL4)
         s.info(p)
+    
     def info(s,p):
         [_.delete() for _ in s.ikids]
         s.ikids.clear()
@@ -485,6 +508,7 @@ class Finder:
                 click_activate=True,
                 on_activate_call=Call(s.copy,t)
             ))
+    
         s.ikids.append(bw(
             parent=s.p,
             position=(250,30),
@@ -494,6 +518,7 @@ class Finder:
             textcolor=s.COL4,
             oac=Call(CON,i['a'],i['p'],False)
         ))
+    
         s.ikids.append(bw(
             parent=s.p,
             position=(340,30),
@@ -503,10 +528,12 @@ class Finder:
             textcolor=s.COL4,
             oac=Call(s.add_friend("pedro"))
         ))
+    
     def copy(s,t):
         s.ding(1,1)
         TIP('Copied to clipboard!')
         COPY(t)
+    
     def plys(s):
         z = []
         me = app.plus.get_v1_account_name()
@@ -518,22 +545,26 @@ class Finder:
                     ds = p['display_string']
                     0 if ds in me else z.append((ds,a))
         return sorted(z,key=lambda _: _[0].startswith('\ue030Server'))
+    
     def snd(s,t):
         l = gs(t)
         l.play()
         teck(uf(0.14,0.18),l.stop)
         return l
+    
     def bye(s):
         s.s1.stop()
         ocw(s.p,transition='out_scale')
         l = s.snd('laser')
         f = lambda: teck(0.01,f) if s.p else l.stop()
         f()
+    
     def ding(s,i,j):
         a = ['Small','']
         x,y = a[i],a[j]
         s.snd('ding'+x)
         teck(0.1,gs('ding'+y).play)
+    
     def fresh(s):
         if s.busy: BTW("Still busy!"); return
         TIP('Buscando Servidores...')
@@ -577,7 +608,6 @@ class Finder:
                 f.write("")
 
         #print(f"[BestFriends] File: {best_friends_file}")
-
         prefixed_friend = f"{friend.strip()}"
 
         # Read what already exists
@@ -628,7 +658,6 @@ class Finder:
         else:
             TIP(f"{prefixed_friend} no se encuentra en la lista")
 
-
     def kang(s,r):
         c = s.__class__
         c.MEM = r['l']
@@ -638,6 +667,7 @@ class Finder:
             s.thr.append(t)
             t.start()
         teck(s.MAX*4,s.join)
+    
     def join(s):
         c = s.__class__
         [t.join() for t in s.thr]
@@ -648,6 +678,7 @@ class Finder:
         TIP(f'Cargado {len(c.MEM)} servidores!')
         s.ding(0,1)
         s.busy = False
+    
     def find(s):
         if s.busy: BTW("Still busy!"); return
         c = s.__class__
@@ -669,16 +700,19 @@ class Finder:
         s.ci = s.lr = 0
         c.BST = c.MEM[:top]
         s.cycle()
+
     def cycle(s):
         _ = s.__class__.BST[s.ci]
         s.ca = _['a']
         CON(s.ca,_['p'],False)
         s.wait()
+
     def wait(s,i=5):
         r = GGR()
         if (r != s.lr) and r: s.__class__.BST[s.ci]['roster'] = s.lr = r; return s.next()
         if not i: s.__class__.BST[s.ci]['roster'] = []; return s.next()
         teck(0.1,Call(s.wait,i-1))
+
     def next(s):
         s.ci += 1
         if s.ci >= len(s.__class__.BST):
@@ -686,12 +720,14 @@ class Finder:
             teck(0.5,s.yay)
             return
         s.cycle()
+
     def yay(s):
         TIP('Ciclado Terminado!')
         s.ding(0,1)
         s.busy = False
         zw('squad_button').activate()
-        teck(0.3,byBordd.up)
+        teck(0.3,byLess.up)
+
     def ping(s,_):
         sock = ping = None
         a,p = _['a'],_['p']
@@ -723,6 +759,7 @@ bw = lambda *,oac=None,**k: obw(
     enable_sound=False,
     **k
 )
+
 cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     parent=zw('overlay_stack'),
     background=False,
@@ -749,17 +786,20 @@ BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
 TIP = lambda t: push(t,Finder.COL3)
 
 # ba_meta export babase.Plugin
-class byBordd(Plugin):
+class byLess(Plugin):
+    
     BTN = None
     @classmethod
     def up(c):
         c.BTN.activate() if c.BTN.exists() else None
+    
     def __init__(s):
         from bauiv1lib import party
         p = party.PartyWindow
         a = '__init__'
         o = getattr(p,a)
         setattr(p,a,lambda z,*a,**k:(o(z,*a,**k),s.make(z))[0])
+    
     def make(s,z):
         sz = (80,30)
         p = z._root_widget
