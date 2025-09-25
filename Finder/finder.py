@@ -327,7 +327,7 @@ class Finder:
             color=s.COL4,
             position=(465,195)
         )
-
+        # Lista de amigos normales
         s.p3 = sw(
             parent=s.p,
             position=(465, 240),
@@ -337,60 +337,27 @@ class Finder:
         s.p4 = None  # Init empty
         s._refresh_friends_ui()
 
-        #friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
-        friends_connected_list = []
-        sy3 = max(len(friends_connected_list)*30, 140)
-
-        p4 = sw(
+        # Lista de mejores amigos
+        s.p4 = sw(
             parent=s.p,
             position=(465, 17),
             size=(140, 170),
             border_opacity=0.4
         )
-        
-        p5 = ocw(
-            parent=p4,
-            size=(190, sy3),
-            background=False
-        )
+        s.p5 = None  # Init empty
 
-        # if there are no friends
-        if not friends_connected_list:
-            tw(
-                parent=p4,
-                position=(42, 70),
-                text='Sin amigos \nconectados',
-                color=s.COL3,
-                maxwidth=135,
-                h_align='center',
-                v_align='center'
-            )
+        s._refresh_best_friends_ui([])
 
-        # Populate the list with friends' names
-        for i, friend in enumerate(friends_connected_list):
-            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
-
-            tw(
-                parent=p5,
-                size=(170, 30),
-                color=s.COL3,
-                text=display_name,
-                position=(0, sy3 - 30 - 30 * i),
-                maxwidth=160,
-                selectable=True,
-                click_activate=True,
-                v_align='center'
-            )
-
-        p5 = sw(
+        # Panel de detalle a la derecha
+        s.p6 = sw(
             parent=s.p,
-            position=(615,17),
-            size=(175,170),
+            position=(615, 17),
+            size=(175, 170),
             border_opacity=0.4
         )
 
         tw(
-            parent=p5,
+            parent=s.p6,
             size=(150, 155),  
             position=(0, 0),
             text='Seleccione un amigo \npara ver la información \ndel servidor',
@@ -400,19 +367,20 @@ class Finder:
             v_align='center'
         )
 
+
     def _refresh_friends_ui(s):
-        if s.p4 and s.p4.exists():
-            s.p4.delete()
+        if hasattr(s, "p4_friends") and s.p4_friends and s.p4_friends.exists():
+            s.p4_friends.delete()
 
         friends_connected_list = s.get_all_friends()
         sy2 = max(len(friends_connected_list) * 30, 140)
 
-        s.p4 = ocw(
+        s.p4_friends = ocw(
             parent=s.p3,
             size=(190, sy2),
             background=False
         )
-        
+
         # if there are no friends
         if not friends_connected_list:
             tw(
@@ -431,7 +399,7 @@ class Finder:
             pos_y = sy2 - 30 - 30 * i
 
             tw(
-                parent=s.p4,
+                parent=s.p4_friends,
                 size=(170, 30),
                 color=s.COL3,
                 text=display_name,
@@ -442,6 +410,66 @@ class Finder:
                 v_align='center',
                 on_activate_call=Call(s._show_friend_popup, friend, (200, pos_y))
             )
+
+
+    def _refresh_best_friends_ui(s, p):
+        if hasattr(s, "p4_best") and s.p4_best and s.p4_best.exists():
+            s.p4_best.delete()
+            s.p4_best = None
+            s.p5_best = None
+
+        # obtener lista de mejores amigos conectados
+        best_friends_connected_list = s.get_all_best_friends(p)
+
+        sy3 = max(len(best_friends_connected_list) * 30, 140)
+
+        # contenedor scrollable principal para mejores amigos
+        if not hasattr(s, "p4_best") or not (s.p4_best and s.p4_best.exists()):
+            s.p4_best = sw(
+                parent=s.p,
+                position=(465, 17),
+                size=(140, 170),
+                border_opacity=0.4
+            )
+
+        # nuevo contenedor con lista de mejores amigos
+        s.p5_best = ocw(
+            parent=s.p4_best,
+            size=(190, sy3),
+            background=False
+        )
+
+        # si no hay mejores amigos conectados
+        if not best_friends_connected_list:
+            tw(
+                parent=s.p5_best,
+                position=(42, 70),
+                text='Sin mejores amigos\nconectados',
+                color=s.COL3,
+                maxwidth=135,
+                h_align='center',
+                v_align='center'
+            )
+            return
+
+        # rellenar con nombres
+        for i, friend in enumerate(best_friends_connected_list):
+            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
+            pos_y = sy3 - 30 - 30 * i
+
+            tw(
+                parent=s.p5_best,
+                size=(170, 30),
+                color=s.COL3,
+                text=display_name,
+                position=(0, pos_y),
+                maxwidth=160,
+                selectable=True,
+                click_activate=True,
+                v_align='center',
+                on_activate_call=Call(s._show_friend_popup, friend, (465 + 140, pos_y))
+            )
+
 
     def _show_friend_popup(s, friend: str, pos: tuple[float, float]):
         
@@ -462,7 +490,8 @@ class Finder:
             textcolor=s.COL4,
             oac=lambda: (
                 s.remove_friend(friend),
-                s._refresh_friends_ui()   
+                s._refresh_friends_ui(),
+                s._refresh_best_friends_ui(s.plys())
             )
         )
         s._popup_target = friend  
@@ -530,7 +559,8 @@ class Finder:
                 textcolor=s.COL4,
                 oac=Call(lambda: (
                     s.add_friend(p[1:]),  # remove the "" and add it
-                    s._refresh_friends_ui()
+                    s._refresh_friends_ui(),
+                    s._refresh_best_friends_ui(s.plys())
                 ))
             ))
 
@@ -555,14 +585,21 @@ class Finder:
     def plys(s):
         z = []
         me = app.plus.get_v1_account_name()
-        me = [me,'\ue063'+me]
+        me = [me, '\ue063' + me]
         for _ in s.__class__.BST:
             a = _['a']
-            if (r:=_.get('roster',{})):
+            if (r := _.get('roster', {})):
                 for p in r:
                     ds = p['display_string']
-                    0 if ds in me else z.append((ds,a))
-        return sorted(z,key=lambda _: _[0].startswith('\ue030Server'))
+                    if ds not in me:
+                        z.append((ds, a))
+
+        result = sorted(z, key=lambda _: _[0].startswith('\ue030Server'))
+
+        s._refresh_best_friends_ui(result)
+
+        return result
+
     
     def snd(s,t):
         l = gs(t)
@@ -607,6 +644,20 @@ class Finder:
             friends = [line.strip() for line in f.readlines() if line.strip()]
 
         return friends
+    
+    def get_all_best_friends(s, pl: list[tuple[str, str]] | None = None) -> list[str]:
+        best_friends = s.get_all_friends()
+        connected_best_friends = []
+
+        # Si no pasan pl o está vacío, devuelve lista vacía
+        if not pl:
+            return []
+
+        for p, a in pl:
+            if p in best_friends:
+                connected_best_friends.append(p)
+
+        return connected_best_friends
 
 
     def add_friend(s, friend: str):
