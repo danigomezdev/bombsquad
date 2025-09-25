@@ -21,6 +21,7 @@ from bauiv1 import (
     getmesh as gm,
     Call
 )
+from bauiv1lib.popup import PopupMenuWindow
 
 import _babase
 import os
@@ -67,6 +68,8 @@ class Finder:
             size=z,
             oac=s.bye
         )[0]
+
+        s._popup_target = None
         # footing
         sw(
             parent=s.p,
@@ -246,16 +249,6 @@ class Finder:
             position=(540, 372)
         )
 
-        #bw(
-        #    parent=s.p,
-        #    position=(760,375),
-        #    size=(20,20),
-        #    label='+',
-        #    color=s.COL2,
-        #    textcolor=s.COL4,
-        #    oac=s.add_friend
-        #)
-
         s.text_input = tw(
             parent=s.p,
             position=(695,320),
@@ -304,8 +297,8 @@ class Finder:
             position=(465,195)
         )
 
-        friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
-        #friends_connected_list = []
+        #friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
+        friends_connected_list = s.get_all_friends()
         sy2 = max(len(friends_connected_list)*30, 140)
 
         p3 = sw(
@@ -335,18 +328,22 @@ class Finder:
         # Populate the list with friends' names
         for i, friend in enumerate(friends_connected_list):
             display_name = friend if len(friend) <= 7 else friend[:7] + "..."
-
+        
+            pos_y = sy2 - 30 - 30 * i
+        
             tw(
                 parent=p4,
                 size=(170, 30),
                 color=s.COL3,
                 text=display_name,
-                position=(0, sy2 - 30 - 30 * i),
+                position=(0, pos_y),
                 maxwidth=160,
                 selectable=True,
                 click_activate=True,
-                v_align='center'
+                v_align='center',
+                on_activate_call=Call(s._show_friend_popup, friend, (200, pos_y))
             )
+
 
         #friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
         friends_connected_list = []
@@ -409,6 +406,41 @@ class Finder:
             h_align='center',
             v_align='center'
         )
+
+    def _show_friend_popup(s, friend: str, pos: tuple[float, float]):
+        # popup con opción "Eliminar"
+        popup = PopupMenuWindow(
+            position=pos,
+            choices=["Eliminar"],
+            current_choice="",
+            delegate=s,
+            width=1,
+        )
+
+        bw(
+            parent=popup.root_widget,
+            position=(0, 2),
+            size=(140, 54),
+            label='Eliminar',
+            color=s.COL2,
+            textcolor=s.COL4,
+            oac=lambda: s.remove_friend(friend)
+        )
+        
+
+        s._popup_target = friend  # guardamos a quién se aplica
+
+    def popup_menu_selected_choice(s, popup_window, choice: str) -> None:
+        if choice == "Eliminar":
+            push(f"Amigo eliminado: {s._popup_target}", color=(1, 0.2, 0.2))
+            # ejemplo: removerlo de tu lista
+            if hasattr(s, "friends_connected_list") and s._popup_target in s.friends_connected_list:
+                s.friends_connected_list.remove(s._popup_target)
+            s._popup_target = None
+
+    # 👇 Método requerido por PopupMenuWindow
+    def popup_menu_closing(s, popup_window) -> None:
+        s._popup_target = None
 
     def hl(s,_,p):
         [tw(t,color=s.COL3) for t in s.kids]
@@ -504,6 +536,16 @@ class Finder:
         )
         p.run_v1_account_transactions()
 
+    def get_all_friends(s) -> list[str]:
+        if not os.path.exists(best_friends_file):
+            return []
+
+        with open(best_friends_file, "r", encoding="utf-8") as f:
+            friends = [line.strip() for line in f.readlines() if line.strip()]
+
+        return friends
+
+
     def add_friend(s, friend: str):
         if s.busy:
             BTW("Todavía Ocupado!")
@@ -537,6 +579,41 @@ class Finder:
             TIP(f"{prefixed_friend} agregado con éxito")
         else:
             TIP(f"{prefixed_friend} ya está en la lista")
+
+    def remove_friend(s, friend: str):
+        if s.busy:
+            BTW("Todavía Ocupado!")
+            return
+
+        # Validate that it is not empty
+        if not friend or friend.strip() == "":
+            push('El campo está vacío, no se puede eliminar', (1, 0, 0))
+            gs('error').play()
+            return
+
+        if not os.path.exists(best_friends_file):
+            push('No hay lista de amigos para eliminar', (1, 0, 0))
+            gs('error').play()
+            return
+
+        prefixed_friend = f"{friend.strip()}"
+
+        # Read all existing friends
+        with open(best_friends_file, "r", encoding="utf-8") as f:
+            existing = [line.strip() for line in f.readlines()]
+
+        if prefixed_friend in existing:
+            # Re-write file excluding the removed friend
+            with open(best_friends_file, "w", encoding="utf-8") as f:
+                for line in existing:
+                    if line != prefixed_friend:
+                        f.write(line + "\n")
+
+            s.ding(0, 1)  # diferente sonido que add (por ejemplo)
+            TIP(f"{prefixed_friend} eliminado con éxito")
+        else:
+            TIP(f"{prefixed_friend} no se encuentra en la lista")
+
 
     def kang(s,r):
         c = s.__class__
