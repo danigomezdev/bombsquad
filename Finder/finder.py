@@ -249,6 +249,19 @@ class Finder:
             position=(540, 372)
         )
 
+        #bw(
+        #    parent=s.p,
+        #    size=(40, 40),
+        #    scale=0.5,
+        #    button_type='square',
+        #    autoselect=True,
+        #    color=s.COL2,
+        #    position=(760, 375),
+        #    on_activate_call =s._on_setting_button_press,
+        #    icon=gt('settingsIcon'),
+        #    iconscale=1.2
+        #)
+
         s.text_input = tw(
             parent=s.p,
             position=(695,320),
@@ -272,10 +285,11 @@ class Finder:
             label='Agregar \nManualmente',
             color=s.COL2,
             textcolor=s.COL4,
-             oac=lambda: (
+            oac=lambda: (
                 (lambda friend: (
-                    s.add_friend(friend),           # add
-                    tw(edit=s.text_input, text="")  # clean text
+                    s.add_friend(friend),
+                    tw(edit=s.text_input, text=""),
+                    s._refresh_friends_ui()   # <- aquí refresca
                 ))(tw(query=s.text_input))
             )
         )
@@ -297,53 +311,14 @@ class Finder:
             position=(465,195)
         )
 
-        #friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
-        friends_connected_list = s.get_all_friends()
-        sy2 = max(len(friends_connected_list)*30, 140)
-
-        p3 = sw(
+        s.p3 = sw(
             parent=s.p,
             position=(465, 240),
             size=(140, 130),
             border_opacity=0.4
         )
-        p4 = ocw(
-            parent=p3,
-            size=(190, sy2),
-            background=False
-        )
-
-        # if there are no friends
-        if not friends_connected_list:
-            tw(
-                parent=p3,
-                position=(42, 70),
-                text='Sin amigos \nconectados',
-                color=s.COL3,
-                maxwidth=135,
-                h_align='center',
-                v_align='center'
-            )
-
-        # Populate the list with friends' names
-        for i, friend in enumerate(friends_connected_list):
-            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
-        
-            pos_y = sy2 - 30 - 30 * i
-        
-            tw(
-                parent=p4,
-                size=(170, 30),
-                color=s.COL3,
-                text=display_name,
-                position=(0, pos_y),
-                maxwidth=160,
-                selectable=True,
-                click_activate=True,
-                v_align='center',
-                on_activate_call=Call(s._show_friend_popup, friend, (200, pos_y))
-            )
-
+        s.p4 = None  # inicializar vacío
+        s._refresh_friends_ui()
 
         #friends_connected_list = ["lessdev","Less", "Juan", "Maria", "Camilo", "Emilio134", "SerpienteYT", "PC161751"]
         friends_connected_list = []
@@ -407,6 +382,49 @@ class Finder:
             v_align='center'
         )
 
+    def _refresh_friends_ui(s):
+        if s.p4 and s.p4.exists():
+            s.p4.delete()
+
+        friends_connected_list = s.get_all_friends()
+        sy2 = max(len(friends_connected_list) * 30, 140)
+
+        s.p4 = ocw(
+            parent=s.p3,
+            size=(190, sy2),
+            background=False
+        )
+             # si no hay amigos
+        if not friends_connected_list:
+            tw(
+                parent=s.p3,
+                position=(42, 70),
+                text='Sin amigos \nconectados',
+                color=s.COL3,
+                maxwidth=135,
+                h_align='center',
+                v_align='center'
+            )
+            return
+
+        # dibujar lista
+        for i, friend in enumerate(friends_connected_list):
+            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
+            pos_y = sy2 - 30 - 30 * i
+
+            tw(
+                parent=s.p4,
+                size=(170, 30),
+                color=s.COL3,
+                text=display_name,
+                position=(0, pos_y),
+                maxwidth=160,
+                selectable=True,
+                click_activate=True,
+                v_align='center',
+                on_activate_call=Call(s._show_friend_popup, friend, (200, pos_y))
+            )
+
     def _show_friend_popup(s, friend: str, pos: tuple[float, float]):
         # popup con opción "Eliminar"
         popup = PopupMenuWindow(
@@ -424,7 +442,10 @@ class Finder:
             label='Eliminar',
             color=s.COL2,
             textcolor=s.COL4,
-            oac=lambda: s.remove_friend(friend)
+            oac=lambda: (
+                s.remove_friend(friend),  # eliminas
+                s._refresh_friends_ui()   # refrescas UI
+            )
         )
         
 
