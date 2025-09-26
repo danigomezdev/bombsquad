@@ -52,6 +52,8 @@ class Finder:
     SL = None
 
     def __init__(s,src):
+
+        s.friends_open = False  
         s.thr = []
         s.ikids = []
         s.ibfriends = []
@@ -59,10 +61,10 @@ class Finder:
         s.s1 = s.snd('powerup01')
         c = s.__class__
         # parent
-        z = (800,400)
+        s.sizeWindow = (800,435)
         s.p = cw(
             scale_origin_stack_offset=src.get_screen_space_center(),
-            size=z,
+            size=s.sizeWindow,
             oac=s.bye
         )[0]
 
@@ -71,7 +73,7 @@ class Finder:
         # footing
         sw(
             parent=s.p,
-            size=z,
+            size=s.sizeWindow,
             border_opacity=0
         )
 
@@ -258,7 +260,7 @@ class Finder:
 
         iw(
             parent=s.p,
-            size=(2, 400),
+            size=(2, 435),
             position=(455, 0),
             texture=gt('white'),
             color=s.COL2
@@ -268,7 +270,7 @@ class Finder:
             parent=s.p,
             text='Todos tus Amigos',
             color=s.COL4,
-            position=(540, 372)
+            position=(540, 400)
         )
 
         #bw(
@@ -283,6 +285,68 @@ class Finder:
         #    icon=gt('settingsIcon'),
         #    iconscale=1.2
         #)
+
+
+        #bw(
+        #    parent=s.p,
+        #    size=(40, 40),
+        #    scale=0.8,
+        #    button_type='square',
+        #    autoselect=True,
+        #    color=s.COL1,
+        #    position=(410, 390),
+        #    #on_activate_call =s._on_setting_button_press,
+        #    icon=gt('usersButton'),
+        #    iconscale=1.2
+        #)
+
+        #friends_connected_btn = bw(
+        #    parent=s.p,
+        #    size=(45, 45),
+        #    scale=0.8,
+        #    button_type='square',
+        #    autoselect=True,
+        #    color=s.COL1,
+        #    position=(410, 390),
+        #    icon=gt('usersButton'),
+        #    iconscale=1.2
+        #)
+
+        friends_connected_btn = bw(
+            parent=s.p,
+            position=(400, 390),
+            size=(45, 38),
+            autoselect=True,
+            button_type='square',
+            label='',  # sin texto
+            color=s.COL1,  # invisible
+            oac=lambda: (
+                s.toggle_friends()
+            )
+        )
+        
+        iw(
+            parent=s.p,
+            size=(45, 45),
+            position=(400, 390),
+            draw_controller=friends_connected_btn,
+            texture=gt('usersButton'),
+        )
+        
+        # Número encima controlado por el mismo botón
+        s._users_count_text = tw(
+            parent=s.p,
+            text="7",
+            size=(0, 0),
+            position=(400 + 21, 390 + 16),
+            h_align="center",
+            v_align="center",
+            scale=0.6,
+            color=(0,1,0,1),  # verde
+            draw_controller=friends_connected_btn  # ojo: lo ligamos al botón, no a la imagen
+        )
+
+
 
         s.text_input = tw(
             parent=s.p,
@@ -379,6 +443,16 @@ class Finder:
             v_align='center'
         )
 
+
+    def toggle_friends(s):
+        # Cambiamos el valor con "not"
+        s.friends_open = not s.friends_open
+
+        if s.friends_open:
+            print("Abrir toggle de amigos")
+            #s.sizeWindow = (600,435)
+        else:
+            print("Cerrar toggle de amigos")
 
     def _refreshBestFriendsUI(s):
         if hasattr(s, "p4_friends") and s.p4_friends and s.p4_friends.exists():
