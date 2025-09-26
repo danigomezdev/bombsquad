@@ -325,7 +325,7 @@ class Finder:
             #oac=lambda: (
             #    s.toggle_friends()
             #),
-            #on_activate_call=Call(s.go,Grid,[s,s.gtrash])
+            oac=lambda:BestFriends(s.p)
         )
         
         iw(
@@ -350,6 +350,680 @@ class Finder:
         )
 
 
+
+        s.text_input = tw(
+            parent=s.p,
+            position=(695,320),
+            size=(120,50),
+            text="",
+            color=s.COL4,
+            editable=True,
+            h_align='center',
+            v_align='center',
+            corner_scale=0.1,
+            scale=10,
+            allow_clear_button=False,
+            shadow=0,
+            flatness=1,
+        )
+
+        bw(
+            parent=s.p,
+            position=(640, 250),
+            size=(120, 39),
+            label='Agregar \nManualmente',
+            color=s.COL2,
+            textcolor=s.COL4,
+            oac=lambda: (
+                (lambda friend: (
+                    s.add_friend(friend),
+                    tw(edit=s.text_input, text=""),
+                    s._refreshBestFriendsUI()
+                ))(tw(query=s.text_input))
+            )
+        )
+
+        # separator
+        iw(
+            parent=s.p,
+            size=(320,1),
+            position=(470,235),
+            texture=gt('white'),
+            color=s.COL2
+        )
+        
+        # top
+        tw(
+            parent=s.p,
+            text='En linea \ue019',
+            color=s.COL4,
+            position=(465,195)
+        )
+        
+        tw(
+            parent=s.p,
+            text='*Recuerda que solo aparecerán tus \namigos si están jugando en un servidor \n publico, con cupo y después de ciclarlos*',
+            color=s.COL4,
+            position=(585,210),
+            scale=0.44
+        )
+
+        # Best friends list
+        s.p3 = sw(
+            parent=s.p,
+            position=(465, 240),
+            size=(140, 130),
+            border_opacity=0.4
+        )
+        s.p4 = None  # Init empty
+        s._refreshBestFriendsUI()
+
+        # Best friends(Connected) list
+        s.p4 = sw(
+            parent=s.p,
+            position=(465, 17),
+            size=(140, 170),
+            border_opacity=0.4
+        )
+
+        s.p5 = None  # Init empty
+
+        s.p6 = sw(
+            parent=s.p,
+            position=(615, 17),
+            size=(175, 170),
+            border_opacity=0.4
+        )
+
+        s.tip_bf = tw(
+            parent=s.p6,
+            size=(150, 155),  
+            position=(0, 0),
+            text='Seleccione un amigo \npara ver la información \ndel servidor',
+            color=s.COL4,
+            maxwidth=150,
+            h_align='center',
+            v_align='center'
+        )
+
+    def toggle_friends(s):
+        # Cambiamos el valor con "not"
+        s.friends_open = not s.friends_open
+
+        if s.friends_open:
+            print("Abrir toggle de amigos")
+            #s.sizeWindow = (600,435)
+        else:
+            print("Cerrar toggle de amigos")
+
+    def _refreshBestFriendsUI(s):
+        if hasattr(s, "p4_friends") and s.p4_friends and s.p4_friends.exists():
+            s.p4_friends.delete()
+
+        friends_connected_list = s.get_all_friends()
+        sy2 = max(len(friends_connected_list) * 30, 140)
+
+        s.p4_friends = ocw(
+            parent=s.p3,
+            size=(190, sy2),
+            background=False
+        )
+
+        # if there are no friends
+        if not friends_connected_list:
+            tw(
+                parent=s.p3,
+                position=(42, 70),
+                text='Sin amigos \nconectados',
+                color=s.COL3,
+                maxwidth=135,
+                h_align='center',
+                v_align='center'
+            )
+            return
+
+        for i, friend in enumerate(friends_connected_list):
+            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
+            pos_y = sy2 - 30 - 30 * i
+
+            tw(
+                parent=s.p4_friends,
+                size=(170, 30),
+                color=s.COL3,
+                text=display_name,
+                position=(0, pos_y),
+                maxwidth=160,
+                selectable=True,
+                click_activate=True,
+                v_align='center',
+                on_activate_call=Call(s._showFriendPopup, friend, (200, pos_y))
+            )
+
+
+    def _refreshBestFriendsConnectedUI(s, p):
+        if hasattr(s, "p4_best") and s.p4_best and s.p4_best.exists():
+            s.p4_best.delete()
+            s.p4_best = None
+            s.p5_best = None
+
+        # List of best friends online
+        best_friends_connected_list = s.get_all_best_friends(p)
+        sy3 = max(len(best_friends_connected_list) * 30, 140)
+
+        # Main scrollable container
+        if not hasattr(s, "p4_best") or not (s.p4_best and s.p4_best.exists()):
+            s.p4_best = sw(
+                parent=s.p,
+                position=(465, 17),
+                size=(140, 170),
+                border_opacity=0.4
+            )
+
+        # New container with best friends list
+        s.p5_best = ocw(
+            parent=s.p4_best,
+            size=(190, sy3),
+            background=False
+        )
+
+        # If there are no connected
+        if not best_friends_connected_list:
+            tw(
+                parent=s.p5_best,
+                position=(42, 50),
+                text='Sin mejores \namigos \nconectados',
+                color=s.COL3,
+                maxwidth=125,
+                h_align='center',
+                v_align='center'
+            )
+            return
+
+        # Fill UI with connected names
+        for i, friend in enumerate(best_friends_connected_list):
+            # If the name exceeds 7 characters, fill in with "..."
+            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
+            pos_y = sy3 - 30 - 30 * i
+
+            tw(
+                parent=s.p5_best,
+                size=(170, 30),
+                color=s.COL3,
+                text=display_name,
+                position=(0, pos_y),
+                maxwidth=160,
+                selectable=True,
+                click_activate=True,
+                v_align='center',
+                on_activate_call=Call(s._infoBestFriends, friend),
+            )
+
+    def _showFriendPopup(s, friend: str, pos: tuple[float, float]):
+        
+        popup = PopupMenuWindow(
+            position=pos,
+            choices=["Eliminar"],
+            current_choice="",
+            delegate=s,
+            width=1,
+        )
+
+        bw(
+            parent=popup.root_widget,
+            position=(0, 2),
+            size=(140, 54),
+            label='Eliminar',
+            color=s.COL2,
+            textcolor=s.COL4,
+            oac=lambda: (
+                s.remove_friend(friend),
+                s._refreshBestFriendsUI(),
+                s._refreshBestFriendsConnectedUI(s.plys())
+            )
+        )
+        s._popup_target = friend  
+
+    def popup_menu_closing(s, popup_window) -> None:
+        s._popup_target = None
+
+    def _hl(s,_,p):
+        [tw(t,color=s.COL3) for t in s.kids]
+        tw(s.kids[_],color=s.COL4)
+        s._infoPlayer(p)
+    
+    def _infoPlayer(s,p):
+
+        [_.delete() for _ in s.ikids]
+        s.ikids.clear()
+        s.tip and s.tip.delete()
+        bst = s.__class__.BST
+        for _ in bst:
+            for r in _['roster']:
+                if r['display_string'] == p:
+                    i = _
+                    break
+        for _ in range(3):
+            t = str(i['nap'[_]])
+            s.ikids.append(tw(
+                parent=s.p,
+                position=(250,155-40*_),
+                h_align='center',
+                v_align='center',
+                maxwidth=175,
+                text=t,
+                color=s.COL4,
+                size=(175,30),
+                selectable=True,
+                click_activate=True,
+                on_activate_call=Call(s.copy,t)
+            ))
+
+        if p.startswith("\ue063"):
+            # v2: Show both buttons side by side
+            s.ikids.append(bw(
+                parent=s.p,
+                position=(250, 30),
+                size=(80, 30),
+                label='Conectar',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(CON, i['a'], i['p'], False)
+            ))
+
+            s.ikids.append(bw(
+                parent=s.p,
+                position=(340, 30),
+                size=(90, 30),
+                label='Agregar Amigo',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(lambda: (
+                    s.add_friend(p[1:]),  # remove the "\ue063" and add it
+                    s._refreshBestFriendsUI(),
+                    s._refreshBestFriendsConnectedUI(s.plys())
+                ))
+            ))
+
+        else:
+            
+            s.ikids.append(bw(
+                parent=s.p,
+                position=(253, 30),
+                size=(166, 30),
+                label='Conectar',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(CON, i['a'], i['p'], False)
+            ))
+
+    def _infoBestFriends(s, p):
+        
+        # Clean Ui
+        [_.delete() for _ in s.ibfriends]
+        s.ibfriends.clear()
+        s.tip_bf and s.tip_bf.delete()
+
+        bst = s.__class__.BST
+        i = None
+        for entry in bst:
+            for r in entry['roster']:
+                if r['display_string'] == p:
+                    i = entry
+                    break
+            if i:
+                break
+
+        if i is None:
+            return
+
+        # Main data
+        server_name = i.get("n", "Desconocido")
+        server_ip = i.get("a", "N/A")
+        server_port = i.get("p", "N/A")
+
+        s.ibfriends.append(tw(
+                parent=s.p6,
+                position=(0, 0),
+                h_align='center',
+                maxwidth=160,
+                text=f"{server_name}\n{server_ip}\n{server_port}",
+                color=s.COL4,
+                size=(160,40)
+        ))
+
+        if p.startswith("\ue063"):
+            # v2: Show both buttons side by side
+            s.ibfriends.append(bw(
+                parent=s.p6,
+                position=(14, 30),
+                size=(60, 30),
+                label='Conectar',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(CON, i['a'], i['p'], False)
+            ))
+
+            s.ibfriends.append(bw(
+                parent=s.p6,
+                position=(84, 30),
+                size=(75, 30),
+                label='Eliminar \nAmigo',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(lambda: (
+                    s.remove_friend(p),  # remove the "\ue063" and add it
+                    s._refreshBestFriendsUI(),
+                    s._refreshBestFriendsConnectedUI(s.plys()),
+                    [_.delete() for _ in s.ibfriends]
+                ))
+            ))
+
+        else:
+            
+            s.ibfriends.append(bw(
+                parent=s.p6,
+                position=(0, 30),
+                size=(156, 30),
+                label='Conectar',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(CON, i['a'], i['p'], False)
+            ))
+    
+    def copy(s,t):
+        s.ding(1,1)
+        TIP('Copiado en el portapapeles!')
+        COPY(t)
+    
+    def plys(s):
+        z = []
+        me = app.plus.get_v1_account_name()
+        me = [me, '\ue063' + me]
+        for _ in s.__class__.BST:
+            a = _['a']
+            if (r := _.get('roster', {})):
+                for p in r:
+                    ds = p['display_string']
+                    if ds not in me:
+                        z.append((ds, a))
+
+        result = sorted(z, key=lambda _: _[0].startswith('\ue030Server'))
+
+        return result
+
+    def snd(s,t):
+        l = gs(t)
+        l.play()
+        teck(uf(0.14,0.18),l.stop)
+        return l
+    
+    def bye(s):
+        s.s1.stop()
+        ocw(s.p,transition='out_scale')
+        l = s.snd('laser')
+        f = lambda: teck(0.01,f) if s.p else l.stop()
+        f()
+    
+    def ding(s,i,j):
+        a = ['Small','']
+        x,y = a[i],a[j]
+        s.snd('ding'+x)
+        teck(0.1,gs('ding'+y).play)
+    
+    def fresh(s):
+        if s.busy: BTW("Still busy!"); return
+        TIP('Buscando Servidores...')
+        s.ding(1,0)
+        s.busy = True
+        p = app.plus
+        p.add_v1_account_transaction(
+            {
+                'type': 'PUBLIC_PARTY_QUERY',
+                'proto': PT(),
+                'lang': 'English'
+            },
+            callback=s.kang,
+        )
+        p.run_v1_account_transactions()
+
+    def get_all_friends(s) -> list[str]:
+        if not os.path.exists(best_friends_file):
+            return []
+
+        with open(best_friends_file, "r", encoding="utf-8") as f:
+            friends = [line.strip() for line in f.readlines() if line.strip()]
+
+        return friends
+    
+    def get_all_best_friends(s, pl: list[tuple[str, str]] | None = None) -> list[str]:
+        best_friends = s.get_all_friends()
+        connected_best_friends = []
+
+        # If no pl is passed or is empty, returns empty list
+        if not pl:
+            return []
+
+        for p, a in pl:
+            if p in best_friends:
+                connected_best_friends.append(p)
+
+        return connected_best_friends
+
+
+    def add_friend(s, friend: str):
+        if s.busy:
+            BTW("Todavía Ocupado!")
+            return
+
+        # Validate that it is not empty
+        if not friend or friend.strip() == "":
+            push('El campo está vacío, no se puede agregar', (1,0,0))
+            gs('error').play()
+            return
+
+        # Ensure the file exists
+        if not os.path.exists(best_friends_file):
+            with open(best_friends_file, "w", encoding="utf-8") as f:
+                f.write("")
+
+        prefixed_friend = f"\ue063{friend.strip()}"
+
+        # Read what already exists
+        with open(best_friends_file, "r", encoding="utf-8") as f:
+            existing = [line.strip() for line in f.readlines()]
+
+        # Check for duplicates
+        if prefixed_friend not in existing:
+            with open(best_friends_file, "a", encoding="utf-8") as f:
+                f.write(prefixed_friend + "\n")
+
+            s.ding(1, 0)
+            TIP(f"{prefixed_friend} agregado con éxito")
+        else:
+            TIP(f"{prefixed_friend} ya está en la lista")
+
+    def remove_friend(s, friend: str):
+        if s.busy:
+            BTW("Todavía Ocupado!")
+            return
+
+        # Validate that it is not empty
+        if not friend or friend.strip() == "":
+            push('El campo está vacío, no se puede eliminar', (1, 0, 0))
+            gs('error').play()
+            return
+
+        if not os.path.exists(best_friends_file):
+            push('No hay lista de amigos para eliminar', (1, 0, 0))
+            gs('error').play()
+            return
+
+        prefixed_friend = f"{friend.strip()}"
+
+        # Read all existing friends
+        with open(best_friends_file, "r", encoding="utf-8") as f:
+            existing = [line.strip() for line in f.readlines()]
+
+        if prefixed_friend in existing:
+            # Re-write file excluding the removed friend
+            with open(best_friends_file, "w", encoding="utf-8") as f:
+                for line in existing:
+                    if line != prefixed_friend:
+                        f.write(line + "\n")
+
+            s.ding(0, 1)  # diferente sonido que add (por ejemplo)
+            TIP(f"{prefixed_friend} eliminado con éxito")
+        else:
+            TIP(f"{prefixed_friend} no se encuentra en la lista")
+
+    def kang(s,r):
+        c = s.__class__
+        c.MEM = r['l']
+        s.thr = []
+        for _ in s.__class__.MEM:
+            t = Thread(target=Call(s.ping,_))
+            s.thr.append(t)
+            t.start()
+        teck(s.MAX*4,s.join)
+    
+    def join(s):
+        c = s.__class__
+        [t.join() for t in s.thr]
+        far = s.MAX*3000
+        c.MEM = [_ for _ in c.MEM if _['ping']]
+        c.MEM.sort(key=lambda _: _['ping'])
+        s.thr.clear()
+        TIP(f'Cargado {len(c.MEM)} servidores!')
+        s.ding(0,1)
+        s.busy = False
+    
+    def find(s):
+        if s.busy: BTW("Still busy!"); return
+        c = s.__class__
+        if not c.MEM:
+            BTW('Primero, busque algunos servidores!')
+            return
+        t = tw(query=s.top)
+        if not t.isdigit():
+            BTW('Invalid cycle limit!')
+            return
+        top = int(t)
+        if not (0 < top < len(c.MEM)):
+            BTW('Cycle count is too '+['big','small'][top<=0]+'!')
+            return
+        c.TOP = top
+        s.ding(1,0)
+        TIP('Empezando Ciclado...')
+        s.busy = True
+        s.ci = s.lr = 0
+        c.BST = c.MEM[:top]
+        s.cycle()
+
+    def cycle(s):
+        _ = s.__class__.BST[s.ci]
+        s.ca = _['a']
+        CON(s.ca,_['p'],False)
+        s.wait()
+
+    def wait(s,i=5):
+        r = GGR()
+        if (r != s.lr) and r: s.__class__.BST[s.ci]['roster'] = s.lr = r; return s.next()
+        if not i: s.__class__.BST[s.ci]['roster'] = []; return s.next()
+        teck(0.1,Call(s.wait,i-1))
+
+    def next(s):
+        s.ci += 1
+        if s.ci >= len(s.__class__.BST):
+            BYE()
+            teck(0.5,s.yay)
+            return
+        s.cycle()
+
+    def yay(s):
+        TIP('Ciclado Terminado!')
+        s.ding(0,1)
+        s.busy = False
+        zw('squad_button').activate()
+        teck(0.3,byLess.up)
+
+    def ping(s,_):
+        sock = ping = None
+        a,p = _['a'],_['p']
+        sock = socket(IPT(a),SOCK_DGRAM)
+        try: sock.connect((a,p))
+        except: ping = None
+        else:
+            st = time()
+            sock.settimeout(s.MAX)
+            yes = False
+            for _i in range(3):
+                try:
+                    sock.send(b'\x0b')
+                    r = sock.recv(10)
+                except: r = None
+                if r == b'\x0c':
+                    yes = True
+                    break
+                sleep(s.MAX)
+            ping = (time()-st)*1000 if yes else None
+        finally:
+            _['ping'] = ping
+            sock.close()
+
+class BestFriends:
+
+    COL1 = (0.4, 0.0, 0.0)   # Rojo vino oscuro (fondo principal)
+    COL2 = (0.15, 0.05, 0.05)  # Gris rojizo muy oscuro (paneles/bordes)
+    COL3 = (0.6, 0.1, 0.1)   # Rojo intenso apagado (resaltados)
+    COL4 = (0.8, 0.2, 0.2)   # Rojo carmesí (texto principal, títulos)
+    COL5 = (1.0, 0.3, 0.3)   # Rojo más vivo, para botones y acentos
+    
+    MAX = 0.3
+    TOP = 25
+    MEM = []
+    BST = []
+    SL = None
+
+    def __init__(s,src):
+
+        s.friends_open = False  
+        s.thr = []
+        s.ikids = []
+        s.ibfriends = []
+        s.busy = False
+        s.s1 = s.snd('powerup01')
+        c = s.__class__
+        # parent
+        s.sizeWindow = (800,435)
+        s.p = cw(
+            scale_origin_stack_offset=(src.get_screen_space_center()),
+            size=s.sizeWindow,
+            oac=s.bye
+        )[0]
+
+        s._popup_target = None
+
+        # footing
+        sw(
+            parent=s.p,
+            size=s.sizeWindow,
+            border_opacity=0
+        )
+
+        iw(
+            parent=s.p,
+            size=(2, 435),
+            position=(455, 0),
+            texture=gt('white'),
+            color=s.COL2
+        )
+
+        tw(
+            parent=s.p,
+            text='Todos tus Amigos',
+            color=s.COL4,
+            position=(540, 400)
+        )
 
         s.text_input = tw(
             parent=s.p,
@@ -999,128 +1673,6 @@ cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     color=Finder.COL1
 ))
 
-
-
-class Grid:
-    def __init__(s,po,trash=[],dry=False):
-        s.po = po
-        size = po.grid
-        s.trash = trash
-        K = s.K = []
-        if dry:
-            s.make(size[0],size[1])
-            return
-        r = res()
-        x,y = -po.width-5,r[1]-360
-        s.I = iw(
-            parent=po.p,
-            texture=gt('white'),
-            position=(x,y),
-            size=(po.width,140),
-            color=(0.3,0,0)
-        )
-        fade(s.I,a=0.2)
-        K.append(s.I)
-        # size
-        K.append(tw(
-            parent=po.p,
-            position=(x+10,y+95),
-            text='Size',
-            color=(0.7,0.2,0)
-        ))
-        K.append(tw(
-            position=(x+65,y+95),
-            size=(po.width/2-40,30),
-            parent=po.p,
-            editable=True,
-            color=(1,0.6,0.6),
-            allow_clear_button=False,
-            text=str(size[0])
-        ))
-        K.append(tw(
-            position=(x+130,y+95),
-            size=(po.width/2-37,30),
-            parent=po.p,
-            editable=True,
-            color=(1,0.6,0.6),
-            allow_clear_button=False,
-            text=str(size[1])
-        ))
-        # separator
-        K.append(iw(
-            parent=po.p,
-            texture=gt('white'),
-            size=(po.width-18,1),
-            position=(x+9,y+88),
-            opacity=0.6
-        ))
-        # set
-        K.append(bw(
-            parent=po.p,
-            position=(x+15,y+48),
-            label='Set',
-            size=(po.width-30,30),
-            texture=gt('white'),
-            textcolor=(0.7,0.2,0.2),
-            color=(0.5,0,0),
-            on_activate_call=s.set,
-            enable_sound=False
-        ))
-        # remove
-        K.append(bw(
-            parent=po.p,
-            position=(x+15,y+10),
-            label='Remove',
-            size=(po.width-30,30),
-            texture=gt('white'),
-            textcolor=(0.7,0.2,0.2),
-            color=(0.5,0,0),
-            on_activate_call=s.nuke,
-            enable_sound=False
-        ))
-    def nuke(s):
-        [_.delete() for _ in s.trash]; s.trash.clear()
-    def set(s):
-        x,y = [tw(query=s.K[i]) for i in [2,3]]
-        ok = '0.123456789'
-        b = True
-        if (not x or not y): b = False
-        if (False in [_ in ok for _ in x]): b = False
-        if (False in [_ in ok for _ in y]): b = False
-        if not b: err('Fix your input!'); return
-        x,y = [int(float(_)) for _ in [x,y]]
-        s.make(x,y)
-        s.po.grid = [x,y]
-    def make(s, w, h):
-        s.nuke()
-        zw, zh = s.po.TAR[1][0]['size']
-
-        for i in range(h + 1):
-            y = i * (zh / h) if h > 0 else 0
-            s.trash.append(iw(
-                parent=s.po.tar,
-                position=(0, y),
-                size=(zw, 1),
-                texture=gt('white'),
-                color=(1,0,0)
-            ))
-
-        for i in range(w + 1):
-            x = i * (zw / w) if w > 0 else 0
-            s.trash.append(iw(
-                parent=s.po.tar,
-                position=(x, 0),
-                size=(1, zh),
-                texture=gt('white'),
-                color=(1,0,0)
-            ))
-
-
-def fade(w,i=0,j=0.025,a=0.1):
-    if i > 1.0 or i < 0: return
-    if not w.exists(): return
-    iw(w,opacity=i)
-    teck(j,Call(fade,w,i+a,j,a))
 
 
 # Global
