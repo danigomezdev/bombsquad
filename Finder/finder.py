@@ -218,7 +218,7 @@ class Finder:
         )
 
         # Refresh all best friends 
-        s._refresh_best_friends_ui(pl)
+        s._refreshBestFriendsConnectedUI(pl)
 
         s.kids = []
         s.kids_bf = []
@@ -233,7 +233,7 @@ class Finder:
                 text=p,
                 position=(0,sy-30-30*_),
                 maxwidth=175,
-                on_activate_call=Call(s.hl,_,p),
+                on_activate_call=Call(s._hl,_,p),
                 v_align='center'
             ))
         
@@ -311,7 +311,7 @@ class Finder:
                 (lambda friend: (
                     s.add_friend(friend),
                     tw(edit=s.text_input, text=""),
-                    s._refresh_friends_ui()
+                    s._refreshBestFriendsUI()
                 ))(tw(query=s.text_input))
             )
         )
@@ -341,7 +341,7 @@ class Finder:
             scale=0.44
         )
 
-        # Lista de amigos normales
+        # Best friends list
         s.p3 = sw(
             parent=s.p,
             position=(465, 240),
@@ -349,20 +349,18 @@ class Finder:
             border_opacity=0.4
         )
         s.p4 = None  # Init empty
-        s._refresh_friends_ui()
+        s._refreshBestFriendsUI()
 
-        # Lista de mejores amigos
+        # Best friends(Connected) list
         s.p4 = sw(
             parent=s.p,
             position=(465, 17),
             size=(140, 170),
             border_opacity=0.4
         )
+
         s.p5 = None  # Init empty
 
-        #s._refresh_best_friends_ui([])
-
-        # Panel de detalle a la derecha
         s.p6 = sw(
             parent=s.p,
             position=(615, 17),
@@ -382,7 +380,7 @@ class Finder:
         )
 
 
-    def _refresh_friends_ui(s):
+    def _refreshBestFriendsUI(s):
         if hasattr(s, "p4_friends") and s.p4_friends and s.p4_friends.exists():
             s.p4_friends.delete()
 
@@ -422,35 +420,21 @@ class Finder:
                 selectable=True,
                 click_activate=True,
                 v_align='center',
-                on_activate_call=Call(s._show_friend_popup, friend, (200, pos_y))
+                on_activate_call=Call(s._showFriendPopup, friend, (200, pos_y))
             )
 
 
-    def _refresh_best_friends_ui(s, p):
+    def _refreshBestFriendsConnectedUI(s, p):
         if hasattr(s, "p4_best") and s.p4_best and s.p4_best.exists():
             s.p4_best.delete()
             s.p4_best = None
             s.p5_best = None
 
-        # lista de mejores amigos conectados
+        # List of best friends online
         best_friends_connected_list = s.get_all_best_friends(p)
-
-        # lista completa de mejores amigos
-        all_best_friends = s.get_all_friends()
-
-        # filtrar todos los jugadores que empiezan con ""
-        players_with_icon = [pl for pl, _ in p if pl.startswith("\ue063")]
-
-        # ⚡ imprimir todo
-        #print("\n=== Debug Mejores Amigos ===")
-        #print("Todos los jugadores con :", players_with_icon)
-        #print("Lista completa de mejores amigos:", all_best_friends)
-        #print("Mejores amigos conectados:", best_friends_connected_list)
-        #print("=============================\n")
-
         sy3 = max(len(best_friends_connected_list) * 30, 140)
 
-        # contenedor scrollable principal
+        # Main scrollable container
         if not hasattr(s, "p4_best") or not (s.p4_best and s.p4_best.exists()):
             s.p4_best = sw(
                 parent=s.p,
@@ -459,14 +443,14 @@ class Finder:
                 border_opacity=0.4
             )
 
-        # nuevo contenedor con lista de mejores amigos
+        # New container with best friends list
         s.p5_best = ocw(
             parent=s.p4_best,
             size=(190, sy3),
             background=False
         )
 
-        # si no hay conectados
+        # If there are no connected
         if not best_friends_connected_list:
             tw(
                 parent=s.p5_best,
@@ -479,8 +463,9 @@ class Finder:
             )
             return
 
-        # rellenar UI con nombres conectados
+        # Fill UI with connected names
         for i, friend in enumerate(best_friends_connected_list):
+            # If the name exceeds 7 characters, fill in with "..."
             display_name = friend if len(friend) <= 7 else friend[:7] + "..."
             pos_y = sy3 - 30 - 30 * i
 
@@ -497,9 +482,7 @@ class Finder:
                 on_activate_call=Call(s._infoBestFriends, friend),
             )
 
-
-
-    def _show_friend_popup(s, friend: str, pos: tuple[float, float]):
+    def _showFriendPopup(s, friend: str, pos: tuple[float, float]):
         
         popup = PopupMenuWindow(
             position=pos,
@@ -518,29 +501,21 @@ class Finder:
             textcolor=s.COL4,
             oac=lambda: (
                 s.remove_friend(friend),
-                s._refresh_friends_ui(),
-                s._refresh_best_friends_ui(s.plys())
+                s._refreshBestFriendsUI(),
+                s._refreshBestFriendsConnectedUI(s.plys())
             )
         )
         s._popup_target = friend  
 
-    def popup_menu_selected_choice(s, popup_window, choice: str) -> None:
-        if choice == "Eliminar":
-            push(f"Amigo eliminado: {s._popup_target}", color=(1, 0.2, 0.2))
-            
-            if hasattr(s, "friends_connected_list") and s._popup_target in s.friends_connected_list:
-                s.friends_connected_list.remove(s._popup_target)
-            s._popup_target = None
-
     def popup_menu_closing(s, popup_window) -> None:
         s._popup_target = None
 
-    def hl(s,_,p):
+    def _hl(s,_,p):
         [tw(t,color=s.COL3) for t in s.kids]
         tw(s.kids[_],color=s.COL4)
-        s.info(p)
+        s._infoPlayer(p)
     
-    def info(s,p):
+    def _infoPlayer(s,p):
 
         [_.delete() for _ in s.ikids]
         s.ikids.clear()
@@ -567,7 +542,7 @@ class Finder:
                 on_activate_call=Call(s.copy,t)
             ))
 
-        if p.startswith(""):
+        if p.startswith("\ue063"):
             # v2: Show both buttons side by side
             s.ikids.append(bw(
                 parent=s.p,
@@ -587,9 +562,9 @@ class Finder:
                 color=s.COL2,
                 textcolor=s.COL4,
                 oac=Call(lambda: (
-                    s.add_friend(p[1:]),  # remove the "" and add it
-                    s._refresh_friends_ui(),
-                    s._refresh_best_friends_ui(s.plys())
+                    s.add_friend(p[1:]),  # remove the "\ue063" and add it
+                    s._refreshBestFriendsUI(),
+                    s._refreshBestFriendsConnectedUI(s.plys())
                 ))
             ))
 
@@ -623,7 +598,6 @@ class Finder:
                 break
 
         if i is None:
-            #print(f"[INFO] No se encontró información para: {p}")
             return
 
         # Main data
@@ -635,18 +609,18 @@ class Finder:
                 parent=s.p6,
                 position=(0, 0),
                 h_align='center',
-                maxwidth=165,
+                maxwidth=160,
                 text=f"{server_name}\n{server_ip}\n{server_port}",
                 color=s.COL4,
-                size=(165,30)
+                size=(160,40)
         ))
 
-        if p.startswith(""):
+        if p.startswith("\ue063"):
             # v2: Show both buttons side by side
             s.ibfriends.append(bw(
                 parent=s.p6,
-                position=(0, 30),
-                size=(70, 30),
+                position=(14, 30),
+                size=(60, 30),
                 label='Conectar',
                 color=s.COL2,
                 textcolor=s.COL4,
@@ -655,15 +629,15 @@ class Finder:
 
             s.ibfriends.append(bw(
                 parent=s.p6,
-                position=(90, 30),
+                position=(84, 30),
                 size=(75, 30),
                 label='Eliminar \nAmigo',
                 color=s.COL2,
                 textcolor=s.COL4,
                 oac=Call(lambda: (
-                    s.remove_friend(p),  # remove the "" and add it
-                    s._refresh_friends_ui(),
-                    s._refresh_best_friends_ui(s.plys()),
+                    s.remove_friend(p),  # remove the "\ue063" and add it
+                    s._refreshBestFriendsUI(),
+                    s._refreshBestFriendsConnectedUI(s.plys()),
                     [_.delete() for _ in s.ibfriends]
                 ))
             ))
@@ -679,12 +653,6 @@ class Finder:
                 textcolor=s.COL4,
                 oac=Call(CON, i['a'], i['p'], False)
             ))
-        
-        if p.startswith(""):
-            print("[INFO] Amigo tiene ícono especial, mostraría botones extra aquí")
-        else:
-            print("[INFO] Amigo normal, mostraría solo botón Conectar")
-
     
     def copy(s,t):
         s.ding(1,1)
@@ -707,7 +675,6 @@ class Finder:
 
         return result
 
-    
     def snd(s,t):
         l = gs(t)
         l.play()
@@ -756,7 +723,7 @@ class Finder:
         best_friends = s.get_all_friends()
         connected_best_friends = []
 
-        # Si no pasan pl o está vacío, devuelve lista vacía
+        # If no pl is passed or is empty, returns empty list
         if not pl:
             return []
 
@@ -783,8 +750,7 @@ class Finder:
             with open(best_friends_file, "w", encoding="utf-8") as f:
                 f.write("")
 
-        #print(f"[BestFriends] File: {best_friends_file}")
-        prefixed_friend = f"{friend.strip()}"
+        prefixed_friend = f"\ue063{friend.strip()}"
 
         # Read what already exists
         with open(best_friends_file, "r", encoding="utf-8") as f:
