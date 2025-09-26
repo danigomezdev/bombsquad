@@ -6,6 +6,7 @@ from babase import Plugin, app
 from threading import Thread
 from time import time, sleep
 from bauiv1 import (
+    get_virtual_screen_size as res,
     get_ip_address_type as IPT,
     clipboard_set_text as COPY,
     get_special_widget as zw,
@@ -30,7 +31,8 @@ from bascenev1 import (
     disconnect_from_host as BYE,
     connect_to_party as CON,
     protocol_version as PT,
-    get_game_roster as GGR
+    get_game_roster as GGR,
+    broadcastmessage as broad
 )
 
 my_directory = _babase.env()['python_directory_user'] 
@@ -320,9 +322,10 @@ class Finder:
             button_type='square',
             label='',  # sin texto
             color=s.COL1,  # invisible
-            oac=lambda: (
-                s.toggle_friends()
-            )
+            #oac=lambda: (
+            #    s.toggle_friends()
+            #),
+            #on_activate_call=Call(s.go,Grid,[s,s.gtrash])
         )
         
         iw(
@@ -442,7 +445,6 @@ class Finder:
             h_align='center',
             v_align='center'
         )
-
 
     def toggle_friends(s):
         # Cambiamos el valor con "not"
@@ -997,9 +999,136 @@ cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     color=Finder.COL1
 ))
 
+
+
+class Grid:
+    def __init__(s,po,trash=[],dry=False):
+        s.po = po
+        size = po.grid
+        s.trash = trash
+        K = s.K = []
+        if dry:
+            s.make(size[0],size[1])
+            return
+        r = res()
+        x,y = -po.width-5,r[1]-360
+        s.I = iw(
+            parent=po.p,
+            texture=gt('white'),
+            position=(x,y),
+            size=(po.width,140),
+            color=(0.3,0,0)
+        )
+        fade(s.I,a=0.2)
+        K.append(s.I)
+        # size
+        K.append(tw(
+            parent=po.p,
+            position=(x+10,y+95),
+            text='Size',
+            color=(0.7,0.2,0)
+        ))
+        K.append(tw(
+            position=(x+65,y+95),
+            size=(po.width/2-40,30),
+            parent=po.p,
+            editable=True,
+            color=(1,0.6,0.6),
+            allow_clear_button=False,
+            text=str(size[0])
+        ))
+        K.append(tw(
+            position=(x+130,y+95),
+            size=(po.width/2-37,30),
+            parent=po.p,
+            editable=True,
+            color=(1,0.6,0.6),
+            allow_clear_button=False,
+            text=str(size[1])
+        ))
+        # separator
+        K.append(iw(
+            parent=po.p,
+            texture=gt('white'),
+            size=(po.width-18,1),
+            position=(x+9,y+88),
+            opacity=0.6
+        ))
+        # set
+        K.append(bw(
+            parent=po.p,
+            position=(x+15,y+48),
+            label='Set',
+            size=(po.width-30,30),
+            texture=gt('white'),
+            textcolor=(0.7,0.2,0.2),
+            color=(0.5,0,0),
+            on_activate_call=s.set,
+            enable_sound=False
+        ))
+        # remove
+        K.append(bw(
+            parent=po.p,
+            position=(x+15,y+10),
+            label='Remove',
+            size=(po.width-30,30),
+            texture=gt('white'),
+            textcolor=(0.7,0.2,0.2),
+            color=(0.5,0,0),
+            on_activate_call=s.nuke,
+            enable_sound=False
+        ))
+    def nuke(s):
+        [_.delete() for _ in s.trash]; s.trash.clear()
+    def set(s):
+        x,y = [tw(query=s.K[i]) for i in [2,3]]
+        ok = '0.123456789'
+        b = True
+        if (not x or not y): b = False
+        if (False in [_ in ok for _ in x]): b = False
+        if (False in [_ in ok for _ in y]): b = False
+        if not b: err('Fix your input!'); return
+        x,y = [int(float(_)) for _ in [x,y]]
+        s.make(x,y)
+        s.po.grid = [x,y]
+    def make(s, w, h):
+        s.nuke()
+        zw, zh = s.po.TAR[1][0]['size']
+
+        for i in range(h + 1):
+            y = i * (zh / h) if h > 0 else 0
+            s.trash.append(iw(
+                parent=s.po.tar,
+                position=(0, y),
+                size=(zw, 1),
+                texture=gt('white'),
+                color=(1,0,0)
+            ))
+
+        for i in range(w + 1):
+            x = i * (zw / w) if w > 0 else 0
+            s.trash.append(iw(
+                parent=s.po.tar,
+                position=(x, 0),
+                size=(1, zh),
+                texture=gt('white'),
+                color=(1,0,0)
+            ))
+
+
+def fade(w,i=0,j=0.025,a=0.1):
+    if i > 1.0 or i < 0: return
+    if not w.exists(): return
+    iw(w,opacity=i)
+    teck(j,Call(fade,w,i+a,j,a))
+
+
 # Global
 BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
 TIP = lambda t: push(t,Finder.COL3)
+err = lambda t: (broad(t,color=(1,0,0)),gs('error').play())
+deek = lambda: gs('deek').play()
+
 
 # ba_meta export babase.Plugin
 class byLess(Plugin):
