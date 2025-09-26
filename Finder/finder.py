@@ -266,7 +266,7 @@ class Finder:
 
         tw(
             parent=s.p,
-            text='Mejores Amigos',
+            text='Todos tus Amigos',
             color=s.COL4,
             position=(540, 372)
         )
@@ -320,7 +320,7 @@ class Finder:
         iw(
             parent=s.p,
             size=(320,1),
-            position=(465,225),
+            position=(470,235),
             texture=gt('white'),
             color=s.COL2
         )
@@ -328,10 +328,19 @@ class Finder:
         # top
         tw(
             parent=s.p,
-            text='Amigos Conectados \ue019',
+            text='En linea \ue019',
             color=s.COL4,
             position=(465,195)
         )
+        
+        tw(
+            parent=s.p,
+            text='*Recuerda que solo aparecerán tus \namigos si están conectados y después \nde ciclar los servidores*',
+            color=s.COL4,
+            position=(600,210),
+            scale=0.44
+        )
+
         # Lista de amigos normales
         s.p3 = sw(
             parent=s.p,
@@ -485,7 +494,7 @@ class Finder:
                 selectable=True,
                 click_activate=True,
                 v_align='center',
-                on_activate_call=Call(s.hl_bf, friend),
+                on_activate_call=Call(s._infoBestFriends, friend),
             )
 
 
@@ -539,15 +548,11 @@ class Finder:
         bst = s.__class__.BST
         for _ in bst:
             for r in _['roster']:
-                #print(f"[DEBUG] Revisando roster entry: {r}")
                 if r['display_string'] == p:
                     i = _
-                    #print(f"[INFO] Match encontrado: {i}")
                     break
         for _ in range(3):
-            #print(f"[DEBUG] Iteración {_}, intentando acceder a nap[{_}]")
             t = str(i['nap'[_]])
-            #print(f"[INFO] Texto obtenido: {t}")
             s.ikids.append(tw(
                 parent=s.p,
                 position=(250,155-40*_),
@@ -600,21 +605,9 @@ class Finder:
                 oac=Call(CON, i['a'], i['p'], False)
             ))
 
-
-    #def hl_bf(s, p):
-    #    # por ahora solo llama a info_bf y muestra un TIP
-    #    s.info_bf(p)
-    #    TIP("Friend " + p)
-
-    def hl_bf(s,p):
-        #[tw(t,color=s.COL3) for t in s.kids]
-        #tw(s.kids[_],color=s.COL4)
-        s.info_bf(p)
-        TIP("Friend " + p)
-
-
-    def info_bf(s, p):
-        # limpiar UI previa
+    def _infoBestFriends(s, p):
+        
+        # Clean Ui
         [_.delete() for _ in s.ibfriends]
         s.ibfriends.clear()
         s.tip_bf and s.tip_bf.delete()
@@ -630,39 +623,22 @@ class Finder:
                 break
 
         if i is None:
-            print(f"[INFO] No se encontró información para: {p}")
+            #print(f"[INFO] No se encontró información para: {p}")
             return
 
-        # 🔥 imprimir todo lo que se encontró
-        print("\n=== Debug info ===")
-        print("Amigo:", p)
-        print("Entrada completa encontrada:", i)
-
-        # datos principales del server
-        nombre_server = i.get("n", "Desconocido")
-        ip_server = i.get("a", "N/A")
-        puerto_server = i.get("p", "N/A")
-
-        print(f"[INFO] Nombre del server: {nombre_server}")
-        print(f"[INFO] IP del server: {ip_server}")
-        print(f"[INFO] Puerto del server: {puerto_server}")
-
-        #print("Roster de este amigo:")
-        #for r in i['roster']:
-        #    print(" -", r)
-        #print("==================\n")
+        # Main data
+        server_name = i.get("n", "Desconocido")
+        server_ip = i.get("a", "N/A")
+        server_port = i.get("p", "N/A")
 
         s.ibfriends.append(tw(
                 parent=s.p6,
                 position=(0, 0),
                 h_align='center',
-                maxwidth=175,
-                text=f"{nombre_server}\n{ip_server}\n{puerto_server}",
+                maxwidth=165,
+                text=f"{server_name}\n{server_ip}\n{server_port}",
                 color=s.COL4,
-                size=(175,30),
-                selectable=True,
-                click_activate=True,
-                #on_activate_call=Call(s.copy,t)
+                size=(165,30)
         ))
 
         if p.startswith(""):
@@ -680,8 +656,8 @@ class Finder:
             s.ibfriends.append(bw(
                 parent=s.p6,
                 position=(90, 30),
-                size=(80, 30),
-                label='Eliminar Amigo',
+                size=(75, 30),
+                label='Eliminar \nAmigo',
                 color=s.COL2,
                 textcolor=s.COL4,
                 oac=Call(lambda: (
@@ -709,11 +685,10 @@ class Finder:
         else:
             print("[INFO] Amigo normal, mostraría solo botón Conectar")
 
-
     
     def copy(s,t):
         s.ding(1,1)
-        TIP('Copied to clipboard!')
+        TIP('Copiado en el portapapeles!')
         COPY(t)
     
     def plys(s):
