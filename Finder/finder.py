@@ -335,9 +335,9 @@ class Finder:
         
         tw(
             parent=s.p,
-            text='*Recuerda que solo aparecerán tus \namigos si están conectados y después \nde ciclar los servidores*',
+            text='*Recuerda que solo aparecerán tus \namigos si están jugando en un servidor \n publico, con cupo y después de ciclarlos*',
             color=s.COL4,
-            position=(600,210),
+            position=(585,210),
             scale=0.44
         )
 
@@ -957,6 +957,7 @@ class byLess(Plugin):
         s.b = s.__class__.BTN = bw(
             parent=p,
             position=(x,y),
+            #position=(-120,200),
             label='Buscar',
             color=Finder.COL1,
             textcolor=Finder.COL3,
