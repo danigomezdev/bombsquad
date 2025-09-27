@@ -64,12 +64,35 @@ class Finder:
         s.s1 = s.snd('powerup01')
         c = s.__class__
         # parent
-        s.sizeWindow = (800,435)
-        s.p = cw(
-            scale_origin_stack_offset=src.get_screen_space_center(),
+        s.sizeWindow = (460,435)
+        # root que cubre toda la pantalla y cierra al click fuera
+        # usamos src._width/_height cuando estén disponibles; si no, 800x600 queda como fallback.
+        try:
+            screen_size = (src._width, src._height)
+        except Exception:
+            screen_size = (800, 600)
+        
+        s.root = ocw(
+            parent=zw('overlay_stack'),
+            size=screen_size,
+            background=False,
+            on_outside_click_call=s.bye,   # <- click fuera cierra
+        )
+        
+        s.p = ocw(
+            parent=s.root,
             size=s.sizeWindow,
-            oac=s.bye
-        )[0]
+            position=(0, 82),   # ahora sí se respeta
+            background=False,
+        )
+        
+        # fondo rosado claro dentro del panel
+        iw(
+            parent=s.p,
+            size=s.sizeWindow,
+            texture=gt('white'),
+            color=s.COL1
+        )
 
         s._popup_target = None
 
@@ -223,7 +246,7 @@ class Finder:
         )
 
         # Refresh all best friends 
-        s._refreshBestFriendsConnectedUI(pl)
+        BestFriends(s.p)._refreshBestFriendsConnectedUI(pl)
 
         s.kids = []
         s.kids_bf = []
@@ -261,72 +284,17 @@ class Finder:
             h_align='center'
         ) if c.SL is None else 0
 
-        iw(
-            parent=s.p,
-            size=(2, 435),
-            position=(455, 0),
-            texture=gt('white'),
-            color=s.COL2
-        )
-
-        tw(
-            parent=s.p,
-            text='Todos tus Amigos',
-            color=s.COL4,
-            position=(540, 400)
-        )
-
-        #bw(
-        #    parent=s.p,
-        #    size=(40, 40),
-        #    scale=0.5,
-        #    button_type='square',
-        #    autoselect=True,
-        #    color=s.COL2,
-        #    position=(760, 375),
-        #    on_activate_call =s._on_setting_button_press,
-        #    icon=gt('settingsIcon'),
-        #    iconscale=1.2
-        #)
-
-
-        #bw(
-        #    parent=s.p,
-        #    size=(40, 40),
-        #    scale=0.8,
-        #    button_type='square',
-        #    autoselect=True,
-        #    color=s.COL1,
-        #    position=(410, 390),
-        #    #on_activate_call =s._on_setting_button_press,
-        #    icon=gt('usersButton'),
-        #    iconscale=1.2
-        #)
-
-        #friends_connected_btn = bw(
-        #    parent=s.p,
-        #    size=(45, 45),
-        #    scale=0.8,
-        #    button_type='square',
-        #    autoselect=True,
-        #    color=s.COL1,
-        #    position=(410, 390),
-        #    icon=gt('usersButton'),
-        #    iconscale=1.2
-        #)
-
         friends_connected_btn = bw(
             parent=s.p,
             position=(400, 390),
             size=(45, 38),
             autoselect=True,
             button_type='square',
-            label='',  # sin texto
-            color=s.COL1,  # invisible
-            #oac=lambda: (
-            #    s.toggle_friends()
-            #),
-            oac=lambda:BestFriends(s.p)
+            label='',
+            color=s.COL1,
+            oac=lambda:(
+                s.toggle_friends()
+            )
         )
         
         iw(
@@ -337,7 +305,6 @@ class Finder:
             texture=gt('usersButton'),
         )
         
-        # Número encima controlado por el mismo botón
         s._users_count_text = tw(
             parent=s.p,
             text="7",
@@ -346,246 +313,21 @@ class Finder:
             h_align="center",
             v_align="center",
             scale=0.6,
-            color=(0,1,0,1),  # verde
-            draw_controller=friends_connected_btn  # ojo: lo ligamos al botón, no a la imagen
-        )
-
-
-
-        s.text_input = tw(
-            parent=s.p,
-            position=(695,320),
-            size=(120,50),
-            text="",
-            color=s.COL4,
-            editable=True,
-            h_align='center',
-            v_align='center',
-            corner_scale=0.1,
-            scale=10,
-            allow_clear_button=False,
-            shadow=0,
-            flatness=1,
-        )
-
-        bw(
-            parent=s.p,
-            position=(640, 250),
-            size=(120, 39),
-            label='Agregar \nManualmente',
-            color=s.COL2,
-            textcolor=s.COL4,
-            oac=lambda: (
-                (lambda friend: (
-                    s.add_friend(friend),
-                    tw(edit=s.text_input, text=""),
-                    s._refreshBestFriendsUI()
-                ))(tw(query=s.text_input))
-            )
-        )
-
-        # separator
-        iw(
-            parent=s.p,
-            size=(320,1),
-            position=(470,235),
-            texture=gt('white'),
-            color=s.COL2
-        )
-        
-        # top
-        tw(
-            parent=s.p,
-            text='En linea \ue019',
-            color=s.COL4,
-            position=(465,195)
-        )
-        
-        tw(
-            parent=s.p,
-            text='*Recuerda que solo aparecerán tus \namigos si están jugando en un servidor \n publico, con cupo y después de ciclarlos*',
-            color=s.COL4,
-            position=(585,210),
-            scale=0.44
-        )
-
-        # Best friends list
-        s.p3 = sw(
-            parent=s.p,
-            position=(465, 240),
-            size=(140, 130),
-            border_opacity=0.4
-        )
-        s.p4 = None  # Init empty
-        s._refreshBestFriendsUI()
-
-        # Best friends(Connected) list
-        s.p4 = sw(
-            parent=s.p,
-            position=(465, 17),
-            size=(140, 170),
-            border_opacity=0.4
-        )
-
-        s.p5 = None  # Init empty
-
-        s.p6 = sw(
-            parent=s.p,
-            position=(615, 17),
-            size=(175, 170),
-            border_opacity=0.4
-        )
-
-        s.tip_bf = tw(
-            parent=s.p6,
-            size=(150, 155),  
-            position=(0, 0),
-            text='Seleccione un amigo \npara ver la información \ndel servidor',
-            color=s.COL4,
-            maxwidth=150,
-            h_align='center',
-            v_align='center'
+            color=(0,1,0,1),
+            draw_controller=friends_connected_btn  
         )
 
     def toggle_friends(s):
-        # Cambiamos el valor con "not"
+        # We change the value with "not"
         s.friends_open = not s.friends_open
 
         if s.friends_open:
+            BestFriends(s.p),
             print("Abrir toggle de amigos")
-            #s.sizeWindow = (600,435)
         else:
             print("Cerrar toggle de amigos")
+            BestFriends(s.p).bye()
 
-    def _refreshBestFriendsUI(s):
-        if hasattr(s, "p4_friends") and s.p4_friends and s.p4_friends.exists():
-            s.p4_friends.delete()
-
-        friends_connected_list = s.get_all_friends()
-        sy2 = max(len(friends_connected_list) * 30, 140)
-
-        s.p4_friends = ocw(
-            parent=s.p3,
-            size=(190, sy2),
-            background=False
-        )
-
-        # if there are no friends
-        if not friends_connected_list:
-            tw(
-                parent=s.p3,
-                position=(42, 70),
-                text='Sin amigos \nconectados',
-                color=s.COL3,
-                maxwidth=135,
-                h_align='center',
-                v_align='center'
-            )
-            return
-
-        for i, friend in enumerate(friends_connected_list):
-            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
-            pos_y = sy2 - 30 - 30 * i
-
-            tw(
-                parent=s.p4_friends,
-                size=(170, 30),
-                color=s.COL3,
-                text=display_name,
-                position=(0, pos_y),
-                maxwidth=160,
-                selectable=True,
-                click_activate=True,
-                v_align='center',
-                on_activate_call=Call(s._showFriendPopup, friend, (200, pos_y))
-            )
-
-
-    def _refreshBestFriendsConnectedUI(s, p):
-        if hasattr(s, "p4_best") and s.p4_best and s.p4_best.exists():
-            s.p4_best.delete()
-            s.p4_best = None
-            s.p5_best = None
-
-        # List of best friends online
-        best_friends_connected_list = s.get_all_best_friends(p)
-        sy3 = max(len(best_friends_connected_list) * 30, 140)
-
-        # Main scrollable container
-        if not hasattr(s, "p4_best") or not (s.p4_best and s.p4_best.exists()):
-            s.p4_best = sw(
-                parent=s.p,
-                position=(465, 17),
-                size=(140, 170),
-                border_opacity=0.4
-            )
-
-        # New container with best friends list
-        s.p5_best = ocw(
-            parent=s.p4_best,
-            size=(190, sy3),
-            background=False
-        )
-
-        # If there are no connected
-        if not best_friends_connected_list:
-            tw(
-                parent=s.p5_best,
-                position=(42, 50),
-                text='Sin mejores \namigos \nconectados',
-                color=s.COL3,
-                maxwidth=125,
-                h_align='center',
-                v_align='center'
-            )
-            return
-
-        # Fill UI with connected names
-        for i, friend in enumerate(best_friends_connected_list):
-            # If the name exceeds 7 characters, fill in with "..."
-            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
-            pos_y = sy3 - 30 - 30 * i
-
-            tw(
-                parent=s.p5_best,
-                size=(170, 30),
-                color=s.COL3,
-                text=display_name,
-                position=(0, pos_y),
-                maxwidth=160,
-                selectable=True,
-                click_activate=True,
-                v_align='center',
-                on_activate_call=Call(s._infoBestFriends, friend),
-            )
-
-    def _showFriendPopup(s, friend: str, pos: tuple[float, float]):
-        
-        popup = PopupMenuWindow(
-            position=pos,
-            choices=["Eliminar"],
-            current_choice="",
-            delegate=s,
-            width=1,
-        )
-
-        bw(
-            parent=popup.root_widget,
-            position=(0, 2),
-            size=(140, 54),
-            label='Eliminar',
-            color=s.COL2,
-            textcolor=s.COL4,
-            oac=lambda: (
-                s.remove_friend(friend),
-                s._refreshBestFriendsUI(),
-                s._refreshBestFriendsConnectedUI(s.plys())
-            )
-        )
-        s._popup_target = friend  
-
-    def popup_menu_closing(s, popup_window) -> None:
-        s._popup_target = None
 
     def _hl(s,_,p):
         [tw(t,color=s.COL3) for t in s.kids]
@@ -640,8 +382,8 @@ class Finder:
                 textcolor=s.COL4,
                 oac=Call(lambda: (
                     s.add_friend(p[1:]),  # remove the "\ue063" and add it
-                    s._refreshBestFriendsUI(),
-                    s._refreshBestFriendsConnectedUI(s.plys())
+                    BestFriends(s.p)._refreshBestFriendsUI(),
+                    BestFriends(s.p)._refreshBestFriendsConnectedUI(s.plys())
                 ))
             ))
 
@@ -713,8 +455,8 @@ class Finder:
                 textcolor=s.COL4,
                 oac=Call(lambda: (
                     s.remove_friend(p),  # remove the "\ue063" and add it
-                    s._refreshBestFriendsUI(),
-                    s._refreshBestFriendsConnectedUI(s.plys()),
+                    BestFriends(s.p)._refreshBestFriendsUI(),
+                    BestFriends(s.p)._refreshBestFriendsConnectedUI(s.plys()),
                     [_.delete() for _ in s.ibfriends]
                 ))
             ))
@@ -759,11 +501,31 @@ class Finder:
         return l
     
     def bye(s):
-        s.s1.stop()
-        ocw(s.p,transition='out_scale')
+        try:
+            s.s1.stop()
+        except Exception:
+            pass
+        
+        if s.p and s.p.exists():
+            s.p.delete()
+    
+        if s.root and s.root.exists():
+            s.root.delete()
+    
+        # sonido de salida
         l = s.snd('laser')
-        f = lambda: teck(0.01,f) if s.p else l.stop()
-        f()
+    
+        def _check():
+            if s.p and s.p.exists():
+                teck(0.01, _check)
+            else:
+                l.stop()
+    
+        teck(0.01, _check)
+    
+        # limpiar referencias
+        s.p = None
+        s.root = None
     
     def ding(s,i,j):
         a = ['Small','']
@@ -995,7 +757,7 @@ class BestFriends:
         s.s1 = s.snd('powerup01')
         c = s.__class__
         # parent
-        s.sizeWindow = (340,435)
+        s.sizeWindow = (355,435)
         
         try:
             screen_size = (src._width, src._height)
@@ -1006,7 +768,7 @@ class BestFriends:
             parent=zw('overlay_stack'),
             size=screen_size,
             background=False,
-            on_outside_click_call=s.bye,   # <- click fuera cierra
+            #on_outside_click_call=s.bye,   # <- click fuera cierra
         )
         
         s.p = ocw(
@@ -1036,7 +798,7 @@ class BestFriends:
         iw(
             parent=s.p,
             size=(2, 435),
-            position=(455, 0),
+            position=(2, 0),
             texture=gt('white'),
             color=s.COL2
         )
@@ -1045,12 +807,12 @@ class BestFriends:
             parent=s.p,
             text='Todos tus Amigos',
             color=s.COL4,
-            position=(540-460, 400)
+            position=(540-450, 400)
         )
 
         s.text_input = tw(
             parent=s.p,
-            position=(695-460,320),
+            position=(695-450,320),
             size=(120,50),
             text="",
             color=s.COL4,
@@ -1066,7 +828,7 @@ class BestFriends:
 
         bw(
             parent=s.p,
-            position=(640-460, 250),
+            position=(640-450, 250),
             size=(120, 39),
             label='Agregar \nManualmente',
             color=s.COL2,
@@ -1075,7 +837,7 @@ class BestFriends:
                 (lambda friend: (
                     s.add_friend(friend),
                     tw(edit=s.text_input, text=""),
-                    s._refreshBestFriendsUI()
+                    BestFriends(s.p)._refreshBestFriendsUI()
                 ))(tw(query=s.text_input))
             )
         )
@@ -1084,7 +846,7 @@ class BestFriends:
         iw(
             parent=s.p,
             size=(320,1),
-            position=(470-460,235),
+            position=(470-450,235),
             texture=gt('white'),
             color=s.COL2
         )
@@ -1094,21 +856,21 @@ class BestFriends:
             parent=s.p,
             text='En linea \ue019',
             color=s.COL4,
-            position=(465-460,195)
+            position=(465-450,195)
         )
         
         tw(
             parent=s.p,
             text='*Recuerda que solo aparecerán tus \namigos si están jugando en un servidor \n publico, con cupo y después de ciclarlos*',
             color=s.COL4,
-            position=(585-460,210),
+            position=(585-450,210),
             scale=0.44
         )
 
         # Best friends list
         s.p3 = sw(
             parent=s.p,
-            position=(465-460, 240),
+            position=(465-450, 240),
             size=(140, 130),
             border_opacity=0.4
         )
@@ -1116,12 +878,12 @@ class BestFriends:
         s._refreshBestFriendsUI()
 
         # Refresh all best friends 
-        s._refreshBestFriendsConnectedUI(pl)
+        #s._refreshBestFriendsConnectedUI(pl)
 
         # Best friends(Connected) list
         s.p4 = sw(
             parent=s.p,
-            position=(465-460, 17),
+            position=(465-450, 17),
             size=(140, 170),
             border_opacity=0.4
         )
@@ -1130,7 +892,7 @@ class BestFriends:
 
         s.p6 = sw(
             parent=s.p,
-            position=(615-460, 17),
+            position=(615-450, 17),
             size=(175, 170),
             border_opacity=0.4
         )
@@ -1173,7 +935,7 @@ class BestFriends:
         if not friends_connected_list:
             tw(
                 parent=s.p3,
-                position=(42-460, 70),
+                position=(42-450, 70),
                 text='Sin amigos \nconectados',
                 color=s.COL3,
                 maxwidth=135,
@@ -1214,7 +976,7 @@ class BestFriends:
         if not hasattr(s, "p4_best") or not (s.p4_best and s.p4_best.exists()):
             s.p4_best = sw(
                 parent=s.p,
-                position=(465-460, 17),
+                position=(465-450, 17),
                 size=(140, 170),
                 border_opacity=0.4
             )
