@@ -37,6 +37,7 @@ from bascenev1 import (
 
 my_directory = _babase.env()['python_directory_user'] 
 best_friends_file = os.path.join(my_directory, "BestFriends.txt")
+pl = []
 
 class Finder:
     
@@ -972,7 +973,7 @@ class Finder:
 
 class BestFriends:
 
-    COL1 = (0.4, 0.0, 0.0)   # Rojo vino oscuro (fondo principal)
+    COL1 = (1, 0.6, 0.8)   # Rojo vino oscuro (fondo principal)
     COL2 = (0.15, 0.05, 0.05)  # Gris rojizo muy oscuro (paneles/bordes)
     COL3 = (0.6, 0.1, 0.1)   # Rojo intenso apagado (resaltados)
     COL4 = (0.8, 0.2, 0.2)   # Rojo carmesí (texto principal, títulos)
@@ -994,13 +995,35 @@ class BestFriends:
         s.s1 = s.snd('powerup01')
         c = s.__class__
         # parent
-        s.sizeWindow = (800,435)
-        s.p = cw(
-            scale_origin_stack_offset=(src.get_screen_space_center()),
+        s.sizeWindow = (340,435)
+        
+        try:
+            screen_size = (src._width, src._height)
+        except Exception:
+            screen_size = (800, 600)
+        
+        s.root = ocw(
+            parent=zw('overlay_stack'),
+            size=screen_size,
+            background=False,
+            on_outside_click_call=s.bye,   # <- click fuera cierra
+        )
+        
+        s.p = ocw(
+            parent=s.root,
             size=s.sizeWindow,
-            oac=s.bye
-        )[0]
-
+            position=(460, 82),   # ahora sí se respeta
+            background=False,
+        )
+        
+        # fondo rosado claro dentro del panel
+        iw(
+            parent=s.p,
+            size=s.sizeWindow,
+            texture=gt('white'),
+            color=(1, 0.6, 0.8)
+        )
+        
         s._popup_target = None
 
         # footing
@@ -1022,12 +1045,12 @@ class BestFriends:
             parent=s.p,
             text='Todos tus Amigos',
             color=s.COL4,
-            position=(540, 400)
+            position=(540-460, 400)
         )
 
         s.text_input = tw(
             parent=s.p,
-            position=(695,320),
+            position=(695-460,320),
             size=(120,50),
             text="",
             color=s.COL4,
@@ -1043,7 +1066,7 @@ class BestFriends:
 
         bw(
             parent=s.p,
-            position=(640, 250),
+            position=(640-460, 250),
             size=(120, 39),
             label='Agregar \nManualmente',
             color=s.COL2,
@@ -1061,7 +1084,7 @@ class BestFriends:
         iw(
             parent=s.p,
             size=(320,1),
-            position=(470,235),
+            position=(470-460,235),
             texture=gt('white'),
             color=s.COL2
         )
@@ -1071,31 +1094,34 @@ class BestFriends:
             parent=s.p,
             text='En linea \ue019',
             color=s.COL4,
-            position=(465,195)
+            position=(465-460,195)
         )
         
         tw(
             parent=s.p,
             text='*Recuerda que solo aparecerán tus \namigos si están jugando en un servidor \n publico, con cupo y después de ciclarlos*',
             color=s.COL4,
-            position=(585,210),
+            position=(585-460,210),
             scale=0.44
         )
 
         # Best friends list
         s.p3 = sw(
             parent=s.p,
-            position=(465, 240),
+            position=(465-460, 240),
             size=(140, 130),
             border_opacity=0.4
         )
         s.p4 = None  # Init empty
         s._refreshBestFriendsUI()
 
+        # Refresh all best friends 
+        s._refreshBestFriendsConnectedUI(pl)
+
         # Best friends(Connected) list
         s.p4 = sw(
             parent=s.p,
-            position=(465, 17),
+            position=(465-460, 17),
             size=(140, 170),
             border_opacity=0.4
         )
@@ -1104,7 +1130,7 @@ class BestFriends:
 
         s.p6 = sw(
             parent=s.p,
-            position=(615, 17),
+            position=(615-460, 17),
             size=(175, 170),
             border_opacity=0.4
         )
@@ -1147,7 +1173,7 @@ class BestFriends:
         if not friends_connected_list:
             tw(
                 parent=s.p3,
-                position=(42, 70),
+                position=(42-460, 70),
                 text='Sin amigos \nconectados',
                 color=s.COL3,
                 maxwidth=135,
@@ -1188,7 +1214,7 @@ class BestFriends:
         if not hasattr(s, "p4_best") or not (s.p4_best and s.p4_best.exists()):
             s.p4_best = sw(
                 parent=s.p,
-                position=(465, 17),
+                position=(465-460, 17),
                 size=(140, 170),
                 border_opacity=0.4
             )
@@ -1432,11 +1458,31 @@ class BestFriends:
         return l
     
     def bye(s):
-        s.s1.stop()
-        ocw(s.p,transition='out_scale')
+        try:
+            s.s1.stop()
+        except Exception:
+            pass
+        
+        if s.p and s.p.exists():
+            s.p.delete()
+    
+        if s.root and s.root.exists():
+            s.root.delete()
+    
+        # sonido de salida
         l = s.snd('laser')
-        f = lambda: teck(0.01,f) if s.p else l.stop()
-        f()
+    
+        def _check():
+            if s.p and s.p.exists():
+                teck(0.01, _check)
+            else:
+                l.stop()
+    
+        teck(0.01, _check)
+    
+        # limpiar referencias
+        s.p = None
+        s.root = None
     
     def ding(s,i,j):
         a = ['Small','']
