@@ -52,6 +52,7 @@ class Finder:
     MEM = []
     BST = []
     SL = None
+    
 
     def __init__(s,src):
 
@@ -309,10 +310,12 @@ class Finder:
             draw_controller=friends_connected_btn,
             texture=gt('usersButton'),
         )
-        
+
+        s.bf_connected = len(s.get_all_best_friends(pl))
+
         s._users_count_text = tw(
             parent=s.p,
-            text=str(len(s.get_all_best_friends(pl))),
+            text=str(s.bf_connected),
             size=(0, 0),
             position=(400 + 21, 390 + 16),
             h_align="center",
@@ -337,12 +340,22 @@ class Finder:
                 position=(460, 82),
                 background=False,
             )
+            
 
             iw(
                 parent=s.pf,
                 size=s.sizeWindow,
                 texture=gt('white'),
                 color=s.COL1
+            )
+
+            # separator
+            iw(
+                parent=s.pf,
+                size=(3,435),
+                position=(0,0),
+                texture=gt('white'),
+                color=s.COL2
             )
 
             tw(
@@ -457,6 +470,10 @@ class Finder:
             if hasattr(s, "pf") and s.pf and s.pf.exists():
                 s.pf.delete()
                 s.pf = None
+
+    def _updateCount(s):
+        new_count = len(s.get_all_best_friends(s.plys()))
+        tw(edit=s._users_count_text, text=str(new_count))
 
 
     def _refreshBestFriendsUI(s):
@@ -866,6 +883,8 @@ class Finder:
                 f.write(prefixed_friend + "\n")
 
             s.ding(1, 0)
+            s.bf_connected+=1
+            s._updateCount()
             TIP(f"{prefixed_friend} agregado con éxito")
         else:
             TIP(f"{prefixed_friend} ya está en la lista")
@@ -900,7 +919,9 @@ class Finder:
                         f.write(line + "\n")
 
             s.ding(0, 1)  # diferente sonido que add (por ejemplo)
+            s.bf_connected-=1
             TIP(f"{prefixed_friend} eliminado con éxito")
+            s._updateCount()
         else:
             TIP(f"{prefixed_friend} no se encuentra en la lista")
 
