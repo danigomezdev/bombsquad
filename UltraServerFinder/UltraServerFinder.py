@@ -60,6 +60,7 @@ class Finder:
     TOP = 1
     MEM = []
     ART = []
+    BST = []
     BUSY = False
     KIDS = []
     P2 = None
@@ -71,6 +72,7 @@ class Finder:
         s.friends_open = False  
         s.thr = []
         s.ikids = []
+        s.ibfriends = []
         s.pro = []
         s.sust = None
         s.ParentFriends = None
@@ -129,8 +131,9 @@ class Finder:
             texture=gt('usersButton'),
         )
 
-        pl = s.plys()
-        s.bf_connected = len(s._getAllBestFriendsConnected(pl))
+        s.bf_connected = len(s._getAllBestFriendsConnected(["\ue063" + nombre.strip() for nombre, _ in s.plys()]))
+        s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
+
 
         s._users_count_text = tw(
             parent=c.MainParent,
@@ -347,7 +350,7 @@ class Finder:
                 oac=Call(lambda: (
                     s._addFriend(p),
                     s._refreshBestFriendsUI(),
-                    s._refreshBestFriendsConnectedUI(s.plys())
+                    s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
                 ))
             ))
         else:
@@ -366,7 +369,7 @@ class Finder:
         s.friends_open = not s.friends_open
 
         if s.friends_open:
-            print("Abrir toggle de amigos")
+            #print("Abrir toggle de amigos")
 
             sizeWindow = (355,435)
             # Crear panel de amigos como hijo
@@ -498,10 +501,10 @@ class Finder:
                 v_align='center'
             )
             s._refreshBestFriendsUI()
-            s._refreshBestFriendsConnectedUI(s.plys())
+            s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
 
         else:
-            print("Cerrar toggle de amigos")
+            #print("Cerrar toggle de amigos")
 
             # Destruir panel si existe
             if hasattr(s, "ParentFriends") and s.ParentFriends and s.ParentFriends.exists():
@@ -509,7 +512,7 @@ class Finder:
                 s.ParentFriends = None
 
     def _updateCount(s):
-        new_count = len(s._getAllBestFriendsConnected(s.plys()))
+        new_count = len(s._getAllBestFriendsConnected(["\ue063" + nombre.strip() for nombre, _ in s.plys()]))
         tw(edit=s._users_count_text, text=str(new_count))
 
 
@@ -559,9 +562,9 @@ class Finder:
 
     def _refreshBestFriendsConnectedUI(s, p):
         if not (s.ParentFriends and s.ParentFriends.exists()):
-            print("⚠️ No existe el panel BestFriends, abortando refresh.")
+            #print("⚠️ No existe el panel BestFriends, abortando refresh.")
             return
-
+        
         if hasattr(s, "p4_best") and s.p4_best and s.p4_best.exists():
             s.p4_best.delete()
             s.p4_best = None
@@ -616,7 +619,7 @@ class Finder:
                 selectable=True,
                 click_activate=True,
                 v_align='center',
-                on_activate_call=Call(s._infoBestFriends, friend),
+                on_activate_call=Call(s._infoBestFriend, friend),
             )
 
     def _showFriendPopup(s, friend: str, pos: tuple[float, float]):
@@ -639,13 +642,107 @@ class Finder:
             oac=lambda: (
                 s._deleteFriend(friend),
                 s._refreshBestFriendsUI(),
-                s._refreshBestFriendsConnectedUI(s.plys())
+                s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
             )
         )
         s._popup_target = friend  
 
     def popup_menu_closing(s, popup_window) -> None:
         s._popup_target = None
+
+
+    def _infoBestFriend(s, p):
+        # Limpieza del nombre (quita el prefijo si existe)
+        clean_p = p.lstrip("\ue063")
+
+        # Clean Ui
+        [_.delete() for _ in s.ibfriends]
+        s.ibfriends.clear()
+        s.tip_bf and s.tip_bf.delete()
+        
+        c = s.__class__
+        i = None
+
+        for idx, _ in enumerate(c.MEM):
+            for r in _.get('roster', []):
+                spec = loads(r['spec'])
+                if spec['n'] == clean_p:
+                    i = _
+                    pz = r['p']
+                    break
+            if i is not None:
+                break
+
+        server_name = i.get("n", "Desconocido")
+        server_ip = i.get("a", "N/A")
+        server_port = i.get("p", "N/A")
+
+        s.ibfriends.append(tw(
+            parent=s.p6,
+            position=(0, 0),
+            h_align='center',
+            maxwidth=160,
+            text=f"{server_name}\n{server_ip}\n{server_port}",
+            color=s.COL4,
+            size=(160,40)
+        ))
+
+
+        if i is None:
+            c.SL = None
+            tw(c.TIP, text=s.tip)
+            return
+
+        account_v2 = [str(list(_.values())[1]) for _ in pz]
+
+        s.ibfriends.append(bw(
+            parent=s.p6,
+            position=(253, 65),
+            size=(170, 30),
+            label=str(account_v2[0]) if account_v2 and account_v2[0] != [] else clean_p,
+            color=s.COL2,
+            textcolor=s.COL4,
+            oac=Call(s.oke, '\n'.join([' | '.join([str(j) for j in _.values()]) for _ in pz]) or 'Nothing')
+        ))
+
+        if p.startswith("\ue063"):
+            # v2: Show both buttons side by side
+            s.ibfriends.append(bw(
+                parent=s.p6,
+                position=(14, 30),
+                size=(60, 30),
+                label='Conectar',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(CON, i['a'], i['p'], False)
+            ))
+
+            s.ibfriends.append(bw(
+                parent=s.p6,
+                position=(84, 30),
+                size=(75, 30),
+                label='Eliminar \nAmigo',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(lambda: (
+                    s.remove_friend(p),  # remove the "\ue063" and add it
+                    s._refreshBestFriendsUI(),
+                    s._refreshBestFriendsConnectedUI(s.plys()),
+                    [_.delete() for _ in s.ibfriends]
+                ))
+            ))
+
+        else:
+            
+            s.ibfriends.append(bw(
+                parent=s.p6,
+                position=(0, 30),
+                size=(156, 30),
+                label='Conectar',
+                color=s.COL2,
+                textcolor=s.COL4,
+                oac=Call(CON, i['a'], i['p'], False)
+            ))
 
     def oke(s,t):
         TIP(t)
@@ -723,7 +820,7 @@ class Finder:
 
         return friends
     
-    def _getAllBestFriendsConnected(s, pl: list[tuple[str, str]] | None = None) -> list[str]:
+    def _getAllBestFriendsConnected(s, pl: list[str] | None = None) -> list[str]:
         best_friends = s.get_all_friends()
         connected_best_friends = []
 
@@ -731,7 +828,7 @@ class Finder:
         if not pl:
             return []
 
-        for p, a in pl:
+        for p in pl:  # ahora p es directamente un nombre con \ue063
             if p in best_friends:
                 connected_best_friends.append(p)
 
@@ -865,8 +962,8 @@ class Finder:
         ab = int(ln/tt)
         TIP(f'¡Terminado!\nEscaneados {ln} servidores en {round(tt,2)} segundos!\nAproximadamente {ab} servidor{["es",""][ab<2]}/seg')
         s.__class__.BUSY = False
-        s._refreshBestFriendsConnectedUI(s.plys())
-
+        s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
+        s._updateCount()
 
 # Kang
 SPEC = {"s":"{\"n\":\"Finder\",\"a\":\"\",\"sn\":\"\"}","d":"69"*20}
