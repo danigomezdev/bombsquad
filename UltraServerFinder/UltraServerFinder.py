@@ -68,6 +68,7 @@ class Finder:
     SL = None
     TIP = None
     FLT = ''
+
     def __init__(s,src):
         s.friends_open = False  
         s.thr = []
@@ -78,6 +79,7 @@ class Finder:
         s.ParentFriends = None
         s.s1 = s.snd('powerup01')
         c = s.__class__
+    
         # parent
         sizeWindow = (800,435)
 
@@ -119,7 +121,7 @@ class Finder:
             label='',
             color=s.COL1,
             oac=lambda:(
-                s.toggle_friends()
+                s._toggleFriendsWindow()
             )
         )
         
@@ -131,9 +133,8 @@ class Finder:
             texture=gt('usersButton'),
         )
 
-        s.bf_connected = len(s._getAllBestFriendsConnected(["\ue063" + nombre.strip() for nombre, _ in s.plys()]))
-        s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
-
+        s.bf_connected = len(s._getAllBestFriendsConnected(["\ue063" + player.strip() for player, _ in s.plys()]))
+        s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
 
         s._users_count_text = tw(
             parent=c.MainParent,
@@ -154,6 +155,7 @@ class Finder:
             color=s.COL4,
             position=(19,359)
         )
+
         bw(
             parent=c.MainParent,
             position=(360,343),
@@ -163,6 +165,7 @@ class Finder:
             textcolor=s.COL4,
             oac=s.fresh
         )
+        
         tw(
             parent=c.MainParent,
             text='Busca jugadores sin tener que unirse a partida',
@@ -171,6 +174,7 @@ class Finder:
             position=(15,330),
             maxwidth=320
         )
+        
         # separator
         iw(
             parent=c.MainParent,
@@ -180,7 +184,6 @@ class Finder:
             color=s.COL2
         )
 
-        
         # cube art
         c.ARTT = tw(
             parent=c.MainParent,
@@ -192,6 +195,7 @@ class Finder:
             color=s.COL4,
             position=(205,260),
         )
+
         # separator
         iw(
             parent=c.MainParent,
@@ -200,6 +204,7 @@ class Finder:
             texture=gt('white'),
             color=s.COL2
         )
+
         # filter
         c.FT = tw(
             parent=c.MainParent,
@@ -213,25 +218,29 @@ class Finder:
             color=s.COL4,
             description='Raw search - Matches wildcard to all strings in server\'s JSON, including player names, and server name. Enter'
         )
+
         s.ft2 = tw(
             parent=c.MainParent,
             position=(26,153),
             text='Buscar',
             color=s.COL3
         )
+
         # players
-        p1 = sw(
+        parent1 = sw(
             parent=c.MainParent,
             position=(20,18),
             size=(205,122),
             border_opacity=0.4,
             color=s.COL4
         )
+
         c.MainParent2 = ocw(
-            parent=p1,
+            parent=parent1,
             size=(205,1),
             background=False
         )
+
         s.pltip = tw(
             parent=c.MainParent,
             position=(90,100),
@@ -240,6 +249,7 @@ class Finder:
             maxwidth=175,
             h_align='center'
         )
+
         # info
         iw(
             parent=c.MainParent,
@@ -249,6 +259,7 @@ class Finder:
             mesh_transparent=gm('softEdgeOutside'),
             opacity=0.4
         )
+
         s.tip = 'Selecciona algo para\nver la info del servidor'
         c.TIP = tw(
             parent=c.MainParent,
@@ -258,11 +269,13 @@ class Finder:
             maxwidth=170,
             h_align='center'
         )
+
         # finally
         s.draw() if c.ART else 0
         s.up()
-        c.SL and s.info(c.SL)
+        c.SL and s._info(c.SL)
         c.FL = tuck(0.1,s.flup,repeat=True)
+
     def flup(s):
         c = s.__class__
         if not s.ft2.exists():
@@ -273,13 +286,15 @@ class Finder:
         if ct != s.FLT:
             c.FLT = ct
             s.up()
+
     def hl(s,_,p):
         c = s.__class__
         c.SL = p
         [tw(t,color=s.COL3) for t in c.KIDS]
         tw(c.KIDS[_],color=s.COL4)
-        s.info(p)
-    def info(s,p):
+        s._info(p)
+
+    def _info(s,p):
         [_.delete() for _ in s.ikids]
         s.ikids.clear()
         c = s.__class__
@@ -344,13 +359,13 @@ class Finder:
                 parent=c.MainParent,
                 position=(340, 30),
                 size=(87, 30),
-                label='Agregar Amigo',
+                label='Agregar \nAmigo',
                 color=s.COL2,
                 textcolor=s.COL4,
                 oac=Call(lambda: (
                     s._addFriend(p),
                     s._refreshBestFriendsUI(),
-                    s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
+                    s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
                 ))
             ))
         else:
@@ -365,15 +380,12 @@ class Finder:
             ))
 
 
-    def toggle_friends(s):
+    def _toggleFriendsWindow(s):
         s.friends_open = not s.friends_open
 
         if s.friends_open:
-            #print("Abrir toggle de amigos")
 
             sizeWindow = (355,435)
-            # Crear panel de amigos como hijo
-            
             s.ParentFriends = ocw(
                 parent=s.root,
                 size=sizeWindow,
@@ -381,7 +393,6 @@ class Finder:
                 background=False,
             )
             
-
             iw(
                 parent=s.ParentFriends,
                 size=sizeWindow,
@@ -404,7 +415,6 @@ class Finder:
                 color=s.COL4,
                 position=(540-450, 400)
             )
-
 
             s.text_input = tw(
                 parent=s.ParentFriends,
@@ -455,13 +465,13 @@ class Finder:
                 position=(465-450,195)
             )
 
-            tw(
-                parent=s.ParentFriends,
-                text='*Recuerda que solo aparecerán tus \namigos si están jugando en un servidor \n publico, con cupo y después de ciclarlos*',
-                color=s.COL4,
-                position=(585-450,210),
-                scale=0.44
-            )
+            #tw(
+            #    parent=s.ParentFriends,
+            #    text='*Recuerda que solo aparecerán tus \namigos si están jugando en un servidor \n publico, con cupo y después de ciclarlos*',
+            #    color=s.COL4,
+            #    position=(585-450,210),
+            #    scale=0.44
+            #)
 
             # Best friends list
             s.p3 = sw(
@@ -501,20 +511,16 @@ class Finder:
                 v_align='center'
             )
             s._refreshBestFriendsUI()
-            s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
+            s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
 
         else:
-            #print("Cerrar toggle de amigos")
-
-            # Destruir panel si existe
             if hasattr(s, "ParentFriends") and s.ParentFriends and s.ParentFriends.exists():
                 s.ParentFriends.delete()
                 s.ParentFriends = None
 
     def _updateCount(s):
-        new_count = len(s._getAllBestFriendsConnected(["\ue063" + nombre.strip() for nombre, _ in s.plys()]))
+        new_count = len(s._getAllBestFriendsConnected(["\ue063" + player.strip() for player, _ in s.plys()]))
         tw(edit=s._users_count_text, text=str(new_count))
-
 
     def _refreshBestFriendsUI(s):
         if hasattr(s, "p4_friends") and s.p4_friends and s.p4_friends.exists():
@@ -556,13 +562,13 @@ class Finder:
                 selectable=True,
                 click_activate=True,
                 v_align='center',
-                on_activate_call=Call(s._showFriendPopup, friend, (200, pos_y))
+                on_activate_call=Call(s._showFriendPopup, friend, (200, 100))
             )
 
 
     def _refreshBestFriendsConnectedUI(s, p):
         if not (s.ParentFriends and s.ParentFriends.exists()):
-            #print("⚠️ No existe el panel BestFriends, abortando refresh.")
+            #print("[DEBUG]: BestFriends panel does not exist, aborting refresh.")
             return
         
         if hasattr(s, "p4_best") and s.p4_best and s.p4_best.exists():
@@ -642,7 +648,7 @@ class Finder:
             oac=lambda: (
                 s._deleteFriend(friend),
                 s._refreshBestFriendsUI(),
-                s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
+                s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
             )
         )
         s._popup_target = friend  
@@ -652,7 +658,7 @@ class Finder:
 
 
     def _infoBestFriend(s, p):
-        # Limpieza del nombre (quita el prefijo si existe)
+        # Clean the player (remove the prefix if it exists)
         clean_p = p.lstrip("\ue063")
 
         # Clean Ui
@@ -673,7 +679,7 @@ class Finder:
             if i is not None:
                 break
 
-        server_name = i.get("n", "Desconocido")
+        server_name = i.get("n", "Unknown")
         server_ip = i.get("a", "N/A")
         server_port = i.get("p", "N/A")
 
@@ -686,7 +692,6 @@ class Finder:
             color=s.COL4,
             size=(160,40)
         ))
-
 
         if i is None:
             c.SL = None
@@ -725,15 +730,14 @@ class Finder:
                 color=s.COL2,
                 textcolor=s.COL4,
                 oac=Call(lambda: (
-                    s.remove_friend(p),  # remove the "\ue063" and add it
+                    s._deleteFriend(p),
                     s._refreshBestFriendsUI(),
                     s._refreshBestFriendsConnectedUI(s.plys()),
                     [_.delete() for _ in s.ibfriends]
                 ))
             ))
 
-        else:
-            
+        else:   
             s.ibfriends.append(bw(
                 parent=s.p6,
                 position=(0, 30),
@@ -747,10 +751,12 @@ class Finder:
     def oke(s,t):
         TIP(t)
         s.ding(1,1)
+
     def copy(s,t):
         s.ding(1,1)
-        TIP('Copied to clipboard!')
+        TIP('¡Copiado en el portapapeles!')
         COPY(t)
+
     def plys(s):
         z = []
         c = s.__class__
@@ -764,6 +770,7 @@ class Finder:
                         (c.FLT and not s.chk(r))
                     ) else z.append((ds,a))
         return sorted(z,key=lambda _: _[0].startswith('Server'))
+    
     def chk(s,r):
         t = s.__class__.FLT.lower()
         for _ in r:
@@ -772,11 +779,13 @@ class Finder:
             for p in _['p']:
                 if t in p['nf'].lower(): return True
         return False
+    
     def snd(s,t):
         l = gs(t)
         l.play()
         teck(uf(0.14,0.18),l.stop)
         return l
+    
     def bye(s):
         s.s1.stop()
         c = s.__class__
@@ -784,11 +793,13 @@ class Finder:
         l = s.snd('laser')
         f = lambda: teck(0.01,f) if c.root else l.stop()
         f()
+    
     def ding(s,*z):
         a = ['Small','']
         for i,_ in enumerate(z):
             h = 'ding'+a[_]
             teck(i/10,Call(s.snd,h) if i<(len(z)-1) else gs(h).play)
+    
     def fresh(s):
         c = s.__class__
         if c.BUSY:
@@ -810,7 +821,6 @@ class Finder:
         )
         p.run_v1_account_transactions()
 
-
     def get_all_friends(s) -> list[str]:
         if not os.path.exists(best_friends_file):
             return []
@@ -828,12 +838,11 @@ class Finder:
         if not pl:
             return []
 
-        for p in pl:  # ahora p es directamente un nombre con \ue063
+        for p in pl:
             if p in best_friends:
                 connected_best_friends.append(p)
 
         return connected_best_friends
-
 
     def _addFriend(s, friend: str):
         # Validate that it is not empty
@@ -907,8 +916,10 @@ class Finder:
             s.thr.append(t)
             t.start()
         s.sust = tuck(0.01,s.sus,repeat=True)
+
     def ping(s,_,i):
         _['ping'],_['roster'] = ping_and_kang(_['a'],_['p'],pro=s.pro,dex=i)
+
     def sus(s):
         if not s.pro: return
         i,p = s.pro.pop()
@@ -922,10 +933,12 @@ class Finder:
         if cs(sc.OUYA_BUTTON_U) not in c.ART:
             s.syst = None
             s.done()
+
     def draw(s):
         c = s.__class__
         tw(c.ARTT,text=('\n'.join(''.join(c.ART[i:i+40]) for i in range(0,len(s.ART),40))), position=(205,295))
         s.up()
+
     def up(s):
         c = s.__class__
         [_.delete() for _ in c.KIDS]
@@ -952,6 +965,7 @@ class Finder:
             )
             if not dun and p == c.SL: ocw(c.MainParent2,visible_child=tt); dun = 1
             c.KIDS.append(tt)
+
     def done(s):
         s.ding(0,1)
         [_.join() for _ in s.thr]
@@ -962,7 +976,7 @@ class Finder:
         ab = int(ln/tt)
         TIP(f'¡Terminado!\nEscaneados {ln} servidores en {round(tt,2)} segundos!\nAproximadamente {ab} servidor{["es",""][ab<2]}/seg')
         s.__class__.BUSY = False
-        s._refreshBestFriendsConnectedUI(["\ue063" + nombre.strip() for nombre, _ in s.plys()])
+        s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
         s._updateCount()
 
 # Kang
@@ -1108,37 +1122,23 @@ cw = lambda *,size=None,oac=None,**k: (p:=ocw(
 # Global
 BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
 TIP = lambda t: push(t,Finder.COL3)
-lmao = lambda: [
-    'Who are we looking for this time?',
-    'Press on Fetch, and I\'ll do the rest.',
-    'Let\'s legally stalk all servers!',
-    'Let\'s list them all!',
-    'Relax. We can find them.',
-    'Lost your friend? Let\'s find them!',
-    'Looking for players? I can help!',
-    'Cool art appears here. Fetch already!',
-    'Let\'s hear some "How did u find me!?"',
-    'Ready as ever. Press on Fetch!',
-    'Let\'s sniff out some packets!',
-    'Who\'s there? I\'ll see myself!',
-    'They can\'t hide!! Muahahaha-',
-    'Why did I put a random tip here?',
-    'We\'re having rosters for dinner!'
-]
 
 
 # ba_meta export babase.Plugin
 class byLess(Plugin):
+    
     BTN = None
     @classmethod
     def up(c):
         c.BTN.activate() if c.BTN.exists() else None
+    
     def __init__(s):
         from bauiv1lib import party
         p = party.PartyWindow
         a = '__init__'
         o = getattr(p,a)
         setattr(p,a,lambda z,*a,**k:(o(z,*a,**k),s.make(z))[0])
+    
     def make(s,z):
         sz = (80,30)
         p = z._root_widget
