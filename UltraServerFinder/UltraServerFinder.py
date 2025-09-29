@@ -1,6 +1,12 @@
 # ba_meta require api 9
 
-from json import dumps, loads, dump
+from json import (
+    dumps,
+    loads,
+    dump,
+    JSONDecodeError,
+    load
+)
 from threading import Thread
 from time import time, sleep
 from bascenev1 import (
@@ -71,7 +77,8 @@ class Finder:
     FLT = ''
 
     def __init__(s,src):
-        s.friends_open = False  
+        config = s.load_config()
+        s.friends_open = config.get("friends_open", False)
         s.thr = []
         s.ikids = []
         s.ibfriends = []
@@ -125,6 +132,11 @@ class Finder:
                 s._toggleFriendsWindow()
             )
         )
+
+        if s.friends_open:
+            s._FriendsWindow()
+
+
         
         iw(
             parent=c.MainParent,
@@ -381,10 +393,20 @@ class Finder:
             ))
 
 
-    def _toggleFriendsWindow(s):
-        s.friends_open = not s.friends_open
+    def load_config(s):
+        s.ensure_files_exist()
+        with open(configs_file, "r", encoding="utf-8") as f:
+            try:
+                return load(f)
+            except JSONDecodeError:
+                return {}
+    
+    def save_config(s, config: dict):
+        os.makedirs(my_directory, exist_ok=True)
+        with open(configs_file, "w", encoding="utf-8") as f:
+            dump(config, f, indent=4, ensure_ascii=False)
 
-        if s.friends_open:
+    def _FriendsWindow(s):
 
             sizeWindow = (355,435)
             s.ParentFriends = ocw(
@@ -513,6 +535,16 @@ class Finder:
             )
             s._refreshBestFriendsUI()
             s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
+
+    def _toggleFriendsWindow(s):
+        s.friends_open = not getattr(s, "friends_open", False)
+
+        config = s.load_config()
+        config["friends_open"] = s.friends_open
+        s.save_config(config)
+        
+        if s.friends_open:
+            s._FriendsWindow()
 
         else:
             if hasattr(s, "ParentFriends") and s.ParentFriends and s.ParentFriends.exists():
