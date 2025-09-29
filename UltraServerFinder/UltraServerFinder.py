@@ -55,18 +55,17 @@ my_directory = _babase.env()['python_directory_user'] + "/UltraServerFinder"
 best_friends_file = os.path.join(my_directory, "BestFriends.txt")
 configs_file = os.path.join(my_directory, "configs.json")
 
-
 def ensure_files_exist():
     """Ensure UltraServerFinder directory and required files exist."""
-    # Crear el folder si no existe
+    # Create the folder if it doesn't exist
     os.makedirs(my_directory, exist_ok=True)
 
-    # Crear BestFriends.txt si no existe
+    # Create BestFriends.txt if it doesn't exist
     if not os.path.exists(best_friends_file):
         with open(best_friends_file, "w", encoding="utf-8") as f:
             f.write("")
 
-    # Crear configs.json si no existe
+    # Create configs.json if it doesn't exist
     if not os.path.exists(configs_file):
         with open(configs_file, "w", encoding="utf-8") as f:
             dump({}, f, indent=4, ensure_ascii=False)
@@ -80,7 +79,7 @@ def load_config():
             return {}
 
 class Finder:
-    VER = '1.2'
+    VER = '1.1'
     config = load_config()
     COL1 = tuple(config.get("COL1", (0.1, 0.1, 0.1)))
     COL2 = tuple(config.get("COL2", (0.2, 0.2, 0.2)))
@@ -172,7 +171,7 @@ class Finder:
             texture=gt('menuButton'),
         )
 
-        friends_connected_btn = bw(
+        _friends_connected_btn = bw(
             parent=c.MainParent,
             position=(400, 390),
             size=(45, 38),
@@ -189,14 +188,14 @@ class Finder:
             parent=c.MainParent,
             size=(45, 45),
             position=(400, 390),
-            draw_controller=friends_connected_btn,
+            draw_controller=_friends_connected_btn,
             texture=gt('usersButton'),
         )
 
         s.bf_connected = len(s._getAllBestFriendsConnected(["\ue063" + player.strip() for player, _ in s.plys()]))
         s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
 
-        s._users_count_text = tw(
+        s._users_connected_count = tw(
             parent=c.MainParent,
             text=str(s.bf_connected),
             size=(0, 0),
@@ -205,7 +204,7 @@ class Finder:
             v_align="center",
             scale=0.6,
             color=(0,1,0,1),
-            draw_controller=friends_connected_btn  
+            draw_controller=_friends_connected_btn  
         )
 
         # fetch
@@ -287,7 +286,7 @@ class Finder:
         )
 
         # players
-        parent1 = sw(
+        _parent1 = sw(
             parent=c.MainParent,
             position=(20,18),
             size=(205,122),
@@ -296,7 +295,7 @@ class Finder:
         )
 
         c.MainParent2 = ocw(
-            parent=parent1,
+            parent=_parent1,
             size=(205,1),
             background=False
         )
@@ -439,7 +438,7 @@ class Finder:
                 oac=Call(CON, i['a'], i['p'], False)
             ))
     
-    def save_config(s, config: dict):
+    def _saveConfigs(s, config: dict):
         os.makedirs(my_directory, exist_ok=True)
         with open(configs_file, "w", encoding="utf-8") as f:
             dump(config, f, indent=4, ensure_ascii=False)
@@ -526,35 +525,27 @@ class Finder:
                 position=(465-450,195)
             )
 
-            #tw(
-            #    parent=s.ParentFriends,
-            #    text='*Recuerda que solo aparecerán tus \namigos si están jugando en un servidor \n publico, con cupo y después de ciclarlos*',
-            #    color=s.COL4,
-            #    position=(585-450,210),
-            #    scale=0.44
-            #)
-
             # Best friends list
-            s.p3 = sw(
+            s._parent3 = sw(
                 parent=s.ParentFriends,
                 position=(465-450, 240),
                 size=(140, 130),
                 border_opacity=0.4
             )
-            s.p4 = None  # Init empty
+            s._parent4 = None  # Init empty
             s._refreshBestFriendsUI()
 
             # Best friends(Connected) list
-            s.p4 = sw(
+            s._parent4 = sw(
                 parent=s.ParentFriends,
                 position=(465-450, 17),
                 size=(140, 170),
                 border_opacity=0.4
             )
 
-            s.p5 = None  # Init empty
+            s._parent5 = None  # Init empty
 
-            s.p6 = sw(
+            s._parent6 = sw(
                 parent=s.ParentFriends,
                 position=(615-450, 17),
                 size=(175, 170),
@@ -562,7 +553,7 @@ class Finder:
             )
 
             s.tip_bf = tw(
-                parent=s.p6,
+                parent=s._parent6,
                 size=(150, 155),  
                 position=(0, 0),
                 text='Selecciona un amigo \npara ver donde está',
@@ -579,7 +570,7 @@ class Finder:
 
         config = load_config()
         config["friends_open"] = s.friends_open
-        s.save_config(config)
+        s._saveConfigs(config)
         
         if s.friends_open:
             s._FriendsWindow()
@@ -590,18 +581,25 @@ class Finder:
                 s.ParentFriends = None
 
     def _updateCount(s):
-        new_count = len(s._getAllBestFriendsConnected(["\ue063" + player.strip() for player, _ in s.plys()]))
-        tw(edit=s._users_count_text, text=str(new_count))
+        new_count = len(
+            s._getAllBestFriendsConnected(
+                ["\ue063" + player.strip() for player, _ in s.plys()]
+            )
+        )
+    
+        if getattr(s, "_users_connected_count", None) and s._users_connected_count.exists():
+            tw(edit=s._users_connected_count, text=str(new_count))
+
 
     def _refreshBestFriendsUI(s):
-        if hasattr(s, "p4_friends") and s.p4_friends and s.p4_friends.exists():
-            s.p4_friends.delete()
+        if hasattr(s, "_parent4_friends") and s._parent4_friends and s._parent4_friends.exists():
+            s._parent4_friends.delete()
 
         friends_connected_list = s.get_all_friends()
         sy2 = max(len(friends_connected_list) * 30, 140)
 
-        s.p4_friends = ocw(
-            parent=s.p3,
+        s._parent4_friends = ocw(
+            parent=s._parent3,
             size=(190, sy2),
             background=False
         )
@@ -609,7 +607,7 @@ class Finder:
         # if there are no friends
         if not friends_connected_list:
             #tw(
-            #    parent=s.p3,
+            #    parent=s._parent3,
             #    position=(-1000, 10),
             #    text='Sin amigos \nconectados',
             #    color=s.COL3,
@@ -625,7 +623,7 @@ class Finder:
             pos_y = sy2 - 30 - 30 * i
 
             tw(
-                parent=s.p4_friends,
+                parent=s._parent4_friends,
                 size=(170, 30),
                 color=s.COL3,
                 text=display_name,
@@ -643,18 +641,18 @@ class Finder:
             #print("[DEBUG]: BestFriends panel does not exist, aborting refresh.")
             return
         
-        if hasattr(s, "p4_best") and s.p4_best and s.p4_best.exists():
-            s.p4_best.delete()
-            s.p4_best = None
-            s.p5_best = None
+        if hasattr(s, "_parent4_best") and s._parent4_best and s._parent4_best.exists():
+            s._parent4_best.delete()
+            s._parent4_best = None
+            s._parent5_best = None
 
         # List of best friends online
         best_friends_connected_list = s._getAllBestFriendsConnected(p)
         sy3 = max(len(best_friends_connected_list) * 30, 140)
 
         # Main scrollable container
-        if not hasattr(s, "p4_best") or not (s.p4_best and s.p4_best.exists()):
-            s.p4_best = sw(
+        if not hasattr(s, "_parent4_best") or not (s._parent4_best and s._parent4_best.exists()):
+            s._parent4_best = sw(
                 parent=s.ParentFriends,
                 position=(465-450, 17),
                 size=(140, 170),
@@ -662,8 +660,8 @@ class Finder:
             )
 
         # New container with best friends list
-        s.p5_best = ocw(
-            parent=s.p4_best,
+        s._parent5_best = ocw(
+            parent=s._parent4_best,
             size=(190, sy3),
             background=False
         )
@@ -671,7 +669,7 @@ class Finder:
         # If there are no connected
         if not best_friends_connected_list:
             tw(
-                parent=s.p5_best,
+                parent=s._parent5_best,
                 position=(42, 50),
                 text="Uh, parece que \nno hay amigos \nen línea, prueba \nbuscando servidores",
                 color=s.COL3,
@@ -688,7 +686,7 @@ class Finder:
             pos_y = sy3 - 30 - 30 * i
 
             tw(
-                parent=s.p5_best,
+                parent=s._parent5_best,
                 size=(170, 30),
                 color=s.COL3,
                 text=display_name,
@@ -756,7 +754,7 @@ class Finder:
         server_port = i.get("p", "N/A")
 
         s.ibfriends.append(tw(
-            parent=s.p6,
+            parent=s._parent6,
             position=(0, 0),
             h_align='center',
             maxwidth=160,
@@ -773,7 +771,7 @@ class Finder:
         account_v2 = [str(list(_.values())[1]) for _ in pz]
 
         s.ibfriends.append(bw(
-            parent=s.p6,
+            parent=s._parent6,
             position=(253, 65),
             size=(170, 30),
             label=str(account_v2[0]) if account_v2 and account_v2[0] != [] else clean_p,
@@ -785,7 +783,7 @@ class Finder:
         if p.startswith("\ue063"):
             # v2: Show both buttons side by side
             s.ibfriends.append(bw(
-                parent=s.p6,
+                parent=s._parent6,
                 position=(14, 30),
                 size=(60, 30),
                 label='Conectar',
@@ -795,7 +793,7 @@ class Finder:
             ))
 
             s.ibfriends.append(bw(
-                parent=s.p6,
+                parent=s._parent6,
                 position=(84, 30),
                 size=(75, 30),
                 label='Eliminar \nAmigo',
@@ -811,7 +809,7 @@ class Finder:
 
         else:   
             s.ibfriends.append(bw(
-                parent=s.p6,
+                parent=s._parent6,
                 position=(0, 30),
                 size=(156, 30),
                 label='Conectar',
@@ -820,20 +818,19 @@ class Finder:
                 oac=Call(CON, i['a'], i['p'], False)
             ))
 
-
     def make_theme_from_picker(s, base_color):
         def adjust(color, factor):
             return tuple(max(0.0, min(1.0, c * factor)) for c in color)
 
-        # convertir lista a tupla si viene del picker
+        # convert list to tuple if coming from picker
         base = tuple(base_color)
 
         return {
-            "COL1": (0.1, 0.1, 0.1),      # fondo fijo oscuro
-            "COL2": (0.2, 0.2, 0.2),      # fondo secundario
-            "COL3": adjust(base, 0.6),    # un poco más oscuro
-            "COL4": base,                 # color principal exacto del picker
-            "COL5": adjust(base, 1.2),    # más brillante
+            "COL1": (0.1, 0.1, 0.1),      # dark fixed background
+            "COL2": (0.2, 0.2, 0.2),      # secondary fund
+            "COL3": adjust(base, 0.6),    # a little darker
+            "COL4": base,                 # exact main color of the picker
+            "COL5": adjust(base, 1.2),    # brighter
         }
 
 
@@ -849,15 +846,15 @@ class Finder:
         )
     
     def save_colors_to_config(s, colors: dict):
-        """Guarda los colores en el archivo de configuración."""
+        """Save colors to the configuration file."""
         config = load_config()
         for k, v in colors.items():
             config[k] = tuple(v)
-        s.save_config(config)
+        s._saveConfigs(config)
 
 
     def load_colors_from_config(s):
-        """Carga los colores desde la config y los aplica a Finder."""
+        "Loads colors from config and applies them to Finder."
         config = load_config()
         for k in ["COL1", "COL2", "COL3", "COL4", "COL5"]:
             if k in config:
@@ -868,38 +865,37 @@ class Finder:
         tag = picker.get_tag()
         tema = s.make_theme_from_picker(color)
 
-        # Actualizar los atributos de la clase Finder
+        # Update the attributes of the Finder class
         for k, v in tema.items():
             setattr(Finder, k, tuple(v))
 
-        # Guardar en config
+        # Save to config
         s.save_colors_to_config(tema)
 
         # Debug
-        print("[DEBUG] Variables Finder actualizadas:")
+        #print("[DEBUG] Variables Finder actualizadas:")
         for k in ["COL1", "COL2", "COL3", "COL4", "COL5"]:
-            print(f"  {k} = {getattr(Finder, k)}")
+            #print(f"  {k} = {getattr(Finder, k)}")
+            pass
 
-        print(f"[DEBUG] Color seleccionado: {tuple(color)} para tag: {tag}")
+        #print(f"[DEBUG] Color seleccionado: {tuple(color)} para tag: {tag}")
 
         if tag == 'color':
             s._color = tuple(color)
-            print(f"[DEBUG] Color principal actualizado: {s._color}")
+            #print(f"[DEBUG] Color principal actualizado: {s._color}")
 
         elif tag == 'highlight':
             s._highlight = tuple(color)
-            print(f"[DEBUG] Highlight actualizado: {s._highlight}")
+            #print(f"[DEBUG] Highlight actualizado: {s._highlight}")
 
 
     def color_picker_closing(s, picker):
-        tag = picker.get_tag()
-        print(f"[DEBUG] Picker cerrado para tag: {tag}")
         s.bye()
         teck(0.25, byLess.up)
 
     def on_popup_cancel(s):
-        print("[DEBUG] Picker cancelado")
-
+        pass
+        #print("[DEBUG] Picker cancelado")
 
     def oke(s,t):
         TIP(t)
