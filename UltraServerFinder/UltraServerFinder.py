@@ -1,6 +1,6 @@
 # ba_meta require api 9
 
-from json import dumps, loads
+from json import dumps, loads, dump
 from threading import Thread
 from time import time, sleep
 from bascenev1 import (
@@ -45,11 +45,12 @@ from socket import (
 import _babase
 import os
 
-my_directory = _babase.env()['python_directory_user'] 
+my_directory = _babase.env()['python_directory_user'] + "/UltraServerFinder"
 best_friends_file = os.path.join(my_directory, "BestFriends.txt")
+configs_file = os.path.join(my_directory, "configs.json")
 
 class Finder:
-    VER = '2.0'
+    VER = '1.2'
     COL1 = (0.1, 0.1, 0.1)     
     COL2 = (0.2, 0.2, 0.2)      
     COL3 = (0.6, 0.2, 0.4)     
@@ -504,7 +505,7 @@ class Finder:
                 parent=s.p6,
                 size=(150, 155),  
                 position=(0, 0),
-                text='Seleccione un amigo \npara ver la información \ndel servidor',
+                text='Selecciona un amigo \npara ver donde está',
                 color=s.COL4,
                 maxwidth=150,
                 h_align='center',
@@ -537,16 +538,17 @@ class Finder:
 
         # if there are no friends
         if not friends_connected_list:
-            tw(
-                parent=s.p3,
-                position=(42-450, 70),
-                text='Sin amigos \nconectados',
-                color=s.COL3,
-                maxwidth=135,
-                h_align='center',
-                v_align='center'
-            )
-            return
+            #tw(
+            #    parent=s.p3,
+            #    position=(-1000, 10),
+            #    text='Sin amigos \nconectados',
+            #    color=s.COL3,
+            #    size=(130, 100),
+            #    h_align='center',
+            #    v_align='center'
+            #)
+            #return
+            friends_connected_list = ["\ue063spaz"]
 
         for i, friend in enumerate(friends_connected_list):
             display_name = friend if len(friend) <= 7 else friend[:7] + "..."
@@ -601,7 +603,7 @@ class Finder:
             tw(
                 parent=s.p5_best,
                 position=(42, 50),
-                text='Sin mejores \namigos \nconectados',
+                text="Uh, parece que \nno hay amigos \nen línea, prueba \nbuscando servidores",
                 color=s.COL3,
                 maxwidth=125,
                 h_align='center',
@@ -830,6 +832,22 @@ class Finder:
 
         return friends
     
+
+    def ensure_files_exist(s):
+        """Ensure UltraServerFinder directory and required files exist."""
+        # Crear el folder si no existe
+        os.makedirs(my_directory, exist_ok=True)
+
+        # Crear BestFriends.txt si no existe
+        if not os.path.exists(best_friends_file):
+            with open(best_friends_file, "w", encoding="utf-8") as f:
+                f.write("")
+
+        # Crear configs.json si no existe
+        if not os.path.exists(configs_file):
+            with open(configs_file, "w", encoding="utf-8") as f:
+                dump({}, f, indent=4, ensure_ascii=False)
+
     def _getAllBestFriendsConnected(s, pl: list[str] | None = None) -> list[str]:
         best_friends = s.get_all_friends()
         connected_best_friends = []
@@ -845,66 +863,58 @@ class Finder:
         return connected_best_friends
 
     def _addFriend(s, friend: str):
-        # Validate that it is not empty
+        s.ensure_files_exist()
+
         if not friend or friend.strip() == "":
             push('El campo está vacío, no se puede agregar', (1,0,0))
             gs('error').play()
             return
 
-        # Ensure the file exists
-        if not os.path.exists(best_friends_file):
-            with open(best_friends_file, "w", encoding="utf-8") as f:
-                f.write("")
-
         prefixed_friend = f"\ue063{friend.strip()}"
 
-        # Read what already exists
         with open(best_friends_file, "r", encoding="utf-8") as f:
             existing = [line.strip() for line in f.readlines()]
 
-        # Check for duplicates
         if prefixed_friend not in existing:
             with open(best_friends_file, "a", encoding="utf-8") as f:
                 f.write(prefixed_friend + "\n")
 
             s.ding(1, 0)
-            s.bf_connected+=1
+            s.bf_connected += 1
             s._updateCount()
+            s._refreshBestFriendsUI()
             TIP(f"{prefixed_friend} agregado con éxito")
         else:
             TIP(f"{prefixed_friend} ya está en la lista")
 
+
     def _deleteFriend(s, friend: str):
-        # Validate that it is not empty
+        s.ensure_files_exist()
+
         if not friend or friend.strip() == "":
             push('El campo está vacío, no se puede eliminar', (1, 0, 0))
             gs('error').play()
             return
 
-        if not os.path.exists(best_friends_file):
-            push('No hay lista de amigos para eliminar', (1, 0, 0))
-            gs('error').play()
-            return
-
         prefixed_friend = f"{friend.strip()}"
 
-        # Read all existing friends
         with open(best_friends_file, "r", encoding="utf-8") as f:
             existing = [line.strip() for line in f.readlines()]
 
         if prefixed_friend in existing:
-            # Re-write file excluding the removed friend
             with open(best_friends_file, "w", encoding="utf-8") as f:
                 for line in existing:
                     if line != prefixed_friend:
                         f.write(line + "\n")
 
-            s.ding(0, 1)  # diferente sonido que add (por ejemplo)
-            s.bf_connected-=1
+            s.ding(0, 1)
+            s.bf_connected -= 1
             TIP(f"{prefixed_friend} eliminado con éxito")
             s._updateCount()
+            s._refreshBestFriendsUI()
         else:
             TIP(f"{prefixed_friend} no se encuentra en la lista")
+
 
     def kang(s,r):
         c = s.__class__
