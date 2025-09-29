@@ -55,14 +55,39 @@ my_directory = _babase.env()['python_directory_user'] + "/UltraServerFinder"
 best_friends_file = os.path.join(my_directory, "BestFriends.txt")
 configs_file = os.path.join(my_directory, "configs.json")
 
+
+def ensure_files_exist():
+    """Ensure UltraServerFinder directory and required files exist."""
+    # Crear el folder si no existe
+    os.makedirs(my_directory, exist_ok=True)
+
+    # Crear BestFriends.txt si no existe
+    if not os.path.exists(best_friends_file):
+        with open(best_friends_file, "w", encoding="utf-8") as f:
+            f.write("")
+
+    # Crear configs.json si no existe
+    if not os.path.exists(configs_file):
+        with open(configs_file, "w", encoding="utf-8") as f:
+            dump({}, f, indent=4, ensure_ascii=False)
+
+def load_config():
+    ensure_files_exist()
+    with open(configs_file, "r", encoding="utf-8") as f:
+        try:
+            return load(f)
+        except JSONDecodeError:
+            return {}
+
 class Finder:
     VER = '1.2'
-    COL1 = (0.1, 0.1, 0.1)     
-    COL2 = (0.2, 0.2, 0.2)      
-    COL3 = (0.6, 0.2, 0.4)     
-    COL4 = (1, 0.08, 0.58)      
-    COL5 = (1, 0.3, 0.6)    
-
+    config = load_config()
+    COL1 = tuple(config.get("COL1", (0.1, 0.1, 0.1)))
+    COL2 = tuple(config.get("COL2", (0.2, 0.2, 0.2)))
+    COL3 = tuple(config.get("COL3", (0.6, 0.2, 0.4)))
+    COL4 = tuple(config.get("COL4", (1, 0.08, 0.58)))
+    COL5 = tuple(config.get("COL5", (1, 0.3, 0.6)))
+    
     MAX = 0.3
     TOP = 1
     MEM = []
@@ -77,8 +102,9 @@ class Finder:
     FLT = ''
 
     def __init__(s,src):
-        config = s.load_config()
+        config = load_config()
         s.friends_open = config.get("friends_open", False)
+
         s.thr = []
         s.ikids = []
         s.ibfriends = []
@@ -128,15 +154,18 @@ class Finder:
             button_type='square',
             label='',
             color=s.COL1,
-            oac=lambda:(
-                s._toggleFriendsWindow()
+            #oac=lambda:(
+            #    s._toggleFriendsWindow()
+            #)
+            oac=lambda: s._make_color_picker(
+                position=(s.root.get_screen_space_center()),
+                initial_color=s.COL5,
+                call='color',
             )
         )
 
         if s.friends_open:
             s._FriendsWindow()
-
-
         
         iw(
             parent=c.MainParent,
@@ -391,15 +420,6 @@ class Finder:
                 textcolor=s.COL4,
                 oac=Call(CON, i['a'], i['p'], False)
             ))
-
-
-    def load_config(s):
-        s.ensure_files_exist()
-        with open(configs_file, "r", encoding="utf-8") as f:
-            try:
-                return load(f)
-            except JSONDecodeError:
-                return {}
     
     def save_config(s, config: dict):
         os.makedirs(my_directory, exist_ok=True)
@@ -539,7 +559,7 @@ class Finder:
     def _toggleFriendsWindow(s):
         s.friends_open = not getattr(s, "friends_open", False)
 
-        config = s.load_config()
+        config = load_config()
         config["friends_open"] = s.friends_open
         s.save_config(config)
         
@@ -766,7 +786,7 @@ class Finder:
                 oac=Call(lambda: (
                     s._deleteFriend(p),
                     s._refreshBestFriendsUI(),
-                    s._refreshBestFriendsConnectedUI(s.plys()),
+                    s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()]),
                     [_.delete() for _ in s.ibfriends]
                 ))
             ))
@@ -781,6 +801,87 @@ class Finder:
                 textcolor=s.COL4,
                 oac=Call(CON, i['a'], i['p'], False)
             ))
+
+
+    def make_theme_from_picker(s, base_color):
+        def adjust(color, factor):
+            return tuple(max(0.0, min(1.0, c * factor)) for c in color)
+
+        # convertir lista a tupla si viene del picker
+        base = tuple(base_color)
+
+        return {
+            "COL1": (0.1, 0.1, 0.1),      # fondo fijo oscuro
+            "COL2": (0.2, 0.2, 0.2),      # fondo secundario
+            "COL3": adjust(base, 0.6),    # un poco más oscuro
+            "COL4": base,                 # color principal exacto del picker
+            "COL5": adjust(base, 1.2),    # más brillante
+        }
+
+
+    def _make_color_picker(s, position, initial_color, call):
+        import bauiv1lib as bui
+
+        return bui.colorpicker.ColorPicker(
+            parent=s.root,
+            position=position,
+            initial_color=initial_color,
+            delegate=s,
+            tag=call,
+        )
+    
+    def save_colors_to_config(s, colors: dict):
+        """Guarda los colores en el archivo de configuración."""
+        config = load_config()
+        for k, v in colors.items():
+            config[k] = tuple(v)
+        s.save_config(config)
+
+
+    def load_colors_from_config(s):
+        """Carga los colores desde la config y los aplica a Finder."""
+        config = load_config()
+        for k in ["COL1", "COL2", "COL3", "COL4", "COL5"]:
+            if k in config:
+                setattr(Finder, k, tuple(config[k]))
+
+
+    def color_picker_selected_color(s, picker, color):
+        tag = picker.get_tag()
+        tema = s.make_theme_from_picker(color)
+
+        # Actualizar los atributos de la clase Finder
+        for k, v in tema.items():
+            setattr(Finder, k, tuple(v))
+
+        # Guardar en config
+        s.save_colors_to_config(tema)
+
+        # Debug
+        print("[DEBUG] Variables Finder actualizadas:")
+        for k in ["COL1", "COL2", "COL3", "COL4", "COL5"]:
+            print(f"  {k} = {getattr(Finder, k)}")
+
+        print(f"[DEBUG] Color seleccionado: {tuple(color)} para tag: {tag}")
+
+        if tag == 'color':
+            s._color = tuple(color)
+            print(f"[DEBUG] Color principal actualizado: {s._color}")
+
+        elif tag == 'highlight':
+            s._highlight = tuple(color)
+            print(f"[DEBUG] Highlight actualizado: {s._highlight}")
+
+        #s.bye()
+        #teck(0.25, byLess.up)
+
+    def color_picker_closing(self, picker):
+        tag = picker.get_tag()
+        print(f"[DEBUG] Picker cerrado para tag: {tag}")
+
+    def on_popup_cancel(s):
+        print("[DEBUG] Picker cancelado")
+
 
     def oke(s,t):
         TIP(t)
@@ -863,22 +964,6 @@ class Finder:
             friends = [line.strip() for line in f.readlines() if line.strip()]
 
         return friends
-    
-
-    def ensure_files_exist(s):
-        """Ensure UltraServerFinder directory and required files exist."""
-        # Crear el folder si no existe
-        os.makedirs(my_directory, exist_ok=True)
-
-        # Crear BestFriends.txt si no existe
-        if not os.path.exists(best_friends_file):
-            with open(best_friends_file, "w", encoding="utf-8") as f:
-                f.write("")
-
-        # Crear configs.json si no existe
-        if not os.path.exists(configs_file):
-            with open(configs_file, "w", encoding="utf-8") as f:
-                dump({}, f, indent=4, ensure_ascii=False)
 
     def _getAllBestFriendsConnected(s, pl: list[str] | None = None) -> list[str]:
         best_friends = s.get_all_friends()
@@ -895,7 +980,7 @@ class Finder:
         return connected_best_friends
 
     def _addFriend(s, friend: str):
-        s.ensure_files_exist()
+        ensure_files_exist()
 
         if not friend or friend.strip() == "":
             push('El campo está vacío, no se puede agregar', (1,0,0))
@@ -921,7 +1006,7 @@ class Finder:
 
 
     def _deleteFriend(s, friend: str):
-        s.ensure_files_exist()
+        ensure_files_exist()
 
         if not friend or friend.strip() == "":
             push('El campo está vacío, no se puede eliminar', (1, 0, 0))
