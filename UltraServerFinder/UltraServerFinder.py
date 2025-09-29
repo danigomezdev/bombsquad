@@ -146,6 +146,32 @@ class Finder:
             border_opacity=0
         )
 
+        if s.friends_open:
+            s._FriendsWindow()
+
+        edit_color = bw(
+            parent=c.MainParent,
+            position=(350, 390),
+            size=(45, 38),
+            autoselect=True,
+            button_type='square',
+            label='',
+            color=s.COL1,
+            oac=lambda: s._make_color_picker(
+                position=(s.root.get_screen_space_center()),
+                initial_color=s.COL5,
+                call='color',
+            )
+        )
+        
+        iw(
+            parent=c.MainParent,
+            size=(45, 45),
+            position=(350, 390),
+            draw_controller=edit_color,
+            texture=gt('menuButton'),
+        )
+
         friends_connected_btn = bw(
             parent=c.MainParent,
             position=(400, 390),
@@ -154,18 +180,10 @@ class Finder:
             button_type='square',
             label='',
             color=s.COL1,
-            #oac=lambda:(
-            #    s._toggleFriendsWindow()
-            #)
-            oac=lambda: s._make_color_picker(
-                position=(s.root.get_screen_space_center()),
-                initial_color=s.COL5,
-                call='color',
+            oac=lambda:(
+                s._toggleFriendsWindow()
             )
         )
-
-        if s.friends_open:
-            s._FriendsWindow()
         
         iw(
             parent=c.MainParent,
@@ -872,12 +890,12 @@ class Finder:
             s._highlight = tuple(color)
             print(f"[DEBUG] Highlight actualizado: {s._highlight}")
 
-        #s.bye()
-        #teck(0.25, byLess.up)
 
-    def color_picker_closing(self, picker):
+    def color_picker_closing(s, picker):
         tag = picker.get_tag()
         print(f"[DEBUG] Picker cerrado para tag: {tag}")
+        s.bye()
+        teck(0.25, byLess.up)
 
     def on_popup_cancel(s):
         print("[DEBUG] Picker cancelado")
