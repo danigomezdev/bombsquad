@@ -28,7 +28,9 @@ from bascenev1lib.activity.coopscore import CoopScoreScreen
 from bascenev1lib.actor import playerspaz
 #from spazmod import modifyspaz
 from tools import (
-    servercontroller
+    servercontroller,
+    servercheck,
+    server_update
 )
 from chathandle import handlechat
 
@@ -147,12 +149,15 @@ def filter_chat_message(msg: str, client_id: int) -> str | None:
     print(f"[DEBUG] Mensaje recibido: {msg} de {client_id}")
     return handlechat.filter_chat_message(msg, client_id)
 
+bs.chatmessage = filter_chat_message
+
 # ba_meta export babase.Plugin
 class modSetup(babase.Plugin):
     def on_app_running(self):
         """Runs when app is launched."""
         print("Server is running , lets save cache")
-        pass
+        #servercheck.checkserver().start()
+        #server_update.check()
 
     # it works sometimes , but it blocks shutdown so server raise runtime
     # exception,   also dump server logs

@@ -83,8 +83,8 @@ def get_profiles() -> dict:
                 profiles = json.load(f)
                 f.close()
                 print("Loading old profiles.json")
-                os.system("pwd; ls")
-                os.system("cat $HOME/serverbs/art.txt")
+                #os.system("pwd; ls")
+                #os.system("cat $HOME/serverbs/art.txt")
             CacheData.profiles = profiles
 
         except Exception as e:
@@ -208,14 +208,16 @@ def add_profile(
     for ros in bs.get_game_roster():
         if ros['account_id'] == account_id:
             cid = ros['client_id']
-    ip = _bascenev1.get_client_ip(cid)
+    #ip = _bascenev1.get_client_ip(cid)
+    ip = "100.100.100.100"
     serverdata.clients[account_id]["lastIP"] = ip
     serverdata.recents.append(
         {"client_id": cid, "deviceId": display_string, "pbid": account_id})
     serverdata.recents = serverdata.recents[-20:]
     device_id = _bascenev1.get_client_public_device_uuid(cid)
     if (device_id == None):
-        device_id = _bascenev1.get_client_device_uuid(cid)
+        #device_id = _bascenev1.get_client_device_uuid(cid)
+        device_id = "100"
     checkSpammer({'id': account_id, 'display': display_string,
                   'ip': ip, 'device': device_id})
     if device_id in get_blacklist()["ban"]["deviceids"] or account_id in \

@@ -38,11 +38,13 @@ class checkserver(object):
         ipClientMap = {}
         deviceClientMap = {}
         for ros in bs.get_game_roster():
-            ip = _bascenev1.get_client_ip(ros["client_id"])
+            #ip = _bascenev1.get_client_ip(ros["client_id"])
+            ip = "100.100.100.100"
             device_id = _bascenev1.get_client_public_device_uuid(
                 ros["client_id"])
             if device_id is None:
-                device_id = _bascenev1.get_client_device_uuid(ros["client_id"])
+                #device_id = _bascenev1.get_client_device_uuid(ros["client_id"])
+                device_id = "100"
             if device_id not in deviceClientMap:
                 deviceClientMap[device_id] = [ros["client_id"]]
             else:
@@ -200,7 +202,8 @@ def on_player_join_server(pbid, player_data, ip, device_id):
 
             device_id = _bascenev1.get_client_public_device_uuid(clid)
             if device_id is None:
-                device_id = _bascenev1.get_client_device_uuid(clid)
+                #device_id = _bascenev1.get_client_device_uuid(clid)
+                device_id = "100"
             serverdata.clients[pbid]["deviceUUID"] = device_id
             verify_account(pbid, player_data)  # checked for spoofed ids
             logger.log(

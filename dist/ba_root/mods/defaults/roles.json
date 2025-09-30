@@ -1,0 +1,77 @@
+{
+    "owner": {
+        "tag": "\ue043Less\ue043",
+        "tagcolor": [
+            1,
+            0.6,
+            0.4
+        ],
+        "commands": [
+            "ALL"
+        ],
+        "ids": [
+            "pb-IF4lUxA_Ng=="
+        ]
+    },
+    "admin": {
+        "tag": "\ue043admin\ue043",
+        "tagcolor": [
+            1,
+            1,
+            1
+        ],
+        "commands": [
+            
+        ],
+        "ids": [
+            
+        ]
+    },
+    "dev": {
+        "tag": "\ue043Developer\ue043",
+        "tagcolor": [
+            1,
+            1,
+            1
+        ],
+        "commands": [
+            "ALL"
+        ],
+        "ids": [
+            "pb-IF5WUU1eNA==",
+            "pb-IF4jUXAxMQ=="
+        ]
+    },
+    "bombsquaders": {
+        "tag": "\ue043Bombsquader\ue043",
+        "tagcolor": [
+            1,
+            1,
+            1
+        ],
+        "commands": [
+            
+        ],
+        "ids": [
+            "pb-IF4HUFcePw==",
+            "pb-IF48URcmEA==",
+            "pb-IF4xUWsBVw=="
+        ]
+    },
+    "bypass-warn": {
+        "tag": "",
+        "tagcolor": [
+            1,
+            1,
+            1
+        ],
+        "commands": [],
+        "ids": [
+            "pb-IF5XUm9eAg==",
+            "pb-IF43VUwlAg==",
+            "pb-IF4iVUc5Cg==",
+            "pb-IF4vNnMJ",
+            "pb-IF4TVWwZUQ=="
+        ]
+    }
+}
