@@ -1,0 +1,749 @@
+from .handlers import send
+#from tools import playlist
+import random
+import os
+
+import _babase
+import _bascenev1
+import setting
+from playersdata import pdata
+#import floater
+# from tools.whitelist import add_to_white_list, add_commit_to_logs
+from serverdata import serverdata
+import json
+import babase
+import bascenev1 as bs
+from tools import logger
+
+from bascenev1lib.actor.spazappearance import *
+
+Commands = ["cmd1","cmd2","cmd3","cmd4", "floater", "import_char", 'unban', 'recents', 'info', 'createteam', 'showid', 'hideid', 'lm', 'gp',
+            'party', 'quit', 'kickvote', 'maxplayers', 'playlist', 'ban',
+            'kick', 'remove', 'end', 'quit', 'mute', 'unmute', 'slowmo', 'nv',
+            'dv', 'pause', 'tint',
+            'cameramode', 'createrole', 'addrole', 'removerole', 'addcommand',
+            'addcmd', 'removecommand', 'getroles', 'removecmd', 'changetag',
+            'customtag', 'customeffect', 'removeeffect', 'removetag', 'add',
+            'spectators', 'lobbytime']
+CommandAliases = ['max', 'rm', 'next', 'restart', 'mutechat', 'unmutechat',
+                  'sm',
+                  'slow', 'night', 'day', 'pausegame', 'camera_mode',
+                  'rotate_camera', 'effect']
+
+with open("/home/archblue1001/teams-test/dist/ba_root/mods/chathandle/chatcommands/commands/commands.json", "r", encoding="utf-8") as f:
+    commands_data = json.load(f)
+
+def ExcelCommand(command, arguments, clientid, accountid):
+    """
+    Checks The Command And Run Function
+
+    Parameters:
+        command : str
+        arguments : str
+        clientid : int
+        accountid : int
+
+    Returns:
+        None
+    """
+    match command:
+        case 'cmd1':
+            cmd(1, clientid)
+        case 'cmd2':
+            cmd(2, clientid)
+        case 'cmd3':
+            cmd(3, clientid)
+        case 'cmd4':
+            cmd(4, clientid)
+        case 'import_char':
+            import_character(arguments, clientid)
+        case 'floater':
+            floater(arguments, clientid)
+        case 'unban':
+            unban(arguments)
+        case 'recents':
+            get_recents(clientid)
+        case 'info':
+            get_player_info(arguments, clientid)
+        case 'maxplayers' | 'max':
+            changepartysize(arguments)
+        case 'createteam':
+            create_team(arguments)
+        case 'playlist':
+            changeplaylist(arguments)
+        case 'kick':
+            kick(arguments)
+        case 'ban':
+            ban(arguments)
+        case 'end' | 'next':
+            end(arguments)
+        case 'kickvote':
+            kikvote(arguments, clientid)
+        case 'hideid':
+            hide_player_spec()
+        case 'showid':
+            show_player_spec()
+        case 'lm':
+            last_msgs(clientid)
+        case 'gp':
+            get_profiles(arguments, clientid)
+        case 'party':
+            party_toggle(arguments)
+        case 'quit' | 'restart':
+            quit(arguments)
+        case 'mute' | 'mutechat':
+            mute(arguments)
+        case 'unmute' | 'unmutechat':
+            un_mute(arguments)
+        case 'remove' | 'rm':
+            remove(arguments)
+        case 'sm' | 'slow' | 'slowmo':
+            slow_motion()
+        case 'nv' | 'night':
+            nv(arguments)
+        case 'tint':
+            tint(arguments)
+        case 'pause' | 'pausegame':
+            pause()
+        case 'cameraMode' | 'camera_mode' | 'rotate_camera':
+            rotate_camera()
+        case 'createrole':
+            create_role(arguments)
+        case 'addrole':
+            add_role_to_player(arguments)
+        case 'removerole':
+            remove_role_from_player(arguments)
+        case 'getroles':
+            get_roles_of_player(arguments, clientid)
+        case 'addcommand' | 'addcmd':
+            add_command_to_role(arguments)
+        case 'removecommand' | 'removecmd':
+            remove_command_to_role(arguments)
+        case 'changetag':
+            change_role_tag(arguments)
+        case 'customtag':
+            set_custom_tag(arguments)
+        case 'customeffect' | 'effect':
+            set_custom_effect(arguments)
+        case 'removetag':
+            remove_custom_tag(arguments)
+        case 'removeeffect':
+            remove_custom_effect(arguments)
+        case 'spectators':
+            spectators(arguments)
+        case 'lobbytime':
+            change_lobby_check_time(arguments)
+        case _:
+            pass
+
+def cmd(cmd, client_id):
+    """
+    Displays the commands in a group (cmd1, cmd2, etc.)
+    Usage: cmd(1, client_id) -> search for "cmd1"
+    """
+    group = f"cmd{cmd}"  # convert number to cmd1, cmd2, etc.
+
+    if group in commands_data:
+        output = f"--- {group.upper()} ---\n"
+        for command_name, description in commands_data[group].items():
+            output += f"{command_name} → {description}\n"
+        output = output.strip()
+        
+        #print(output)
+        send(output, client_id, showBroadcastMessage=False) 
+        return output
+    else:
+        msg = f"El grupo '{group}' no existe en commands.json"
+        #print(msg)
+        send(msg, client_id, showBroadcastMessage=False)
+        return msg
+
+def import_character(arguments, client_id):
+    if len(arguments) == 0:
+        send("ingresa un personaje", client_id, showBroadcastMessage=False)
+        return
+
+    characters_dir = "/home/archblue1001/teams-test/dist/ba_root/mods/CHARACTERS"
+    character_name = arguments[0]
+
+    available_characters = [
+        os.path.splitext(f)[0]
+        for f in os.listdir(characters_dir)
+        if f.endswith(".json")
+    ]
+
+    match = next((c for c in available_characters if c.lower() == character_name.lower()), None)
+
+    if match:
+        send(f"El personaje '{match}' existe en la carpeta.", client_id, showBroadcastMessage=False)
+
+        # Load the JSON file
+        json_path = os.path.join(characters_dir, f"{match}.json")
+        with open(json_path, "r") as f:
+            character_data = json.load(f)
+
+        # Register the character using your function
+        register_character_json(match, character_data)
+
+        send(f"El personaje '{match}' fue registrado correctamente.", client_id, showBroadcastMessage=False)
+    else:
+        send(f"El personaje '{character_name}' NO existe en la carpeta.", client_id, showBroadcastMessage=False)
+
+def register_character_json(name, character):
+    appearance = Appearance(name)
+    appearance.color_texture = character['color_texture']
+    appearance.color_mask_texture = character['color_mask']
+    appearance.default_color = (0.6, 0.6, 0.6)
+    appearance.default_highlight = (0, 1, 0)
+    appearance.icon_texture = character['icon_texture']
+    appearance.icon_mask_texture = character['icon_mask_texture']
+    appearance.head_mesh = character['head']
+    appearance.torso_mesh = character['torso']
+    appearance.pelvis_mesh = character['pelvis']
+    appearance.upper_arm_mesh = character['upper_arm']
+    appearance.forearm_mesh = character['forearm']
+    appearance.hand_mesh = character['hand']
+    appearance.upper_leg_mesh = character['upper_leg']
+    appearance.lower_leg_mesh = character['lower_leg']
+    appearance.toes_mesh = character['toes_mesh']
+    appearance.jump_sounds = character['jump_sounds']
+    appearance.attack_sounds = character['attack_sounds']
+    appearance.impact_sounds = character['impact_sounds']
+    appearance.death_sounds = character['death_sounds']
+    appearance.pickup_sounds = character['pickup_sounds']
+    appearance.fall_sounds = character['fall_sounds']
+    appearance.style = character['style']
+
+
+def get_activity_index(clid: int) -> int:
+    """Return Player Index of player in the game activity or None if player is not in the activity."""
+    activity = bs.get_foreground_host_activity()
+    for i, p in enumerate(activity.players):
+        if p.sessionplayer.inputdevice.client_id == clid:
+            return i
+    return None  # Return None only after checking all players
+
+def floater(arguments, client_id):
+    from .. import floater
+
+    if len(arguments) == 0:
+        index = get_activity_index(client_id)
+        if index is None: return
+        send(f"Floater para el user ti: {client_id}", client_id, showBroadcastMessage=False)
+        floater.assign_floater_input(index, client_id)
+        return
+
+    try:
+        tgt_clid = int(arguments[0])
+    except: return
+    index = get_activity_index(tgt_clid)
+    if index is None: return
+    send(f"Floater para  el user: {arguments[0]}", client_id, showBroadcastMessage=False)
+    floater.assign_floater_input(index, tgt_clid)
+
+#def floater(arguments, client_id):
+#    from .. import floater
+#    from .. import floater1
+#
+#
+#    if len(arguments) == 0:
+#        send(f"Floater para ti: {client_id}", client_id, showBroadcastMessage=False)
+#        floater1.assignFloInputs(client_id)
+#        return
+#    send(f"Floater para  el usuario: {arguments[0]}", client_id, showBroadcastMessage=False)
+#    floater1.assignFloInputs(int(arguments[0]))
+   
+
+def create_team(arguments):
+    if len(arguments) == 0:
+        bs.chatmessage("enter team name")
+    else:
+        from bascenev1._team import SessionTeam
+        bs.get_foreground_host_session().sessionteams.append(SessionTeam(
+            team_id=len(bs.get_foreground_host_session().sessionteams) + 1,
+            name=str(arguments[0]),
+            color=(random.uniform(0, 1.2), random.uniform(
+                0, 1.2), random.uniform(0, 1.2))))
+        from bascenev1._lobby import Lobby
+        bs.get_foreground_host_session().lobby = Lobby()
+
+
+def hide_player_spec():
+    _babase.hide_player_device_id(True)
+
+
+def show_player_spec():
+    _babase.hide_player_device_id(False)
+
+
+def get_player_info(arguments, client_id):
+    if len(arguments) == 0:
+        send("invalid client id", client_id)
+    for account in serverdata.recents:
+        if account['client_id'] == int(arguments[0]):
+            send(pdata.get_detailed_info(account["pbid"]), client_id)
+
+
+def get_recents(client_id):
+    for players in serverdata.recents:
+        send(
+            f"{players['client_id']} {players['deviceId']} {players['pbid']}",
+            client_id)
+
+
+def changepartysize(arguments):
+    if len(arguments) == 0:
+        bs.chatmessage("enter number")
+    else:
+        bs.set_public_party_max_size(int(arguments[0]))
+
+
+def changeplaylist(arguments):
+    #if len(arguments) == 0:
+    #    bs.chatmessage("enter list code or name")
+    #else:
+    #    if arguments[0] == 'coop':
+    #        serverdata.coopmode = True
+    #    else:
+    #        serverdata.coopmode = False
+    #    playlist.setPlaylist(arguments[0])
+    #return
+    pass
+
+
+def kick(arguments):
+    cl_id = int(arguments[0])
+    for ros in bs.get_game_roster():
+        if ros["client_id"] == cl_id:
+            logger.log("kicked " + ros["display_string"])
+    bs.disconnect_client(int(arguments[0]))
+    return
+
+
+def kikvote(arguments, clientid):
+    if arguments == [] or arguments == [''] or len(arguments) < 2:
+        return
+
+    elif arguments[0] == 'enable':
+        if arguments[1] == 'all':
+            _babase.set_enable_default_kick_voting(True)
+        else:
+            try:
+                cl_id = int(arguments[1])
+                for ros in bs.get_game_roster():
+                    if ros["client_id"] == cl_id:
+                        pdata.enable_kick_vote(ros["account_id"])
+                        logger.log(
+                            f'kick vote enabled for {ros["account_id"]} {ros["display_string"]}')
+                        send(
+                            "Upon server restart, Kick-vote will be enabled for this person",
+                            clientid)
+                return
+            except:
+                return
+
+    elif arguments[0] == 'disable':
+        if arguments[1] == 'all':
+            _babase.set_enable_default_kick_voting(False)
+        else:
+            try:
+                cl_id = int(arguments[1])
+                for ros in bs.get_game_roster():
+                    if ros["client_id"] == cl_id:
+                        _bascenev1.disable_kickvote(ros["account_id"])
+                        send("Kick-vote disabled for this person", clientid)
+                        logger.log(
+                            f'kick vote disabled for {ros["account_id"]} {ros["display_string"]}')
+                        pdata.disable_kick_vote(
+                            ros["account_id"], 2, "by chat command")
+                return
+            except:
+                return
+    else:
+        return
+
+
+def last_msgs(clientid):
+    for i in bs.get_chat_messages():
+        send(i, clientid)
+
+
+def get_profiles(arguments, clientid):
+    try:
+        playerID = int(arguments[0])
+        num = 1
+        for i in bs.get_foreground_host_session().sessionplayers[
+                playerID].inputdevice.get_player_profiles():
+            try:
+                send(f"{num})-  {i}", clientid)
+                num += 1
+            except:
+                pass
+    except:
+        pass
+
+
+def party_toggle(arguments):
+    if arguments == ['public']:
+        bs.set_public_party_enabled(True)
+        bs.chatmessage("party is public now")
+    elif arguments == ['private']:
+        bs.set_public_party_enabled(False)
+        bs.chatmessage("party is private now")
+    else:
+        pass
+
+
+def end(arguments):
+    if arguments == [] or arguments == ['']:
+        try:
+            game = bs.get_foreground_host_activity()
+            with game.context:
+                game.end_game()
+        except:
+            pass
+
+
+def ban(arguments):
+    try:
+        cl_id = int(arguments[0])
+        duration = int(arguments[1]) if len(arguments) >= 2 else 0.5
+        for ros in bs.get_game_roster():
+            if ros["client_id"] == cl_id:
+                pdata.ban_player(ros['account_id'], duration,
+                                 "by chat command")
+                logger.log(f'banned {ros["display_string"]} by chat command')
+
+        for account in serverdata.recents:  # backup case if player left the server
+            if account['client_id'] == int(arguments[0]):
+                pdata.ban_player(
+                    account["pbid"], duration, "by chat command")
+                logger.log(
+                    f'banned {account["pbid"]} by chat command, recents')
+        kick(arguments)
+    except:
+        pass
+
+
+def unban(arguments):
+    try:
+        for account in serverdata.recents:
+            if account['client_id'] == int(arguments[0]):
+                pdata.unban_player(
+                    account["pbid"])
+                logger.log(
+                    f'unbanned {account["pbid"]} by chat command, recents')
+
+    except:
+        pass
+
+
+def quit(arguments):
+    if arguments == [] or arguments == ['']:
+        babase.quit()
+
+
+def mute(arguments):
+    if len(arguments) == 0:
+        serverdata.muted = True
+    try:
+        cl_id = int(arguments[0])
+        duration = int(arguments[1]) if len(arguments) >= 2 else 0.5
+        for ros in bs.get_game_roster():
+            if ros["client_id"] == cl_id:
+                ac_id = ros['account_id']
+                logger.log(f'muted {ros["display_string"]}')
+                pdata.mute(ac_id, duration, "muted by chat command")
+                return
+        for account in serverdata.recents:  # backup case if player left the server
+            if account['client_id'] == int(arguments[0]):
+                pdata.mute(account["pbid"], duration,
+                           "muted by chat command, from recents")
+    except:
+        pass
+    return
+
+
+def un_mute(arguments):
+    if len(arguments) == 0:
+        serverdata.muted = False
+    try:
+        cl_id = int(arguments[0])
+        for ros in bs.get_game_roster():
+            if ros["client_id"] == cl_id:
+                pdata.unmute(ros['account_id'])
+                logger.log(f'unmuted {ros["display_string"]} by chat command')
+                return
+        for account in serverdata.recents:  # backup case if player left the server
+            if account['client_id'] == int(arguments[0]):
+                pdata.unmute(account["pbid"])
+                logger.log(
+                    f'unmuted {account["pbid"]} by chat command, recents')
+    except:
+        pass
+
+
+def remove(arguments):
+    if arguments == [] or arguments == ['']:
+        return
+
+    elif arguments[0] == 'all':
+        session = bs.get_foreground_host_session()
+        for i in session.sessionplayers:
+            i.remove_from_game()
+
+    else:
+        try:
+            session = bs.get_foreground_host_session()
+            for i in session.sessionplayers:
+                if i.inputdevice.client_id == int(arguments[0]):
+                    i.remove_from_game()
+        except:
+            return
+
+
+def slow_motion():
+    activity = _babase.get_foreground_host_activity()
+
+    if not activity.globalsnode.slow_motion:
+        activity.globalsnode.slow_motion = True
+
+    else:
+        activity.globalsnode.slow_motion = False
+
+
+def nv(arguments):
+    def is_close(a, b, tol=1e-5):
+        return all(abs(x - y) < tol for x, y in zip(a, b))
+
+    try:
+        activity = bs.get_foreground_host_activity()
+        nv_tint = (0.5, 0.5, 1.0)
+        nv_ambient = (1.5, 1.5, 1.5)
+
+        if is_close(activity.globalsnode.tint, nv_tint):
+            activity.globalsnode.tint = (1, 1, 1)
+            # adding ambient color to imitate moonlight reflection on objects
+            activity.globalsnode.ambient_color = (1, 1, 1)
+            # print(activity.globalsnode.tint)
+        else:
+            activity.globalsnode.tint = nv_tint
+            activity.globalsnode.ambient_color = nv_ambient
+            # print(activity.globalsnode.tint)
+    except:
+        return
+
+
+def tint(arguments):
+
+    if len(arguments) == 3:
+        args = arguments
+        r, g, b = float(args[0]), float(args[1]), float(args[2])
+        try:
+            # print(dir(activity.globalsnode))
+
+            activity = bs.get_foreground_host_activity()
+            activity.globalsnode.tint = (r, g, b)
+        except:
+            return
+
+
+def pause():
+    activity = _babase.get_foreground_host_activity()
+
+    if not activity.globalsnode.paused:
+        activity.globalsnode.paused = True
+
+    else:
+        activity.globalsnode.paused = False
+
+
+def rotate_camera():
+    activity = _babase.get_foreground_host_activity()
+
+    if activity.globalsnode.camera_mode != 'rotate':
+        activity.globalsnode.camera_mode = 'rotate'
+
+    else:
+        activity.globalsnode.camera_mode = 'normal'
+
+
+def create_role(arguments):
+    try:
+        pdata.create_role(arguments[0])
+    except:
+        return
+
+
+def add_role_to_player(arguments):
+    try:
+
+        session = bs.get_foreground_host_session()
+        for i in session.sessionplayers:
+            if i.inputdevice.client_id == int(arguments[1]):
+                roles = pdata.add_player_role(
+                    arguments[0], i.get_v1_account_id())
+    except:
+        return
+
+
+def remove_role_from_player(arguments):
+    try:
+        session = bs.get_foreground_host_session()
+        for i in session.sessionplayers:
+            if i.inputdevice.client_id == int(arguments[1]):
+                roles = pdata.remove_player_role(
+                    arguments[0], i.get_v1_account_id())
+
+    except:
+        return
+
+
+def get_roles_of_player(arguments, clientid):
+    try:
+        session = bs.get_foreground_host_session()
+        roles = []
+        reply = ""
+        for i in session.sessionplayers:
+            if i.inputdevice.client_id == int(arguments[0]):
+                roles = pdata.get_player_roles(i.get_v1_account_id())
+
+        for role in roles:
+            reply = reply + role + ","
+        send(reply, clientid)
+    except:
+        return
+
+
+def change_role_tag(arguments):
+    try:
+        pdata.change_role_tag(arguments[0], arguments[1])
+    except:
+        return
+
+
+def set_custom_tag(arguments):
+    try:
+        session = bs.get_foreground_host_session()
+        for i in session.sessionplayers:
+            if i.inputdevice.client_id == int(arguments[1]):
+                roles = pdata.set_tag(arguments[0], i.get_v1_account_id())
+    except:
+        return
+
+
+def remove_custom_tag(arguments):
+    try:
+        session = bs.get_foreground_host_session()
+        for i in session.sessionplayers:
+            if i.inputdevice.client_id == int(arguments[0]):
+                pdata.remove_tag(i.get_v1_account_id())
+    except:
+        return
+
+
+def remove_custom_effect(arguments):
+    try:
+        session = bs.get_foreground_host_session()
+        for i in session.sessionplayers:
+            if i.inputdevice.client_id == int(arguments[0]):
+                pdata.remove_effect(i.get_v1_account_id())
+    except:
+        return
+
+
+def set_custom_effect(arguments):
+    try:
+        session = bs.get_foreground_host_session()
+        for i in session.sessionplayers:
+            if i.inputdevice.client_id == int(arguments[1]):
+                pdata.set_effect(arguments[0], i.get_v1_account_id())
+    except:
+        return
+
+
+all_commands = ["cmd1","cmd2","cmd3","cmd4", "floater", "import_char", "changetag", "createrole", "addrole", "removerole",
+                "addcommand", "addcmd", "removecommand", "removecmd", "kick",
+                "remove", "rm", "end", "next", "quit", "restart", "mute",
+                "mutechat", "unmute", "unmutechat", "sm", "slow", "slowmo",
+                "nv", "night", "dv", "day", "pause", "pausegame", "cameraMode",
+                "camera_mode", "rotate_camera", "kill", "die", "heal", "heath",
+                "curse", "cur", "sleep", "sp", "superpunch", "gloves", "punch",
+                "shield", "protect", "freeze", "ice", "unfreeze", "thaw", "gm",
+                "godmode", "fly", "inv", "invisible", "hl", "headless",
+                "creepy", "creep", "celebrate", "celeb", "spaz"]
+
+
+def add_command_to_role(arguments):
+    try:
+        if len(arguments) == 2:
+            pdata.add_command_role(arguments[0], arguments[1])
+        else:
+            bs.chatmessage("invalid command arguments")
+    except:
+        return
+
+
+def remove_command_to_role(arguments):
+    try:
+        if len(arguments) == 2:
+            pdata.remove_command_role(arguments[0], arguments[1])
+    except:
+        return
+
+
+# def whitelst_it(accountid : str, arguments):
+#     settings = setting.get_settings_data()
+
+#     if arguments[0] == 'on':
+#         if settings["white_list"]["whitelist_on"]:
+#             bs.chatmessage("Already on")
+#         else:
+#             settings["white_list"]["whitelist_on"] = True
+#             setting.commit(settings)
+#             bs.chatmessage("whitelist on")
+#             from tools import whitelist
+#             whitelist.Whitelist()
+#         return
+
+#     elif arguments[0] == 'off':
+#         settings["white_list"]["whitelist_on"] = False
+#         setting.commit(settings)
+#         bs.chatmessage("whitelist off")
+#         return
+
+# else:
+#     rost = bs.get_game_roster()
+
+#     for i in rost:
+#         if i['client_id'] == int(arguments[0]):
+#             add_to_white_list(i['account_id'], i['display_string'])
+#             bs.chatmessage(str(i['display_string'])+" whitelisted")
+#             add_commit_to_logs(accountid+" added "+i['account_id'])
+
+
+def spectators(arguments):
+    if arguments[0] in ['on', 'off']:
+        settings = setting.get_settings_data()
+
+        if arguments[0] == 'on':
+            settings["white_list"]["spectators"] = True
+            setting.commit(settings)
+            bs.chatmessage("spectators on")
+
+        elif arguments[0] == 'off':
+            settings["white_list"]["spectators"] = False
+            setting.commit(settings)
+            bs.chatmessage("spectators off")
+
+
+def change_lobby_check_time(arguments):
+    try:
+        argument = int(arguments[0])
+    except:
+        bs.chatmessage("must type number to change lobby check time")
+        return
+    settings = setting.get_settings_data()
+    settings["white_list"]["lobbychecktime"] = argument
+    setting.commit(settings)
+    bs.chatmessage(f"lobby check time is {argument} now")

@@ -166,7 +166,17 @@
    ]
   }
  },
- "Plugins": {},
+ "Plugins": {
+    "create_server.EntryPoint": {
+        "enabled": true
+    },
+    "custom_hooks.modSetup": {
+        "enabled": true
+    },
+    "plugins.Init": {
+        "enabled": true
+    }
+ },
  "Port": 43210,
  "Show Tutorial": false,
  "Signed In Last Session": false,

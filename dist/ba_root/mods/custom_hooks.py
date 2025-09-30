@@ -30,20 +30,14 @@ from bascenev1lib.actor import playerspaz
 from tools import (
     servercontroller
 )
+from chathandle import handlechat
+
 
 if TYPE_CHECKING:
     from typing import Any
 
 settings = setting.get_settings_data()
-
-
-def filter_chat_message(msg: str, client_id: int) -> str | None:
-    """Returns all in game messages or None (ignore's message)."""
-    #return handlechat.filter_chat_message(msg, client_id)
-    pass
-
 org_end = bs._activity.Activity.end
-
 
 def new_end(self, results: Any = None,
             delay: float = 0.0, force: bool = False):
@@ -147,41 +141,17 @@ def on_access_check_response(self, data):
 
 ServerController._access_check_response = on_access_check_response
 
-#def wrap_player_spaz_init(original_class):
-#    """
-#    Modify the __init__ method of the player_spaz.
-#    """
-#
-#    class WrappedClass(original_class):
-#        def __init__(self, *args, **kwargs):
-#            # Custom code before the original __init__
-#
-#            # Modify args or kwargs as needed
-#            player = args[0] if args else kwargs.get('player')
-#            character = args[3] if len(
-#                args) > 3 else kwargs.get('character', 'Spaz')
-#
-#            # Modify the character value
-#            modified_character = modifyspaz.getCharacter(player, character)
-#            if len(args) > 3:
-#                args = args[:3] + (modified_character,) + args[4:]
-#            else:
-#                kwargs['character'] = modified_character
-#
-#            # Call the original __init__
-#            super().__init__(*args, **kwargs)
-#            playerspaz_init(self, self.node, self._player)
-#
-#    # Return the modified class
-#    return WrappedClass
+def filter_chat_message(msg: str, client_id: int) -> str | None:
+    """Returns all in game messages or None (ignore's message)."""
+    print("Activando chat..")
+    print(f"[DEBUG] Mensaje recibido: {msg} de {client_id}")
+    return handlechat.filter_chat_message(msg, client_id)
 
-#playerspaz.PlayerSpaz = wrap_player_spaz_init(playerspaz.PlayerSpaz)
-#original_classic_app_mode_activate = ClassicAppMode.on_activate
-
-# ba_meta export plugin
+# ba_meta export babase.Plugin
 class modSetup(babase.Plugin):
     def on_app_running(self):
         """Runs when app is launched."""
+        print("Server is running , lets save cache")
         pass
 
     # it works sometimes , but it blocks shutdown so server raise runtime
