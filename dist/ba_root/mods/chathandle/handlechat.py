@@ -16,7 +16,6 @@ settings = setting.get_settings_data()
 
 
 def filter_chat_message(msg, client_id):
-    print("[DEBUG]: desde handle?")
     now = datetime.now()
     # bypassing chat filter for host
     if client_id == -1:

@@ -49,7 +49,7 @@ party_name = "Teams @ Less `test`"
 #
 # 43210 is the default and the only port that will show up in the
 # LAN browser tab.
-port = 6666
+port = 43210
 
 # Max devices in the party. Note that this does *NOT* mean max
 # players. Any device in the party can have more than one player on

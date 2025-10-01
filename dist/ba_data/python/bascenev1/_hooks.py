@@ -33,7 +33,22 @@ def get_player_icon(sessionplayer: bascenev1.SessionPlayer) -> dict[str, Any]:
     }
 
 
+#def filter_chat_message(msg: str, client_id: int) -> str | None:
+#    """Intercept/filter chat messages.
+#
+#    Called for all chat messages while hosting.
+#    Messages originating from the host will have clientID -1.
+#    Should filter and return the string to be displayed, or return None
+#    to ignore the message.
+#    """
+#    del client_id  # Unused by default.
+#    return msg
+
 def filter_chat_message(msg: str, client_id: int) -> str | None:
+    try:
+        import custom_hooks as chooks
+    except:
+        pass
     """Intercept/filter chat messages.
 
     Called for all chat messages while hosting.
@@ -41,8 +56,10 @@ def filter_chat_message(msg: str, client_id: int) -> str | None:
     Should filter and return the string to be displayed, or return None
     to ignore the message.
     """
-    del client_id  # Unused by default.
-    return msg
+    try:
+        return chooks.filter_chat_message(msg,client_id)
+    except:
+        return msg
 
 
 def local_chat_message(msg: str) -> None:
