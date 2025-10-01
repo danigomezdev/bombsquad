@@ -145,8 +145,6 @@ ServerController._access_check_response = on_access_check_response
 
 def filter_chat_message(msg: str, client_id: int) -> str | None:
     """Returns all in game messages or None (ignore's message)."""
-    print("Activando chat..")
-    print(f"[DEBUG] Mensaje recibido: {msg} de {client_id}")
     return handlechat.filter_chat_message(msg, client_id)
 
 bs.chatmessage = filter_chat_message

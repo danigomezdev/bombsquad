@@ -61,7 +61,6 @@ def filter_chat_message(msg: str, client_id: int) -> str | None:
     except:
         return msg
 
-
 def local_chat_message(msg: str) -> None:
     classic = babase.app.classic
     assert classic is not None

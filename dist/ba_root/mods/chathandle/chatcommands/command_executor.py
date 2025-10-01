@@ -39,6 +39,7 @@ def command_type(command):
 
 
 def execute(msg, clientid):
+    print(f"[DEBUG]: From command ejecutor: {msg}")
     """
     Command Execution
 
@@ -52,6 +53,9 @@ def execute(msg, clientid):
     command = msg.lower().split(" ")[0].split("/")[1]
     arguments = msg.lower().split(" ")[1:]
     accountid = clientid_to_accountid(clientid)
+    print(f"[DEBUG]: Account ID: {accountid}, command `{command}`")
+    management.ExcelCommand(command, arguments, clientid, accountid)
+
 
     if command_type(command) == "Normal":
         normal_commands.ExcelCommand(command, arguments, clientid, accountid)

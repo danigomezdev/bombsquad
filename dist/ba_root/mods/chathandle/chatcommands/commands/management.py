@@ -34,6 +34,8 @@ with open("/home/archblue1001/teams-test/dist/ba_root/mods/chathandle/chatcomman
     commands_data = json.load(f)
 
 def ExcelCommand(command, arguments, clientid, accountid):
+    print(f"[DEBUG]: From excel Command {command}, by {accountid}")
+
     """
     Checks The Command And Run Function
 
@@ -48,8 +50,10 @@ def ExcelCommand(command, arguments, clientid, accountid):
     """
     match command:
         case 'cmd1':
+            print(f"[DEBUG]: CMD1")
             cmd(1, clientid)
         case 'cmd2':
+            print(f"[DEBUG]: CMD2")
             cmd(2, clientid)
         case 'cmd3':
             cmd(3, clientid)
@@ -149,7 +153,7 @@ def cmd(cmd, client_id):
             output += f"{command_name} → {description}\n"
         output = output.strip()
         
-        #print(output)
+        print(output)
         send(output, client_id, showBroadcastMessage=False) 
         return output
     else:

