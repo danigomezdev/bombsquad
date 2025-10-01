@@ -19,26 +19,18 @@ def filter_chat_message(msg, client_id):
         if i['client_id'] == client_id:
             acid = i['account_id']
 
-    # log inicial con pb_id (acid), client_id y mensaje/comando
-    if msg.startswith("/"):
-        print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | comando={msg}")
-    else:
-        print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | mensaje={msg}")
-
-    if acid == "pb-IF5WUU1eNA==":
-        print(f"[DEBUG] pb_id especial detectado, ejecutando como comando: {msg}")
-        result = command_executor.execute(msg, client_id)
-        return result  # no seguimos con el filtro normal
-
-    print(f"[DEBUG]: Filter Chat msg1 {msg}")
-    now = datetime.now()
     # bypassing chat filter for host
-    if client_id == -1:
+    if 1==1:
         if msg.startswith("/"):
+            print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | comando={msg}")
             command_executor.execute(msg, client_id)
-            return None
-        logger.log(f"Host msg: | {msg}", "chat")
-        return msg
+            return msg
+        else:
+            print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | mensaje={msg}")
+            return msg
+    
+    now = datetime.now()
+
     acid = ""
     displaystring = ""
     currentname = ""

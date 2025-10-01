@@ -54,8 +54,8 @@ def execute(msg, clientid):
     arguments = msg.lower().split(" ")[1:]
     accountid = clientid_to_accountid(clientid)
     print(f"[DEBUG]: Account ID: {accountid}, command `{command}`")
-    management.ExcelCommand(command, arguments, clientid, accountid)
-
+    #management.ExcelCommand(command, arguments, clientid, accountid)
+    #normal_commands.ExcelCommand(command, arguments, clientid, accountid)
 
     if command_type(command) == "Normal":
         normal_commands.ExcelCommand(command, arguments, clientid, accountid)

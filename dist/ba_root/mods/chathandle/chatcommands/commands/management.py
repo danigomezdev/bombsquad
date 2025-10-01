@@ -34,7 +34,7 @@ with open("/home/archblue1001/teams-test/dist/ba_root/mods/chathandle/chatcomman
     commands_data = json.load(f)
 
 def ExcelCommand(command, arguments, clientid, accountid):
-    print(f"[DEBUG]: From excel Command {command}, by {accountid}")
+    print(f"[DEBUG.commands.management.py]: ExcelCommand {command}, by {accountid}")
 
     """
     Checks The Command And Run Function

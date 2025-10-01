@@ -147,7 +147,7 @@ def filter_chat_message(msg: str, client_id: int) -> str | None:
     """Returns all in game messages or None (ignore's message)."""
     return handlechat.filter_chat_message(msg, client_id)
 
-bs.chatmessage = filter_chat_message
+#bs.chatmessage = filter_chat_message
 
 # ba_meta export babase.Plugin
 class modSetup(babase.Plugin):
