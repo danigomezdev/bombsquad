@@ -22,11 +22,11 @@ def filter_chat_message(msg, client_id):
     # bypassing chat filter for host
     if 1==1:
         if msg.startswith("/"):
-            print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | comando={msg}")
+            #print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | comando={msg}")
             command_executor.execute(msg, client_id)
             return msg
         else:
-            print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | mensaje={msg}")
+            #print(f"[DEBUG-INIT] pb_id={acid} | client_id={client_id} | mensaje={msg}")
             return msg
     
     now = datetime.now()

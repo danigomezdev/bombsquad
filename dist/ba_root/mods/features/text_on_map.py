@@ -1,15 +1,11 @@
-# Released under the MIT License. See LICENSE for details.
-""" TODO need to set coordinates of text node , move timer values to settings.json """
-
 import random
 import _babase
 import setting
-from stats import mystats
+#from stats import mystats
 import babase
 import bascenev1 as bs
 
 setti = setting.get_settings_data()
-
 
 class textonmap:
 
@@ -34,8 +30,8 @@ class textonmap:
         self.top_message(top)
         self.restart_msg()
 
-        if setti["leaderboard"]["enable"]:
-            self.leaderBoard()
+        #if setti["leaderboard"]["enable"]:
+        #    self.leaderBoard()
 
         # Solo iniciar el timer si hay mensajes
         if self.highlights:
@@ -130,42 +126,43 @@ class textonmap:
             'color': (1, 1, 1),
         })
 
-    def leaderBoard(self):
-        if len(mystats.top3Name) > 2:
-            if setti["leaderboard"]["barsBehindName"]:
-                bs.newnode('image', attrs={'scale': (300, 30),
-                                           'texture': bs.gettexture('uiAtlas2'),
-                                           'position': (0, -80),
-                                           'attach': 'topRight',
-                                           'opacity': 0.5,
-                                           'color': (0.7, 0.1, 0)})
-                bs.newnode('image', attrs={'scale': (300, 30),
-                                           'texture': bs.gettexture('uiAtlas2'),
-                                           'position': (0, -115),
-                                           'attach': 'topRight',
-                                           'opacity': 0.5,
-                                           'color': (0.6, 0.6, 0.6)})
-                bs.newnode('image', attrs={'scale': (300, 30),
-                                           'texture': bs.gettexture('uiAtlas2'),
-                                           'position': (0, -150),
-                                           'attach': 'topRight',
-                                           'opacity': 0.5,
-                                           'color': (0.1, 0.3, 0.1)})
-
-            bs.newnode('text', attrs={
-                'text': "#1 " + mystats.top3Name[0][:10] + "...",
-                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
-                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -80),
-                'scale': 0.7, 'color': (0.7, 0.4, 0.3)})
-
-            bs.newnode('text', attrs={
-                'text': "#2 " + mystats.top3Name[1][:10] + "...",
-                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
-                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -115),
-                'scale': 0.7, 'color': (0.8, 0.8, 0.8)})
-
-            bs.newnode('text', attrs={
-                'text': "#3 " + mystats.top3Name[2][:10] + "...",
-                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
-                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -150),
-                'scale': 0.7, 'color': (0.2, 0.6, 0.2)})
+#    def leaderBoard(self):
+#        if len(mystats.top3Name) > 2:
+#            if setti["leaderboard"]["barsBehindName"]:
+#                bs.newnode('image', attrs={'scale': (300, 30),
+#                                           'texture': bs.gettexture('uiAtlas2'),
+#                                           'position': (0, -80),
+#                                           'attach': 'topRight',
+#                                           'opacity': 0.5,
+#                                           'color': (0.7, 0.1, 0)})
+#                bs.newnode('image', attrs={'scale': (300, 30),
+#                                           'texture': bs.gettexture('uiAtlas2'),
+#                                           'position': (0, -115),
+#                                           'attach': 'topRight',
+#                                           'opacity': 0.5,
+#                                           'color': (0.6, 0.6, 0.6)})
+#                bs.newnode('image', attrs={'scale': (300, 30),
+#                                           'texture': bs.gettexture('uiAtlas2'),
+#                                           'position': (0, -150),
+#                                           'attach': 'topRight',
+#                                           'opacity': 0.5,
+#                                           'color': (0.1, 0.3, 0.1)})
+#
+#            bs.newnode('text', attrs={
+#                'text': "#1 " + mystats.top3Name[0][:10] + "...",
+#                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
+#                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -80),
+#                'scale': 0.7, 'color': (0.7, 0.4, 0.3)})
+#
+#            bs.newnode('text', attrs={
+#                'text': "#2 " + mystats.top3Name[1][:10] + "...",
+#                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
+#                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -115),
+#                'scale': 0.7, 'color': (0.8, 0.8, 0.8)})
+#
+#            bs.newnode('text', attrs={
+#                'text': "#3 " + mystats.top3Name[2][:10] + "...",
+#                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
+#                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -150),
+#                'scale': 0.7, 'color': (0.2, 0.6, 0.2)})
+#

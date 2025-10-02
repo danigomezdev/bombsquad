@@ -32,6 +32,7 @@ from tools import (
     servercheck,
     server_update
 )
+from features import text_on_map, announcement
 from spazmod import modifyspaz
 from chathandle import handlechat
 
@@ -148,6 +149,17 @@ def bootstraping():
     if settings["custom_characters"]["enable"]:
         from plugins import importcustomcharacters
         importcustomcharacters.enable()
+
+def on_map_init(func):
+    def wrapper(self, *args, **kwargs):
+        func(self, *args, **kwargs)
+        text_on_map.textonmap()
+        #modifyspaz.setTeamCharacter()
+
+    return wrapper
+
+
+Map.__init__ = on_map_init(Map.__init__)
 
 def playerspaz_init(playerspaz: bs.Player, node: bs.Node, player: bs.Player):
     """Runs when player is spawned on map."""
