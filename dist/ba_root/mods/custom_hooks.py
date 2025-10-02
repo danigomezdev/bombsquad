@@ -32,6 +32,7 @@ from tools import (
     servercheck,
     server_update
 )
+from spazmod import modifyspaz
 from chathandle import handlechat
 
 
@@ -125,11 +126,6 @@ def shutdown(func) -> None:
 
 ServerController.shutdown = shutdown(ServerController.shutdown)
 
-#def playerspaz_init(playerspaz: bs.Player, node: bs.Node, player: bs.Player):
-#    """Runs when player is spawned on map."""
-#    modifyspaz.main(playerspaz, node, player)
-
-
 def on_access_check_response(self, data):
     if data is not None:
         addr = data['address']
@@ -140,20 +136,62 @@ def on_access_check_response(self, data):
 
     servercontroller._access_check_response(self, data)
 
-
 ServerController._access_check_response = on_access_check_response
+
+
+def bootstraping():
+    """Bootstarps the server."""
+    logging.warning("Bootstraping mods...")
+    if settings["character_chooser"]["enable"]:
+        from plugins import character_chooser
+        character_chooser.enable()
+    if settings["custom_characters"]["enable"]:
+        from plugins import importcustomcharacters
+        importcustomcharacters.enable()
+
+def playerspaz_init(playerspaz: bs.Player, node: bs.Node, player: bs.Player):
+    """Runs when player is spawned on map."""
+    modifyspaz.main(playerspaz, node, player)
+
+
+def wrap_player_spaz_init(original_class):
+    """
+    Modify the __init__ method of the player_spaz.
+    """
+
+    class WrappedClass(original_class):
+        def __init__(self, *args, **kwargs):
+            # Custom code before the original __init__
+
+            # Modify args or kwargs as needed
+            player = args[0] if args else kwargs.get('player')
+            character = args[3] if len(
+                args) > 3 else kwargs.get('character', 'Spaz')
+
+            # Modify the character value
+            modified_character = modifyspaz.getCharacter(player, character)
+            if len(args) > 3:
+                args = args[:3] + (modified_character,) + args[4:]
+            else:
+                kwargs['character'] = modified_character
+
+            # Call the original __init__
+            super().__init__(*args, **kwargs)
+            playerspaz_init(self, self.node, self._player)
+
+    # Return the modified class
+    return WrappedClass
+
 
 def filter_chat_message(msg: str, client_id: int) -> str | None:
     """Returns all in game messages or None (ignore's message)."""
     return handlechat.filter_chat_message(msg, client_id)
 
-#bs.chatmessage = filter_chat_message
-
 # ba_meta export babase.Plugin
 class modSetup(babase.Plugin):
     def on_app_running(self):
         """Runs when app is launched."""
-        print("Server is running , lets save cache")
+        bootstraping()
         #servercheck.checkserver().start()
         #server_update.check()
 

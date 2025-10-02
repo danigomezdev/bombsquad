@@ -48,7 +48,7 @@ def _access_check_response(self, data) -> None:
                     f"{Clr.SBLU} visible en la lista de partidas públicas.{Clr.RST}",
                     flush=True
                 )
-                import_characters()
+                #import_characters()
             else:
                 print(
                     f'{Clr.SBLU}Tu fiesta privada {self._config.party_name}'

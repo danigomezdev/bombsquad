@@ -3,7 +3,7 @@ import random
 
 import setting
 from playersdata import pdata
-from stats import mystats
+#from stats import mystats
 from typing import Sequence
 
 import babase
