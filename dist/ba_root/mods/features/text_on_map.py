@@ -1,7 +1,7 @@
 import random
 import _babase
 import setting
-#from stats import mystats
+from stats import mystats
 import babase
 import bascenev1 as bs
 
@@ -30,18 +30,16 @@ class textonmap:
         self.top_message(top)
         self.restart_msg()
 
-        #if setti["leaderboard"]["enable"]:
-        #    self.leaderBoard()
+        if setti["leaderboard"]["enable"]:
+            self.leaderBoard()
 
-        self.leaderBoardTest()
-
-        # Solo iniciar el timer si hay mensajes
+        # Only start the timer if there are messages
         if self.highlights:
             self.timer = bs.timer(8, babase.Call(self.highlights_), repeat=True)
 
     def highlights_(self):
         if not self.highlights:
-            return  # No hay mensajes, no mostrar nada
+            return  # No messages, show nothing
 
         if setti["textonmap"]['center highlights']["randomColor"]:
             color = (random.random(), random.random(), random.random())
@@ -128,143 +126,112 @@ class textonmap:
             'color': (1, 1, 1),
         })
 
-#    def leaderBoard(self):
-#        if len(mystats.top3Name) > 2:
-#            if setti["leaderboard"]["barsBehindName"]:
-#                bs.newnode('image', attrs={'scale': (300, 30),
-#                                           'texture': bs.gettexture('uiAtlas2'),
-#                                           'position': (0, -80),
-#                                           'attach': 'topRight',
-#                                           'opacity': 0.5,
-#                                           'color': (0.7, 0.1, 0)})
-#                bs.newnode('image', attrs={'scale': (300, 30),
-#                                           'texture': bs.gettexture('uiAtlas2'),
-#                                           'position': (0, -115),
-#                                           'attach': 'topRight',
-#                                           'opacity': 0.5,
-#                                           'color': (0.6, 0.6, 0.6)})
-#                bs.newnode('image', attrs={'scale': (300, 30),
-#                                           'texture': bs.gettexture('uiAtlas2'),
-#                                           'position': (0, -150),
-#                                           'attach': 'topRight',
-#                                           'opacity': 0.5,
-#                                           'color': (0.1, 0.3, 0.1)})
-#
-#            bs.newnode('text', attrs={
-#                'text': "#1 " + mystats.top3Name[0][:10] + "...",
-#                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
-#                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -80),
-#                'scale': 0.7, 'color': (0.7, 0.4, 0.3)})
-#
-#            bs.newnode('text', attrs={
-#                'text': "#2 " + mystats.top3Name[1][:10] + "...",
-#                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
-#                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -115),
-#                'scale': 0.7, 'color': (0.8, 0.8, 0.8)})
-#
-#            bs.newnode('text', attrs={
-#                'text': "#3 " + mystats.top3Name[2][:10] + "...",
-#                'flatness': 1.0, 'h_align': 'left', 'h_attach': 'right',
-#                'v_attach': 'top', 'v_align': 'center', 'position': (-140, -150),
-#                'scale': 0.7, 'color': (0.2, 0.6, 0.2)})
-#
+    def leaderBoard(self):
+        # Get all stats
+        stats = mystats.get_all_stats()
 
+        # Sort by scores (descending)
+        ordered = sorted(
+            stats.values(),
+            key=lambda x: x.get("scores", 0),
+            reverse=True
+        )
 
+        # Extract up to 5 real names
+        player_names = [p.get("name", "Unknown") for p in ordered[:5]]
 
-    def leaderBoardTest(self):
-        # Top 5 players (ejemplo)
-        self.top5Name = ["PlayerOne", "PlayerTwo", "PlayerThree", "PlayerFour", "PlayerFive"]
+        # Configured slots (design)
+        leaderboard_slots = [
+            {
+                "default_name": "PlayerOne",
+                "color": (1.0, 0.0, 0.0),   # Red
+                "texture": "penguinColorMask",
+                "y": -80
+            },
+            {
+                "default_name": "PlayerTwo",
+                "color": (0.0, 0.5, 1.0),   # Blue
+                "texture": "explosion",
+                "y": -115
+            },
+            {
+                "default_name": "PlayerThree",
+                "color": (1.0, 1.0, 0.0),   # Yellow
+                "texture": "bunnyColor",
+                "y": -150
+            },
+            {
+                "default_name": "PlayerFour",
+                "color": (1.0, 0.4, 0.7),   # Pink
+                "texture": "uiAtlas2",
+                "y": -185
+            },
+            {
+                "default_name": "PlayerFive",
+                "color": (0.6, 0.0, 1.0),   # Violet
+                "texture": "uiAtlas2",
+                "y": -220
+            }
+        ]
 
-        # 🎨 Colores configurables (texto)
-        color_first = (1.0, 1.0, 0.0)   # Amarillo
-        color_second = (0.0, 0.5, 1.0)  # Azul
-        color_third = (1.0, 0.0, 0.0)   # Rojo
-        color_fourth = (1.0, 0.4, 0.7)  # Rosado
-        color_fifth = (0.6, 0.0, 1.0)   # Violeta
+        # Fill with defaults if missing
+        names = list(player_names)
+        while len(names) < 5:
+            names.append(leaderboard_slots[len(names)]["default_name"])
 
-        # 🎨 Colores para los fondos (más opacos, multiplicados por 0.5)
-        bg_first = tuple(c * 0.5 for c in color_first)
-        bg_second = tuple(c * 0.5 for c in color_second)
-        bg_third = tuple(c * 0.5 for c in color_third)
-        bg_fourth = tuple(c * 0.5 for c in color_fourth)
-        bg_fifth = tuple(c * 0.5 for c in color_fifth)
+        #print("[DEBUG] Leaderboard Names ->", names)
 
-        if len(self.top5Name) >= 5:
-            # Fondos
+        # Create nodes for each location
+        for i, slot in enumerate(leaderboard_slots):
+            text_color = slot["color"]
+            bg_color = tuple(c * 0.5 for c in text_color)  # more opaque
+            pos_y = slot["y"]
+
+            # Background
             bs.newnode('image', attrs={
                 'scale': (300, 30),
-                'texture': bs.gettexture('bunnyIconColorMask'),
-                'position': (0, -80),
+                'texture': bs.gettexture(slot["texture"]),
+                'position': (0, pos_y),
                 'attach': 'topRight',
                 'opacity': 0.5,
-                'color': bg_first})
+                'color': bg_color
+            })
 
-            bs.newnode('image', attrs={
-                'scale': (300, 30),
-                'texture': bs.gettexture('explosion'),
-                'position': (0, -115),
-                'attach': 'topRight',
-                'opacity': 0.5,
-                'color': bg_second})
-
-            bs.newnode('image', attrs={
-                'scale': (300, 30),
-                'texture': bs.gettexture('penguinColorMask'),
-                'position': (0, -150),
-                'attach': 'topRight',
-                'opacity': 0.5,
-                'color': bg_third})
-
-            bs.newnode('image', attrs={
-                'scale': (300, 30),
-                'texture': bs.gettexture('rgbStripes'),
-                'position': (0, -185),
-                'attach': 'topRight',
-                'opacity': 0.5,
-                'color': bg_fourth})
-
-            bs.newnode('image', attrs={
-                'scale': (300, 30),
-                'texture': bs.gettexture('bunnyColor'),
-                'position': (0, -220),
-                'attach': 'topRight',
-                'opacity': 0.5,
-                'color': bg_fifth})
-
-            # Textos Top 5
+            # Text
+            name = names[i]
+            text_display = name[:10] + ("..." if len(name) > 10 else "")
             bs.newnode('text', attrs={
-                'text': "#1 " + self.top5Name[0][:10] + ("..." if len(self.top5Name[0]) > 10 else ""),
+                'text': f"#{i+1} {text_display}",
                 'flatness': 1.0, 'h_align': 'left',
                 'h_attach': 'right', 'v_attach': 'top',
-                'v_align': 'center', 'position': (-140, -80),
-                'scale': 0.7, 'color': color_first})
+                'v_align': 'center', 'position': (-140, pos_y),
+                'scale': 0.7, 'color': text_color
+            })
 
-            bs.newnode('text', attrs={
-                'text': "#2 " + self.top5Name[1][:10] + ("..." if len(self.top5Name[1]) > 10 else ""),
-                'flatness': 1.0, 'h_align': 'left',
-                'h_attach': 'right', 'v_attach': 'top',
-                'v_align': 'center', 'position': (-140, -115),
-                'scale': 0.7, 'color': color_second})
+    def debug_print_all_stats(self):
+        """
+        Prints the entire contents of mystats to the console (full stats, top players, and total players).
+        """
+        stats = mystats.get_all_stats()
 
-            bs.newnode('text', attrs={
-                'text': "#3 " + self.top5Name[2][:10] + ("..." if len(self.top5Name[2]) > 10 else ""),
-                'flatness': 1.0, 'h_align': 'left',
-                'h_attach': 'right', 'v_attach': 'top',
-                'v_align': 'center', 'position': (-140, -150),
-                'scale': 0.7, 'color': color_third})
+        print("\n" + "="*40)
+        print("[DEBUG] --- ESTADO DE MYSTATS ---")
 
-            bs.newnode('text', attrs={
-                'text': "#4 " + self.top5Name[3][:10] + ("..." if len(self.top5Name[3]) > 10 else ""),
-                'flatness': 1.0, 'h_align': 'left',
-                'h_attach': 'right', 'v_attach': 'top',
-                'v_align': 'center', 'position': (-140, -185),
-                'scale': 0.7, 'color': color_fourth})
+        # Total
+        print(f"[DEBUG] Total jugadores en stats.json: {len(stats)}")
 
-            bs.newnode('text', attrs={
-                'text': "#5 " + self.top5Name[4][:10] + ("..." if len(self.top5Name[4]) > 10 else ""),
-                'flatness': 1.0, 'h_align': 'left',
-                'h_attach': 'right', 'v_attach': 'top',
-                'v_align': 'center', 'position': (-140, -220),
-                'scale': 0.7, 'color': color_fifth})
-        else:
-            print("[LeaderBoardTest] No hay suficientes jugadores para mostrar el Top 5")
+        # Each player
+        for aid, data in stats.items():
+            print(f"  - {aid}: {data}")
+
+        # Top 5 
+        ordered = sorted(
+            stats.items(), 
+            key=lambda x: x[1].get("score", 0),
+            reverse=True
+        )
+        top5 = [name for name, _ in ordered[:5]]
+        print("\n[DEBUG] Top 5 Names:", top5 if top5 else "(vacío)")
+
+        print("[DEBUG] --- FIN DEBUG MYSTATS ---")
+        print("="*40 + "\n")

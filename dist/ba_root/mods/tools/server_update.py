@@ -20,8 +20,18 @@ def check():
     bascenev1.apptimer(15, postStatus)
 
 
+#def updateProfilesJson():
+#    profiles = pdata.get_profiles()
+#
+#    for id in profiles:
+#        if "spamCount" not in profiles[id]:
+#            profiles[id]["spamCount"] = 0
+#            profiles[id]["lastSpam"] = time.time()
+#
+#    pdata.commit_profiles(profiles)
+
 def updateProfilesJson():
-    profiles = pdata.get_profiles()
+    profiles = pdata.get_profiles() or {}
 
     for id in profiles:
         if "spamCount" not in profiles[id]:
@@ -29,6 +39,7 @@ def updateProfilesJson():
             profiles[id]["lastSpam"] = time.time()
 
     pdata.commit_profiles(profiles)
+
 
 
 def postStatus():

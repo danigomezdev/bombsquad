@@ -35,7 +35,7 @@ from tools import (
 from features import text_on_map, announcement
 from spazmod import modifyspaz
 from chathandle import handlechat
-
+from stats import mystats
 
 if TYPE_CHECKING:
     from typing import Any
@@ -150,6 +150,23 @@ def bootstraping():
         from plugins import importcustomcharacters
         importcustomcharacters.enable()
 
+
+def score_screen_on_begin(func) -> None:
+    """Runs when score screen is displayed."""
+
+    def wrapper(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)  # execute the original method
+        #team_balancer.balanceTeams()
+        mystats.update(self._stats)
+        announcement.showScoreScreenAnnouncement()
+        return result
+
+    return wrapper
+
+
+ScoreScreenActivity.on_begin = score_screen_on_begin(
+    ScoreScreenActivity.on_begin)
+
 def on_map_init(func):
     def wrapper(self, *args, **kwargs):
         func(self, *args, **kwargs)
@@ -194,6 +211,7 @@ def wrap_player_spaz_init(original_class):
     # Return the modified class
     return WrappedClass
 
+playerspaz.PlayerSpaz = wrap_player_spaz_init(playerspaz.PlayerSpaz)
 
 def filter_chat_message(msg: str, client_id: int) -> str | None:
     """Returns all in game messages or None (ignore's message)."""
@@ -204,8 +222,8 @@ class modSetup(babase.Plugin):
     def on_app_running(self):
         """Runs when app is launched."""
         bootstraping()
-        #servercheck.checkserver().start()
-        #server_update.check()
+        servercheck.checkserver().start()
+        server_update.check()
 
     # it works sometimes , but it blocks shutdown so server raise runtime
     # exception,   also dump server logs

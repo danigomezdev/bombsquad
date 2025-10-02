@@ -30,16 +30,16 @@ def update_name():
 
 
 def main(spaz, node, player):
-    if _setting['enablehptag']:
-        tag.addhp(node, spaz)
     if _setting['enabletags']:
         tag.addtag(node, player)
+    if _setting['enablehptag']:
+        tag.addhp(node, spaz)
     if _setting['enablerank']:
         tag.addrank(node, player)
-    #if _setting["playermod"]['default_boxing_gloves']:
-    #    spaz.equip_boxing_gloves()
-    #if _setting['playermod']['default_shield']:
-    #    spaz.equip_shields()
+    if _setting["playermod"]['default_boxing_gloves']:
+        spaz.equip_boxing_gloves()
+    if _setting['playermod']['default_shield']:
+        spaz.equip_shields()
     spaz.bomb_type = _setting['playermod']['default_bomb']
     spaz.bomb_count = _setting['playermod']['default_bomb_count']
     # update_name()  will add threading here later . it was adding delay on game start

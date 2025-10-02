@@ -103,7 +103,7 @@
    "Complete": false
   },
   "Team Player": {
-   "Complete": false
+   "Complete": true
   },
   "The Great Wall": {
    "Complete": false
@@ -134,16 +134,22 @@
   ]
  },
  "Default Player Profiles": {
-  "Client Input Device #1": "__account__"
+  "Client Input Device #1": "[Denial]",
+  "Client Input Device #2": "__account__",
+  "Client Input Device #3": "perro peruano",
+  "Client Input Device #4": "_random",
+  "Client Input Device #5": "\u2133\ud804\udc64\u02d1 \u05b4 \u05b6 \ud80c\udc83",
+  "Client Input Device #6": "alexcrashres"
  },
  "FFA Series Length": 24,
  "Fleet Zone Ping Last Flush Time": 1759196305,
  "Fleet Zone Pings": {
   "prod": {
-   "atlanta.v4": 20.99354101670254,
-   "chicago.v4": 36.94774075103644,
-   "columbus.v4": 35.512240486002526,
-   "n_virginia.v4": 21.54176733311452
+   "atlanta.v4": 20.179086334786035,
+   "columbus.v4": 30.62886329586709,
+   "montreal.v4": 32.59597315788631,
+   "n_virginia.v4": 19.703637606736166,
+   "new_york.v4": 18.723822735944356
   }
  },
  "Free-for-All Playlist Randomize": true,
@@ -167,22 +173,21 @@
   }
  },
  "Plugins": {
-    "create_server.EntryPoint": {
-        "enabled": true
-    },
-    "custom_hooks.modSetup": {
-        "enabled": true
-    },
-    "plugins.Init": {
-        "enabled": true
-    }
+  "custom_hooks.modSetup": {
+   "enabled": true
+  },
+  "plugins.Init": {
+   "enabled": true
+  }
  },
  "Port": 43210,
  "Show Tutorial": false,
  "Signed In Last Session": false,
+ "Team Tournament Playlist Randomize": true,
+ "Team Tournament Playlist Selection": "__default__",
  "Team Tournament Playlists": {},
  "Teams Series Length": 7,
- "launchCount": 3,
+ "launchCount": 4,
  "lc14173": 1,
  "lc14292": 1
 }

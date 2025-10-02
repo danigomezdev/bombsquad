@@ -1,6 +1,6 @@
 import setting
 from playersdata import pdata
-#from stats import mystats
+from stats import mystats
 
 import babase
 import bascenev1 as bs
@@ -32,24 +32,24 @@ def addtag(node, player):
 
 
 def addrank(node, player):
-    #session_player = player.sessionplayer
-    #account_id = session_player.get_v1_account_id()
-    #rank = mystats.getRank(account_id)
-#
-    #if rank:
-    #    Rank(node, rank)
+    session_player = player.sessionplayer
+    account_id = session_player.get_v1_account_id()
+    rank = mystats.getRank(account_id)
+
+    if rank:
+        Rank(node, rank)
     pass
 
 def addhp(node, spaz):
-    #def showHP():
-    #    hp = spaz.hitpoints
-    #    if spaz.node.exists():
-    #        HitPoint(owner=node, prefix=str(int(hp)),
-    #                 position=(0, 1.75, 0), shad=1.4)
-    #    else:
-    #        spaz.hptimer = None
-    #spaz.hptimer = bs.Timer(2, babase.Call(
-    #    showHP), repeat=True)
+    def showHP():
+        hp = spaz.hitpoints
+        if spaz.node.exists():
+            HitPoint(owner=node, prefix=str(int(hp)),
+                     position=(0, 1.75, 0), shad=1.4)
+        else:
+            spaz.hptimer = None
+    spaz.hptimer = bs.Timer(2, babase.Call(
+        showHP), repeat=True)
     pass
 
 class Tag(object):

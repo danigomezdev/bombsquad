@@ -119,8 +119,8 @@
   "enableTagAnimation": true,
   "enableTop5effects": true,
   "enableeffects": true,
-  "enablehptag": true,
-  "enablerank": true,
+  "enablehptag": false,
+  "enablerank": false,
   "enablestats": true,
   "enabletags": true,
   "firstTimeJoinMsg": "",
@@ -140,7 +140,7 @@
   "playermod": {
     "default_bomb": "normal",
     "default_bomb_count": 1,
-    "default_boxing_gloves": true,
+    "default_boxing_gloves": false,
     "default_shield": false
   },
   "playlists": {
