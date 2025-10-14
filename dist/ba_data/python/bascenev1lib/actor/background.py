@@ -42,7 +42,7 @@ class Background(bs.Actor):
                     'texture': bs.gettexture('bg'),
                     'tilt_translate': -0.3,
                     'has_alpha_channel': False,
-                    'color': (1, 1, 1),
+                    'color': (1, 0, 0),
                 },
             )
             if not start_faded:
@@ -53,7 +53,7 @@ class Background(bs.Actor):
                     loop=False,
                 )
             if show_logo:
-                logo_texture = bs.gettexture('logo')
+                logo_texture = bs.gettexture('zoeIconColorMask')
                 logo_mesh = bs.getmesh('logo')
                 logo_mesh_transparent = bs.getmesh('logoTransparent')
                 self.logo = bs.newnode(

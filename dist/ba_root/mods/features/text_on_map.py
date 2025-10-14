@@ -15,7 +15,9 @@ class textonmap:
         top = data['top watermark']
         nextMap = ""
         try:
-            nextMap = bs.get_foreground_host_session().get_next_game_description().evaluate()
+            nextMap = bs.get_foreground_host_session().get_next_game_description()
+            nextMapText = nextMap.evaluate(lang='Spanish')
+            print(nextMapText)
         except Exception:
             pass
         try:
@@ -26,7 +28,9 @@ class textonmap:
         self.index = 0
         self.highlights = data['center highlights'].get("msg", [])
 
+        self.show_team_score()
         self.left_watermark(left)
+        self.nextGame(nextMap)
         self.top_message(top)
         self.restart_msg()
 
@@ -61,8 +65,68 @@ class textonmap:
 
         self.delt = bs.timer(7, node.delete)
 
-        # Asegurarse de no pasarse del rango
+        # Make sure you don't go over the range
         self.index = (self.index + 1) % len(self.highlights)
+
+    def show_team_score(self):
+        """Display team scores (e.g., Azul: 0   Rojo: 0) centered at the top."""
+        try:
+            session = bs.get_foreground_host_session()
+            teams = session.sessionteams
+
+            if len(teams) < 2:
+                return  # Only show if there are at least 2 teams
+
+            team1 = teams[0]
+            team2 = teams[1]
+
+            # Try to evaluate localized team names in Spanish
+            try:
+                name1 = team1.name.evaluate(lang='Spanish')
+            except Exception:
+                try:
+                    name1 = team1.name.evaluate()
+                except Exception:
+                    name1 = str(team1.name)
+
+            try:
+                name2 = team2.name.evaluate(lang='Spanish')
+            except Exception:
+                try:
+                    name2 = team2.name.evaluate()
+                except Exception:
+                    name2 = str(team2.name)
+
+            score1 = team1.customdata.get('score', 0)
+            score2 = team2.customdata.get('score', 0)
+
+            print(f"[TEAM SCORE] {name1}: {score1} | {name2}: {score2}")
+
+            # First team name + score (left)
+            bs.newnode('text', attrs={
+                'text': f"{name1}: {score1}",
+                'flatness': 1.0,
+                'h_align': 'right',
+                'v_attach': 'top',
+                'scale': 1.0,
+                'position': (-40, -80),
+                'color': team1.color if hasattr(team1, "color") else (0.5, 0.5, 0.5),
+            })
+
+            # Second team name + score (right)
+            bs.newnode('text', attrs={
+                'text': f"{name2}: {score2}",
+                'flatness': 1.0,
+                'h_align': 'left',
+                'v_attach': 'top',
+                'scale': 1.0,
+                'position': (40, -80),
+                'color': team2.color if hasattr(team2, "color") else (0.5, 0.5, 0.5),
+            })
+
+        except Exception as e:
+            print("Error showing team score:", e)
+
 
     def left_watermark(self, text):
         bs.newnode('text', attrs={
@@ -77,8 +141,26 @@ class textonmap:
         })
 
     def nextGame(self, text):
+        try:
+            session = bs.get_foreground_host_session()
+            game_number = session.get_game_number() + 1 if hasattr(session, "get_game_number") else 1
+        except Exception:
+            game_number = 1
+
         bs.newnode('text', attrs={
-            'text': "Next : " + text,
+            'text': bs.Lstr(
+                value='${A} ${B}',
+                subs=[
+                    (
+                        '${A}',
+                        bs.Lstr(
+                            resource='upNextText',
+                            subs=[('${COUNT}', str(game_number))]
+                        ),
+                    ),
+                    ('${B}', text)
+                ]
+            ),
             'flatness': 1.0,
             'h_align': 'right',
             'v_attach': 'bottom',
@@ -87,6 +169,7 @@ class textonmap:
             'position': (-25, 16),
             'color': (0.5, 0.5, 0.5),
         })
+
 
     def season_reset(self, text):
         bs.newnode('text', attrs={

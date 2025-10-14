@@ -40,8 +40,6 @@ def updateProfilesJson():
 
     pdata.commit_profiles(profiles)
 
-
-
 def postStatus():
     link = 'https://bcsservers.ballistica.workers.dev/ping'
     data = {'name': babase.app.classic.server._config.party_name,

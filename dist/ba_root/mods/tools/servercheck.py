@@ -51,11 +51,18 @@ class checkserver(object):
                 deviceClientMap[device_id].append(ros["client_id"])
                 if len(deviceClientMap[device_id]) >= settings[
                         'maxAccountPerIP']:
-                    bs.chatmessage(
-                        f"Only {settings['maxAccountPerIP']} player per IP allowed, disconnecting this device.",
-                        clients=[
-                            ros["client_id"]])
-                    bs.disconnect_client(ros["client_id"])
+                    
+                    #bs.broadcastmessage(
+                    #    f"Only {settings['maxAccountPerIP']} player per IP allowed, disconnecting this device.",
+                    #    color=(1, 0, 0), transient=True,
+                    #    clients=[ros['client_id']]
+                    #)
+                    #bs.chatmessage(
+                    #    f"Only {settings['maxAccountPerIP']} player per IP allowed, disconnecting this device.",
+                    #    clients=[
+                    #        ros["client_id"]])
+                    
+                    #bs.disconnect_client(ros["client_id"])
                     logger.log(
                         f'Player disconnected, reached max players per device || {ros["account_id"]}',
                         "playerjoin")
@@ -65,11 +72,17 @@ class checkserver(object):
             else:
                 ipClientMap[ip].append(ros["client_id"])
                 if len(ipClientMap[ip]) >= settings['maxAccountPerIP']:
-                    _babase.chatmessage(
-                        f"Only {settings['maxAccountPerIP']} player per IP allowed, disconnecting this device.",
-                        clients=[
-                            ros["client_id"]])
-                    bs.disconnect_client(ros["client_id"])
+
+                    #bs.broadcastmessage(
+                    #    f"Only {settings['maxAccountPerIP']} player per IP allowed, disconnecting this device.",
+                    #    color=(1, 0, 0), transient=True,
+                    #    clients=[ros['client_id']]
+                    #)
+                    #_babase.chatmessage(
+                    #    f"Only {settings['maxAccountPerIP']} player per IP allowed, disconnecting this device.",
+                    #    clients=[
+                    #        ros["client_id"]])
+                    #bs.disconnect_client(ros["client_id"])
                     logger.log(
                         f'Player disconnected, reached max players per IP address || {ros["account_id"]}',
                         "playerjoin")
@@ -139,14 +152,14 @@ def on_player_join_server(pbid, player_data, ip, device_id):
     if ip in ipjoin:
         lastjoin = ipjoin[ip]["lastJoin"]
         joincount = ipjoin[ip]["count"]
-        if now - lastjoin < 15:
+
+        if now - lastjoin < 15 and ipjoin[ip].get("lastDevice") == device_id:
             joincount += 1
             if joincount > 2:
-                bs.broadcastmessage("Joining too fast , slow down dude",
-                                    # its not possible now tho, network layer will catch it before reaching here
-                                    color=(1, 0, 1), transient=True,
-                                    clients=[clid])
-                logger.log(f'{pbid} || kicked for joining too fast')
+                bs.broadcastmessage(
+                    "Te estás uniendo demasiado rápido, vé más despacio, amigo.",
+                    color=(1, 0, 1), transient=True,
+                    clients=[clid])
                 bs.disconnect_client(clid)
                 _thread.start_new_thread(reportSpam, (pbid,))
                 return
@@ -155,8 +168,10 @@ def on_player_join_server(pbid, player_data, ip, device_id):
 
         ipjoin[ip]["count"] = joincount
         ipjoin[ip]["lastJoin"] = now
+        ipjoin[ip]["lastDevice"] = device_id
     else:
-        ipjoin[ip] = {"lastJoin": now, "count": 0}
+        ipjoin[ip] = {"lastJoin": now, "count": 0, "lastDevice": device_id}
+
     if pbid in serverdata.clients:
         serverdata.clients[pbid]["lastJoin"] = now
 
@@ -165,9 +180,15 @@ def on_player_join_server(pbid, player_data, ip, device_id):
             {"client_id": clid, "deviceId": device_string, "pbid": pbid, "ip": ip, "device_uuid": device_id})
         serverdata.recents = serverdata.recents[-20:]
         if check_ban(ip, device_id, pbid):
-            _babase.chatmessage(
-                'sad ,your account is flagged contact server owner for unban',
-                clients=[clid])
+
+            bs.broadcastmessage(
+                "sad ,your account is flagged contact server owner for unban",
+                color=(1, 0, 0), transient=True,
+                clients=[ros['client_id']]
+            )
+            #_babase.chatmessage(
+            #    'sad ,your account is flagged contact server owner for unban',
+            #    clients=[clid])
             bs.disconnect_client(clid)
             return
         if get_account_age(player_data["accountAge"]) < \
