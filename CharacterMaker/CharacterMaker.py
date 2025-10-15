@@ -1,46 +1,4 @@
-# Released under the MIT License. See LICENSE for details.
-
 # ba_meta require api 9
-
-
-'''
-Character Builder/Maker by Mr.Smoothy
-Plugin helps to mix character models and textures in interactive way.
-
-Watch tutorial : https://youtu.be/q0KxY1hfMPQ
-Join discord: https://discord.gg/ucyaesh for help
-https://bombsquad-community.web.app/home
-
-> create team playlist and add character maker mini game 
-> Use export command to save character
-> Character will be saved in CustomCharacter folder inside Bombsquad Mods folder
-
-
-Characters can be used offline or online
-for online you need to share character file with  server owners.
-
-*For server owners:_
-     You might know what to do with that file, 
-     Still , 
-          refer code after line 455 in this file , add it as a plugin to import characters from json file.
-
-*For modders:-
-     You can add more models and texture , check line near 400 and add asset names ,  you can also modify sounds and icon in json file (optional)  .
-
-To share your character with friends ,
-     send them character .json file and tell them to put file in same location i.e mods/CustomCharacter  or for PC appdata/Local/Bombsquad/Mods/CustomCharacter
-     this plugin should be installed on their device too.
-
-Dont forget to share your creativity with me ,
-send your character screenshot discord: mr.smoothy#5824  https://discord.gg/ucyaesh
-
-Register your character in above discord server , so other server owners can add your characters.
-
-
-Released on 28 May 2021 
-Update 2 june : use import <character-name>
-Update 29 July 2023: updated to API 8 , multiplayer support
-'''
 
 from typing import Sequence
 import _babase
