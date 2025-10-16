@@ -80,16 +80,6 @@
     }
 ,
     {
-        "name": "UltraPartyWindow",
-        "file_name": "UltraPartyWindow.py",
-        "path": "UltraPartyWindowV2/UltraPartyWindow.py",
-        "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraPartyWindowV2/UltraPartyWindow.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraPartyWindowV2/UltraPartyWindow.py",
-        "description": "No description available"
-    }
-,
-    {
         "name": "BombRadiusVisualizer",
         "file_name": "BombRadiusVisualizer.py",
         "path": "BombRadiusVisualizer/BombRadiusVisualizer.py",
@@ -146,6 +136,16 @@
         "api_version": 9,
         "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/BombSquadPro/BombSquadPro.py",
         "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/BombSquadPro/BombSquadPro.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "ModManager",
+        "file_name": "ModManager.py",
+        "path": "ModManager/ModManager.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/ModManager/ModManager.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/ModManager/ModManager.py",
         "description": "No description available"
     }
 ,
