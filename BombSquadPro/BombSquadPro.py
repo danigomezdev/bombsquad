@@ -1,11 +1,10 @@
-# To learn more, see https://ballistica.net/wiki/meta-tag-system
 # ba_meta require api 9
 
 import babase
 import _babase
 import _baplus
 
-# ba_meta export plugin
+# ba_meta export babase.plugin
 class BSPro(babase.Plugin):
     def mode(test) -> bool:
         return True

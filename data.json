@@ -1,0 +1,241 @@
+[
+    {
+        "name": "UltraPartyWindow",
+        "file_name": "UltraPartyWindow.py",
+        "path": "UltraPartyWindow/UltraPartyWindow.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraPartyWindow/UltraPartyWindow.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraPartyWindow/UltraPartyWindow.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "IceMan",
+        "file_name": "IceMan.py",
+        "path": "IceMan/IceMan.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/IceMan/IceMan.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/IceMan/IceMan.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "CharacterMaker",
+        "file_name": "CharacterMaker.py",
+        "path": "CharacterMaker/CharacterMaker.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/CharacterMaker/CharacterMaker.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/CharacterMaker/CharacterMaker.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "DiscordAndroidRPC",
+        "file_name": "DiscordAndroidRPC.py",
+        "path": "DiscordAndroidRPC/DiscordAndroidRPC.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordAndroidRPC/DiscordAndroidRPC.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordAndroidRPC/DiscordAndroidRPC.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "Polish",
+        "file_name": "Polish.py",
+        "path": "Polish/Polish.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Polish/Polish.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Polish/Polish.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "CustomHits",
+        "file_name": "CustomHits.py",
+        "path": "CustomHits/CustomHits.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/CustomHits/CustomHits.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/CustomHits/CustomHits.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "InvisibleOne",
+        "file_name": "InvisibleOne.py",
+        "path": "InvisibleOne/InvisibleOne.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/InvisibleOne/InvisibleOne.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/InvisibleOne/InvisibleOne.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "Camera",
+        "file_name": "Camera.py",
+        "path": "Camera/Camera.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Camera/Camera.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Camera/Camera.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "UltraPartyWindow",
+        "file_name": "UltraPartyWindow.py",
+        "path": "UltraPartyWindowV2/UltraPartyWindow.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraPartyWindowV2/UltraPartyWindow.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraPartyWindowV2/UltraPartyWindow.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "BombRadiusVisualizer",
+        "file_name": "BombRadiusVisualizer.py",
+        "path": "BombRadiusVisualizer/BombRadiusVisualizer.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/BombRadiusVisualizer/BombRadiusVisualizer.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/BombRadiusVisualizer/BombRadiusVisualizer.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "StoreEventSpecial",
+        "file_name": "StoreEventSpecial.py",
+        "path": "StoreEventSpecial/StoreEventSpecial.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/StoreEventSpecial/StoreEventSpecial.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/StoreEventSpecial/StoreEventSpecial.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "FileShare",
+        "file_name": "FileShare.py",
+        "path": "FileShare/FileShare.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/FileShare/FileShare.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/FileShare/FileShare.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "cheap_disco",
+        "file_name": "cheap_disco.py",
+        "path": "CheapDisco/cheap_disco.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/CheapDisco/cheap_disco.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/CheapDisco/cheap_disco.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "DiscordRPC",
+        "file_name": "DiscordRPC.py",
+        "path": "DiscordRPC/DiscordRPC.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordRPC/DiscordRPC.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordRPC/DiscordRPC.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "BombSquadPro",
+        "file_name": "BombSquadPro.py",
+        "path": "BombSquadPro/BombSquadPro.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/BombSquadPro/BombSquadPro.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/BombSquadPro/BombSquadPro.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "SparkEffect",
+        "file_name": "SparkEffect.py",
+        "path": "Effects/SparkEffect.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SparkEffect.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SparkEffect.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "SweatEffect",
+        "file_name": "SweatEffect.py",
+        "path": "Effects/SweatEffect.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEffect.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEffect.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "SparkEpicEffect",
+        "file_name": "SparkEpicEffect.py",
+        "path": "Effects/SparkEpicEffect.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SparkEpicEffect.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SparkEpicEffect.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "SplinterEffect",
+        "file_name": "SplinterEffect.py",
+        "path": "Effects/SplinterEffect.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SplinterEffect.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SplinterEffect.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "SweatEpicEffect",
+        "file_name": "SweatEpicEffect.py",
+        "path": "Effects/SweatEpicEffect.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEpicEffect.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEpicEffect.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "SmokeSparkEffect",
+        "file_name": "SmokeSparkEffect.py",
+        "path": "Effects/SmokeSparkEffect.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SmokeSparkEffect.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SmokeSparkEffect.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "UltraServerFinder",
+        "file_name": "UltraServerFinder.py",
+        "path": "UltraServerFinder/UltraServerFinder.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraServerFinder/UltraServerFinder.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraServerFinder/UltraServerFinder.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "PartyFilter",
+        "file_name": "PartyFilter.py",
+        "path": "PartyFilter/PartyFilter.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/PartyFilter/PartyFilter.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/PartyFilter/PartyFilter.py",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "BetterProfileEditor",
+        "file_name": "BetterProfileEditor.py",
+        "path": "BetterProfileEditor/BetterProfileEditor.py",
+        "api_version": 9,
+        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/BetterProfileEditor/BetterProfileEditor.py",
+        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/BetterProfileEditor/BetterProfileEditor.py",
+        "description": "No description available"
+    }
+]
