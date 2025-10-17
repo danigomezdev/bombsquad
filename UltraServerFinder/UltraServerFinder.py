@@ -1241,6 +1241,26 @@ bw = lambda *,oac=None,**k: obw(
     enable_sound=False,
     **k
 )
+#cw = lambda *,size=None,oac=None,**k: (p:=ocw(
+#    parent=zw('overlay_stack'),
+#    background=False,
+#    transition='in_scale',
+#    size=size,
+#    on_outside_click_call=oac,
+#    **k
+#)) and (p,iw(
+#    parent=p,
+#    texture=gt('softRect'),
+#    size=(size[0]*1.2,size[1]*1.2),
+#    position=(-size[0]*0.1,-size[1]*0.1),
+#    opacity=0.55,
+#    color=(0,0,0)
+#),iw(
+#    parent=p,
+#    size=size
+#))
+
+
 cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     parent=zw('overlay_stack'),
     background=False,
@@ -1249,17 +1269,9 @@ cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     on_outside_click_call=oac,
     **k
 )) and (p,iw(
-    #parent=p,
-    #texture=gt('softRect'),
-    #size=(size[0]*1.2,size[1]*1.2),
-    #position=(-size[0]*0.1,-size[1]*0.1),
-    #opacity=0.55,
-    #color=(0,0,0)
-),iw(
     parent=p,
     size=size
 ))
-
 # Global
 BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
 TIP = lambda t: push(t,Finder.COL3)
