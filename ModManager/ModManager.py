@@ -1,4 +1,5 @@
 # ba_meta require api 9
+# ba_meta nomod
 
 import babase
 import _babase

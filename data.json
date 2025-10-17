@@ -4,9 +4,12 @@
         "file_name": "UltraPartyWindow.py",
         "path": "UltraPartyWindow/UltraPartyWindow.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraPartyWindow/UltraPartyWindow.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraPartyWindow/UltraPartyWindow.py",
-        "description": "No description available"
+        "version": "v1.1.1",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraPartyWindow/UltraPartyWindow.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraPartyWindow/UltraPartyWindow.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraPartyWindow/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraPartyWindow/README.md",
+        "description": "A mod to display online game data in more detail"
     }
 ,
     {
@@ -14,8 +17,11 @@
         "file_name": "IceMan.py",
         "path": "IceMan/IceMan.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/IceMan/IceMan.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/IceMan/IceMan.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/IceMan/IceMan.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/IceMan/IceMan.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/IceMan/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/IceMan/README.md",
         "description": "No description available"
     }
 ,
@@ -24,8 +30,11 @@
         "file_name": "CharacterMaker.py",
         "path": "CharacterMaker/CharacterMaker.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/CharacterMaker/CharacterMaker.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/CharacterMaker/CharacterMaker.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/CharacterMaker/CharacterMaker.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/CharacterMaker/CharacterMaker.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/CharacterMaker/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/CharacterMaker/README.md",
         "description": "No description available"
     }
 ,
@@ -34,8 +43,11 @@
         "file_name": "DiscordAndroidRPC.py",
         "path": "DiscordAndroidRPC/DiscordAndroidRPC.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordAndroidRPC/DiscordAndroidRPC.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordAndroidRPC/DiscordAndroidRPC.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordAndroidRPC/DiscordAndroidRPC.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordAndroidRPC/DiscordAndroidRPC.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordAndroidRPC/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordAndroidRPC/README.md",
         "description": "No description available"
     }
 ,
@@ -44,8 +56,11 @@
         "file_name": "Polish.py",
         "path": "Polish/Polish.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Polish/Polish.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Polish/Polish.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Polish/Polish.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Polish/Polish.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Polish/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Polish/README.md",
         "description": "No description available"
     }
 ,
@@ -54,8 +69,11 @@
         "file_name": "CustomHits.py",
         "path": "CustomHits/CustomHits.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/CustomHits/CustomHits.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/CustomHits/CustomHits.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/CustomHits/CustomHits.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/CustomHits/CustomHits.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/CustomHits/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/CustomHits/README.md",
         "description": "No description available"
     }
 ,
@@ -64,8 +82,11 @@
         "file_name": "InvisibleOne.py",
         "path": "InvisibleOne/InvisibleOne.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/InvisibleOne/InvisibleOne.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/InvisibleOne/InvisibleOne.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/InvisibleOne/InvisibleOne.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/InvisibleOne/InvisibleOne.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/InvisibleOne/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/InvisibleOne/README.md",
         "description": "No description available"
     }
 ,
@@ -74,8 +95,11 @@
         "file_name": "Camera.py",
         "path": "Camera/Camera.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Camera/Camera.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Camera/Camera.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Camera/Camera.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Camera/Camera.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Camera/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Camera/README.md",
         "description": "No description available"
     }
 ,
@@ -84,8 +108,11 @@
         "file_name": "BombRadiusVisualizer.py",
         "path": "BombRadiusVisualizer/BombRadiusVisualizer.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/BombRadiusVisualizer/BombRadiusVisualizer.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/BombRadiusVisualizer/BombRadiusVisualizer.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/BombRadiusVisualizer/BombRadiusVisualizer.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/BombRadiusVisualizer/BombRadiusVisualizer.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/BombRadiusVisualizer/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/BombRadiusVisualizer/README.md",
         "description": "No description available"
     }
 ,
@@ -94,8 +121,11 @@
         "file_name": "StoreEventSpecial.py",
         "path": "StoreEventSpecial/StoreEventSpecial.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/StoreEventSpecial/StoreEventSpecial.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/StoreEventSpecial/StoreEventSpecial.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/StoreEventSpecial/StoreEventSpecial.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/StoreEventSpecial/StoreEventSpecial.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/StoreEventSpecial/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/StoreEventSpecial/README.md",
         "description": "No description available"
     }
 ,
@@ -104,8 +134,11 @@
         "file_name": "FileShare.py",
         "path": "FileShare/FileShare.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/FileShare/FileShare.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/FileShare/FileShare.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/FileShare/FileShare.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/FileShare/FileShare.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/FileShare/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/FileShare/README.md",
         "description": "No description available"
     }
 ,
@@ -114,8 +147,11 @@
         "file_name": "cheap_disco.py",
         "path": "CheapDisco/cheap_disco.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/CheapDisco/cheap_disco.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/CheapDisco/cheap_disco.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/CheapDisco/cheap_disco.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/CheapDisco/cheap_disco.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/CheapDisco/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/CheapDisco/README.md",
         "description": "No description available"
     }
 ,
@@ -124,8 +160,11 @@
         "file_name": "DiscordRPC.py",
         "path": "DiscordRPC/DiscordRPC.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordRPC/DiscordRPC.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordRPC/DiscordRPC.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordRPC/DiscordRPC.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordRPC/DiscordRPC.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordRPC/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordRPC/README.md",
         "description": "No description available"
     }
 ,
@@ -134,18 +173,11 @@
         "file_name": "BombSquadPro.py",
         "path": "BombSquadPro/BombSquadPro.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/BombSquadPro/BombSquadPro.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/BombSquadPro/BombSquadPro.py",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "ModManager",
-        "file_name": "ModManager.py",
-        "path": "ModManager/ModManager.py",
-        "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/ModManager/ModManager.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/ModManager/ModManager.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/BombSquadPro/BombSquadPro.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/BombSquadPro/BombSquadPro.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/BombSquadPro/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/BombSquadPro/README.md",
         "description": "No description available"
     }
 ,
@@ -154,8 +186,11 @@
         "file_name": "SparkEffect.py",
         "path": "Effects/SparkEffect.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SparkEffect.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SparkEffect.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SparkEffect.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SparkEffect.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
         "description": "No description available"
     }
 ,
@@ -164,8 +199,11 @@
         "file_name": "SweatEffect.py",
         "path": "Effects/SweatEffect.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEffect.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEffect.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEffect.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEffect.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
         "description": "No description available"
     }
 ,
@@ -174,8 +212,11 @@
         "file_name": "SparkEpicEffect.py",
         "path": "Effects/SparkEpicEffect.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SparkEpicEffect.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SparkEpicEffect.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SparkEpicEffect.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SparkEpicEffect.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
         "description": "No description available"
     }
 ,
@@ -184,8 +225,11 @@
         "file_name": "SplinterEffect.py",
         "path": "Effects/SplinterEffect.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SplinterEffect.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SplinterEffect.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SplinterEffect.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SplinterEffect.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
         "description": "No description available"
     }
 ,
@@ -194,8 +238,11 @@
         "file_name": "SweatEpicEffect.py",
         "path": "Effects/SweatEpicEffect.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEpicEffect.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEpicEffect.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEpicEffect.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEpicEffect.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
         "description": "No description available"
     }
 ,
@@ -204,8 +251,11 @@
         "file_name": "SmokeSparkEffect.py",
         "path": "Effects/SmokeSparkEffect.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SmokeSparkEffect.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SmokeSparkEffect.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SmokeSparkEffect.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SmokeSparkEffect.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
         "description": "No description available"
     }
 ,
@@ -214,8 +264,11 @@
         "file_name": "UltraServerFinder.py",
         "path": "UltraServerFinder/UltraServerFinder.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraServerFinder/UltraServerFinder.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraServerFinder/UltraServerFinder.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraServerFinder/UltraServerFinder.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraServerFinder/UltraServerFinder.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/UltraServerFinder/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/UltraServerFinder/README.md",
         "description": "No description available"
     }
 ,
@@ -224,8 +277,11 @@
         "file_name": "PartyFilter.py",
         "path": "PartyFilter/PartyFilter.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/PartyFilter/PartyFilter.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/PartyFilter/PartyFilter.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/PartyFilter/PartyFilter.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/PartyFilter/PartyFilter.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/PartyFilter/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/PartyFilter/README.md",
         "description": "No description available"
     }
 ,
@@ -234,8 +290,11 @@
         "file_name": "BetterProfileEditor.py",
         "path": "BetterProfileEditor/BetterProfileEditor.py",
         "api_version": 9,
-        "normal_url": "https://github.com/danigomezdev/bombsquad/blob/mods/BetterProfileEditor/BetterProfileEditor.py",
-        "raw_url": "https://github.com/danigomezdev/bombsquad/raw/mods/BetterProfileEditor/BetterProfileEditor.py",
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/BetterProfileEditor/BetterProfileEditor.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/BetterProfileEditor/BetterProfileEditor.py",
+        "url_readme": "",
+        "url_raw_readme": "",
         "description": "No description available"
     }
 ]

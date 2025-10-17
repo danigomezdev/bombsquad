@@ -47,7 +47,7 @@ extract_mod_name() {
         # Extract everything after "name:"
         local extracted_name=$(echo "$name_line" | sed 's/^# ba_meta name:\s*//')
         extracted_name=$(extract_meta_value "$extracted_name")
-        echo "$extracted_name"
+        echo "$extaped_name"
     else
         echo "$default_name"
     fi
@@ -92,12 +92,41 @@ extract_api_version() {
     fi
 }
 
+# Function to extract version from file
+extract_version() {
+    local file_path="$1"
+    
+    # Look for ba_meta version pattern
+    local version_line=$(grep -m 1 "^# ba_meta version:" "$file_path" 2>/dev/null)
+    
+    if [ -n "$version_line" ]; then
+        # Extract everything after "version:"
+        local extracted_version=$(echo "$version_line" | sed 's/^# ba_meta version:\s*//')
+        extracted_version=$(extract_meta_value "$extracted_version")
+        echo "$extracted_version"
+    else
+        echo "v1.0.0"
+    fi
+}
+
+# Function to check if file has nomod header
+has_nomod() {
+    local file_path="$1"
+    
+    # Check if file contains ba_meta nomod
+    if grep -q "^# ba_meta nomod" "$file_path" 2>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Function to check if file is a Python mod file
 is_mod_file() {
     local file_path="$1"
     
-    # Check if it's a .py file and contains ba_meta require api
-    if [[ "$file_path" == *.py ]] && grep -q "^# ba_meta require api" "$file_path" 2>/dev/null; then
+    # Check if it's a .py file and contains ba_meta require api and doesn't have nomod
+    if [[ "$file_path" == *.py ]] && grep -q "^# ba_meta require api" "$file_path" 2>/dev/null && ! has_nomod "$file_path"; then
         return 0
     else
         return 1
@@ -112,6 +141,27 @@ escape_json_string() {
     echo "$string"
 }
 
+# Function to check if README exists and generate URLs
+get_readme_urls() {
+    local file_path="$1"
+    local dir_path=$(dirname "$file_path")
+    local readme_path="$dir_path/README.md"
+    
+    if [ -f "$readme_path" ]; then
+        local relative_readme_path=$(echo "$readme_path" | sed "s|^\./||")
+        local url_readme="${REPO}/blob/mods/${relative_readme_path}"
+        local url_raw_readme="${REPO}/raw/mods/${relative_readme_path}"
+        
+        # Replace spaces with %20 in URLs
+        url_readme=$(echo "$url_readme" | sed 's/ /%20/g')
+        url_raw_readme=$(echo "$url_raw_readme" | sed 's/ /%20/g')
+        
+        echo "$url_readme" "$url_raw_readme"
+    else
+        echo "" ""
+    fi
+}
+
 # Function to generate mod data
 generate_mod_data() {
     log "Scanning for mod files..."
@@ -121,6 +171,7 @@ generate_mod_data() {
     
     local first_entry=true
     local mod_count=0
+    local excluded_count=0
     
     # Find all .py files and process them
     while IFS= read -r -d '' file; do
@@ -129,18 +180,23 @@ generate_mod_data() {
             local mod_name=$(extract_mod_name "$file")
             local description=$(extract_description "$file")
             local api_version=$(extract_api_version "$file")
+            local version=$(extract_version "$file")
             
-            # Generate URLs
-            local normal_url="${REPO}/blob/mods/${relative_path}"
-            local raw_url="${REPO}/raw/mods/${relative_path}"
+            # Generate mod URLs
+            local url_mod="${REPO}/blob/mods/${relative_path}"
+            local url_raw_mod="${REPO}/raw/mods/${relative_path}"
+            
+            # Generate README URLs if README exists
+            read -r url_readme url_raw_readme <<< "$(get_readme_urls "$file")"
             
             # Replace spaces with %20 in URLs
-            normal_url=$(echo "$normal_url" | sed 's/ /%20/g')
-            raw_url=$(echo "$raw_url" | sed 's/ /%20/g')
+            url_mod=$(echo "$url_mod" | sed 's/ /%20/g')
+            url_raw_mod=$(echo "$url_raw_mod" | sed 's/ /%20/g')
             
             # Escape strings for JSON
             local escaped_name=$(escape_json_string "$mod_name")
             local escaped_desc=$(escape_json_string "$description")
+            local escaped_version=$(escape_json_string "$version")
             
             if [ "$first_entry" = false ]; then
                 echo "," >> "$TEMP_FILE"
@@ -153,15 +209,21 @@ generate_mod_data() {
         "file_name": "$(basename "$file")",
         "path": "$relative_path",
         "api_version": $api_version,
-        "normal_url": "$normal_url",
-        "raw_url": "$raw_url",
+        "version": "$escaped_version",
+        "url_mod": "$url_mod",
+        "url_raw_mod": "$url_raw_mod",
+        "url_readme": "$url_readme",
+        "url_raw_readme": "$url_raw_readme",
         "description": "$escaped_desc"
     }
 EOF
             
             first_entry=false
             ((mod_count++))
-            log "Found mod: $mod_name (API: $api_version)"
+            log "Found mod: $mod_name (API: $api_version, Version: $version)"
+        elif [[ "$file" == *.py ]] && has_nomod "$file"; then
+            warn "Excluding $(basename "$file") - has nomod header"
+            ((excluded_count++))
         fi
     done < <(find "$MODS_DIR" -name "*.py" -type f -print0)
     
@@ -169,6 +231,9 @@ EOF
     echo "]" >> "$TEMP_FILE"
     
     log "Found $mod_count mod files"
+    if [ $excluded_count -gt 0 ]; then
+        log "Excluded $excluded_count files with nomod header"
+    fi
 }
 
 # Function to check if data needs to be updated
@@ -287,6 +352,12 @@ main() {
         log "API version distribution:"
         jq -r '.[].api_version' "$DATA_FILE" | sort | uniq -c | while read count version; do
             echo "  API $version: $count mods"
+        done
+        
+        # Show version distribution
+        log "Version distribution:"
+        jq -r '.[].version' "$DATA_FILE" | sort | uniq -c | while read count version; do
+            echo "  $version: $count mods"
         done
     fi
     
