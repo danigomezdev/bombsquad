@@ -32,22 +32,31 @@ extract_meta_value() {
     value=$(echo "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
     # Remove quotes at the beginning and end only
     value=$(echo "$value" | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/")
+    # Remove any trailing comments
+    value=$(echo "$value" | sed 's/#.*$//')
     echo "$value"
 }
+
 
 # Function to extract mod name from file
 extract_mod_name() {
     local file_path="$1"
     local default_name=$(basename "$file_path" .py)
     
-    # Look for ba_meta name pattern
-    local name_line=$(grep -m 1 "^# ba_meta name:" "$file_path" 2>/dev/null)
+    # Look for ba_meta name pattern with or without colon
+    local name_line=$(grep -m 1 "^# ba_meta name" "$file_path" 2>/dev/null)
     
     if [ -n "$name_line" ]; then
-        # Extract everything after "name:"
-        local extracted_name=$(echo "$name_line" | sed 's/^# ba_meta name:\s*//')
+        # Extract everything after "name" (with optional colon)
+        local extracted_name=$(echo "$name_line" | sed -E 's/^# ba_meta name:?[[:space:]]*//')
         extracted_name=$(extract_meta_value "$extracted_name")
-        echo "$extaped_name"
+        
+        # If extraction failed or resulted in empty string, use default
+        if [ -z "$extracted_name" ]; then
+            echo "$default_name"
+        else
+            echo "$extracted_name"
+        fi
     else
         echo "$default_name"
     fi
@@ -58,12 +67,12 @@ extract_description() {
     local file_path="$1"
     local default_description="No description available"
     
-    # Look for ba_meta description pattern
-    local desc_line=$(grep -m 1 "^# ba_meta description:" "$file_path" 2>/dev/null)
+    # Look for ba_meta description pattern with or without colon
+    local desc_line=$(grep -m 1 "^# ba_meta description" "$file_path" 2>/dev/null)
     
     if [ -n "$desc_line" ]; then
-        # Extract everything after "description:"
-        local extracted_desc=$(echo "$desc_line" | sed 's/^# ba_meta description:\s*//')
+        # Extract everything after "description" (with optional colon)
+        local extracted_desc=$(echo "$desc_line" | sed -E 's/^# ba_meta description:?[[:space:]]*//')
         extracted_desc=$(extract_meta_value "$extracted_desc")
         
         # Limit to 120 characters
@@ -73,6 +82,23 @@ extract_description() {
         echo "$extracted_desc"
     else
         echo "$default_description"
+    fi
+}
+
+# Function to extract version from file
+extract_version() {
+    local file_path="$1"
+    
+    # Look for ba_meta version pattern with or without colon
+    local version_line=$(grep -m 1 "^# ba_meta version" "$file_path" 2>/dev/null)
+    
+    if [ -n "$version_line" ]; then
+        # Extract everything after "version" (with optional colon)
+        local extracted_version=$(echo "$version_line" | sed -E 's/^# ba_meta version:?[[:space:]]*//')
+        extracted_version=$(extract_meta_value "$extracted_version")
+        echo "$extracted_version"
+    else
+        echo "v1.0.0"
     fi
 }
 

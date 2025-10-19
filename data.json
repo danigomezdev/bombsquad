@@ -104,7 +104,7 @@
     }
 ,
     {
-        "name": "BombRadiusVisualizer",
+        "name": "Bomb Radius Visualizer",
         "file_name": "BombRadiusVisualizer.py",
         "path": "BombRadiusVisualizer/BombRadiusVisualizer.py",
         "api_version": 9,
@@ -113,7 +113,7 @@
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/BombRadiusVisualizer/BombRadiusVisualizer.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/BombRadiusVisualizer/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/BombRadiusVisualizer/README.md",
-        "description": "No description available"
+        "description": "A visualizer of the blast field of all explosives"
     }
 ,
     {
@@ -143,13 +143,13 @@
     }
 ,
     {
-        "name": "cheap_disco",
-        "file_name": "cheap_disco.py",
-        "path": "CheapDisco/cheap_disco.py",
+        "name": "CheapDisco",
+        "file_name": "CheapDisco.py",
+        "path": "CheapDisco/CheapDisco.py",
         "api_version": 9,
         "version": "v1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/CheapDisco/cheap_disco.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/CheapDisco/cheap_disco.py",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/CheapDisco/CheapDisco.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/CheapDisco/CheapDisco.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/CheapDisco/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/CheapDisco/README.md",
         "description": "No description available"
@@ -241,6 +241,19 @@
         "version": "v1.0.0",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEpicEffect.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEpicEffect.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
+        "description": "No description available"
+    }
+,
+    {
+        "name": "EffectRushStar",
+        "file_name": "EffectRushStar.py",
+        "path": "Effects/EffectRushStar.py",
+        "api_version": 9,
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/EffectRushStar.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/EffectRushStar.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
         "description": "No description available"
