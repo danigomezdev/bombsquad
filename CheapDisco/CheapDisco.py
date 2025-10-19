@@ -203,7 +203,7 @@ class DiscoSettingsWindow(PopupWindow):
 
 abc = ba.AppTimer(ba.app.config.get('Disco Color Time', 1.0), disco, repeat=True)
 
-# ba_meta export plugin
+# ba_meta export babase.Plugin
 class byLess(bs.Plugin):
     def on_app_running(self) -> None: pass
 

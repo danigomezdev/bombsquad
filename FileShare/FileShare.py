@@ -414,7 +414,7 @@ def handle_download(url, path, callback):
         # bui.screenmessage(f'Error occured {e}')
         print(f"Error occurred: {e}")
 
-# ba_meta export plugin
+# ba_meta export babase.Plugin
 class byLess(babase.Plugin):
     def on_app_running(self):
         pass
