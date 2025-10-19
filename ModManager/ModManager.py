@@ -3,8 +3,6 @@
 
 import babase
 import _babase
-import _bauiv1
-import _bascenev1
 import bauiv1 as bui
 from bauiv1lib import popup, confirm
 from babase._meta import EXPORT_CLASS_NAME_SHORTCUTS
@@ -34,10 +32,7 @@ import logging
 MOD_MANAGER_VERSION = "1.0.0"
 MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/mods/data.json"
 CURRENT_TAG = "mods"
-#REPOSITORY_URL = "https://github.com/bombsquad-community/plugin-manager"
-# Current tag can be changed to "staging" or any other branch in
-# plugin manager repo for testing purpose.
-#CURRENT_TAG = "main"
+REPOSITORY_URL = "https://github.com/danigomezdev/bombsquad/tree/mods"
 
 _env = _babase.env()
 _app_api_version = babase.app.env.api_version
@@ -86,7 +81,7 @@ REGEXP = {
         ),
     ),
 }
-DISCORD_URL = "https://ballistica.net/discord"
+DISCORD_URL = "https://discord.gg/q5GdnP85Ky"
 
 
 _CACHE = {}
@@ -282,12 +277,21 @@ class StartupTasks:
                 del installed_plugins[plugin_name]
 
         # This order is the options will show up in Settings window.
+
         current_settings = {
-            "Auto Update Mod Manager": True,
-            "Auto Update Plugins": True,
-            "Auto Enable Plugins After Installation": True,
-            "Notify New Plugins": True
+            "Actualizar automáticamente Mod Manager": True,
+            "Actualizar automáticamente los mods": True,
+            "Habilitar mods automáticamente después de la instalación": True,
+            "Notificar nuevos mods": True
         }
+                
+        #current_settings = {
+        #    "Auto Update Mod Manager": True,
+        #    "Auto Update Plugins": True,
+        #    "Auto Enable Plugins After Installation": True,
+        #    "Notify New Plugins": True
+        #}
+
         settings = plugin_manager_config.setdefault("Settings", {})
 
         for setting, value in settings.items():
@@ -300,7 +304,7 @@ class StartupTasks:
             babase.app.config.commit()
 
     async def update_plugin_manager(self):
-        if not babase.app.config["Mod Manager"]["Settings"]["Auto Update Mod Manager"]:
+        if not babase.app.config["Mod Manager"]["Settings"]["Actualizar automáticamente Mod Manager"]:
             return
         update_details = await self.plugin_manager.get_update_details()
         if update_details:
@@ -316,7 +320,7 @@ class StartupTasks:
                 bui.getsound('shieldUp').play()
 
     async def update_plugins(self):
-        if not babase.app.config["Mod Manager"]["Settings"]["Auto Update Plugins"]:
+        if not babase.app.config["Mod Manager"]["Settings"]["Actualizar automáticamente los mods"]:
             return
         await self.plugin_manager.setup_index()
         all_plugins = await self.plugin_manager.categories["All"].get_plugins()
@@ -339,7 +343,7 @@ class StartupTasks:
             return True
 
     async def notify_new_plugins(self):
-        if not babase.app.config["Mod Manager"]["Settings"]["Notify New Plugins"]:
+        if not babase.app.config["Mod Manager"]["Settings"]["Notificar nuevos mods"]:
             return
         show_max_names = 2
         await self.plugin_manager.setup_index()
@@ -403,10 +407,8 @@ class Category:
 
     async def fetch_metadata(self):
         if self._metadata is None:
-            # Let's keep depending on the "main" branch for 3rd party sources
-            # even if we're using a different branch of plugin manager's repository.
             request = urllib.request.Request(
-                self.meta_url.format(content_type="raw", tag=self.tag),
+                self.meta_url,
                 headers=self.request_headers,
             )
             response = await async_send_network_request(request)
@@ -414,48 +416,47 @@ class Category:
             self.set_category_global_cache("metadata", self._metadata)
         return self
 
-    async def validate(self):
-        try:
-            await self.fetch_metadata()
-        except urllib.error.HTTPError as e:
-            raise PluginSourceNetworkError(str(e))
-        except json.decoder.JSONDecodeError as e:
-            raise CategoryMetadataParseError(f"Failed to parse JSON: {str(e)}")
-        try:
-            await asyncio.gather(
-                self.get_name(),
-                self.get_description(),
-                self.get_plugins_base_url(),
-                self.get_plugins(),
-            )
-        except KeyError:
-            raise CategoryMetadataParseError(f"Failed to parse JSON; missing required fields.")
-        else:
-            return True
-
-    async def get_name(self):
-        await self.fetch_metadata()
-        return self._metadata["name"]
-
     async def get_description(self):
-        await self.fetch_metadata()
-        return self._metadata["description"]
-
-    async def get_plugins_base_url(self):
-        await self.fetch_metadata()
-        return self._metadata["plugins_base_url"]
-
+        return "Community mods collection"  # Fixed description
+    
     async def get_plugins(self):
         if self._plugins is None:
             await self.fetch_metadata()
-            self._plugins = ([
-                Plugin(
-                    plugin_info,
-                    f"{await self.get_plugins_base_url()}/{plugin_info[0]}.py",
-                    tag=self.tag,
-                )
-                for plugin_info in self._metadata["plugins"].items()
-            ])
+            self._plugins = []
+
+            #print(f"DEBUG: Procesando {len(self._metadata)} mods desde JSON")
+
+            for mod_data in self._metadata:
+                try:
+                    # Log cada mod cargado
+                    #print(f"DEBUG: Cargando mod: {mod_data['name']} - {mod_data['description']}")
+
+                    plugin_info = (
+                        mod_data["name"],
+                        {
+                            "description": mod_data["description"],
+                            "authors": [{"name": "Community"}],
+                            "external_url": mod_data["url_mod"],
+                            "versions": {
+                                mod_data.get("version", "1.0.0"): {
+                                    "api_version": mod_data["api_version"],
+                                    "released_on": "01-01-2024",
+                                    "commit_sha": "unknown",
+                                    "md5sum": ""
+                                }
+                            }
+                        }
+                    )
+                    plugin = Plugin(
+                        plugin_info,
+                        mod_data["url_raw_mod"],
+                        tag=self.tag,
+                    )
+                    self._plugins.append(plugin)
+                except Exception as e:
+                    print(f"ERROR: Could not load mod {mod_data.get('name', 'unknown')}: {e}")
+
+            #print(f"DEBUG: Total de plugins cargados: {len(self._plugins)}")
             self.set_category_global_cache("plugins", self._plugins)
         return self._plugins
 
@@ -702,8 +703,10 @@ class PluginVersion:
         self.commit_sha = info["commit_sha"]
         self.md5sum = info["md5sum"]
 
-        self.download_url = self.plugin.url.format(content_type="raw", tag=tag)
-        self.view_url = self.plugin.url.format(content_type="blob", tag=tag)
+        # Usar la URL directa del plugin (raw_url)
+        self.download_url = self.plugin.url
+        # Usar normal_url para visualización
+        self.view_url = self.plugin.info.get("external_url", self.plugin.url)
 
     def __eq__(self, plugin_version):
         return (self.number, self.plugin.name) == (plugin_version.number,
@@ -739,7 +742,7 @@ class PluginVersion:
             if not suppress_screenmessage:
                 bui.screenmessage(f"{self.plugin.name} installed", color=(0, 1, 0))
             check = babase.app.config["Mod Manager"]["Settings"]
-            if check["Auto Enable Plugins After Installation"]:
+            if check["Habilitar mods automáticamente después de la instalación"]:
                 await local_plugin.enable()
             return True
 
@@ -751,14 +754,14 @@ class Plugin:
         """
         self.name, self.info = plugin
         self.install_path = os.path.join(PLUGIN_DIRECTORY, f"{self.name}.py")
-        self.url = url
+        self.url = url  # Esta es ahora la raw_url directa para descargar
         self.tag = tag
         self._local_plugin = None
 
         self._versions = None
         self._latest_version = None
         self._latest_compatible_version = None
-
+        
     def __repr__(self):
         return f"<Plugin({self.name})>"
 
@@ -767,11 +770,7 @@ class Plugin:
 
     @property
     def view_url(self):
-        if self.latest_compatible_version == self.latest_version:
-            tag = CURRENT_TAG
-        else:
-            tag = self.latest_compatible_version.commit_sha
-        return self.url.format(content_type="blob", tag=tag)
+        return self.info.get("external_url", self.url)
 
     @property
     def is_installed(self):
@@ -792,9 +791,11 @@ class Plugin:
     @property
     def latest_version(self):
         if self._latest_version is None:
+            # Usar la versión del JSON
+            version_number = list(self.info["versions"].keys())[0]
             self._latest_version = PluginVersion(
                 self,
-                tuple(self.info["versions"].items())[0],
+                (version_number, self.info["versions"][version_number]),
                 tag=self.tag,
             )
         return self._latest_version
@@ -802,12 +803,13 @@ class Plugin:
     @property
     def latest_compatible_version(self):
         if self._latest_compatible_version is None:
+            # Buscar versión compatible
             for number, info in self.info["versions"].items():
                 if info["api_version"] == _app_api_version:
                     self._latest_compatible_version = PluginVersion(
                         self,
                         (number, info),
-                        tag=self.tag if self.latest_version.number == number else info["commit_sha"]
+                        tag=self.tag
                     )
                     break
         if self._latest_compatible_version is None:
@@ -866,18 +868,20 @@ class PluginManager:
 
     async def get_index(self):
         if not self._index:
-            request = urllib.request.Request(
-                INDEX_META.format(
-                    repository_url=REPOSITORY_URL,
-                    content_type="raw",
-                    tag=CURRENT_TAG
-                ),
-                headers=self.request_headers,
-            )
-            response = await async_send_network_request(request)
-            index = json.loads(response.read())
-            self.set_index_global_cache(index)
-            self._index = index
+            # For the new format, we create a minimal index
+            self._index = {
+                "categories": [MODS_DATA_URL],
+                "external_source_url": "",  # Empty for now
+                "versions": {
+                    MOD_MANAGER_VERSION: {
+                        "api_version": _app_api_version,
+                        "released_on": "01-01-2024",
+                        "commit_sha": "unknown", 
+                        "md5sum": ""
+                    }
+                }
+            }
+            self.set_index_global_cache(self._index)
         return self._index
 
     async def setup_index(self):
@@ -940,35 +944,17 @@ class PluginManager:
         self._changelog_setup_in_progress = False
 
     async def setup_plugin_categories(self, plugin_index):
-        # A hack to have the "All" category show at the top.
+        # We only have one category now - "All"
         self.categories["All"] = None
 
-        requests = []
-        for meta_url in plugin_index["categories"]:
-            category = Category(meta_url)
-            request = category.fetch_metadata()
-            requests.append(request)
-        for source in babase.app.config["Mod Manager"]["Custom Sources"]:
-            source_splits = source.split("@", maxsplit=1)
-            if len(source_splits) == 1:
-                # Fallack to `main` if `@branchname` isn't specified in an external source URI.
-                source_repo, source_tag = source_splits[0], "main"
-            else:
-                source_repo, source_tag = source_splits
-            meta_url = partial_format(
-                plugin_index["external_source_url"],
-                repository=source_repo,
-            )
-            category = Category(meta_url, tag=source_tag)
-            request = category.fetch_metadata()
-            requests.append(request)
-        categories = await asyncio.gather(*requests)
-
-        all_plugins = []
-        for category in categories:
-            self.categories[await category.get_name()] = category
-            all_plugins.extend(await category.get_plugins())
+        # Create parent category with data.json URL
+        category = Category(MODS_DATA_URL)
+        await category.fetch_metadata()
+        
+        all_plugins = await category.get_plugins()
         self.categories["All"] = CategoryAll(plugins=all_plugins)
+        # We can also add "Mods" as a category
+        #self.categories["Mods"] = category
 
     def cleanup(self):
         for category in self.categories.values():
@@ -1136,100 +1122,6 @@ class ChangelogWindow(popup.PopupWindow):
         _remove_popup(self)
         bui.containerwidget(edit=self._root_widget, transition='out_scale')
 
-
-class AuthorsWindow(popup.PopupWindow):
-    def __init__(self, authors_info, origin_widget):
-        self.authors_info = authors_info
-        self.scale_origin = origin_widget.get_screen_space_center()
-        bui.getsound('swish').play()
-        s = 1.25 if _uiscale() is babase.UIScale.SMALL else 1.39 if _uiscale() is babase.UIScale.MEDIUM else 1.67
-        width = 400 * s
-        height = width * 0.8
-        color = (1, 1, 1)
-        text_scale = 0.7 * s
-        self._transition_out = 'out_scale'
-        transition = 'in_scale'
-
-        self._root_widget = bui.containerwidget(
-            size=(width, height),
-            on_outside_click_call=self._back,
-            transition=transition,
-            scale=(1.5 if _uiscale() is babase.UIScale.SMALL else 1.5
-                   if _uiscale() is babase.UIScale.MEDIUM else 1.0),
-            scale_origin_stack_offset=self.scale_origin
-        )
-
-        _add_popup(self)
-
-        pos = height * 0.9
-        bui.textwidget(
-            parent=self._root_widget,
-            position=(width * 0.49, pos),
-            size=(0, 0),
-            h_align='center',
-            v_align='center',
-            text='Authors',
-            scale=text_scale * 1.25,
-            color=color,
-            maxwidth=width * 0.9
-        )
-
-        back_button = bui.buttonwidget(
-            parent=self._root_widget,
-            position=(width * 0.1, height * 0.87),
-            size=(60, 60),
-            scale=0.8,
-            label=babase.charstr(babase.SpecialChar.BACK),
-            button_type='backSmall',
-            on_activate_call=self._back
-        )
-
-        bui.containerwidget(edit=self._root_widget, cancel_button=back_button)
-
-        self._scrollwidget = bui.scrollwidget(
-            parent=self._root_widget,
-            size=(width * 0.8, height * 0.75),
-            position=(width * 0.1, height * 0.1)
-        )
-        self._columnwidget = bui.columnwidget(
-            parent=self._scrollwidget,
-            border=1,
-            left_border=-15,
-            margin=0
-        )
-
-        for author in self.authors_info:
-            for key, value in author.items():
-                text = f"{key.title()}: {value if value != '' else 'Not Provided'}"
-                if key == 'name':
-                    text = value
-                bui.textwidget(
-                    parent=self._columnwidget,
-                    size=(width * 0.8, 35 if key == 'name' else 30),
-                    color=color if key == 'name' else (0.75, 0.7, 0.8),
-                    scale=(
-                        (1.1 if key == 'name' else 0.9) if _uiscale() is babase.UIScale.SMALL else
-                        (1.2 if key == 'name' else 1.0)
-                    ),
-                    text=text,
-                    h_align='center',
-                    v_align='center',
-                    maxwidth=420
-                )
-            bui.textwidget(
-                parent=self._columnwidget,
-                size=(width * 0.8, 30),
-                always_highlight=True,
-                h_align='center',
-                v_align='center'
-            )
-
-    def _back(self) -> None:
-        bui.getsound('swish').play()
-        _remove_popup(self)
-        bui.containerwidget(edit=self._root_widget, transition='out_scale')
-
-
 class PluginWindow(popup.PopupWindow):
     def __init__(
         self,
@@ -1323,7 +1215,7 @@ class PluginWindow(popup.PopupWindow):
 
         pos = height * 0.8
         plug_name = self.plugin.name.replace('_', ' ').title()
-        plugin_title = f"{plug_name} (v{self.plugin.latest_compatible_version.number})"
+        plugin_title = f"{plug_name} ({self.plugin.latest_compatible_version.number})"
         bui.textwidget(
             parent=self._root_widget,
             position=(width * 0.49, pos),
@@ -1336,28 +1228,9 @@ class PluginWindow(popup.PopupWindow):
             maxwidth=width * 0.9
         )
         pos -= 25
+
         # Author
-        text = 'by ' + ', '.join([author["name"] for author in self.plugin.info["authors"]])
-        author_text_control_btn = bui.buttonwidget(
-            parent=self._root_widget,
-            position=(width * 0.49 - (len(text)*14/2), pos - 10),
-            size=(len(text)*14, 20),
-            label='',
-            texture=bui.gettexture("empty"),
-            on_activate_call=lambda: AuthorsWindow(self.plugin.info["authors"], self._root_widget)
-        )
-        bui.textwidget(
-            parent=self._root_widget,
-            position=(width * 0.49 - (len(text)*14/2), pos - 10),
-            size=(len(text)*14, 20),
-            h_align='center',
-            v_align='center',
-            text=text,
-            scale=text_scale * 0.8,
-            color=(0.75, 0.7, 0.8),
-            maxwidth=width * 0.9,
-            draw_controller=author_text_control_btn,
-        )
+
         pos -= 60
         # Info
         bui.textwidget(
@@ -1821,7 +1694,7 @@ class PluginCustomSourcesWindow(popup.PopupWindow):
 
 class PluginCategoryWindow(popup.PopupMenuWindow):
     def __init__(self, choices, current_choice, origin_widget, asyncio_callback):
-        choices = (*choices, "Installed", "Custom Sources")
+        choices = (*choices, "Instalados")
         self._asyncio_callback = asyncio_callback
         self.scale_origin = origin_widget.get_screen_space_center()
         super().__init__(
@@ -1834,7 +1707,7 @@ class PluginCategoryWindow(popup.PopupMenuWindow):
         )
         self._root_widget = self.root_widget
         _add_popup(self)
-        self._update_custom_sources_widget()
+        #self._update_custom_sources_widget()
 
     def _update_custom_sources_widget(self):
         bui.textwidget(
@@ -2072,7 +1945,7 @@ class PluginManagerWindow(bui.MainWindow):
                 label=('Z - A' if self.selected_alphabet_order == 'z_a' else 'A - Z')
             ) if b.exists() else None
 
-        label = f"Category: {post_label}"
+        label = f"Categoria: {post_label}"
 
         if self.category_selection_button is None:
             self.category_selection_button = b = bui.buttonwidget(
@@ -2222,25 +2095,54 @@ class PluginManagerWindow(bui.MainWindow):
         )
 
     def search_term_filterer(self, plugin, search_term):
-        # This helps resolve "plugin name" to "plugin_name".
-        if search_term in plugin.info["description"].lower():
+        """
+        Filter plugins based on the search term.
+        Now search by name and description.
+        """
+        search_term = search_term.lower().strip()
+
+        # Search in mod name (case insensitive)
+        plugin_name_lower = plugin.name.lower()
+        if search_term in plugin_name_lower:
             return True
-        search_term = search_term.replace(" ", "_")
-        if search_term in plugin.name:
+
+        # Search in the mod description (case insensitive)
+        plugin_description_lower = plugin.info["description"].lower()
+        if search_term in plugin_description_lower:
             return True
-        for author in plugin.info["authors"]:
-            if search_term in author["name"].lower():
+
+        # Search for partial words in the name
+        name_words = plugin_name_lower.replace('_', ' ').replace('-', ' ')
+        if search_term in name_words:
+            return True
+
+        # Fuzzy search - if the term is a substring of the name
+        # E.g., "ptfltr" might find "PartyFilter"
+        if len(search_term) > 2:
+            name_chars = plugin_name_lower.replace('_', '').replace('-', '').replace(' ', '')
+            search_chars = search_term.replace(' ', '')
+
+            # Check if the search characters appear in order in the name
+            pos = 0
+            for char in search_chars:
+                pos = name_chars.find(char, pos)
+                if pos == -1:
+                    break
+                pos += 1
+            else:
+                # All characters found in order
                 return True
+
         return False
 
-    # XXX: Not sure if this is the best way to handle search filters.
+
     async def draw_plugin_names(self, category, search_term="", refresh=False, order='a_z'):
         # Re-draw plugin list UI if either search term or category was switched.
         to_draw_plugin_names = (search_term, category) != (self._last_filter_text,
                                                            self.selected_category)
         if not (to_draw_plugin_names or refresh):
             return
-
+    
         try:
             if self.plugin_manager.categories != {}:
                 if self.plugin_manager.categories['All'] is not None:
@@ -2255,49 +2157,77 @@ class PluginManagerWindow(bui.MainWindow):
                 raise CategoryDoesNotExist(f"{category} does not exist.")
             else:
                 return
-
+    
         if search_term:
+            original_count = len(category_plugins)
             plugins = list(filter(
                 lambda plugin: self.search_term_filterer(plugin, search_term),
                 category_plugins,
             ))
+            filtered_count = len(plugins)
+    
+            #print(f"DEBUG: Búsqueda '{search_term}' - {original_count} mods total, {filtered_count} encontrados")
+            for plugin in plugins:
+                #print(f"DEBUG: Encontrado: {plugin.name}")
+                pass
         else:
             plugins = category_plugins
-
+    
         def return_name(val):
             return val.name
         plugins.sort(key=return_name, reverse=(True if order == 'z_a' else False))
-
+    
         if plugins == self._last_filter_plugins and not refresh:
             # Plugins names to draw on UI are already drawn.
             return
-
+    
         self._last_filter_text = search_term
         self._last_filter_plugins = plugins
-
+    
         if not self._columnwidget.exists():
             return
-
+    
         if category == 'Installed':
             plugin_names_to_draw = tuple(
                 plugin for plugin in plugins if plugin.is_installed
             )
         else:
             plugin_names_to_draw = plugins
-
+    
+        # Clear previous widgets
         [plugin.delete() for plugin in self._columnwidget.get_children()]
-        text_widget = bui.textwidget(parent=self._columnwidget)
-        text_widget.delete()
-        # await asyncio.gather(*plugin_names_to_draw)
-
+    
+        # Process compatible plugins
         plugin_names_ready_to_draw = []
         for plugin in plugin_names_to_draw:
             try:
                 lcv = plugin.latest_compatible_version
+                plugin_names_ready_to_draw.append(plugin)
             except NoCompatibleVersion:
                 continue
-            plugin_names_ready_to_draw += [plugin]
-
+            
+        # SHOW MESSAGE IF NO RESULTS
+        if not plugin_names_ready_to_draw:
+            no_results_text = f"No se encontraron mods que coincidan con '{search_term}'" if search_term else "No hay mods disponibles en esta categoría"
+    
+            bui.textwidget(
+                parent=self._columnwidget,
+                size=(410, 30),
+                selectable=False,
+                color=(0.7, 0.7, 0.7),
+                text=no_results_text,
+                h_align='center',
+                v_align='center',
+                maxwidth=420,
+                scale=0.8
+            )
+    
+            # Logs
+            #print(f"DEBUG: No se encontraron resultados para '{search_term}'")
+            #print(f"DEBUG: Mods disponibles: {[p.name for p in category_plugins]}")
+            return
+    
+        # Draw the found plugins
         for i, plugin in enumerate(plugin_names_ready_to_draw):
             await self.draw_plugin_name(plugin, plugin_names_ready_to_draw)
 
@@ -2358,11 +2288,16 @@ class PluginManagerWindow(bui.MainWindow):
         )
 
     async def select_category(self, category):
+        # Map the Spanish category to the internal English name
+        internal_category = category
+        if category == "Instalados":
+            internal_category = "Installed"
+
         self.plugins_in_current_view.clear()
-        self.draw_category_selection_button(post_label=category)
+        self.draw_category_selection_button(post_label=category) # Show "Installed" on the button
         await self.draw_plugin_names(
-            category, search_term=self._last_filter_text, refresh=True, order=self.selected_alphabet_order)
-        self.selected_category = category
+            internal_category, search_term=self._last_filter_text, refresh=True, order=self.selected_alphabet_order)
+        self.selected_category = internal_category  # Save the internal name
 
     def cleanup(self):
         self.plugin_manager.cleanup()
@@ -2431,7 +2366,7 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
         )
         _add_popup(self)
         pos = height * 0.9
-        setting_title = "Settings"
+        setting_title = "Ajustes"
         bui.textwidget(
             parent=self._root_widget,
             position=(width * 0.49, pos),
@@ -2445,26 +2380,7 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
         )
 
         pos -= 20
-        self._changelog_button = b = bui.buttonwidget(
-            parent=self._root_widget,
-            position=((width * 0.2) - button_size[0] / 2 - 5, pos),
-            size=(80, 30),
-            textcolor=b_text_color,
-            button_type='square',
-            label=''
-        )
-        bui.buttonwidget(b, on_activate_call=lambda: ChangelogWindow(b))
-        bui.textwidget(
-            parent=self._root_widget,
-            position=((width * 0.2) - button_size[0] / 2, pos),
-            size=(70, 30),
-            scale=0.6,
-            h_align='center',
-            v_align='center',
-            text='ChangeLog',
-            color=b_text_color,
-            draw_controller=self._changelog_button,
-        )
+        
         self._save_button = bui.buttonwidget(
             parent=self._root_widget,
             position=((width * 0.82) - button_size[0] / 2, pos),
@@ -2475,7 +2391,7 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
             text_scale=1,
             scale=0,
             selectable=False,
-            label="Save"
+            label="Guardar\n Cambios"
         )
         pos -= 40
 
@@ -2494,24 +2410,27 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
             pos -= 34 * text_scale
 
         pos = height - 200
-        bui.textwidget(
-            parent=self._root_widget,
-            position=(width * 0.49, pos-5),
-            size=(0, 0),
-            h_align='center',
-            v_align='center',
-            text='Contribute to plugins or to this community plugin manager!',
-            scale=text_scale * 0.65,
-            color=color,
-            maxwidth=width * 0.95
-        )
+        
+        #bui.textwidget(
+        #    parent=self._root_widget,
+        #    position=(width * 0.49, pos-5),
+        #    size=(0, 0),
+        #    h_align='center',
+        #    v_align='center',
+        #    text='Contribute to plugins or to this community plugin manager!',
+        #    scale=text_scale * 0.65,
+        #    color=color,
+        #    maxwidth=width * 0.95
+        #)
 
         pos -= 75
+        
         try:
             plugin_manager_update_available = await self._plugin_manager.get_update_details()
         except urllib.error.URLError:
             plugin_manager_update_available = False
         discord_width = (width * 0.20) if plugin_manager_update_available else (width * 0.31)
+        
         self.discord_button = bui.buttonwidget(
             parent=self._root_widget,
             position=(discord_width - button_size[0] / 2, pos),
@@ -2564,7 +2483,7 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
         if plugin_manager_update_available:
             text_color = (0.75, 0.2, 0.2)
             button_size = (95 * s, 32 * s)
-            update_button_label = f'Update to v{plugin_manager_update_available[0]}'
+            update_button_label = f'Update to {plugin_manager_update_available[0]}'
             self._update_button = bui.buttonwidget(
                 parent=self._root_widget,
                 position=((width * 0.77) - button_size[0] / 2, pos),
@@ -2590,30 +2509,34 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
             )
         else:
             text_color = (0, 0.8, 0)
+        
         pos -= 25
-        bui.textwidget(
-            parent=self._root_widget,
-            position=(width * 0.49, pos),
-            size=(0, 0),
-            h_align='center',
-            v_align='center',
-            text=f'Mod Manager v{MOD_MANAGER_VERSION}',
-            scale=text_scale * 0.8,
-            color=text_color,
-            maxwidth=width * 0.9
-        )
+        
+        #bui.textwidget(
+        #    parent=self._root_widget,
+        #    position=(width * 0.49, pos),
+        #    size=(0, 0),
+        #    h_align='center',
+        #    v_align='center',
+        #    text=f'Mod Manager v{MOD_MANAGER_VERSION}',
+        #    scale=text_scale * 0.8,
+        #    color=text_color,
+        #    maxwidth=width * 0.9
+        #)
+        
         pos -= 25
-        bui.textwidget(
-            parent=self._root_widget,
-            position=(width * 0.49, pos),
-            size=(0, 0),
-            h_align='center',
-            v_align='center',
-            text=f'API Version: {_app_api_version}',
-            scale=text_scale * 0.7,
-            color=(0.4, 0.8, 1),
-            maxwidth=width * 0.95
-        )
+        
+        #bui.textwidget(
+        #    parent=self._root_widget,
+        #    position=(width * 0.49, pos),
+        #    size=(0, 0),
+        #    h_align='center',
+        #    v_align='center',
+        #    text=f'API Version: {_app_api_version}',
+        #    scale=text_scale * 0.7,
+        #    color=(0.4, 0.8, 1),
+        #    maxwidth=width * 0.95
+        #)
 
         pos = height * 0.1
 
