@@ -14,10 +14,11 @@ class textonmap:
         left = data['bottom left watermark']
         top = data['top watermark']
         nextMap = ""
+
         try:
             nextMap = bs.get_foreground_host_session().get_next_game_description()
             nextMapText = nextMap.evaluate(lang='Spanish')
-            print(nextMapText)
+            #print(nextMapText)
         except Exception:
             pass
         try:
@@ -100,7 +101,7 @@ class textonmap:
             score1 = team1.customdata.get('score', 0)
             score2 = team2.customdata.get('score', 0)
 
-            print(f"[TEAM SCORE] {name1}: {score1} | {name2}: {score2}")
+            #print(f"[TEAM SCORE] {name1}: {score1} | {name2}: {score2}")
 
             # First team name + score (left)
             bs.newnode('text', attrs={
@@ -127,18 +128,53 @@ class textonmap:
         except Exception as e:
             print("Error showing team score:", e)
 
+    def left_watermark(self, text: str):
+        #print("[left_watermark] Creando texto principal...")
 
-    def left_watermark(self, text):
         bs.newnode('text', attrs={
             'text': text,
             'flatness': 1.0,
             'h_align': 'left',
             'v_attach': 'bottom',
             'h_attach': 'left',
-            'scale': 0.7,
-            'position': (25, 67),
-            'color': (0.7, 0.7, 0.7),
+            'scale': 0.8,
+            'position': (15, 60),
+            'color': (1, 1, 1)
         })
+
+        base_x = 65
+        top_y = 90
+        bottom_y = 55
+
+        divider_top = bs.newnode('image', attrs={
+            'texture': bs.gettexture('white'),
+            'color': (1, 1, 0),
+            'position': (base_x, top_y),
+            'attach': 'bottomLeft',
+            'scale': (120, 4),
+            'opacity': 0.9
+        })
+
+        divider_bottom = bs.newnode('image', attrs={
+            'texture': bs.gettexture('white'),
+            'color': (1, 1, 0),
+            'position': (base_x, bottom_y),
+            'attach': 'bottomLeft',
+            'scale': (120, 4),
+            'opacity': 0.9
+        })
+
+        rainbow_keys = {
+            0.0: (1, 0, 0),
+            0.2: (1, 1, 0),
+            0.4: (0, 1, 0),
+            0.6: (0, 1, 1),
+            0.8: (0, 0, 1),
+            1.0: (1, 0, 1),
+        }
+
+        bs.animate_array(node=divider_top, attr='color', size=3, keys=rainbow_keys, loop=True)
+        bs.animate_array(node=divider_bottom, attr='color', size=3, keys=rainbow_keys, loop=True)
 
     def nextGame(self, text):
         try:
