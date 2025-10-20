@@ -1,18 +1,6 @@
 # ba_meta require api 9
-
-
-# Better Profile Editor
-# Author: Vishuuu/ Vishal/ Vishyyy
-
-# FEATURES:
-# - New Modeled UI for Profile Editor
-# - Has a Live Character updating to your profile choices
-# - Fun QOL
-
-# NOTE: If the character looks blurry, please open your game
-# and go to Settings -> Graphics, and set "Visuals" to either
-# "Medium" or "Low", whichever works for you.
-
+# ba_meta name Better Profile Editor
+# ba_meta description Advanced viewer of your Bombsquad profiles, with a live character that updates based on your profile choices
 
 from __future__ import annotations
 
@@ -64,22 +52,24 @@ class BetterProfileActivity(bs.Activity[bs.Player, bs.Team]):
     def __init__(self, settings: dict):
         super().__init__(settings)
 
+        self.spaz: ProfileSpaz | None = None
+        self.character: str = 'Spaz'
+        self.color: tuple[float, float, float] = (1.0, 1.0, 1.0)
+        self.highlight: tuple[float, float, float] = (0.5, 0.5, 0.5)
+
     @override
     def on_transition_in(self) -> None:
         super().on_transition_in()
 
-        gnode = self.globalsnode
-        gnode.tint = (1.5, 1.5, 1.5)
-
+        # DARK BACKGROUND - Dark solid color
         self.bgterrain = bs.NodeActor(
             bs.newnode(
                 'terrain',
                 attrs={
                     'mesh': bs.getmesh('thePadBG'),
-                    'color': (0.92, 0.91, 0.9),
+                    'color': (0.1, 0.05, 0.1),  # Dark color
                     'lighting': False,
                     'background': True,
-                    'color_texture': bs.gettexture('menuBG'),
                 },
             )
         )
@@ -102,6 +92,7 @@ class BetterProfileActivity(bs.Activity[bs.Player, bs.Team]):
             )
         )
 
+        # COLLISION REGION
         bs.newnode(
             'region',
             attrs={
@@ -127,27 +118,34 @@ class BetterProfileActivity(bs.Activity[bs.Player, bs.Team]):
 
         bs.setmusic(bs.MusicType.GRAND_ROMP)
 
-        self.spaz: ProfileSpaz | None = None
-        self.character: str = 'Spaz'
-        self.color: tuple[float, float, float] = (0, 0, 0)
-        self.highlight: tuple[float, float, float] = (0, 0, 0)
+        # Create initial spaz immediately
+        with self.context:
+            self.set_character(self.character)
 
     def set_character(self, name: str) -> None:
+        # Remove previous spaz if it exists
         if self.spaz is not None:
             self.spaz.handlemessage(bs.DieMessage(immediate=True))
-            self.spaz.node.delete()
+            if hasattr(self.spaz, 'node') and self.spaz.node:
+                self.spaz.node.delete()
+        
         self.character = name
+        # Create new spaz - same as in the original mod
         self.spaz = ProfileSpaz(character=name, start_invincible=False).autoretain()
         self.spaz.node.is_area_of_interest = False
+        
+        # Exact position as in the original mod - works perfectly
         self.spaz.handlemessage(bs.StandMessage(position=(0, 16, 16.5), angle=0))
 
     def set_color(self, color: tuple[float, float, float]) -> None:
         self.color = color
-        self.spaz.node.color = color
+        if self.spaz is not None and hasattr(self.spaz, 'node'):
+            self.spaz.node.color = color
 
     def set_highlight(self, color: tuple[float, float, float]) -> None:
         self.highlight = color
-        self.spaz.node.highlight = color
+        if self.spaz is not None and hasattr(self.spaz, 'node'):
+            self.spaz.node.highlight = color
 
 
 class NewEditProfileWindow(EditProfileWindow):
@@ -242,8 +240,13 @@ class NewEditProfileWindow(EditProfileWindow):
             self.character = profile['character']
         except:
             self.character = 'Spaz'
-        with self.activity.context:
+
+       # Initialize the character in the activity
+        if self.activity is not None and hasattr(self.activity, 'set_character'):
+            with self.activity.context:
                 self.activity.set_character(self.character)
+                self.activity.set_color(self._color)
+                self.activity.set_highlight(self._highlight)
 
         if 'global' in profile:
             self._global = profile['global']
@@ -736,12 +739,19 @@ class NewEditProfileWindow(EditProfileWindow):
                     edit=character_text,
                     text=self._spazzes[ind],
                 )
-        with self.activity.context:
-            if self.character != self._spazzes[self._icon_index]:
-                self.activity.set_character(name=self._spazzes[self._icon_index])
-                self.character = self._spazzes[self._icon_index]
-            self.activity.set_color(self._color)
-            self.activity.set_highlight(self._highlight)
+        
+        # Update the character in the activity with secure checks
+        if self.activity is not None and hasattr(self.activity, 'set_character'):
+            with self.activity.context:
+                new_character = self._spazzes[self._icon_index]
+                if hasattr(self.activity, 'character') and self.activity.character != new_character:
+                    self.activity.set_character(name=new_character)
+                    self.activity.character = new_character
+                
+                if hasattr(self.activity, 'set_color'):
+                    self.activity.set_color(self._color)
+                if hasattr(self.activity, 'set_highlight'):
+                    self.activity.set_highlight(self._highlight)
 
     def _cancel(self) -> None:
         self.main_window_back()

@@ -17,9 +17,7 @@ if TYPE_CHECKING:
     pass
 
 # ba_meta export babase.Plugin
-
-
-class BombRadiusVisualizer(babase.Plugin):
+class byLess(babase.Plugin):
 
     # We use a decorator to add extra code to existing code, increasing mod compatibility.
     # Here I'm defining a new bomb init function that'll be replaced.

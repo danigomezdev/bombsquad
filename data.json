@@ -299,15 +299,15 @@
     }
 ,
     {
-        "name": "BetterProfileEditor",
+        "name": "Better Profile Editor",
         "file_name": "BetterProfileEditor.py",
         "path": "BetterProfileEditor/BetterProfileEditor.py",
         "api_version": 9,
         "version": "v1.0.0",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/BetterProfileEditor/BetterProfileEditor.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/BetterProfileEditor/BetterProfileEditor.py",
-        "url_readme": "",
-        "url_raw_readme": "",
-        "description": "No description available"
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/BetterProfileEditor/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/BetterProfileEditor/README.md",
+        "description": "Advanced viewer of your Bombsquad profiles, with a live character that updates based on your profile choices"
     }
 ]
