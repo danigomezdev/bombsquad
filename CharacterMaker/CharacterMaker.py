@@ -1,4 +1,6 @@
 # ba_meta require api 9
+# ba_meta name Character Maker
+# ba_meta description A mod that allows you to create your own characters using parts of other characters in the game as a base
 
 from typing import Sequence
 import _babase
@@ -711,7 +713,7 @@ def get_player(msg, activity):
 
 
 # ba_meta export babase.Plugin
-class bySmoothy(babase.Plugin):
+class byLess(babase.Plugin):
     def __init__(self):
         _babase.import_character = import_character
         _babase.export_character = export_character
