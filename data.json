@@ -26,7 +26,20 @@
     }
 ,
     {
-        "name": "CharacterMaker",
+        "name": "Effect Rush Star",
+        "file_name": "EffectRushStar.py",
+        "path": "EffectRushStar/EffectRushStar.py",
+        "api_version": 9,
+        "version": "v1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/EffectRushStar/EffectRushStar.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/EffectRushStar/EffectRushStar.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/EffectRushStar/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/EffectRushStar/README.md",
+        "description": "A mod that creates a flashy star that floats around the map"
+    }
+,
+    {
+        "name": "Character Maker",
         "file_name": "CharacterMaker.py",
         "path": "CharacterMaker/CharacterMaker.py",
         "api_version": 9,
@@ -35,7 +48,7 @@
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/CharacterMaker/CharacterMaker.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/CharacterMaker/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/CharacterMaker/README.md",
-        "description": "No description available"
+        "description": "A mod that allows you to create your own characters using parts of other characters in the game as a base"
     }
 ,
     {
@@ -178,97 +191,6 @@
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/BombSquadPro/BombSquadPro.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/BombSquadPro/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/BombSquadPro/README.md",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "SparkEffect",
-        "file_name": "SparkEffect.py",
-        "path": "Effects/SparkEffect.py",
-        "api_version": 9,
-        "version": "v1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SparkEffect.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SparkEffect.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "SweatEffect",
-        "file_name": "SweatEffect.py",
-        "path": "Effects/SweatEffect.py",
-        "api_version": 9,
-        "version": "v1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEffect.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEffect.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "SparkEpicEffect",
-        "file_name": "SparkEpicEffect.py",
-        "path": "Effects/SparkEpicEffect.py",
-        "api_version": 9,
-        "version": "v1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SparkEpicEffect.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SparkEpicEffect.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "SplinterEffect",
-        "file_name": "SplinterEffect.py",
-        "path": "Effects/SplinterEffect.py",
-        "api_version": 9,
-        "version": "v1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SplinterEffect.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SplinterEffect.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "SweatEpicEffect",
-        "file_name": "SweatEpicEffect.py",
-        "path": "Effects/SweatEpicEffect.py",
-        "api_version": 9,
-        "version": "v1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SweatEpicEffect.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SweatEpicEffect.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "EffectRushStar",
-        "file_name": "EffectRushStar.py",
-        "path": "Effects/EffectRushStar.py",
-        "api_version": 9,
-        "version": "v1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/EffectRushStar.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/EffectRushStar.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "SmokeSparkEffect",
-        "file_name": "SmokeSparkEffect.py",
-        "path": "Effects/SmokeSparkEffect.py",
-        "api_version": 9,
-        "version": "v1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/SmokeSparkEffect.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/SmokeSparkEffect.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/Effects/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/Effects/README.md",
         "description": "No description available"
     }
 ,

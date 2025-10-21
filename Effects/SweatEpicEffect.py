@@ -1,4 +1,5 @@
 # ba_meta require api 9
+# ba_meta nomod
 
 from __future__ import annotations
 from typing import TYPE_CHECKING

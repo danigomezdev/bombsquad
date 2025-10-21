@@ -1,4 +1,6 @@
 # ba_meta require api 9
+# ba_meta name Effect Rush Star
+# ba_meta description A mod that creates a flashy star that floats around the map
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, cast
@@ -13,7 +15,7 @@ if TYPE_CHECKING:
     from typing import Any, Sequence, Callable, List, Dict, Tuple, Optional, Union
 
 # Text settings
-TEXT_CONTENT = "\ue00cBsRush Mod\ue00c"  
+TEXT_CONTENT = "\ue00cLess\ue00c"  
 TEXT_SIZE = 0.01             
 TEXT_COLOR = (1, 1, 1)   
 
@@ -138,7 +140,7 @@ class byLess(babase.Plugin):
             text_math2.connectattr('output', text_node2, 'position')
 
             bs.animate_array(text_node2, 'color', 3, {
-                0: (1, 0, 1), # purple
+                0: (1, 0, 1),   # purple
                 0.2: (0, 1, 1), # light blue
                 0.4: (0, 1, 0), # green
                 0.6: (1, 1, 0), # yellow
