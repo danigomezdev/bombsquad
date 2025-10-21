@@ -1,4 +1,6 @@
 # ba_meta require api 9
+# ba_meta name Events Special Store
+# ba_meta description A mod that allows you to buy special characters that are unlocked only in specific seasons of the year or exclusive
 
 from typing import List, Dict, Any
 

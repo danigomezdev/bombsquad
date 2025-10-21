@@ -1,49 +1,75 @@
-# BombSquad Mods Collection
+# Events Special Store for BombSquad
 
-This repository is a curated collection of mods for **BombSquad**, focused on enhancing gameplay and utility. The primary motivation is to have a centralized place for our favorite mods — both for casual fun and deeper insights during gameplay.
+A mod that unlocks special seasonal characters and exclusive content in the store year-round.
 
-Among the included mods, you'll find one that provides detailed in-game information about the match, players, server stats, and more. This makes it particularly useful for hosting custom matches or analyzing gameplay with friends.
+## Description
 
-## Repository
+Events Special Store modifies the in-game store to make seasonal and event-exclusive characters and minigames available for purchase at any time. No longer wait for specific holidays or events to access your favorite special content!
 
-This collection is maintained under the following repository and branch:
+## Features
 
-**Repository:** [https://github.com/danigomezdev/bombsquad/tree/mods](https://github.com/danigomezdev/bombsquad/tree/mods)  
-**Branch:** `mods`
+- **Unlocks Seasonal Characters**: Makes seasonal characters available permanently:
+  - Bunny (Easter character)
+  - Taobao Mascot (special event character) 
+  - Santa (Christmas character)
+- **Unlocks Special Minigames**: Adds exclusive minigames to the store:
+  - Easter Egg Hunt minigame
+- **Permanent Access**: Buy and use special content regardless of the current season
+- **Seamless Integration**: Automatically integrates with the existing store layout
+- **No Gameplay Changes**: Doesn't alter gameplay mechanics, only unlocks purchasing options
 
-> ⚠️ Other branches in the repository may serve different purposes and are not related to this mod collection.
+## Installation
 
-## Maintainer
+1. Download the `eventsSpecialStore.py` file
+2. Place it in your BombSquad mods folder
+3. Ensure you have API version 9 or compatible version of BombSquad
 
-**Name:** Dani Gómez  
-**Email:** [me@danigomez.dev](mailto:me@danigomez.dev)
+## Usage
 
-## Installation Requirements
+1. Launch BombSquad with the mod installed
+2. Navigate to the store as usual
+3. You'll now see additional characters and minigames available for purchase:
+   - **Characters Tab**: Bunny, Taobao Mascot, and Santa characters
+   - **Minigames Tab**: Easter Egg Hunt minigame
+4. Purchase these items using in-game currency like any other store item
 
-To use these mods, ensure you have the following:
+## Requirements
 
-- **Python 3.11**
-- **BombSquad (Desktop version)**  
-  Download from: [https://ballistica.net/downloads](https://ballistica.net/downloads)
+- BombSquad version with API 9 support
+- Python modding environment setup
+- Sufficient in-game currency to purchase unlocked items
 
-## Game Source Repository
+## Technical Details
 
-These mods are built with respect to the original game architecture and community guidelines. For reference or contribution to the game itself, visit:
+This mod uses function replacement to modify the store layout:
+- Replaces `bui.app.classic.store.get_store_layout` method
+- Adds special characters to the characters section
+- Adds special minigames to the minigames section
+- Maintains compatibility with original store functionality
+- Uses type hints for better code clarity
 
-**Official BombSquad Source (Ballistica):**  
-[https://github.com/efroemling/ballistica](https://github.com/efroemling/ballistica)
+## Unlocked Content
 
-## How to Install
+### Characters:
+- **Bunny**: Easter-themed character normally available during spring events
+- **Taobao Mascot**: Special promotional character
+- **Santa**: Christmas-themed character normally available during winter holidays
 
-1. Clone the `mods` branch of the repository:
-   
-   ```
-   git clone -b mods https://github.com/danigomezdev/bombsquad.git
-   ```
+### Minigames:
+- **Easter Egg Hunt**: Seasonal minigame typically available during Easter events
 
-2. Copy the desired mods into your BombSquad user scripts folder. The location depends on your platform:
-   - On Linux: `~/.bombsquad/mods`
-   - On Windows: `%APPDATA%\\BombSquad\\mods`
-   - On macOS: `~/Library/Application Support/BombSquad/mods`
+## Compatibility
 
-3. Launch BombSquad and enjoy your customized experience.
+- Works with most other store and UI mods
+- Compatible with all game modes
+- No conflicts with existing save data or profiles
+- Maintains original pricing and purchase mechanics
+
+## Screenshots
+
+<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/adb62254-7fe4-4bbf-bac7-d8c982a2a2fe" />
+
+## Credits
+
+Created by the [BombSquad modding community](https://github.com/bombsquad-community)  
+Forked by [Less](https://github.com/danigomezdev)

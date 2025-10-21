@@ -113,11 +113,11 @@
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/BombRadiusVisualizer/BombRadiusVisualizer.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/BombRadiusVisualizer/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/BombRadiusVisualizer/README.md",
-        "description": "A visualizer of the blast field of all explosives"
+        "description": "A mod that displays dynamic visual indicators showing the blast radius of all explosives in BombSquad with colorful a..."
     }
 ,
     {
-        "name": "StoreEventSpecial",
+        "name": "Events Special Store",
         "file_name": "StoreEventSpecial.py",
         "path": "StoreEventSpecial/StoreEventSpecial.py",
         "api_version": 9,
@@ -126,7 +126,7 @@
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/StoreEventSpecial/StoreEventSpecial.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/mods/StoreEventSpecial/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/mods/StoreEventSpecial/README.md",
-        "description": "No description available"
+        "description": "A mod that allows you to buy special characters that are unlocked only in specific seasons of the year or exclusive"
     }
 ,
     {
