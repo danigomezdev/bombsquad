@@ -13,21 +13,17 @@ import http.client
 import socket
 import json
 import ssl
-
 import re
 import os
 import sys
 import copy
 import asyncio
-import pathlib
 import hashlib
 import contextlib
-
-from typing import cast, override
+from typing import override
 from datetime import datetime
-
-# Modules used for overriding AllSettingsWindow
 import logging
+from random import choice
 
 MOD_MANAGER_VERSION = "1.0.0"
 MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/mods/data.json"
@@ -37,8 +33,6 @@ REPOSITORY_URL = "https://github.com/danigomezdev/bombsquad/tree/mods"
 _env = _babase.env()
 _app_api_version = babase.app.env.api_version
 
-INDEX_META = "{repository_url}/{content_type}/{tag}/index.json"
-CHANGELOG_META = "{repository_url}/{content_type}/{tag}/CHANGELOG.md"
 HEADERS = {
     "User-Agent": _env["legacy_user_agent_string"],
 }
@@ -46,10 +40,9 @@ PLUGIN_DIRECTORY = _env["python_directory_user"]
 loop = babase._asyncio._asyncio_event_loop
 
 open_popups = []
-
+BUTTONS_COLOR = (0.23, 0.23, 0.23)
 
 def _add_popup(popup): open_popups.append(popup)
-
 
 def _remove_popup(popup):
     try:
@@ -57,10 +50,9 @@ def _remove_popup(popup):
     except ValueError:
         pass
 
-
 def _uiscale(): return bui.app.ui_v1.uiscale
-def _regexp_friendly_class_name_shortcut(string): return string.replace(".", "\\.")
 
+def _regexp_friendly_class_name_shortcut(string): return string.replace(".", "\\.")
 
 REGEXP = {
     "plugin_api_version": re.compile(b"(?<=ba_meta require api )(.*)"),
@@ -71,21 +63,11 @@ REGEXP = {
             ),
             "utf-8"
         ),
-    ),
-    "minigames": re.compile(
-        bytes(
-            "(ba_meta export ({})\n+class )(.*)\\(".format(
-                _regexp_friendly_class_name_shortcut("bascenev1.GameActivity"),
-            ),
-            "utf-8"
-        ),
-    ),
+    )
 }
+
 DISCORD_URL = "https://discord.gg/q5GdnP85Ky"
-
-
 _CACHE = {}
-
 
 class MD5CheckSumFailed(Exception):
     pass
@@ -261,7 +243,7 @@ class DNSBlockWorkaround:
 
 class StartupTasks:
     def __init__(self):
-        self.plugin_manager = PluginManager()
+        self.plugin_manager = ModManager()
 
     def setup_config(self):
         # is_config_updated = False
@@ -277,7 +259,6 @@ class StartupTasks:
                 del installed_plugins[plugin_name]
 
         # This order is the options will show up in Settings window.
-
         current_settings = {
             "Actualizar automáticamente Mod Manager": True,
             "Actualizar automáticamente los mods": True,
@@ -417,47 +398,56 @@ class Category:
         return self
 
     async def get_description(self):
-        return "Community mods collection"  # Fixed description
+        return "Less mods collection"
     
     async def get_plugins(self):
         if self._plugins is None:
-            await self.fetch_metadata()
-            self._plugins = []
+            try:
+                await self.fetch_metadata()
+                self._plugins = []
 
-            #print(f"DEBUG: Procesando {len(self._metadata)} mods desde JSON")
-
-            for mod_data in self._metadata:
-                try:
-                    # Log cada mod cargado
-                    #print(f"DEBUG: Cargando mod: {mod_data['name']} - {mod_data['description']}")
-
-                    plugin_info = (
-                        mod_data["name"],
-                        {
-                            "description": mod_data["description"],
-                            "authors": [{"name": "Community"}],
-                            "external_url": mod_data["url_mod"],
-                            "versions": {
-                                mod_data.get("version", "1.0.0"): {
-                                    "api_version": mod_data["api_version"],
-                                    "released_on": "01-01-2024",
-                                    "commit_sha": "unknown",
-                                    "md5sum": ""
+                for mod_data in self._metadata:
+                    try:
+                        if not all(key in mod_data for key in ['name', 'description', 'url_raw_mod', 'api_version', 'file_name']):
+                            print(f"ERROR Mod data incompleto: {mod_data.get('name', 'unknown')}")
+                            continue
+                        
+                        #print(f"DEBUG: Processing mod: {mod_data['name']} -> {mod_data['file_name']}")
+                        
+                        plugin_info = (
+                            mod_data["name"],
+                            {
+                                "description": mod_data["description"],
+                                "authors": [{"name": mod_data.get("author", "Community")}],
+                                "external_url": mod_data.get("url_mod", ""),
+                                "versions": {
+                                    mod_data.get("version", "1.0.0"): {
+                                        "api_version": mod_data["api_version"],
+                                        "released_on": mod_data.get("released_on", "01-01-2024"),
+                                        "commit_sha": "unknown",
+                                        "md5sum": mod_data.get("md5sum", "")
+                                    }
                                 }
                             }
-                        }
-                    )
-                    plugin = Plugin(
-                        plugin_info,
-                        mod_data["url_raw_mod"],
-                        tag=self.tag,
-                    )
-                    self._plugins.append(plugin)
-                except Exception as e:
-                    print(f"ERROR: Could not load mod {mod_data.get('name', 'unknown')}: {e}")
+                        )
+                        plugin = Plugin(
+                            plugin_info,
+                            mod_data["url_raw_mod"],
+                            file_name=mod_data["file_name"],
+                            tag=self.tag,
+                        )
+                        self._plugins.append(plugin)
+                    except Exception as e:
+                        print(f"ERROR: Failed to load mod {mod_data.get('name', 'unknown')}: {e}")
+                        continue
 
-            #print(f"DEBUG: Total de plugins cargados: {len(self._plugins)}")
-            self.set_category_global_cache("plugins", self._plugins)
+                self.set_category_global_cache("plugins", self._plugins)
+                #print(f"DEBUG: Total plugins loaded: {len(self._plugins)}")
+
+            except Exception as e:
+                print(f"CRITICAL ERROR in get_plugins: {e}")
+                self._plugins = []
+
         return self._plugins
 
     def set_category_global_cache(self, key, value):
@@ -496,20 +486,48 @@ class CategoryAll(Category):
 
 
 class PluginLocal:
-    def __init__(self, name):
+    def __init__(self, name, file_name=None):
         """
         Initialize a plugin locally installed on the device.
         """
         self.name = name
-        self.install_path = os.path.join(PLUGIN_DIRECTORY, f"{name}.py")
-        self._entry_point_initials = f"{self.name}."
+        if file_name is None:
+            self.file_name = self._find_actual_filename(name)
+        else:
+            self.file_name = file_name
+        
+        # Get the module_name from the file_name (without .py)
+        self.module_name = self.file_name.replace('.py', '')
+        
+        self.install_path = os.path.join(PLUGIN_DIRECTORY, self.file_name)
+        self._entry_point_initials = f"{self.module_name}."
         self.cleanup()
 
+
+    def _find_actual_filename(self, name):
+        "Find the actual file in the filesystem"
+        
+        # First try with the direct name
+        direct_path = os.path.join(PLUGIN_DIRECTORY, f"{name}.py")
+        if os.path.isfile(direct_path):
+            return f"{name}.py"
+        
+        # Search for files that may match
+        for filename in os.listdir(PLUGIN_DIRECTORY):
+            if filename.endswith('.py'):
+                # Remove spaces and compare
+                clean_name = name.replace(' ', '').replace('_', '').lower()
+                clean_filename = filename.replace(' ', '').replace('_', '').replace('.py', '').lower()
+                if clean_name == clean_filename:
+                    return filename
+        
+        # If not found, use the original name
+        return f"{name}.py"
+    
     def cleanup(self):
         self._content = None
         self._api_version = None
         self._entry_points = []
-        self._has_minigames = None
 
     @property
     def is_installed(self):
@@ -525,8 +543,6 @@ class PluginLocal:
         return self
 
     async def uninstall(self):
-        if await self.has_minigames():
-            self.unload_minigames()
         try:
             os.remove(self.install_path)
         except FileNotFoundError:
@@ -556,14 +572,61 @@ class PluginLocal:
             fout.write(content)
 
     def has_settings(self):
-        for plugin_entry_point, plugin_spec in bui.app.plugins.plugin_specs.items():
-            if plugin_entry_point.startswith(self._entry_point_initials):
-                return plugin_spec.plugin.has_settings_ui()
+        try:
+            for plugin_entry_point, plugin_spec in bui.app.plugins.plugin_specs.items():
+                if plugin_entry_point.startswith(self._entry_point_initials):
+
+                    if plugin_spec is None:
+                        #print(f"DEBUG: plugin_spec is None for {plugin_entry_point}")
+                        continue
+
+                    if plugin_spec.plugin is None:
+                        #print(f"DEBUG: plugin_spec.plugin is None for{plugin_entry_point}")
+                        continue
+                    
+                    # Verify that the plugin has the has_settings_ui method
+                    if not hasattr(plugin_spec.plugin, 'has_settings_ui'):
+                        #print(f"DEBUG: plugin has no method has_settings_ui for{plugin_entry_point}")
+                        continue
+                    
+                    result = plugin_spec.plugin.has_settings_ui()
+                    #print(f"DEBUG: has_settings_ui() returned: {result} for {plugin_entry_point}")
+                    return result
+
+            #print(f"DEBUG: No plugins found with settings for {self.name}")
+            return False
+
+        except Exception as e:
+            #print(f"ERROR in has_settings for{self.name}: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
     def launch_settings(self, source_widget):
-        for plugin_entry_point, plugin_spec in bui.app.plugins.plugin_specs.items():
-            if plugin_entry_point.startswith(self._entry_point_initials):
-                return plugin_spec.plugin.show_settings_ui(source_widget)
+        
+        try:
+            for plugin_entry_point, plugin_spec in bui.app.plugins.plugin_specs.items():
+                if plugin_entry_point.startswith(self._entry_point_initials):
+
+                    if plugin_spec is None:
+                        #print(f"DEBUG: plugin_spec is None for {plugin_entry_point}")
+                        continue
+                        
+                    if plugin_spec.plugin is None:
+                        #print(f"DEBUG: plugin_spec.plugin is None for {plugin_entry_point}")
+                        continue
+                    
+                    # Verify that the plugin has the show_settings_ui method
+                    if not hasattr(plugin_spec.plugin, 'show_settings_ui'):
+                        #print(f"DEBUG: plugin has no show_settings_ui method for {plugin_entry_point}")
+                        continue
+                    
+                    return plugin_spec.plugin.show_settings_ui(source_widget)
+            
+        except Exception as e:
+            #print(f"ERROR in launch_settings for {self.name}: {e}")
+            import traceback
+            traceback.print_exc()
 
     async def get_content(self):
         if self._content is None:
@@ -573,68 +636,98 @@ class PluginLocal:
             self._content = await loop.run_in_executor(None, self._get_content)
         return self._content
 
-    async def get_api_version(self):
-        if self._api_version is None:
-            content = await self.get_content()
-            self._api_version = REGEXP["plugin_api_version"].search(content).group()
-        return self._api_version
+    async def detect_entry_points_deep_scan(self):
+        """
+        Scans the entire file for entry points, not just the beginning
+        """
+        if not self.is_installed:
+            return []
+
+        content = await self.get_content()
+        content_str = content.decode('utf-8', errors='ignore')
+        entry_points_found = []
+
+        # Find all export patterns in the ENTIRE file
+        export_patterns = [
+            r'#\s*ba_meta\s+export\s+babase\.Plugin\s*class\s+(\w+)',
+            r'#\s*ba_meta\s+export\s+plugin\s*class\s+(\w+)',
+            r'#\s*ba_meta\s+export\s+babase\s*class\s+(\w+)',
+            r'ba_meta\s+export\s+babase\.Plugin\s*class\s+(\w+)',
+            r'ba_meta\s+export\s+plugin\s*class\s+(\w+)'
+        ]
+
+        for pattern in export_patterns:
+            matches = re.findall(pattern, content_str, re.IGNORECASE | re.MULTILINE)
+            if matches:
+                for match in matches:
+                    entry_point = f"{self.module_name}.{match}"
+                    if entry_point not in entry_points_found:
+                        entry_points_found.append(entry_point)
+
+        # Also search for alternative format (on multiple lines)
+        multi_line_patterns = [
+            r'#\s*ba_meta\s+export\s+babase\.Plugin\s*(?:.*\n)*?\s*class\s+(\w+)',
+            r'#\s*ba_meta\s+export\s+plugin\s*(?:.*\n)*?\s*class\s+(\w+)'
+        ]
+
+        for pattern in multi_line_patterns:
+            matches = re.findall(pattern, content_str, re.IGNORECASE)
+            if matches:
+                for match in matches:
+                    entry_point = f"{self.module_name}.{match}"
+                    if entry_point not in entry_points_found:
+                        entry_points_found.append(entry_point)
+
+        # Find specific lines that contain "ba_meta export"
+        lines = content_str.split('\n')
+        export_lines = []
+        for i, line in enumerate(lines):
+            if 'ba_meta export' in line.lower():
+                export_lines.append((i, line.strip()))
+                #print(f"Line {i}: {line.strip()}")
+
+                # Find the class in the next 10 lines
+                for j in range(i+1, min(i+11, len(lines))):
+                    if lines[j].strip().startswith('class '):
+                        class_line = lines[j].strip()
+                        class_match = re.search(r'class\s+(\w+)', class_line)
+                        if class_match:
+                            class_name = class_match.group(1)
+                            entry_point = f"{self.module_name}.{class_name}"
+                            if entry_point not in entry_points_found:
+                                entry_points_found.append(entry_point)
+                                #print(f"  → Class found online{j}: {class_name}")
+
+        return entry_points_found
 
     async def get_entry_points(self):
         if not self._entry_points:
-            content = await self.get_content()
-            groups = REGEXP["plugin_entry_points"].findall(content)
-            # Actual entry points are stored in the last index inside the matching groups.
-            entry_points = tuple(f"{self.name}.{group[-1].decode('utf-8')}" for group in groups)
-            self._entry_points = entry_points
+            # Use deep scanning instead of limited regex
+            entry_points_list = await self.detect_entry_points_deep_scan()
+            self._entry_points = tuple(entry_points_list)
+            
+            #print(f"DEBUG: Entry points end for {self.name}: {self._entry_points}")
         return self._entry_points
-
-    async def has_minigames(self):
-        if self._has_minigames is None:
-            content = await self.get_content()
-            self._has_minigames = REGEXP["minigames"].search(content) is not None
-        return self._has_minigames
 
     async def has_plugins(self):
         entry_points = await self.get_entry_points()
-        return len(entry_points) > 0
-
-    def load_minigames(self):
-        scanner = babase._meta.DirectoryScan(paths="")
-        directory, module = self.install_path.rsplit(os.path.sep, 1)
-        scanner._scan_module(
-            pathlib.Path(directory),
-            pathlib.Path(module),
-        )
-        scanned_results = set(babase.app.meta.scanresults.exports["bascenev1.GameActivity"])
-        for game in scanner.results.exports["bascenev1.GameActivity"]:
-            if game not in scanned_results:
-                bui.screenmessage(f"{game} minigame loaded")
-                babase.app.meta.scanresults.exports["bascenev1.GameActivity"].append(game)
-
-    def unload_minigames(self):
-        scanner = babase._meta.DirectoryScan(paths="")
-        directory, module = self.install_path.rsplit(os.path.sep, 1)
-        scanner._scan_module(
-            pathlib.Path(directory),
-            pathlib.Path(module),
-        )
-        new_scanned_results_games = []
-        for game in babase.app.meta.scanresults.exports["bascenev1.GameActivity"]:
-            if game in scanner.results.exports["bascenev1.GameActivity"]:
-                bui.screenmessage(f"{game} minigame unloaded")
-            else:
-                new_scanned_results_games.append(game)
-        babase.app.meta.scanresults.exports["bascenev1.GameActivity"] = new_scanned_results_games
-
+        result = len(entry_points) > 0
+        #print(f"DEBUG: PluginLocal.has_plugins for{self.name}: {result} (entry_points: {entry_points})")
+        return result
+    
     async def is_enabled(self):
         """
         Return True even if a single entry point is enabled or contains minigames.
         """
         if not await self.has_plugins():
+            #print(f"DEBUG: PluginLocal.is_enabled for {self.name}: True (no plugins)")
             return True
+            
         for entry_point, plugin_info in babase.app.config["Plugins"].items():
             if entry_point.startswith(self._entry_point_initials) and plugin_info["enabled"]:
+                #print(f"DEBUG: PluginLocal.is_enabled for {self.name}: True (entry_point {entry_point} enabled)")
                 return True
+                
         return False
 
     async def enable(self):
@@ -645,12 +738,11 @@ class PluginLocal:
             plugin_spec = bui.app.plugins.plugin_specs.get(entry_point)
             if plugin_spec not in bui.app.plugins.active_plugins:
                 self.load_plugin(entry_point)
-                bui.screenmessage(f"{entry_point} loaded")
-        if await self.has_minigames():
-            self.load_minigames()
+                bui.screenmessage(f"{entry_point} cargado")
         self.save()
-
+        
     def load_plugin(self, entry_point):
+        #print(f"DEBUG: Loading plugin: {entry_point}")
         plugin_class = babase._general.getclass(entry_point, babase.Plugin)
         loaded_plugin_instance = plugin_class()
         loaded_plugin_instance.on_app_running()
@@ -665,6 +757,8 @@ class PluginLocal:
         for entry_point, plugin_info in babase.app.config["Plugins"].items():
             if entry_point.startswith(self._entry_point_initials):
                 plugin_info["enabled"] = False
+        bui.screenmessage(f"{self.module_name} deshabilitado", color=(0.9, 1, 0))
+        bui.getsound('shieldDown').play()
         self.save()
 
     def set_version(self, version):
@@ -703,9 +797,9 @@ class PluginVersion:
         self.commit_sha = info["commit_sha"]
         self.md5sum = info["md5sum"]
 
-        # Usar la URL directa del plugin (raw_url)
+        # Use the plugin's direct URL (raw_url)
         self.download_url = self.plugin.url
-        # Usar normal_url para visualización
+        # Use normal_url for display
         self.view_url = self.plugin.info.get("external_url", self.plugin.url)
 
     def __eq__(self, plugin_version):
@@ -720,41 +814,60 @@ class PluginVersion:
         return datetime.strptime(self.released_on, "%d-%m-%Y")
 
     async def _download(self, retries=3):
+        #print(f"DEBUG: _download started for: {self.plugin.name}")
+        #print(f"DEBUG: - file_name: {self.plugin.file_name}")
+        #print(f"DEBUG: - install_path: {self.plugin.install_path}")
+        #print(f"DEBUG: - download_url: {self.download_url}")
+        
         local_plugin = self.plugin.create_local()
+        
+        #print(f"DEBUG: Local plugin created:")
+        #print(f"DEBUG: - name: {local_plugin.name}")
+        #print(f"DEBUG: - file_name: {local_plugin.file_name}") 
+        #print(f"DEBUG: - install_path: {local_plugin.install_path}")
+        
         await local_plugin.set_content_from_network_response(
             self.download_url,
             md5sum=self.md5sum,
             retries=retries,
         )
+
         local_plugin.set_version(self.number)
         local_plugin.save()
+        
+        #print(f"DEBUG: _download completed for:{self.plugin.name}")
         return local_plugin
 
     async def install(self, suppress_screenmessage=False):
+        #print(f"DEBUG: install started for: {self.plugin.name}")
         try:
             local_plugin = await self._download()
         except MD5CheckSumFailed:
+            print(f"ERROR MD5 checksum failed para: {self.plugin.name}")
             if not suppress_screenmessage:
                 bui.screenmessage(
                     f"{self.plugin.name} failed MD5 checksum during installation", color=(1, 0, 0))
             return False
         else:
+            #print(f"DEBUG: install successful for: {self.plugin.name}")
             if not suppress_screenmessage:
                 bui.screenmessage(f"{self.plugin.name} installed", color=(0, 1, 0))
             check = babase.app.config["Mod Manager"]["Settings"]
             if check["Habilitar mods automáticamente después de la instalación"]:
                 await local_plugin.enable()
+            else:
+                pass
             return True
 
-
 class Plugin:
-    def __init__(self, plugin, url, tag=CURRENT_TAG):
+    def __init__(self, plugin, url, file_name=None, tag=CURRENT_TAG):
         """
         Initialize a plugin from network repository.
         """
         self.name, self.info = plugin
-        self.install_path = os.path.join(PLUGIN_DIRECTORY, f"{self.name}.py")
-        self.url = url  # Esta es ahora la raw_url directa para descargar
+        self.file_name = file_name or self.name
+        self.install_path = os.path.join(PLUGIN_DIRECTORY, self.file_name)
+        self.url = url
         self.tag = tag
         self._local_plugin = None
 
@@ -823,12 +936,12 @@ class Plugin:
             raise PluginNotInstalled(
                 f"{self.name} needs to be installed to get its local plugin.")
         if self._local_plugin is None:
-            self._local_plugin = PluginLocal(self.name)
+            self._local_plugin = PluginLocal(self.name, self.file_name)
         return self._local_plugin
-
+    
     def create_local(self):
         return (
-            PluginLocal(self.name)
+            PluginLocal(self.name, self.file_name)
             .initialize()
         )
 
@@ -856,7 +969,7 @@ class Plugin:
             bui.getsound('error').play()
 
 
-class PluginManager:
+class ModManager:
     def __init__(self):
         self.request_headers = HEADERS
         self._index = _CACHE.get("index", {})
@@ -894,67 +1007,28 @@ class PluginManager:
         await self.setup_plugin_categories(index)
         self._index_setup_in_progress = False
 
-    async def get_changelog(self) -> list[str, bool]:
-        requested = False
-        if not self._changelog:
-            request = urllib.request.Request(CHANGELOG_META.format(
-                repository_url=REPOSITORY_URL,
-                content_type="raw",
-                tag=CURRENT_TAG
-            ),
-                headers=self.request_headers)
-            response = await async_send_network_request(request)
-            self._changelog = response.read().decode()
-            requested = True
-        return [self._changelog, requested]
-
-    async def setup_changelog(self, version=None) -> None:
-        if version is None:
-            version = MOD_MANAGER_VERSION
-        while self._changelog_setup_in_progress:
-            # Avoid making multiple network calls to the same resource in parallel.
-            # Rather wait for the previous network call to complete.
-            await asyncio.sleep(0.1)
-        self._changelog_setup_in_progress = not bool(self._changelog)
-        try:
-            full_changelog = await self.get_changelog()
-            # check if the changelog was requested
-            if full_changelog[1]:
-                pattern = rf"### {version} \(\d\d-\d\d-\d{{4}}\)\n(.*?)(?=### \d+\.\d+\.\d+|\Z)"
-                if (len(full_changelog[0].split(version)) > 1):
-                    released_on = full_changelog[0].split(version)[1].split('\n')[0]
-                    matches = re.findall(pattern, full_changelog[0], re.DOTALL)
-                else:
-                    matches = None
-
-                if matches:
-                    changelog = {
-                        'released_on': released_on,
-                        'info': matches[0].strip()
-                    }
-                else:
-                    changelog = {'released_on': ' (Not Provided)',
-                                 'info': f"Changelog entry for version {version} not found."}
-            else:
-                changelog = full_changelog[0]
-        except urllib.error.URLError:
-            changelog = {'released_on': ' (Not Provided)',
-                         'info': 'Could not get ChangeLog due to Internet Issues.'}
-        self.set_changelog_global_cache(changelog)
-        self._changelog_setup_in_progress = False
-
     async def setup_plugin_categories(self, plugin_index):
-        # We only have one category now - "All"
-        self.categories["All"] = None
-
-        # Create parent category with data.json URL
-        category = Category(MODS_DATA_URL)
-        await category.fetch_metadata()
-        
-        all_plugins = await category.get_plugins()
-        self.categories["All"] = CategoryAll(plugins=all_plugins)
-        # We can also add "Mods" as a category
-        #self.categories["Mods"] = category
+        try:
+            # We only have one category now - "All"
+            self.categories["All"] = None
+    
+            # Create parent category with data.json URL
+            category = Category(MODS_DATA_URL)
+            await category.fetch_metadata()
+            
+            all_plugins = await category.get_plugins()
+            
+            if not all_plugins:
+                print("WARNING: Could not load plugins from URL")
+                # Create an empty list to avoid errors
+                all_plugins = []
+                
+            self.categories["All"] = CategoryAll(plugins=all_plugins)
+            
+        except Exception as e:
+            print(f"ERROR in setup_plugin_categories: {e}")
+            # Make sure there is at least one empty category
+            self.categories["All"] = CategoryAll(plugins=[])
 
     def cleanup(self):
         for category in self.categories.values():
@@ -1021,108 +1095,7 @@ class PluginManager:
     async def soft_refresh(self):
         pass
 
-
-class ChangelogWindow(popup.PopupWindow):
-    def __init__(self, origin_widget):
-        self.scale_origin = origin_widget.get_screen_space_center()
-        bui.getsound('swish').play()
-        s = 1.65 if _uiscale() is babase.UIScale.SMALL else 1.39 if _uiscale() is babase.UIScale.MEDIUM else 1.67
-        width = 400 * s
-        height = width * 0.5
-        color = (1, 1, 1)
-        text_scale = 0.7 * s
-        self._transition_out = 'out_scale'
-        transition = 'in_scale'
-
-        self._root_widget = bui.containerwidget(
-            size=(width, height),
-            on_outside_click_call=self._back,
-            transition=transition,
-            scale=(1.5 if _uiscale() is babase.UIScale.SMALL else 1.5 if _uiscale()
-                   is babase.UIScale.MEDIUM else 1.0),
-            scale_origin_stack_offset=self.scale_origin
-        )
-
-        _add_popup(self)
-
-        bui.textwidget(
-            parent=self._root_widget,
-            position=(width * 0.49, height * 0.87),
-            size=(0, 0),
-            h_align='center',
-            v_align='center',
-            text='ChangeLog',
-            scale=text_scale * 1.25,
-            color=bui.app.ui_v1.title_color,
-            maxwidth=width * 0.9
-        )
-
-        back_button = bui.buttonwidget(
-            parent=self._root_widget,
-            position=(width * 0.1, height * 0.8),
-            size=(60, 60),
-            scale=0.8,
-            label=babase.charstr(babase.SpecialChar.BACK),
-            button_type='backSmall',
-            on_activate_call=self._back
-        )
-
-        bui.containerwidget(edit=self._root_widget, cancel_button=back_button)
-
-        try:
-            released_on = _CACHE['changelog']['released_on']
-            logs = _CACHE['changelog']['info'].split('\n')
-            h_align = 'left'
-            extra = 0.1
-        except KeyError:
-            released_on = ''
-            logs = ["Could not load ChangeLog"]
-            h_align = 'center'
-            extra = 1
-
-        bui.textwidget(
-            parent=self._root_widget,
-            position=(width * 0.49, height * 0.72),
-            size=(0, 0),
-            h_align='center',
-            v_align='center',
-            text=MOD_MANAGER_VERSION + released_on,
-            scale=text_scale * 0.9,
-            color=color,
-            maxwidth=width * 0.9
-        )
-
-        bui.buttonwidget(
-            parent=self._root_widget,
-            position=(width * 0.7, height * 0.72 - 20),
-            size=(140, 60),
-            scale=0.8,
-            label='Full ChangeLog',
-            button_type='square',
-            on_activate_call=lambda: bui.open_url(REPOSITORY_URL + '/blob/main/CHANGELOG.md')
-        )
-
-        loop_height = height * 0.62
-        for log in logs:
-            bui.textwidget(
-                parent=self._root_widget,
-                position=(width * 0.5 * extra, loop_height),
-                size=(0, 0),
-                h_align=h_align,
-                v_align='top',
-                text=log,
-                scale=text_scale,
-                color=color,
-                maxwidth=width * 0.9
-            )
-            loop_height -= 35
-
-    def _back(self) -> None:
-        bui.getsound('swish').play()
-        _remove_popup(self)
-        bui.containerwidget(edit=self._root_widget, transition='out_scale')
-
-class PluginWindow(popup.PopupWindow):
+class ModWindow(popup.PopupWindow):
     def __init__(
         self,
         plugin: Plugin,
@@ -1227,11 +1200,10 @@ class PluginWindow(popup.PopupWindow):
             color=color,
             maxwidth=width * 0.9
         )
+
         pos -= 25
-
-        # Author
-
         pos -= 60
+
         # Info
         bui.textwidget(
             parent=self._root_widget,
@@ -1252,29 +1224,46 @@ class PluginWindow(popup.PopupWindow):
 
         to_draw_button1 = True
         to_draw_button4 = False
+        has_update = False
+        
+        #print(f"DEBUG: ModWindow: Processing mod{self.plugin.name}")
+        #print(f"  - Installing: {self.plugin.is_installed}")
+        
         if self.plugin.is_installed:
             self.local_plugin = self.plugin.get_local()
+            #print(f"  - It has plugins: {await self.local_plugin.has_plugins()}")
+            #print(f"  - It is enabled: {await self.local_plugin.is_enabled()}")
+            
             if not await self.local_plugin.has_plugins():
                 to_draw_button1 = False
+                #print(f"  - Don't draw button 1: has no plugins")
             else:
                 if await self.local_plugin.is_enabled():
                     button1_label = "Disable"
                     b1_color = (0.6, 0.53, 0.63)
                     button1_action = self.disable
+                    #print(f"  - Button 1: Disable")
                     if self.local_plugin.has_settings():
                         to_draw_button4 = True
+                        #print(f"  - Has settings: Yes")
                 else:
                     button1_label = "Enable"
                     button1_action = self.enable
+                    #print(f"  - Button 1: Enable")
+            
             button2_label = "Uninstall"
             button2_action = self.uninstall
             has_update = self.plugin.has_update()
+            #print(f"  - Has update: {has_update}")
+            
             if has_update:
                 button3_label = "Update"
                 button3_action = self.update
+                #print(f"  - Button 3: Update")
         else:
             button1_label = "Install"
             button1_action = self.install
+            #print(f"  - Button 1: Install")
 
         if to_draw_button1:
             selected_btn = bui.buttonwidget(
@@ -1326,15 +1315,15 @@ class PluginWindow(popup.PopupWindow):
             selected_child=selected_btn
         )
 
-        open_pos_x = (390 if _uiscale() is babase.UIScale.SMALL else
-                      450 if _uiscale() is babase.UIScale.MEDIUM else 440)
+        open_pos_x = (415 if _uiscale() is babase.UIScale.SMALL else
+                      475 if _uiscale() is babase.UIScale.MEDIUM else 465)
         open_pos_y = (100 if _uiscale() is babase.UIScale.SMALL else
                       110 if _uiscale() is babase.UIScale.MEDIUM else 120)
         open_button = bui.buttonwidget(
             parent=self._root_widget,
             autoselect=True,
             position=(open_pos_x, open_pos_y),
-            size=(40, 40),
+            size=(30, 40),
             button_type="square",
             label="",
             color=(0.6, 0.53, 0.63),
@@ -1343,7 +1332,7 @@ class PluginWindow(popup.PopupWindow):
         bui.imagewidget(
             parent=self._root_widget,
             position=(open_pos_x, open_pos_y),
-            size=(40, 40),
+            size=(30, 40),
             color=(0.8, 0.95, 1),
             texture=bui.gettexture("file"),
             draw_controller=open_button
@@ -1375,8 +1364,8 @@ class PluginWindow(popup.PopupWindow):
             open_button = bui.buttonwidget(
                 parent=self._root_widget,
                 autoselect=True,
-                position=(open_pos_x, open_pos_y),
-                size=(40, 40),
+                position=(open_pos_x + 20, open_pos_y),
+                size=(30, 40),
                 button_type="square",
                 label="",
                 color=(0.6, 0.53, 0.63),
@@ -1385,15 +1374,15 @@ class PluginWindow(popup.PopupWindow):
 
             bui.imagewidget(
                 parent=self._root_widget,
-                position=(open_pos_x, open_pos_y),
-                size=(40, 40),
+                position=(open_pos_x + 20, open_pos_y),
+                size=(30, 40),
                 color=(0.8, 0.95, 1),
                 texture=bui.gettexture("frameInset"),
                 draw_controller=open_button
             )
             bui.textwidget(
                 parent=self._root_widget,
-                position=(open_pos_x - 3, open_pos_y + 12),
+                position=(open_pos_x + 13, open_pos_y + 12),
                 text="Tutorial",
                 size=(10, 10),
                 draw_controller=open_button,
@@ -1411,10 +1400,10 @@ class PluginWindow(popup.PopupWindow):
                 parent=self._root_widget,
                 autoselect=True,
                 position=(settings_pos_x, settings_pos_y),
-                size=(40, 40),
+                size=(30, 40),
                 button_type="square",
                 label="",
-                color=(0, 0.75, 0.75)
+                color=(0, 0.75, 0.75),
             )
             bui.buttonwidget(
                 edit=settings_button,
@@ -1423,7 +1412,7 @@ class PluginWindow(popup.PopupWindow):
             bui.imagewidget(
                 parent=self._root_widget,
                 position=(settings_pos_x, settings_pos_y),
-                size=(40, 40),
+                size=(30, 40),
                 color=(0.8, 0.95, 1),
                 texture=bui.gettexture("settingsIcon"),
                 draw_controller=settings_button
@@ -1460,7 +1449,7 @@ class PluginWindow(popup.PopupWindow):
     def show_previous_plugin(self):
         bui.containerwidget(edit=self._root_widget, transition='out_right')
         _remove_popup(self)
-        PluginWindow(
+        ModWindow(
             self.p_n_plugins[0],
             self._root_widget,
             transition='in_left',
@@ -1471,7 +1460,7 @@ class PluginWindow(popup.PopupWindow):
     def show_next_plugin(self):
         bui.containerwidget(edit=self._root_widget, transition='out_left')
         _remove_popup(self)
-        PluginWindow(
+        ModWindow(
             self.p_n_plugins[1],
             self._root_widget,
             transition='in_right',
@@ -1694,7 +1683,7 @@ class PluginCustomSourcesWindow(popup.PopupWindow):
 
 class PluginCategoryWindow(popup.PopupMenuWindow):
     def __init__(self, choices, current_choice, origin_widget, asyncio_callback):
-        choices = (*choices, "Instalados")
+        choices = (*choices, "Installed")
         self._asyncio_callback = asyncio_callback
         self.scale_origin = origin_widget.get_screen_space_center()
         super().__init__(
@@ -1703,7 +1692,8 @@ class PluginCategoryWindow(popup.PopupMenuWindow):
                    1.65 if _uiscale() is babase.UIScale.MEDIUM else 1.23),
             choices=choices,
             current_choice=current_choice,
-            delegate=self
+            delegate=self,
+            color=BUTTONS_COLOR
         )
         self._root_widget = self.root_widget
         _add_popup(self)
@@ -1733,13 +1723,13 @@ class PluginCategoryWindow(popup.PopupMenuWindow):
         bui.containerwidget(edit=self.root_widget, transition='out_scale')
 
 
-class PluginManagerWindow(bui.MainWindow):
+class ModManagerWindow(bui.MainWindow):
     def __init__(
         self,
         transition: str = "in_right",
         origin_widget: bui.Widget = None
     ):
-        self.plugin_manager = PluginManager()
+        self.plugin_manager = ModManager()
         self.category_selection_button = None
         self.selected_category = 'All'
         self.plugins_in_current_view = {}
@@ -1801,7 +1791,9 @@ class PluginManagerWindow(bui.MainWindow):
 
         title_pos = self._height - (83 if _uiscale() is babase.UIScale.SMALL else
                                     50 if _uiscale() is babase.UIScale.MEDIUM else 50)
-        bui.textwidget(
+
+        # Title text
+        self._title = bui.textwidget(
             parent=self._root_widget,
             position=(-10, title_pos),
             size=(self._width, 25),
@@ -1812,6 +1804,53 @@ class PluginManagerWindow(bui.MainWindow):
             v_align="center",
             maxwidth=270,
         )
+
+        # Divider line under the title
+        self._divider = bui.imagewidget(
+            parent=self._root_widget,
+            size=(270, 2),
+            position=((self._width - 270) / 2, title_pos - 8),
+            texture=bui.gettexture("white"),
+            color=(1, 0, 0),
+        )
+
+        # Rainbow color sequence
+        self._rainbow_colors = [
+            (1, 0, 0),
+            (1, 0.5, 0),
+            (1, 1, 0),
+            (0, 1, 0),
+            (0, 1, 1),
+            (0, 0, 1),
+            (1, 0, 1),
+        ]
+
+        # Track the current color index
+        self._divider_color_index = 0
+
+        # Function to rotate both divider and title colors
+        def _update_colors():
+            if not self._divider.exists() or not self._title.exists():
+                return
+
+            # Get next rainbow color
+            self._divider_color_index = (
+                self._divider_color_index + 1
+            ) % len(self._rainbow_colors)
+            new_color = self._rainbow_colors[self._divider_color_index]
+
+            # Apply color to divider
+            bui.imagewidget(edit=self._divider, color=new_color)
+
+            # Dimmed version for title (50% opacity)
+            title_color = tuple(c * 0.5 for c in new_color)
+            bui.textwidget(edit=self._title, color=title_color)
+
+            # Schedule next update
+            bui.apptimer(1.0, _update_colors)
+
+        # Start color rotation
+        bui.apptimer(1.0, _update_colors)
 
         loading_pos_y = self._height - (275 if _uiscale() is babase.UIScale.SMALL else
                                         235 if _uiscale() is babase.UIScale.MEDIUM else 270)
@@ -1890,7 +1929,6 @@ class PluginManagerWindow(bui.MainWindow):
         self.draw_refresh_icon()
         self.draw_settings_icon()
         with self.exception_handler():
-            await self.plugin_manager.setup_changelog()
             await self.plugin_manager.setup_index()
             self.spin()
             try:
@@ -1930,13 +1968,14 @@ class PluginManagerWindow(bui.MainWindow):
         if self.alphabet_order_selection_button is None:
             self.alphabet_order_selection_button = bui.buttonwidget(
                 parent=self._root_widget,
-                size=(40, 30),
+                size=(30, 30),
                 position=(category_pos_x - 47, category_pos_y),
                 label='Z - A' if self.selected_alphabet_order == 'z_a' else 'A - Z',
                 on_activate_call=lambda: loop.create_task(self._on_order_button_press()),
                 button_type="square",
                 textcolor=b_textcolor,
-                text_scale=0.6
+                text_scale=0.6,
+                color=BUTTONS_COLOR
             )
         else:
             b = self.alphabet_order_selection_button
@@ -1945,7 +1984,7 @@ class PluginManagerWindow(bui.MainWindow):
                 label=('Z - A' if self.selected_alphabet_order == 'z_a' else 'A - Z')
             ) if b.exists() else None
 
-        label = f"Categoria: {post_label}"
+        label = f"Category: {post_label}"
 
         if self.category_selection_button is None:
             self.category_selection_button = b = bui.buttonwidget(
@@ -1955,7 +1994,8 @@ class PluginManagerWindow(bui.MainWindow):
                 label=label,
                 button_type="square",
                 textcolor=b_textcolor,
-                text_scale=0.6
+                text_scale=0.6,
+                color=BUTTONS_COLOR
             )
             bui.buttonwidget(
                 edit=b, on_activate_call=lambda: self.show_categories_window(source=b)),
@@ -2057,10 +2097,11 @@ class PluginManagerWindow(bui.MainWindow):
         bui.buttonwidget(
             controller_button,
             on_activate_call=babase.Call(
-                PluginManagerSettingsWindow,
+                ModManagerSettingsWindow,
                 self.plugin_manager,
-                controller_button
-            )
+                controller_button,
+            ),
+            color=BUTTONS_COLOR
         )
         bui.imagewidget(
             parent=self._root_widget,
@@ -2083,7 +2124,8 @@ class PluginManagerWindow(bui.MainWindow):
             size=(30, 30),
             button_type="square",
             label="",
-            on_activate_call=lambda: loop.create_task(self.refresh())
+            on_activate_call=lambda: loop.create_task(self.refresh()),
+            color=BUTTONS_COLOR
         )
         bui.imagewidget(
             parent=self._root_widget,
@@ -2166,9 +2208,8 @@ class PluginManagerWindow(bui.MainWindow):
             ))
             filtered_count = len(plugins)
     
-            #print(f"DEBUG: Búsqueda '{search_term}' - {original_count} mods total, {filtered_count} encontrados")
             for plugin in plugins:
-                #print(f"DEBUG: Encontrado: {plugin.name}")
+                #print(f"DEBUG: Found: {plugin.name}")
                 pass
         else:
             plugins = category_plugins
@@ -2205,7 +2246,70 @@ class PluginManagerWindow(bui.MainWindow):
                 plugin_names_ready_to_draw.append(plugin)
             except NoCompatibleVersion:
                 continue
-            
+
+        # Counters by category
+        counters = {
+            "green_updated": 0,
+            "blue_update": 0, 
+            "orange_disabled": 0,
+            "red_manual": 0,
+            "gray_not_installed": 0
+        }
+    
+        # Lists for each category
+        mods_green = []
+        mods_blue = []
+        mods_orange = []
+        mods_red = []
+        mods_gray = []
+    
+        for plugin in plugin_names_ready_to_draw:
+            if plugin.is_installed:
+                local_plugin = plugin.get_local()
+                is_enabled = await local_plugin.is_enabled()
+                has_update = plugin.has_update()
+                
+                if is_enabled:
+                    if not local_plugin.is_installed_via_plugin_manager:
+                        counters["red_manual"] += 1
+                        mods_red.append(plugin.name)
+                    elif has_update:
+                        counters["blue_update"] += 1
+                        mods_blue.append(plugin.name)
+                    else:
+                        counters["green_updated"] += 1
+                        mods_green.append(plugin.name)
+                else:
+                    counters["orange_disabled"] += 1
+                    mods_orange.append(plugin.name)
+            else:
+                counters["gray_not_installed"] += 1
+                mods_gray.append(plugin.name)
+    
+        # Print summary
+        #print(f"\n--- MOD SUMMARY ---")
+        #print(f"🟢 GREEN (Updated and enabled): {counters['green_updated']}")
+        #if mods_green:
+        #    print(f"   Mods: {', '.join(mods_green)}")
+        #
+        #print(f"🔵 BLUE (Update available): {counters['blue_update']}")
+        #if mods_blue:
+        #    print(f"   Mods: {', '.join(mods_blue)}")
+        #
+        #print(f"🟠 ORANGE (Disabled): {counters['orange disabled']}")
+        #if mods_orange:
+        #    print(f"   Mods: {', '.join(mods_orange)}")
+        #
+        #print(f"🔴 RED (Manually installed): {counters['red_manual']}")
+        #if mods_red:
+        #    print(f"   Mods: {', '.join(mods_red)}")
+        #
+        #print(f"⚫ GRAY (Not installed): {counters['gray_not_installed']}")
+        #if mods_gray:
+        #    print(f"   Mods: {', '.join(mods_gray[:10])}{'...' if len(mods_gray) > 10 else ''}")
+        #
+        #print("=== END OF SUMMARY ===\n")
+ 
         # SHOW MESSAGE IF NO RESULTS
         if not plugin_names_ready_to_draw:
             no_results_text = f"No se encontraron mods que coincidan con '{search_term}'" if search_term else "No hay mods disponibles en esta categoría"
@@ -2221,10 +2325,7 @@ class PluginManagerWindow(bui.MainWindow):
                 maxwidth=420,
                 scale=0.8
             )
-    
-            # Logs
-            #print(f"DEBUG: No se encontraron resultados para '{search_term}'")
-            #print(f"DEBUG: Mods disponibles: {[p.name for p in category_plugins]}")
+
             return
     
         # Draw the found plugins
@@ -2232,20 +2333,29 @@ class PluginManagerWindow(bui.MainWindow):
             await self.draw_plugin_name(plugin, plugin_names_ready_to_draw)
 
     async def draw_plugin_name(self, plugin, plugins_list):
-
+        # Get the local plugin if installed
         if plugin.is_installed:
             local_plugin = plugin.get_local()
-            if await local_plugin.is_enabled():
+            is_enabled = await local_plugin.is_enabled()
+            has_update = plugin.has_update()
+
+            #print(f"DEBUG: Mod status{plugin.name}:")
+            #print(f"  - Installed: Yes")
+            #print(f"  - Enabled: {is_enabled}")
+            #print(f"  - Has update: {has_update}")
+            #print(f"  - Installed via manager: {local_plugin.is_installed_via_plugin_manager}")
+
+            if is_enabled:
                 if not local_plugin.is_installed_via_plugin_manager:
-                    color = (0.8, 0.2, 0.2)
-                elif local_plugin.version == plugin.latest_compatible_version.number:
-                    color = (0, 0.95, 0.2)
+                    color = (0.8, 0.2, 0.2)  # RED - Installed manually
+                elif has_update:
+                    color = (0.2, 0.5, 1.0)  # BLUE - Update available
                 else:
-                    color = (1, 0.6, 0)
+                    color = (0, 0.95, 0.2)   # GREEN - Updated and enabled
             else:
-                color = (1, 1, 1)
+                color = (1, 0.6, 0)          # ORANGE - Installed but disabled
         else:
-            color = (0.5, 0.5, 0.5)
+            color = (0.5, 0.5, 0.5)          # GRAY - Not installed
 
         plugin_name_widget_to_update = self.plugins_in_current_view.get(plugin.name)
         if plugin_name_widget_to_update:
@@ -2268,11 +2378,9 @@ class PluginManagerWindow(bui.MainWindow):
                 maxwidth=420
             )
             self.plugins_in_current_view[plugin.name] = text_widget
-            # XXX: This seems nicer. Might wanna use this in future.
-            # text_widget.add_delete_callback(lambda: self.plugins_in_current_view.pop(plugin.name))
 
     def show_plugin_window(self, plugin, plugins_list):
-        PluginWindow(
+        ModWindow(
             plugin,
             self._root_widget,
             plugins_list=plugins_list,
@@ -2284,17 +2392,14 @@ class PluginManagerWindow(bui.MainWindow):
             self.plugin_manager.categories.keys(),
             self.selected_category,
             source,
-            self.select_category,
+            self.select_category
         )
 
     async def select_category(self, category):
-        # Map the Spanish category to the internal English name
         internal_category = category
-        if category == "Instalados":
-            internal_category = "Installed"
 
         self.plugins_in_current_view.clear()
-        self.draw_category_selection_button(post_label=category) # Show "Installed" on the button
+        self.draw_category_selection_button(post_label=category) 
         await self.draw_plugin_names(
             internal_category, search_term=self._last_filter_text, refresh=True, order=self.selected_alphabet_order)
         self.selected_category = internal_category  # Save the internal name
@@ -2308,30 +2413,42 @@ class PluginManagerWindow(bui.MainWindow):
         self._last_filter_plugins = []
 
     async def refresh(self):
-        self.cleanup()
-        # try:
-        #     bui.textwidget(edit=self._plugin_manager_status_text, text="Refreshing")
-        # except:
-        #     pass
 
+        self.cleanup()
         self.spin(True)
 
-        with self.exception_handler():
-            await self.plugin_manager.refresh()
-            await self.plugin_manager.setup_changelog()
-            await self.plugin_manager.setup_index()
+        try:
+            with self.exception_handler():
+                # Force full cache clearing
+                if "index" in _CACHE:
+                    del _CACHE["index"]
+                if "categories" in _CACHE:
+                    del _CACHE["categories"] 
+
+                await self.plugin_manager.refresh()
+                await self.plugin_manager.setup_index()
+                self.spin()
+
+                try:
+                    bui.textwidget(edit=self._plugin_manager_status_text, text="")
+                except:
+                    pass
+
+                await self.select_category(self.selected_category)
+
+        except Exception as e:
             self.spin()
             try:
-                bui.textwidget(edit=self._plugin_manager_status_text, text="")
+                bui.textwidget(edit=self._plugin_manager_status_text, 
+                             text=f"Error: {str(e)}")
             except:
                 pass
-            await self.select_category(self.selected_category)
 
     def soft_refresh(self):
         pass
 
 
-class PluginManagerSettingsWindow(popup.PopupWindow):
+class ModManagerSettingsWindow(popup.PopupWindow):
     def __init__(self, plugin_manager, origin_widget):
         self._plugin_manager = plugin_manager
         self.scale_origin = origin_widget.get_screen_space_center()
@@ -2362,7 +2479,8 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
             transition=transition,
             scale=(2.1 if _uiscale() is babase.UIScale.SMALL else 1.5
                    if _uiscale() is babase.UIScale.MEDIUM else 1.0),
-            scale_origin_stack_offset=self.scale_origin
+            scale_origin_stack_offset=self.scale_origin,
+            color=BUTTONS_COLOR
         )
         _add_popup(self)
         pos = height * 0.9
@@ -2405,23 +2523,12 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
                 on_value_change_call=babase.Call(self.toggle_setting, setting),
                 maxwidth=500,
                 textcolor=(0.9, 0.9, 0.9),
-                scale=text_scale * 0.8
+                scale=text_scale * 0.8,
+                color=BUTTONS_COLOR
             )
             pos -= 34 * text_scale
 
-        pos = height - 200
-        
-        #bui.textwidget(
-        #    parent=self._root_widget,
-        #    position=(width * 0.49, pos-5),
-        #    size=(0, 0),
-        #    h_align='center',
-        #    v_align='center',
-        #    text='Contribute to plugins or to this community plugin manager!',
-        #    scale=text_scale * 0.65,
-        #    color=color,
-        #    maxwidth=width * 0.95
-        #)
+        pos = height - 180
 
         pos -= 75
         
@@ -2475,6 +2582,27 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
         )
 
         bui.containerwidget(edit=self._root_widget, on_cancel_call=self._ok)
+
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(width * 0.49, pos-20),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text='by: Less',
+            scale=text_scale * 0.65,
+            color=color,
+            maxwidth=width * 0.95
+        )
+
+        # Divider line under the fork author
+        bui.imagewidget(
+            parent=self._root_widget,
+            size=(90, 2),
+            position=(width * 0.4, pos-30),
+            texture=bui.gettexture("white"),
+            color=(1, 1, 1)
+        )
 
         try:
             plugin_manager_update_available = await self._plugin_manager.get_update_details()
@@ -2546,7 +2674,8 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
         bui.buttonwidget(
             edit=self._save_button,
             scale=0 if check else 1,
-            selectable=(not check)
+            selectable=(not check),
+            color=BUTTONS_COLOR
         )
 
     def save_settings_button(self):
@@ -2558,7 +2687,6 @@ class PluginManagerSettingsWindow(popup.PopupWindow):
     async def update(self, to_version=None, commit_sha=None):
         try:
             await self._plugin_manager.update(to_version, commit_sha)
-            await self._plugin_manager.setup_changelog()
         except MD5CheckSumFailed:
             bui.screenmessage("MD5 checksum failed during plugin manager update", color=(1, 0, 0))
             bui.getsound('error').play()
@@ -2787,7 +2915,7 @@ class NewAllSettingsWindow(AllSettingsWindow):
             return
 
         self.main_window_replace(
-            PluginManagerWindow(origin_widget=self._plugman_button)
+            ModManagerWindow(origin_widget=self._plugman_button)
         )
 
     def _save_state(self) -> None:
