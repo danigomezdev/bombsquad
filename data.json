@@ -91,16 +91,16 @@
     }
 ,
     {
-        "name": "InvisibleOne",
+        "name": "Invisible One",
         "file_name": "InvisibleOne.py",
         "path": "InvisibleOne/InvisibleOne.py",
         "api_version": 9,
-        "version": "1.0.0",
+        "version": "1.1.1",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/InvisibleOne/InvisibleOne.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/InvisibleOne/InvisibleOne.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/InvisibleOne/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/InvisibleOne/README.md",
-        "description": "No description available"
+        "description": "A game mode where touching a flag changes your character to become invisible"
     }
 ,
     {

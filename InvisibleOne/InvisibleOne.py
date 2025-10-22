@@ -1,4 +1,7 @@
 # ba_meta require api 9
+# ba_meta name Invisible One
+# ba_meta description A game mode where touching a flag changes your character to become invisible
+# ba_meta version 1.1.1
 
 from __future__ import annotations
 
