@@ -1,4 +1,6 @@
 # ba_meta require api 9
+# ba_meta name Camera
+# ba_meta description A mod that creates a flying object on the map which can change the position of the camera in order to take photos
 
 from _babase import (
     get_display_resolution as GDR,
