@@ -52,16 +52,16 @@
     }
 ,
     {
-        "name": "DiscordAndroidRPC",
-        "file_name": "DiscordAndroidRPC.py",
-        "path": "DiscordAndroidRPC/DiscordAndroidRPC.py",
+        "name": "Discord Rich Presence",
+        "file_name": "DiscordRichPresence.py",
+        "path": "DiscordRichPresence/DiscordRichPresence.py",
         "api_version": 9,
-        "version": "1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordAndroidRPC/DiscordAndroidRPC.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordAndroidRPC/DiscordAndroidRPC.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/DiscordAndroidRPC/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/DiscordAndroidRPC/README.md",
-        "description": "No description available"
+        "version": "1.1.4",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordRichPresence/DiscordRichPresence.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordRichPresence/DiscordRichPresence.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/DiscordRichPresence/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/DiscordRichPresence/README.md",
+        "description": "A mod that allows you to update your gaming activity on Discord specifically for BombSquad"
     }
 ,
     {
@@ -78,16 +78,16 @@
     }
 ,
     {
-        "name": "CustomHits",
+        "name": "Custom Hits",
         "file_name": "CustomHits.py",
         "path": "CustomHits/CustomHits.py",
         "api_version": 9,
-        "version": "1.0.0",
+        "version": "1.0.1",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/CustomHits/CustomHits.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/CustomHits/CustomHits.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CustomHits/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CustomHits/README.md",
-        "description": "No description available"
+        "description": "A mod that shows reactions to real-time gameplay, for example when you hit a player multiple times."
     }
 ,
     {
@@ -113,7 +113,7 @@
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/Camera/Camera.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Camera/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Camera/README.md",
-        "description": "No description available"
+        "description": "A mod that creates a flying object on the map which can change the position of the camera in order to take photos"
     }
 ,
     {
@@ -156,29 +156,16 @@
     }
 ,
     {
-        "name": "CheapDisco",
+        "name": "Cheap Disco",
         "file_name": "CheapDisco.py",
         "path": "CheapDisco/CheapDisco.py",
         "api_version": 9,
-        "version": "1.0.0",
+        "version": "1.0.1",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/CheapDisco/CheapDisco.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/CheapDisco/CheapDisco.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CheapDisco/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CheapDisco/README.md",
-        "description": "No description available"
-    }
-,
-    {
-        "name": "DiscordRPC",
-        "file_name": "DiscordRPC.py",
-        "path": "DiscordRPC/DiscordRPC.py",
-        "api_version": 9,
-        "version": "1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/DiscordRPC/DiscordRPC.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/DiscordRPC/DiscordRPC.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/DiscordRPC/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/DiscordRPC/README.md",
-        "description": "No description available"
+        "description": "A mod that changes the background color of the Bombsquad MainMenu, using random dark colors"
     }
 ,
     {
