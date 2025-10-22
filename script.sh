@@ -76,7 +76,7 @@ extract_description() {
         extracted_desc=$(extract_meta_value "$extracted_desc")
         
         # Limit to 120 characters
-        if [ ${#extracted_desc} -gt 120 ]; then
+        if [ ${#extracted_desc} -gt 250 ]; then
             extracted_desc="${extracted_desc:0:117}..."
         fi
         echo "$extracted_desc"
@@ -89,16 +89,16 @@ extract_description() {
 extract_version() {
     local file_path="$1"
     
-    # Look for ba_meta version pattern with or without colon
+    # Look for ba_meta version pattern WITHOUT colon
     local version_line=$(grep -m 1 "^# ba_meta version" "$file_path" 2>/dev/null)
     
     if [ -n "$version_line" ]; then
-        # Extract everything after "version" (with optional colon)
-        local extracted_version=$(echo "$version_line" | sed -E 's/^# ba_meta version:?[[:space:]]*//')
+        # Extract everything after "version" (WITHOUT colon)
+        local extracted_version=$(echo "$version_line" | sed -E 's/^# ba_meta version[[:space:]]+//')
         extracted_version=$(extract_meta_value "$extracted_version")
         echo "$extracted_version"
     else
-        echo "v1.0.0"
+        echo "1.0.0"
     fi
 }
 
@@ -115,23 +115,6 @@ extract_api_version() {
         echo "$api_version"
     else
         echo "unknown"
-    fi
-}
-
-# Function to extract version from file
-extract_version() {
-    local file_path="$1"
-    
-    # Look for ba_meta version pattern
-    local version_line=$(grep -m 1 "^# ba_meta version:" "$file_path" 2>/dev/null)
-    
-    if [ -n "$version_line" ]; then
-        # Extract everything after "version:"
-        local extracted_version=$(echo "$version_line" | sed 's/^# ba_meta version:\s*//')
-        extracted_version=$(extract_meta_value "$extracted_version")
-        echo "$extracted_version"
-    else
-        echo "v1.0.0"
     fi
 }
 
@@ -175,8 +158,8 @@ get_readme_urls() {
     
     if [ -f "$readme_path" ]; then
         local relative_readme_path=$(echo "$readme_path" | sed "s|^\./||")
-        local url_readme="${REPO}/blob/mods/${relative_readme_path}"
-        local url_raw_readme="${REPO}/raw/mods/${relative_readme_path}"
+        local url_readme="${REPO}/blob/modmanager/${relative_readme_path}"
+        local url_raw_readme="${REPO}/raw/modmanager/${relative_readme_path}"
         
         # Replace spaces with %20 in URLs
         url_readme=$(echo "$url_readme" | sed 's/ /%20/g')

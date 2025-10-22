@@ -1,6 +1,6 @@
 # ba_meta require api 9
 # ba_meta name Better Profile Editor
-# ba_meta version: "v1.5"
+# ba_meta version 1.5
 # ba_meta description Advanced viewer of your Bombsquad profiles, with a live character that updates based on your profile choices
 
 from __future__ import annotations

@@ -1,6 +1,7 @@
 # ba_meta require api 9
-# ba_meta description: "A mod to display online game data in more detail"
-# ba_meta version: "v1.1.1"
+# ba_meta name Ultra Party Window
+# ba_meta description A mod to display online game data in more detail
+# ba_meta version 1.1.2
 
 from __future__ import annotations
 import re
