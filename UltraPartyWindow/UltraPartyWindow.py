@@ -24,7 +24,7 @@ import urllib.request, urllib.error, urllib.parse
 from typing import TYPE_CHECKING
 from datetime import datetime
 from threading import Thread
-
+import logging
 import babase
 import bauiv1 as bui
 import bascenev1 as bs
@@ -49,7 +49,7 @@ from json import (
     load
 )
 from threading import Thread
-from time import time, sleep
+import time
 from bascenev1 import (
     connect_to_party as CON,
     protocol_version as PT
@@ -85,10 +85,7 @@ from random import (
     choice as CH,
     randint
 )
-from socket import (
-    SOCK_DGRAM,
-    socket
-)
+
 import _babase
 import os
 
@@ -445,7 +442,7 @@ file_date = datetime.now().strftime("[%d-%m-%Y]")
 main_directory: str = _babase.env()['python_directory_user']
 #main_directory = "A:/FILES/BS Party Window Data" # Custom Path For PCs (Usually). Dont ends with "/ or \"
 
-party_window_folder_name = 'LesssResponderPartyWindow'
+party_window_folder_name = 'LessResponderPartyWindow'
 party_window_directory: str = main_directory + f'/{party_window_folder_name}/'
 #party_window_directory: str = __file__.split(__name__, 1)[0] + f'{party_window_folder_name}/'
 
@@ -458,7 +455,7 @@ quick_msg_file_path = party_window_directory + f'{quick_msg_file_name}.txt'
 custom_command_file_name = 'Custom Commands'
 custom_command_file_path = party_window_directory + f'{custom_command_file_name}.txt'
 
-config_party_file_name = 'LesssPartyWindowSettings'
+config_party_file_name = 'LessPartyWindowSettings'
 config_party_file_path = party_window_directory + f'{config_party_file_name}.json'
 
 internal_error_log_file_name = 'Error Logs'
@@ -488,7 +485,7 @@ new_translated_text_file_path = new_translated_text_folder_path + f"{new_transla
 
 #@@@@@@@@@@@@@@@# AUTO RESPONDER DATA #@@@@@@@@@@@@@@@#
 ######## Chats Data ########
-responder_folder_name = 'LesssAutoResponder'
+responder_folder_name = 'LessAutoResponder'
 responder_directory: str = party_window_directory + f'{responder_folder_name}/'
 
 chats_data_file_folder_name = 'Chats Data'
@@ -496,7 +493,7 @@ server_name_default = "Unknown Server"
 chats_data_file_folder_path = responder_directory + f"{chats_data_file_folder_name}/{server_name_default}/"
 internal_chats_data_file_folder_path = responder_directory + f"{chats_data_file_folder_name}/"
 
-config_responder_file_name = 'LesssResponderSettings'
+config_responder_file_name = 'LessResponderSettings'
 config_responder_file_path = responder_directory + f'{config_responder_file_name}.json'
 
 chats_data_file_name = 'Player Chats Data'
@@ -1716,7 +1713,7 @@ def ping_and_kang(
     """
     ping_result = None
     roster_result = None
-    sock = socket(IPT(address),SOCK_DGRAM)
+    sock = socket(IPT(address),socket.SOCK_DGRAM)
     sock.settimeout(timeout)
 
     try:
@@ -1731,7 +1728,7 @@ def ping_and_kang(
                     ping_success = True
                     break
             except: break
-            sleep(ping_wait)
+            time.sleep(ping_wait)
         if ping_success:
             ping_result = (time() - ping_start_time) * 1000
         else:
@@ -4497,7 +4494,7 @@ default_responder_config = {
     config_name_show_my_master_ping: True
 }
 responder_config: Dict[str, bool] = {}
-"""Global Lesss Responder Settings,
+"""Global Less Responder Settings,
 
 Usages: `responder_config.get(config_key)` OR `responder_config[config_key]`"""
 
@@ -5285,7 +5282,7 @@ default_party_config: Dict[str, Any] = {
 }
 
 party_config: Dict[str, Any] = {}
-"""Global Lesss Party Window Main Settings,
+"""Global Less Party Window Main Settings,
 
 Usages: `party_config.get(config_key)` OR `party_config[config_key]`"""
 
@@ -6193,7 +6190,7 @@ def load_players_server_data() -> dict[str, dict[str, Any]]:
     try:
         empty_msg = f"Server Players Data Is Empty (；′⌒`)"
         if not os.listdir(players_server_data_folder_path):
-            babase.pushcall(Call(screenmessage, empty_msg, COLOR_SCREENCMD_NORMAL), from_other_thread=True)
+            #babase.pushcall(Call(screenmessage, empty_msg, COLOR_SCREENCMD_NORMAL), from_other_thread=True)
             return {}
         for file_name in os.listdir(players_server_data_folder_path):
             if file_name.startswith("profiles") and file_name.endswith(".json"):
@@ -6299,10 +6296,10 @@ def update_all_names_with_pb_id(server_pdata: dict[str, dict[str, Any]]):
 
     except KeyError as e:
         babase.pushcall(Call(screenmessage, f"{CMD_LOGO_CAUTION} KeyError: Missing key in data", COLOR_SCREENCMD_ERROR), from_other_thread=True)
-        babase.print_exception(e)#print_internal_exception(e)
+        logging.exception(e)#print_internal_exception(e)
     except json.JSONDecodeError as e:
         babase.pushcall(Call(screenmessage, f"{CMD_LOGO_CAUTION} JSONDecodeError -> Error reading player data", COLOR_SCREENCMD_ERROR), from_other_thread=True)
-        babase.print_exception(e)#print_internal_exception(e)
+        logging.exception(e)#print_internal_exception(e)
     except Exception as e:
         babase.pushcall(Call(screenmessage, f"{CMD_LOGO_CAUTION} Error On Updating Server P-Data", COLOR_SCREENCMD_ERROR), from_other_thread=True)
         babase.pushcall(Call(screenmessage, f"{e}", COLOR_SCREENCMD_ERROR), from_other_thread=True)
@@ -6477,7 +6474,7 @@ def new_connect_to_party(address: str, port: int = _default_server_port, print_p
     global _server_ip, _server_port
     _server_ip = address
     _server_port = port
-    print(f'IP: {_server_ip}     PORT: {_server_port}')
+    #print(f'IP: {_server_ip}     PORT: {_server_port}')
     original_connect_to_party(_server_ip, _server_port, print_progress)
     if auto_responder: auto_responder._get_player_info()
 
@@ -6974,7 +6971,7 @@ def _save_quick_responds(data: List[str]):
                 f.write('\n'.join(data))
 
     except Exception as e:
-        babase.print_exception()
+        logging.exception()
         screenmessage(f'Error writing quick responds: {e}', (1, 0, 0))
         bui.getsound('error').play(1.5)
 ####### QUICK MESSAGES #######
@@ -7611,7 +7608,7 @@ def replace_msg_emoji_var_with_emojis(text: str):
     if '$unamused' in text.lower(): text = text.replace('$unamused', get_random_unamused_emoji())
     return text
 
-class LesssPartyWindow(bauiv1lib.party.PartyWindow):
+class LessPartyWindow(bauiv1lib.party.PartyWindow):
 
     def __del__(self) -> None:
         bui.set_party_window_open(False)
@@ -9421,7 +9418,7 @@ class LesssPartyWindow(bauiv1lib.party.PartyWindow):
         try:
             PartySettingsWindow()
         except Exception as e:
-            babase.print_exception()
+            logging.exception()
             pass
 
     def _show_quick_respond_window(self, button: bui.Widget):
@@ -9994,7 +9991,7 @@ def cari_nick(list_nick: List[str], message: str):
 
 
 ding_small_high = bui.getsound('dingSmallHigh')
-class LesssAutoResponder:
+class LessAutoResponder:
     """A Lovely Auto Responder"""
     def __init__(self):
         self.is_sending_names = False
@@ -10828,7 +10825,7 @@ class LesssAutoResponder:
                             else:
                                 player_acc_returner[sanitized_short] = _player_real_name
         except Exception as e:
-            print_internal_exception(e, once=True)
+            print_internal_exception(e)
 
         _automatic_get_player_info_from_bcs()
         self._current_name_saving_ratio += 1
@@ -11380,14 +11377,14 @@ class PingThread:
             except Exception as e:
                 print("Error Ping " + str(e))
         except Exception:
-            babase.print_exception('Error on gather ping', once=True)
+            logging.exception('Error on gather ping')
         finally:
             try:
                 is_pinging = False
                 if sock is not None:
                     sock.close()
             except Exception:
-                babase.print_exception('Error on gather ping cleanup', once=True)
+                logging.exception('Error on gather ping cleanup')
 
 class AddNewChoiceWindow: # Unsued
     def __init__(self):
@@ -11768,7 +11765,7 @@ class SortMessagesList:
         try:
             self.save(self.msgs)
         except:
-            babase.print_exception()
+            logging.exception()
             screenmessage('Error!', COLOR_SCREENCMD_ERROR)
         if self.original_msgs != self.msgs:
             bui.getsound('gunCocking').play()
@@ -12677,7 +12674,7 @@ class ResponderSettingsWindow(popup.PopupWindow):
           # Save using the global save function
 
     def _apply_setting(self, display_name: str, value: bool) -> None:
-        """Apply a specific setting immediately without recalling LesssAutoResponder"""
+        """Apply a specific setting immediately without recalling LessAutoResponder"""
         screenmessage(f'{display_name}: {get_lang_text("enabled") if value else get_lang_text("disabled")}', color=COLOR_SCREENCMD_NORMAL)
 
     def _on_cancel_press(self) -> None:
@@ -13988,7 +13985,7 @@ def fetch_data(player_name: str, widget=None, no_confirmation: bool = False, pri
                 babase.pushcall(Call(widget._transition_out), from_other_thread=True)
          #   babase.pushcall(Call(PlayerInfoPopup, self.real_name), from_other_thread=True)
             #babase.pushcall(Call(bui.buttonwidget, edit=self._view_account_button, icon=bui.gettexture('ouyaUButton'), on_activate_call=self._on_view_account_button_press), from_other_thread=True)
-        except Exception as e: babase.print_exception(e)
+        except Exception as e: logging.exception(e)
         _bcs_player_info_obtained(player_name, data, no_confirmation, print_progress_only)
         all_names[player_name]['searched_bcs'] = True
         all_names_updated = True
@@ -14018,7 +14015,7 @@ def fetch_data(player_name: str, widget=None, no_confirmation: bool = False, pri
                     babase.pushcall(Call(widget._transition_out), from_other_thread=True)
                # babase.pushcall(Call(PlayerInfoPopup, self.real_name), from_other_thread=True)
                 #babase.pushcall(Call(bui.buttonwidget, edit=self._view_account_button, icon=bui.gettexture('ouyaUButton'), on_activate_call=self._on_view_account_button_press), from_other_thread=True)
-            except Exception as e: babase.print_exception(e)
+            except Exception as e: logging.exception(e)
             _bcs_player_info_obtained(player_name, data2, no_confirmation, print_progress_only)
             all_names[player_name]['searched_bcs'] = True
             all_names_updated = True
@@ -17096,7 +17093,7 @@ class CustomAccountViewerWindow(AccountViewerWindow):
                     if trophystr == '':
                         trophystr = '-'
                 except Exception:
-                    babase.print_exception('Error displaying trophies.')
+                    logging.exception('Error displaying trophies.')
 
                 shruggie = self.shruggie
                 # Menampilkan data dari custom_data
@@ -17301,7 +17298,7 @@ class CustomAccountViewerWindow(AccountViewerWindow):
                                 )
                                 v -= 105
                     except Exception:
-                        babase.print_exception('Error displaying character.')
+                        logging.exception('Error displaying character.')
                     profile_text = babase.Lstr(value=data['profileDisplayString'] if data.get('profileDisplayString') else self.custom_data['spaz'])
                     bui.textwidget(
                         parent=self._subcontainer,
@@ -17561,7 +17558,7 @@ class CustomAccountViewerWindow(AccountViewerWindow):
                 )
 
             except Exception:
-                babase.print_exception('Error displaying account info.')
+                logging.exception('Error displaying account info.')
             if self._loading_spinner:
                 babase.apptimer(0.5, self._loading_spinner.delete)
 
@@ -17702,7 +17699,7 @@ def _get_store_char_tex(self) -> str:
         from bauiv1 import set_party_icon_always_visible # type: ignore
         set_party_icon_always_visible(True)
     except Exception as e:
-        babase.print_exception(e)
+        logging.exception(e)
     return (
         'storeCharacterXmas' if bui.app.plus.get_v1_account_misc_read_val('xmas', False) else # type: ignore
         'storeCharacterEaster' if bui.app.plus.get_v1_account_misc_read_val('easter', False) else # type: ignore
@@ -17813,13 +17810,13 @@ def _app_party_window():
 auto_responder = None
 def apply_packages():
     try:
-        bauiv1lib.party.PartyWindow = LesssPartyWindow
+        bauiv1lib.party.PartyWindow = LessPartyWindow
         PopupMenuWindow.__init__ = __popup_menu_window_init__
 
         babase.app.classic.party_window = _app_party_window # type: ignore
 
         global auto_responder
-        auto_responder = LesssAutoResponder()
+        auto_responder = LessAutoResponder()
         auto_responder._start_engine()
 
         babase.app.config['Chat Muted'] = True if party_config.get(CFG_NAME_MODIFIED_SCREENMESSAGE) else False
@@ -17837,7 +17834,7 @@ def apply_packages():
             from bauiv1lib.mainmenu import MainMenuWindow
             MainMenuWindow._get_store_char_tex = _get_store_char_tex # type: ignore
         except Exception as e:
-            babase.print_exception(e)
+            logging.exception(e)
 
         #chatmessage("Hey, This Message Should Be Small Enough")
         #bauiv1lib.party.PartyWindow()
@@ -17878,7 +17875,6 @@ class byLess(babase.Plugin):
         _load_all_internal_data()
         setbs_uiscale()
         babase.apptimer(1.5, apply_packages)
-
         babase.apptimer(1, modify_conncet_to_party)
 
         global auto_save_data_timer
@@ -17886,18 +17882,16 @@ class byLess(babase.Plugin):
             auto_save_data_ratio,
             babase.Call(_save_internal_data_normal),
             repeat=True
-            #timetype=ba.TimeType.REAL,
-            #suppress_format_warning=True
         )
 
         try:
-            from bauiv1 import set_party_icon_always_visible # type: ignore
+            from bauiv1 import set_party_icon_always_visible  # type: ignore
             set_party_icon_always_visible(True)
-        except Exception as e:
-            pass #babase.print_exception(e)
+        except Exception:
+            pass
 
     def on_app_shutdown(self) -> None:
-        return #_save_internal_data_normal()
+        return
 
     def has_settings_ui(self) -> bool:
         return True
@@ -17905,47 +17899,64 @@ class byLess(babase.Plugin):
     def show_settings_ui(self, source_widget: Optional[bui.Window]) -> None:
         PartySettingsWindow()
 
-
-
     BTN = None
+
     @classmethod
     def up(c):
         c.BTN.activate() if c.BTN.exists() else None
-    
-    def __init__(self):
 
-        p = LesssPartyWindow
+    def __init__(self):
+        p = LessPartyWindow
         a = '__init__'
-        o = getattr(p,a)
-        setattr(p,a,lambda z,*a,**k:(o(z,*a,**k),self.make(z))[0])
-        self.uiscale = bui.app.ui_v1.uiscale
-    
-    def make(self,z):
-        sz = (120,70)
+        o = getattr(p, a)
+        setattr(p, a, lambda z, *a, **k: (o(z, *a, **k), self.make(z))[0])
+
+    @property
+    def uiscale(self):
+        return bui.app.ui_v1.uiscale
+
+    def make(self, z):
+        sz = (120, 70)
         p = z._root_widget
 
-        x  : int = (1470 if self.uiscale is babase.UIScale.SMALL else
-                              1320 if self.uiscale is babase.UIScale.MEDIUM else
-                              1220) 
-        y : int = (530 if self.uiscale is babase.UIScale.SMALL else
-                              530 if self.uiscale is babase.UIScale.MEDIUM else
-                              530)
-        
+        scale_name = (
+            "SMALL" if self.uiscale is babase.UIScale.SMALL else
+            "MEDIUM" if self.uiscale is babase.UIScale.MEDIUM else
+            "LARGE"
+        )
+
+        #print(f"[byLess] Current UI Scale: {scale_name}")
+        #babase.screenmessage(f"UI Scale: {scale_name}", color=(0, 1, 1))
+
+        x: int = (
+            1220 if self.uiscale is babase.UIScale.SMALL else
+            1065 if self.uiscale is babase.UIScale.MEDIUM else
+            964
+        )
+        y: int = (
+            530 if self.uiscale is babase.UIScale.SMALL else
+            745 if self.uiscale is babase.UIScale.MEDIUM else
+            850
+        )
+
         iw(
             parent=p,
-            size=(sz[0]*1.34,sz[1]*1.4),
-            position=(x-sz[0]*0.14,y-sz[1]*0.20),
+            size=(sz[0] * 1.34, sz[1] * 1.4),
+            position=(x - sz[0] * 0.14, y - sz[1] * 0.20),
             texture=gt('softRect'),
             opacity=0.2,
-            color=(0,0,0)
+            color=(0, 0, 0)
         )
+
         search_ds: str = f'{get_lang_text("search")}!'
         self.search_button = self.__class__.BTN = bui.buttonwidget(
             parent=p,
-            position=(x,y),
+            position=(x, y),
             label=search_ds,
             color=Finder.COL1,
             textcolor=Finder.COL3,
             size=sz,
-            on_activate_call=lambda:Finder(self.search_button)
+            on_activate_call=lambda: Finder(self.search_button)
         )
+
+        #print(f"[byLess] Button position: ({x}, {y}) size={sz}")
