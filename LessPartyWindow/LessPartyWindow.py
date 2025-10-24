@@ -1,7 +1,7 @@
 # ba_meta require api 9
-# ba_meta name Ultra Party Window
-# ba_meta description A mod to display online game data in more detail
-# ba_meta version 1.1.2
+# ba_meta name Less Party Window
+# ba_meta description A mod that makes scaled modifications to the PartyWindow, giving multiple options for use in-game
+# ba_meta version 1.1.3
 
 from __future__ import annotations
 import re
@@ -21,7 +21,6 @@ import traceback
 import http.client
 import urllib.request, urllib.error, urllib.parse
 #from html.parser import HTMLParser
-from typing import TYPE_CHECKING
 from datetime import datetime
 from threading import Thread
 import logging
@@ -89,8 +88,15 @@ from random import (
 import _babase
 import os
 
+from bauiv1lib.tabs import TabRow
+from enum import Enum
+
+from baenv import TARGET_BALLISTICA_BUILD as build_number
+from typing import TYPE_CHECKING, override
+
 if TYPE_CHECKING:
     from typing import Any, Sequence, List, Optional, Dict, Tuple, Callable, Literal
+    from bauiv1lib.play import PlaylistSelectContex
 
 get_ip_address_type = babase.get_ip_address_type
 disconnect_from_host = bs.disconnect_from_host # bs.disconnect_from_host()
@@ -663,7 +669,8 @@ class Finder:
 
     def __init__(s,src):
         config = load_config()
-        s.friends_open = config.get("friends_open", False)
+        #s.friends_open = config.get("friends_open", False)
+        s.friends_open = True
 
         s.thr = []
         s.ikids = []
@@ -740,9 +747,9 @@ class Finder:
             button_type='square',
             label='',
             color=s.COL1,
-            oac=lambda:(
-                s._toggleFriendsWindow()
-            )
+            #oac=lambda:(
+            #    s._toggleFriendsWindow()
+            #)
         )
         
         iw(
@@ -1522,7 +1529,7 @@ class Finder:
             s.ding(0,0)
             return
         TIP('¡Escaneando servidores!\nEsto debería tardar unos segundos.\nPuedes cerrar esta ventana.')
-        c.ST = time()
+        c.ST = time.time()
         s.ding(1,0)
         c.BUSY = True
         p = app.plus
@@ -1633,7 +1640,7 @@ class Finder:
         c = s.__class__
         c.ART[i] = (
             cs(sc.OUYA_BUTTON_A) if p==999 else
-            cs(sc.OUYA_BUTTON_O) if p<100 else
+            cs(sc.OUYA_BUTTON_O) if (p is not None and p < 100) else
             cs(sc.OUYA_BUTTON_Y)
         )
         s.draw() if c.ARTT.exists() else None
@@ -1678,7 +1685,7 @@ class Finder:
         [_.join() for _ in s.thr]
         s.thr.clear()
         c = s.__class__
-        tt = time() - c.ST
+        tt = time.time() - c.ST
         ln = len(s.MEM)
         ab = int(ln/tt)
         TIP(f'¡Terminado!\nEscaneados {ln} servidores en {round(tt,2)} segundos!\nAproximadamente {ab} servidor{["es",""][ab<2]}/seg')
@@ -1713,11 +1720,11 @@ def ping_and_kang(
     """
     ping_result = None
     roster_result = None
-    sock = socket(IPT(address),socket.SOCK_DGRAM)
+    sock = socket.socket(IPT(address),socket.SOCK_DGRAM)
     sock.settimeout(timeout)
 
     try:
-        ping_start_time = time()
+        ping_start_time = time.time()
         ping_success = False
         for _ in range(3):
             try:
@@ -1730,7 +1737,7 @@ def ping_and_kang(
             except: break
             time.sleep(ping_wait)
         if ping_success:
-            ping_result = (time() - ping_start_time) * 1000
+            ping_result = (time.time() - ping_start_time) * 1000
         else:
             pro.append((dex,999))
             return (999,[])
@@ -1764,8 +1771,8 @@ def ping_and_kang(
         BA_MESSAGE_PARTY_ROSTER = 0x09
         roster_parts = bytearray()
         collecting_roster = False
-        roster_listen_start_time = time()
-        while time() - roster_listen_start_time < (timeout / 2): # Use part of the total timeout
+        roster_listen_start_time = time.time()
+        while time.time() - roster_listen_start_time < (timeout / 2): # Use part of the total timeout
             packet = g(2048) # Increased buffer size for safety
 
             if not packet or len(packet) < 9: continue
@@ -1807,26 +1814,6 @@ bw = lambda *,oac=None,**k: obw(
     enable_sound=False,
     **k
 )
-#cw = lambda *,size=None,oac=None,**k: (p:=ocw(
-#    parent=zw('overlay_stack'),
-#    background=False,
-#    transition='in_scale',
-#    size=size,
-#    on_outside_click_call=oac,
-#    **k
-#)) and (p,iw(
-#    parent=p,
-#    texture=gt('softRect'),
-#    size=(size[0]*1.2,size[1]*1.2),
-#    position=(-size[0]*0.1,-size[1]*0.1),
-#    opacity=0.55,
-#    color=(0,0,0)
-#),iw(
-#    parent=p,
-#    size=size
-#))
-
-
 cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     parent=zw('overlay_stack'),
     background=False,
@@ -1836,13 +1823,32 @@ cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     **k
 )) and (p,iw(
     parent=p,
+    texture=gt('softRect'),
+    size=(size[0]*1.2,size[1]*1.2),
+    position=(-size[0]*0.1,-size[1]*0.1),
+    opacity=0.55,
+    color=(0,0,0)
+),iw(
+    parent=p,
     size=size
 ))
+
+
+#cw = lambda *,size=None,oac=None,**k: (p:=ocw(
+#    parent=zw('overlay_stack'),
+#    background=False,
+#    transition='in_scale',
+#    size=size,
+#    on_outside_click_call=oac,
+#    **k
+#)) and (p,iw(
+#    parent=p,
+#    size=size
+#))
 
 # Global
 BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
 TIP = lambda t: push(t,Finder.COL3)
-
 
 
 button_delays_dict: Dict[str, dict[str, float]] = {}
@@ -7532,52 +7538,445 @@ def _rejoin_server():
         bui.getsound('error').play(1.5)
         screenmessage(msg, color=COLOR_SCREENCMD_ERROR)
 
+
 is_gather_window = None
 def new_close_gather_func():
     global is_gather_window
-    assert is_gather_window is not None
-    bui.containerwidget(
-        edit=is_gather_window._root_widget, transition=is_gather_window._main_window_transition_out
-    )
 
-    babase.apptimer(1, is_gather_window.get_root_widget().delete)
-    is_gather_window._save_state()
-    is_gather_window = None
-    print('Delete GatherWindow Root Widget Called')
-
-def _open_gather_window(close_window_func: Optional[Callable[[], None]] = None):
-    global is_gather_window
-    import bauiv1lib.gather
-    GatherWindow = bauiv1lib.gather.GatherWindow
-
-    if is_gather_window and is_gather_window.get_root_widget():
-        screenmessage(get_lang_text('gatherWindowStillOpen'), COLOR_SCREENCMD_ERROR)
-        #print('Gather Window Still Opened')
-        bui.getsound('error').play(1.5)
+    # Validate that the window still exists and has its root widget
+    if (
+        is_gather_window is None
+        or not hasattr(is_gather_window, "_root_widget")
+        or is_gather_window._root_widget is None
+    ):
+        print("[DEBUG] Warning: GatherWindow already destroyed or invalid.")
+        is_gather_window = None
         return
 
     try:
-        if is_gather_window:
-            is_gather_window.get_root_widget().delete()
+        # Close with transition if it still exists
+        bui.containerwidget(
+            edit=is_gather_window._root_widget,
+            transition=is_gather_window._main_window_transition_out
+        )
+
+        # Remove the root widget after a small delay
+        root_widget = is_gather_window.get_root_widget()
+        if root_widget is not None:
+            babase.apptimer(1.0, root_widget.delete)
+
+        # Save state if the method exists
+        if hasattr(is_gather_window, "_save_state"):
+            is_gather_window._save_state()
+
+        print("[DEBUG] Delete GatherWindow Root Widget Called")
+
     except Exception as e:
-        screenmessage(f"Error Deleting GatherWindow! {e}", COLOR_SCREENCMD_ERROR)
-        bui.getsound('error').play(1.5)
+        print(f"[DEBUG] Error while closing GatherWindow: {e}")
 
-    is_gather_window = GatherWindow('in_left', None)
-    bui.buttonwidget(
-        edit=is_gather_window._back_button,
-        on_activate_call=new_close_gather_func
-    )
+    # Clean up global reference to avoid memory leaks
+    is_gather_window = None
 
+class ModifiedGatherWindow(bui.MainWindow):
+    """Window for joining/inviting friends - MODIFIED VERSION."""
+
+    class TabID(Enum):
+        """Our available tab types."""
+        ABOUT = 'about'
+        INTERNET = 'internet'
+        PRIVATE = 'private'
+        NEARBY = 'nearby'
+        MANUAL = 'manual'
+
+    def __init__(
+        self,
+        transition: str | None = 'in_right',
+        origin_widget: bui.Widget | None = None,
+    ):
+        # pylint: disable=too-many-locals
+        # pylint: disable=cyclic-import
+        from bauiv1lib.gather.abouttab import AboutGatherTab
+        from bauiv1lib.gather.manualtab import ManualGatherTab
+        from bauiv1lib.gather.privatetab import PrivateGatherTab
+        from bauiv1lib.gather.publictab import PublicGatherTab
+        from bauiv1lib.gather.nearbytab import NearbyGatherTab
+
+        plus = bui.app.plus
+        assert plus is not None
+
+        bui.set_analytics_screen('Gather Window')
+        uiscale = bui.app.ui_v1.uiscale
+        self._width = (
+            1640
+            if uiscale is bui.UIScale.SMALL
+            else 1100 if uiscale is bui.UIScale.MEDIUM else 1200
+        )
+        self._height = (
+            1000
+            if uiscale is bui.UIScale.SMALL
+            else 730 if uiscale is bui.UIScale.MEDIUM else 900
+        )
+        self._current_tab: GatherWindow.TabID | None = None
+        self._r = 'gatherWindow'
+
+        # Do some fancy math to fill all available screen area up to the
+        # size of our backing container. This lets us fit to the exact
+        # screen shape at small ui scale.
+        screensize = bui.get_virtual_screen_size()
+        scale = (
+            1.4
+            if uiscale is bui.UIScale.SMALL
+            else 0.88 if uiscale is bui.UIScale.MEDIUM else 0.66
+        )
+        # Calc screen size in our local container space and clamp to a
+        # bit smaller than our container size.
+        target_width = min(self._width - 130, screensize[0] / scale)
+        target_height = min(self._height - 130, screensize[1] / scale)
+
+        # To get top/left coords, go to the center of our window and
+        # offset by half the width/height of our target area.
+        yoffs = 0.5 * self._height + 0.5 * target_height + 30.0
+
+        self._scroll_width = target_width
+        self._scroll_height = target_height - 65
+        self._scroll_bottom = yoffs - 93 - self._scroll_height
+        self._scroll_left = (self._width - self._scroll_width) * 0.5
+
+        # Llamar al constructor padre
+        super().__init__(
+            root_widget=bui.containerwidget(
+                size=(self._width, self._height),
+                toolbar_visibility=(
+                    'menu_tokens'
+                    if uiscale is bui.UIScale.SMALL
+                    else 'menu_full'
+                ),
+                scale=scale,
+            ),
+            transition=transition,
+            origin_widget=origin_widget,
+            # We're affected by screen size only at small ui-scale.
+            refresh_on_screen_size_changes=uiscale is bui.UIScale.SMALL,
+        )
+
+        self._back_button = None  # Clean original reference
+        
+        # Create our custom button
+        custom_back_pos = (70, yoffs - 43)
+        custom_back_size = (60, 60)
+        
+        self._custom_back_button = bui.buttonwidget(
+            parent=self._root_widget,
+            position=custom_back_pos,
+            size=custom_back_size,
+            scale=1.1,
+            autoselect=True,
+            label=bui.charstr(bui.SpecialChar.BACK),
+            button_type='backSmall',
+            on_activate_call=self._custom_main_window_back,
+            color=(1, 1, 1), 
+            textcolor=(0, 0, 0)
+        )
+        
+        # Set the custom button as a cancel button
+        bui.containerwidget(edit=self._root_widget, cancel_button=self._custom_back_button)
+        
+        # For uiscale SMALL, also set on_cancel_call
+        if uiscale is bui.UIScale.SMALL:
+            bui.containerwidget(
+                edit=self._root_widget, 
+                on_cancel_call=self._custom_main_window_back
+            )
+
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(
+                (
+                    self._width * 0.5
+                    + (
+                        (self._scroll_width * -0.5 + 170.0 - 70.0)
+                        if uiscale is bui.UIScale.SMALL
+                        else 0.0
+                    )
+                ),
+                yoffs - (64 if uiscale is bui.UIScale.SMALL else 4),
+            ),
+            size=(0, 0),
+            color=bui.app.ui_v1.title_color,
+            scale=1.3 if uiscale is bui.UIScale.SMALL else 1.0,
+            h_align='left' if uiscale is bui.UIScale.SMALL else 'center',
+            v_align='center',
+            text=(bui.Lstr(resource=f'{self._r}.titleText')),
+            maxwidth=135 if uiscale is bui.UIScale.SMALL else 320,
+        )
+
+        # Build up the set of tabs we want.
+        tabdefs: list[tuple[GatherWindow.TabID, bui.Lstr]] = [
+            (self.TabID.ABOUT, bui.Lstr(resource=f'{self._r}.aboutText'))
+        ]
+        if plus.get_v1_account_misc_read_val('enablePublicParties', True):
+            tabdefs.append(
+                (
+                    self.TabID.INTERNET,
+                    bui.Lstr(resource=f'{self._r}.publicText'),
+                )
+            )
+        tabdefs.append(
+            (self.TabID.PRIVATE, bui.Lstr(resource=f'{self._r}.privateText'))
+        )
+        tabdefs.append(
+            (self.TabID.NEARBY, bui.Lstr(resource=f'{self._r}.nearbyText'))
+        )
+        tabdefs.append(
+            (self.TabID.MANUAL, bui.Lstr(resource=f'{self._r}.manualText'))
+        )
+
+        tab_inset = 250.0 if uiscale is bui.UIScale.SMALL else 100.0
+
+        self._tab_row = TabRow(
+            self._root_widget,
+            tabdefs,
+            size=(self._scroll_width - 2.0 * tab_inset, 50),
+            pos=(
+                self._scroll_left + tab_inset,
+                self._scroll_bottom + self._scroll_height - 4.0,
+            ),
+            on_select_call=bui.WeakCall(self._set_tab),
+        )
+
+        # Now instantiate handlers for these tabs.
+        tabtypes: dict[GatherWindow.TabID, type[GatherTab]] = {
+            self.TabID.ABOUT: AboutGatherTab,
+            self.TabID.MANUAL: ManualGatherTab,
+            self.TabID.PRIVATE: PrivateGatherTab,
+            self.TabID.INTERNET: PublicGatherTab,
+            self.TabID.NEARBY: NearbyGatherTab,
+        }
+        self._tabs: dict[GatherWindow.TabID, GatherTab] = {}
+        for tab_id in self._tab_row.tabs:
+            tabtype = tabtypes.get(tab_id)
+            if tabtype is not None:
+                self._tabs[tab_id] = tabtype(self)
+
+        # Eww; tokens meter may or may not be here; should be smarter
+        # about this.
+        bui.widget(
+            edit=self._tab_row.tabs[tabdefs[-1][0]].button,
+            right_widget=bui.get_special_widget('tokens_meter'),
+        )
+        if uiscale is bui.UIScale.SMALL:
+            bui.widget(
+                edit=self._tab_row.tabs[tabdefs[0][0]].button,
+                left_widget=bui.get_special_widget('back_button'),
+                up_widget=bui.get_special_widget('back_button'),
+            )
+
+        # Not actually using a scroll widget anymore; just an image.
+        bui.imagewidget(
+            parent=self._root_widget,
+            size=(self._scroll_width, self._scroll_height),
+            position=(
+                self._width * 0.5 - self._scroll_width * 0.5,
+                self._scroll_bottom,
+            ),
+            texture=bui.gettexture('scrollWidget'),
+            mesh_transparent=bui.getmesh('softEdgeOutside'),
+            opacity=0.4,
+        )
+        self._tab_container: bui.Widget | None = None
+
+        self._restore_state()
+
+    def _custom_main_window_back(self) -> None:
+        "Our custom function to close the window."
+        
+        # Save state if necessary
+        if hasattr(self, "_save_state"):
+            self._save_state()
+            
+        # Close the window using the native transition
+        try:
+            bui.containerwidget(
+                edit=self._root_widget,
+                transition=self._main_window_transition_out
+            )
+            
+            # Schedule widget removal after a while
+            root_widget = self.get_root_widget()
+            if root_widget is not None:
+                bui.apptimer(0.5, root_widget.delete)
+                
+        except Exception as e:
+            #print(f"[DEBUG] Error during close: {e}")
+            # Fallback: try closing in another way
+            try:
+                self.main_window_back()
+            except:
+                pass
+
+    @override
+    def get_main_window_state(self) -> bui.MainWindowState:
+        # Support recreating our window for back/refresh purposes.
+        cls = type(self)
+        return bui.BasicMainWindowState(
+            create_call=lambda transition, origin_widget: cls(
+                transition=transition, origin_widget=origin_widget
+            )
+        )
+
+    @override
+    def on_main_window_close(self) -> None:
+        self._save_state()
+
+    def playlist_select(
+        self,
+        origin_widget: bui.Widget,
+        context: PlaylistSelectContext,
+    ) -> None:
+        """Called by the private-hosting tab to select a playlist."""
+        from bauiv1lib.play import PlayWindow
+
+        # Avoid redundant window spawns.
+        if not self.main_window_has_control():
+            return
+
+        playwindow = PlayWindow(
+            origin_widget=origin_widget, playlist_select_context=context
+        )
+        self.main_window_replace(playwindow)
+
+        # Grab the newly-set main-window's back-state; that will lead us
+        # back here once we're done going down our main-window
+        # rabbit-hole for playlist selection.
+        context.back_state = playwindow.main_window_back_state
+
+    def _set_tab(self, tab_id: TabID) -> None:
+        if self._current_tab is tab_id:
+            return
+        prev_tab_id = self._current_tab
+        self._current_tab = tab_id
+
+        # We wanna preserve our current tab between runs.
+        cfg = bui.app.config
+        cfg['Gather Tab'] = tab_id.value
+        cfg.commit()
+
+        # Update tab colors based on which is selected.
+        self._tab_row.update_appearance(tab_id)
+
+        if prev_tab_id is not None:
+            prev_tab = self._tabs.get(prev_tab_id)
+            if prev_tab is not None:
+                prev_tab.on_deactivate()
+
+        # Clear up prev container if it hasn't been done.
+        if self._tab_container:
+            self._tab_container.delete()
+
+        tab = self._tabs.get(tab_id)
+        if tab is not None:
+            self._tab_container = tab.on_activate(
+                self._root_widget,
+                self._tab_row.tabs[tab_id].button,
+                self._scroll_width,
+                self._scroll_height,
+                self._scroll_left,
+                self._scroll_bottom,
+            )
+            return
+
+    def _save_state(self) -> None:
+        try:
+            for tab in self._tabs.values():
+                tab.save_state()
+
+            sel = self._root_widget.get_selected_child()
+            selected_tab_ids = [
+                tab_id
+                for tab_id, tab in self._tab_row.tabs.items()
+                if sel == tab.button
+            ]
+            if sel == self._custom_back_button:
+                sel_name = 'Back'
+            elif selected_tab_ids:
+                assert len(selected_tab_ids) == 1
+                sel_name = f'Tab:{selected_tab_ids[0].value}'
+            elif sel == self._tab_container:
+                sel_name = 'TabContainer'
+            else:
+                raise ValueError(f'unrecognized selection: \'{sel}\'')
+            assert bui.app.classic is not None
+            bui.app.ui_v1.window_states[type(self)] = {
+                'sel_name': sel_name,
+            }
+        except Exception:
+            logging.exception('Error saving state for %s.', self)
+
+    def _restore_state(self) -> None:
+        try:
+            for tab in self._tabs.values():
+                tab.restore_state()
+
+            sel: bui.Widget | None
+            assert bui.app.classic is not None
+            winstate = bui.app.ui_v1.window_states.get(type(self), {})
+            sel_name = winstate.get('sel_name', None)
+            assert isinstance(sel_name, (str, type(None)))
+            current_tab = self.TabID.ABOUT
+            gather_tab_val = bui.app.config.get('Gather Tab')
+            try:
+                stored_tab = self.TabID(gather_tab_val)
+                if stored_tab in self._tab_row.tabs:
+                    current_tab = stored_tab
+            except ValueError:
+                pass
+            self._set_tab(current_tab)
+            if sel_name == 'Back':
+                sel = self._custom_back_button
+            elif sel_name == 'TabContainer':
+                sel = self._tab_container
+            elif isinstance(sel_name, str) and sel_name.startswith('Tab:'):
+                try:
+                    sel_tab_id = self.TabID(sel_name.split(':')[-1])
+                except ValueError:
+                    sel_tab_id = self.TabID.ABOUT
+                sel = self._tab_row.tabs[sel_tab_id].button
+            else:
+                sel = self._tab_row.tabs[current_tab].button
+            bui.containerwidget(edit=self._root_widget, selected_child=sel)
+
+        except Exception:
+            logging.exception('Error restoring state for %s.', self)
+
+
+def _open_gather_window(close_window_func: Optional[Callable[[], None]] = None):
+    global is_gather_window
+
+    # Avoid duplicates
+    if is_gather_window and is_gather_window.get_root_widget():
+        try:
+            # If it already exists, close it first
+            is_gather_window.main_window_back()
+        except:
+            pass
+        is_gather_window = None
+
+    # Create new modified window
+    is_gather_window = ModifiedGatherWindow('in_left', None)
+
+    # Close previous window if provided
     if close_window_func:
         close_window_func()
+
     bui.getsound('dingSmallHigh').play(1.5)
 
 def _get_popup_window_scale() -> float:
     uiscale = bui.app.ui_v1.uiscale
-    return (1.6 if uiscale is babase.UIScale.SMALL else
-            1.325 if uiscale is babase.UIScale.MEDIUM else
-            1.05)
+    return (
+        1.6 if uiscale is babase.UIScale.SMALL
+        else 1.325 if uiscale is babase.UIScale.MEDIUM
+        else 1.05
+    )
 
 ping_server_delay = 6
 def ping_server_recall():
@@ -8370,9 +8769,6 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             choices_display=_create_baLstr_list(choices_display),
             current_choice=choices_key[0],
             delegate=self)
-
-    def _aa(self):
-        Finder(self._search_button)
 
     def _update(self, force: bool = False) -> None:
         if self._firstcall:
