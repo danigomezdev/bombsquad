@@ -1,12 +1,7 @@
 # ba_meta require api 9
+# ba_meta description A mod that allows you to easily install, update and delete multiple mods in the remote repository
+# ba_meta version 1.1.2
 # ba_meta nomod
-
-import babase
-import _babase
-import bauiv1 as bui
-from bauiv1lib import popup, confirm
-from babase._meta import EXPORT_CLASS_NAME_SHORTCUTS
-from bauiv1lib.settings.allsettings import AllSettingsWindow
 
 import urllib.request
 import http.client
@@ -23,12 +18,19 @@ import contextlib
 from typing import override
 from datetime import datetime
 import logging
-from random import choice
 
-MOD_MANAGER_VERSION = "1.0.0"
-MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/mods/data.json"
-CURRENT_TAG = "mods"
-REPOSITORY_URL = "https://github.com/danigomezdev/bombsquad/tree/mods"
+import babase
+import _babase
+import bauiv1 as bui
+from bauiv1lib import popup, confirm
+from bauiv1lib.settings.allsettings import AllSettingsWindow
+
+
+
+MOD_MANAGER_VERSION = "1.1.2"
+REPOSITORY_URL = "https://github.com/danigomezdev/bombsquad/tree/modmanager"
+MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/data.json"
+CURRENT_TAG = "modmanager"
 
 _env = _babase.env()
 _app_api_version = babase.app.env.api_version
@@ -40,7 +42,7 @@ PLUGIN_DIRECTORY = _env["python_directory_user"]
 loop = babase._asyncio._asyncio_event_loop
 
 open_popups = []
-BUTTONS_COLOR = (0.23, 0.23, 0.23)
+MAIN_COLOR = (0.23, 0.23, 0.23)
 
 def _add_popup(popup): open_popups.append(popup)
 
@@ -51,20 +53,6 @@ def _remove_popup(popup):
         pass
 
 def _uiscale(): return bui.app.ui_v1.uiscale
-
-def _regexp_friendly_class_name_shortcut(string): return string.replace(".", "\\.")
-
-REGEXP = {
-    "plugin_api_version": re.compile(b"(?<=ba_meta require api )(.*)"),
-    "plugin_entry_points": re.compile(
-        bytes(
-            "(ba_meta export (plugin|{})\n+class )(.*)\\(".format(
-                _regexp_friendly_class_name_shortcut(EXPORT_CLASS_NAME_SHORTCUTS["plugin"]),
-            ),
-            "utf-8"
-        ),
-    )
-}
 
 DISCORD_URL = "https://discord.gg/q5GdnP85Ky"
 _CACHE = {}
@@ -420,6 +408,7 @@ class Category:
                                 "description": mod_data["description"],
                                 "authors": [{"name": mod_data.get("author", "Community")}],
                                 "external_url": mod_data.get("url_mod", ""),
+                                "readme_url": mod_data.get("url_readme", ""),
                                 "versions": {
                                     mod_data.get("version", "1.0.0"): {
                                         "api_version": mod_data["api_version"],
@@ -1349,14 +1338,16 @@ class ModWindow(popup.PopupWindow):
         )
 
         # Below snippet handles the tutorial button in the plugin window
-        tutorial_url = self.plugin.info["external_url"]
+        tutorial_url = self.plugin.info.get("readme_url")
         if tutorial_url:
+            
             def tutorial_confirm_window():
-                text = "This will take you to \n\""+self.plugin.info["external_url"] + "\""
-                tutorial_confirm_window = confirm.ConfirmWindow(
-                    text=text,
-                    action=lambda: bui.open_url(self.plugin.info["external_url"]),
-                )
+                bui.open_url(tutorial_url)
+                #text = "This will take you to the mod's documentation\n\"" + tutorial_url + "\""
+                #tutorial_confirm_window = confirm.ConfirmWindow(
+                #    text=text,
+                #    action=lambda: bui.open_url(tutorial_url),
+                #)
             open_pos_x = (440 if _uiscale() is babase.UIScale.SMALL else
                           500 if _uiscale() is babase.UIScale.MEDIUM else 490)
             open_pos_y = (100 if _uiscale() is babase.UIScale.SMALL else
@@ -1383,7 +1374,7 @@ class ModWindow(popup.PopupWindow):
             bui.textwidget(
                 parent=self._root_widget,
                 position=(open_pos_x + 13, open_pos_y + 12),
-                text="Tutorial",
+                text="Readme",
                 size=(10, 10),
                 draw_controller=open_button,
                 color=(1, 1, 1, 1),
@@ -1692,10 +1683,10 @@ class PluginCategoryWindow(popup.PopupMenuWindow):
                    1.65 if _uiscale() is babase.UIScale.MEDIUM else 1.23),
             choices=choices,
             current_choice=current_choice,
-            delegate=self,
-            color=BUTTONS_COLOR
+            delegate=self
         )
         self._root_widget = self.root_widget
+        bui.containerwidget(edit=self.root_widget, color=MAIN_COLOR)
         _add_popup(self)
         #self._update_custom_sources_widget()
 
@@ -1975,7 +1966,7 @@ class ModManagerWindow(bui.MainWindow):
                 button_type="square",
                 textcolor=b_textcolor,
                 text_scale=0.6,
-                color=BUTTONS_COLOR
+                color=MAIN_COLOR
             )
         else:
             b = self.alphabet_order_selection_button
@@ -1995,7 +1986,7 @@ class ModManagerWindow(bui.MainWindow):
                 button_type="square",
                 textcolor=b_textcolor,
                 text_scale=0.6,
-                color=BUTTONS_COLOR
+                color=MAIN_COLOR
             )
             bui.buttonwidget(
                 edit=b, on_activate_call=lambda: self.show_categories_window(source=b)),
@@ -2101,7 +2092,7 @@ class ModManagerWindow(bui.MainWindow):
                 self.plugin_manager,
                 controller_button,
             ),
-            color=BUTTONS_COLOR
+            color=MAIN_COLOR
         )
         bui.imagewidget(
             parent=self._root_widget,
@@ -2125,7 +2116,7 @@ class ModManagerWindow(bui.MainWindow):
             button_type="square",
             label="",
             on_activate_call=lambda: loop.create_task(self.refresh()),
-            color=BUTTONS_COLOR
+            color=MAIN_COLOR
         )
         bui.imagewidget(
             parent=self._root_widget,
@@ -2480,7 +2471,7 @@ class ModManagerSettingsWindow(popup.PopupWindow):
             scale=(2.1 if _uiscale() is babase.UIScale.SMALL else 1.5
                    if _uiscale() is babase.UIScale.MEDIUM else 1.0),
             scale_origin_stack_offset=self.scale_origin,
-            color=BUTTONS_COLOR
+            color=MAIN_COLOR
         )
         _add_popup(self)
         pos = height * 0.9
@@ -2524,7 +2515,7 @@ class ModManagerSettingsWindow(popup.PopupWindow):
                 maxwidth=500,
                 textcolor=(0.9, 0.9, 0.9),
                 scale=text_scale * 0.8,
-                color=BUTTONS_COLOR
+                color=MAIN_COLOR
             )
             pos -= 34 * text_scale
 
@@ -2675,7 +2666,7 @@ class ModManagerSettingsWindow(popup.PopupWindow):
             edit=self._save_button,
             scale=0 if check else 1,
             selectable=(not check),
-            color=BUTTONS_COLOR
+            color=MAIN_COLOR
         )
 
     def save_settings_button(self):

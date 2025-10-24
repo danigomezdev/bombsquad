@@ -1,15 +1,15 @@
 [
     {
-        "name": "IceMan",
+        "name": "Ice Man",
         "file_name": "IceMan.py",
         "path": "IceMan/IceMan.py",
         "api_version": 9,
-        "version": "1.0.0",
+        "version": "1.1.2",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/mods/IceMan/IceMan.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/mods/IceMan/IceMan.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/IceMan/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/IceMan/README.md",
-        "description": "No description available"
+        "description": "A mod that provides your character with ice abilities, special effects, and more"
     }
 ,
     {
