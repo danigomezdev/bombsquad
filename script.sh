@@ -192,8 +192,8 @@ generate_mod_data() {
             local version=$(extract_version "$file")
             
             # Generate mod URLs
-            local url_mod="${REPO}/blob/mods/${relative_path}"
-            local url_raw_mod="${REPO}/raw/mods/${relative_path}"
+            local url_mod="${REPO}/blob/modmanager/${relative_path}"
+            local url_raw_mod="${REPO}/raw/modmanager/${relative_path}"
             
             # Generate README URLs if README exists
             read -r url_readme url_raw_readme <<< "$(get_readme_urls "$file")"
