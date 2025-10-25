@@ -1,6 +1,6 @@
 # ba_meta require api 9
 # ba_meta description A mod that allows you to easily install, update and delete multiple mods in the remote repository
-# ba_meta version 1.1.2
+# ba_meta version 1.1.3
 # ba_meta nomod
 
 import urllib.request
@@ -26,8 +26,8 @@ from bauiv1lib import popup, confirm
 from bauiv1lib.settings.allsettings import AllSettingsWindow
 
 
-
-MOD_MANAGER_VERSION = "1.1.2"
+MOD_MANAGER_VERSION = "1.1.3"
+MOD_MANAGER_MOD = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/ModManager.py"
 REPOSITORY_URL = "https://github.com/danigomezdev/bombsquad/tree/modmanager"
 MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/data.json"
 CURRENT_TAG = "modmanager"
@@ -125,6 +125,126 @@ async def async_stream_network_response_to_file(request, file, md5sum=None, retr
     )
     return content
 
+async def check_for_update():
+    """
+    Checks if a new version of the Mod Manager is available.
+    Returns a dictionary with information about the update.
+    """
+    try:
+        #print("DEBUG: Checking for update...")
+        
+        # Create request for the mod manager file
+        request = urllib.request.Request(
+            MOD_MANAGER_MOD,
+            headers=HEADERS,
+        )
+        
+        # Download the contents of the remote file
+        response = await async_send_network_request(request)
+        remote_content = response.read().decode('utf-8')
+        
+        # Find version in content using regex
+        version_pattern = r'#\s*ba_meta\s+version\s+([\d.]+)'
+        version_match = re.search(version_pattern, remote_content)
+        
+        if not version_match:
+            #print("DEBUG: Version not found in remote file")
+            return {
+                'update_available': False,
+                'current_version': MOD_MANAGER_VERSION,
+                'remote_version': None
+            }
+            
+        remote_version = version_match.group(1)
+        current_version = MOD_MANAGER_VERSION
+        
+        #print(f"DEBUG: Local version: {current_version}, Remote version: {remote_version}")
+        
+        # Compare versions
+        if remote_version != current_version:
+            #print(f"DEBUG: New version available: {remote_version}")
+            return {
+                'update_available': True,
+                'current_version': current_version,
+                'remote_version': remote_version
+            }
+        else:
+            #print("DEBUG: The Mod Manager is updated")
+            return {
+                'update_available': False,
+                'current_version': current_version,
+                'remote_version': remote_version
+            }
+            
+    except Exception as e:
+        #print(f"DEBUG: Error checking for update: {e}")
+        return {
+            'update_available': False,
+            'current_version': MOD_MANAGER_VERSION,
+            'remote_version': None
+        }
+
+async def update_mod_manager(current_version, remote_version):
+    """
+    Download and update Mod Manager to the latest version.
+    Display messages to the user during the process.
+    """
+    global MOD_MANAGER_VERSION  
+    
+    try:
+        # Show startup message
+        bui.screenmessage(f"Actualizando Mod Manager a v{remote_version}", color=(0, 1, 0))
+        
+        # Download the remote file
+        request = urllib.request.Request(
+            MOD_MANAGER_MOD,
+            headers=HEADERS,
+        )
+        
+        response = await async_send_network_request(request)
+        remote_content = response.read().decode('utf-8')
+        
+        # Get the current mod manager file path
+        current_file_path = sys.modules[__name__].__file__
+        
+        # Write the new content
+        with open(current_file_path, 'w', encoding='utf-8') as f:
+            f.write(remote_content)
+        
+        # Success message
+        bui.screenmessage("¡Mod Manager actualizado! Reinicia el juego.", color=(0, 1, 0))
+        bui.getsound('shieldUp').play()
+        #print(f"DEBUG: Mod Manager updated from {current_version} to {remote_version}")
+        MOD_MANAGER_VERSION = str(remote_version)
+        return True
+        
+    except Exception as e:
+        # Error message
+        #print(f"DEBUG: Error during update: {e}")
+        bui.screenmessage("Error al actualizar Mod Manager", color=(1, 0, 0))
+        bui.getsound('error').play()
+        return False
+
+async def auto_update_mod_manager():
+    """
+    Automatically checks if a new version of Mod Manager is available
+    and updates it if necessary.
+    """
+    
+    if not babase.app.config["Mod Manager"]["Settings"]["Actualizar automáticamente Mod Manager"]:
+        return
+    
+    # Check if an update is available
+    update_info = await check_for_update()
+    
+    #print(f"Current version: {update_info['current_version']}")
+    #if update_info['remote_version']:
+    #    print(f"Remote version: {update_info['remote_version']}")
+    
+    if not update_info['update_available']:
+        return
+    
+    await update_mod_manager(update_info['current_version'], update_info['remote_version'])
 
 def partial_format(string_template, **kwargs):
     for key, value in kwargs.items():
@@ -357,6 +477,8 @@ class StartupTasks:
     async def execute(self):
         self.setup_config()
         try:
+            await auto_update_mod_manager()
+
             await asyncio.gather(
                 self.update_plugin_manager(),
                 self.update_plugins(),
@@ -2447,6 +2569,21 @@ class ModManagerSettingsWindow(popup.PopupWindow):
 
         loop.create_task(self.draw_ui())
 
+
+    async def perform_update(self, current_version, remote_version):
+        # Call update_mod_manager which now handles all messages
+        success = await update_mod_manager(current_version, remote_version)
+
+        if success:
+            # Refresh the interface after successful update
+            bui.textwidget(
+                edit=self._restart_to_reload_changes_text,
+                text='¡Actualizado!\nReinicia el juego.'
+            )
+            # Hide the refresh button
+            if hasattr(self, '_update_button') and self._update_button.exists():
+                self._update_button.delete()
+
     async def draw_ui(self):
         b_text_color = (0.8, 0.8, 0.85)
         s = 1.25 if _uiscale() is babase.UIScale.SMALL else 1.27 if _uiscale() is babase.UIScale.MEDIUM else 1.3
@@ -2489,10 +2626,10 @@ class ModManagerSettingsWindow(popup.PopupWindow):
         )
 
         pos -= 20
-        
+        save_button_y = pos
         self._save_button = bui.buttonwidget(
             parent=self._root_widget,
-            position=((width * 0.82) - button_size[0] / 2, pos),
+            position=((width * 0.82) - button_size[0] / 2, save_button_y),
             size=(73, 35),
             on_activate_call=self.save_settings_button,
             textcolor=b_text_color,
@@ -2596,19 +2733,23 @@ class ModManagerSettingsWindow(popup.PopupWindow):
         )
 
         try:
-            plugin_manager_update_available = await self._plugin_manager.get_update_details()
+            # Verificar si hay actualización disponible usando nuestra función
+            update_info = await check_for_update()
+            plugin_manager_update_available = update_info['update_available']
+            remote_version = update_info['remote_version']
         except urllib.error.URLError:
             plugin_manager_update_available = False
-        if plugin_manager_update_available:
+            remote_version = None
+
+        if plugin_manager_update_available and remote_version:
             text_color = (0.75, 0.2, 0.2)
             button_size = (95 * s, 32 * s)
-            update_button_label = f'Update to {plugin_manager_update_available[0]}'
+            update_button_label = f'Actualizar a v{remote_version}'
             self._update_button = bui.buttonwidget(
                 parent=self._root_widget,
-                position=((width * 0.77) - button_size[0] / 2, pos),
+                position=((width * 0.2) - button_size[0] / 2, save_button_y),
                 size=button_size,
-                on_activate_call=lambda: loop.create_task(
-                    self.update(*plugin_manager_update_available)),
+                on_activate_call=lambda: loop.create_task(self.perform_update(update_info['current_version'], update_info['remote_version'])),
                 textcolor=b_text_color,
                 button_type='square',
                 text_scale=1,
@@ -2617,7 +2758,7 @@ class ModManagerSettingsWindow(popup.PopupWindow):
             )
             self._restart_to_reload_changes_text = bui.textwidget(
                 parent=self._root_widget,
-                position=(width * 0.79, pos + 20),
+                position=((width * 0.4) - button_size[0] / 2, save_button_y+10),
                 size=(0, 0),
                 h_align='center',
                 v_align='center',
@@ -2629,33 +2770,33 @@ class ModManagerSettingsWindow(popup.PopupWindow):
         else:
             text_color = (0, 0.8, 0)
         
-        pos -= 25
+        pos -= 45
         
-        #bui.textwidget(
-        #    parent=self._root_widget,
-        #    position=(width * 0.49, pos),
-        #    size=(0, 0),
-        #    h_align='center',
-        #    v_align='center',
-        #    text=f'Mod Manager v{MOD_MANAGER_VERSION}',
-        #    scale=text_scale * 0.8,
-        #    color=text_color,
-        #    maxwidth=width * 0.9
-        #)
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(width * 0.49, pos),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text=f'Mod Manager v{MOD_MANAGER_VERSION}',
+            scale=text_scale * 0.6,
+            color=text_color,
+            maxwidth=width * 0.95
+        )
         
-        pos -= 25
+        pos -= 15
         
-        #bui.textwidget(
-        #    parent=self._root_widget,
-        #    position=(width * 0.49, pos),
-        #    size=(0, 0),
-        #    h_align='center',
-        #    v_align='center',
-        #    text=f'API Version: {_app_api_version}',
-        #    scale=text_scale * 0.7,
-        #    color=(0.4, 0.8, 1),
-        #    maxwidth=width * 0.95
-        #)
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(width * 0.49, pos),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text=f'API Version: {_app_api_version}',
+            scale=text_scale * 0.5,
+            color=(0.4, 0.8, 1),
+            maxwidth=width * 0.95
+        )
 
         pos = height * 0.1
 
@@ -2674,21 +2815,6 @@ class ModManagerSettingsWindow(popup.PopupWindow):
         babase.app.config.commit()
         self._ok()
         bui.getsound('gunCocking').play()
-
-    async def update(self, to_version=None, commit_sha=None):
-        try:
-            await self._plugin_manager.update(to_version, commit_sha)
-        except MD5CheckSumFailed:
-            bui.screenmessage("MD5 checksum failed during plugin manager update", color=(1, 0, 0))
-            bui.getsound('error').play()
-        else:
-            bui.screenmessage("Plugin manager update successful", color=(0, 1, 0))
-            bui.getsound('shieldUp').play()
-            bui.textwidget(
-                edit=self._restart_to_reload_changes_text,
-                text='Update Applied!\nRestart game to reload changes.'
-            )
-            self._update_button.delete()
 
     def _ok(self) -> None:
         bui.getsound('swish').play()
