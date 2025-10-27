@@ -1,4 +1,44 @@
 # ba_meta require api 9
+# ba_meta name Ultra Server Finder
+# ba_meta description A mod that allows you to do a full search for players on all game servers
+# ba_meta version 1.1.4
+
+from __future__ import annotations
+import re
+import os
+import sys
+import json
+import time
+import math
+import glob
+import shutil
+import socket
+import random
+import base64
+import string
+import weakref
+import traceback
+import http.client
+import urllib.request, urllib.error, urllib.parse
+#from html.parser import HTMLParser
+from datetime import datetime
+from threading import Thread
+import logging
+import babase
+import bauiv1 as bui
+import bascenev1 as bs
+from babase._general import Call
+from babase._mgen.enums import SpecialChar, UIScale
+
+import _babase # type: ignore
+
+import bauiv1lib.party # Our Party Window Package
+from bauiv1lib.confirm import ConfirmWindow
+from bauiv1lib.colorpicker import ColorPickerExact
+from bauiv1lib.account.viewer import AccountViewerWindow
+import bauiv1lib.popup as popup
+from bauiv1lib.popup import PopupMenuWindow, PopupWindow, PopupMenu
+
 
 from json import (
     dumps,
@@ -8,7 +48,7 @@ from json import (
     load
 )
 from threading import Thread
-from time import time, sleep
+import time
 from bascenev1 import (
     connect_to_party as CON,
     protocol_version as PT
@@ -44,12 +84,20 @@ from random import (
     choice as CH,
     randint
 )
-from socket import (
-    SOCK_DGRAM,
-    socket
-)
+
 import _babase
 import os
+
+from bauiv1lib.tabs import TabRow
+from enum import Enum
+
+from baenv import TARGET_BALLISTICA_BUILD as build_number
+from typing import TYPE_CHECKING, override
+
+if TYPE_CHECKING:
+    from typing import Any, Sequence, List, Optional, Dict, Tuple, Callable, Literal
+    from bauiv1lib.play import PlaylistSelectContex
+
 
 my_directory = _babase.env()['python_directory_user'] + "/UltraServerFinder"
 best_friends_file = os.path.join(my_directory, "BestFriends.txt")
@@ -102,7 +150,8 @@ class Finder:
 
     def __init__(s,src):
         config = load_config()
-        s.friends_open = config.get("friends_open", False)
+        #s.friends_open = config.get("friends_open", False)
+        s.friends_open = True
 
         s.thr = []
         s.ikids = []
@@ -179,9 +228,9 @@ class Finder:
             button_type='square',
             label='',
             color=s.COL1,
-            oac=lambda:(
-                s._toggleFriendsWindow()
-            )
+            #oac=lambda:(
+            #    s._toggleFriendsWindow()
+            #)
         )
         
         iw(
@@ -892,6 +941,7 @@ class Finder:
     def color_picker_closing(s, picker):
         s.bye()
         teck(0.25, byLess.up)
+        
 
     def on_popup_cancel(s):
         pass
@@ -942,6 +992,10 @@ class Finder:
         l = s.snd('laser')
         f = lambda: teck(0.01,f) if c.root else l.stop()
         f()
+
+    def open(s):
+        c = s.__class__
+        ocw(c.root, transition='in_scale')
     
     def ding(s,*z):
         a = ['Small','']
@@ -956,7 +1010,7 @@ class Finder:
             s.ding(0,0)
             return
         TIP('¡Escaneando servidores!\nEsto debería tardar unos segundos.\nPuedes cerrar esta ventana.')
-        c.ST = time()
+        c.ST = time.time()
         s.ding(1,0)
         c.BUSY = True
         p = app.plus
@@ -1067,7 +1121,7 @@ class Finder:
         c = s.__class__
         c.ART[i] = (
             cs(sc.OUYA_BUTTON_A) if p==999 else
-            cs(sc.OUYA_BUTTON_O) if p<100 else
+            cs(sc.OUYA_BUTTON_O) if (p is not None and p < 100) else
             cs(sc.OUYA_BUTTON_Y)
         )
         s.draw() if c.ARTT.exists() else None
@@ -1112,7 +1166,7 @@ class Finder:
         [_.join() for _ in s.thr]
         s.thr.clear()
         c = s.__class__
-        tt = time() - c.ST
+        tt = time.time() - c.ST
         ln = len(s.MEM)
         ab = int(ln/tt)
         TIP(f'¡Terminado!\nEscaneados {ln} servidores en {round(tt,2)} segundos!\nAproximadamente {ab} servidor{["es",""][ab<2]}/seg')
@@ -1147,11 +1201,11 @@ def ping_and_kang(
     """
     ping_result = None
     roster_result = None
-    sock = socket(IPT(address),SOCK_DGRAM)
+    sock = socket.socket(IPT(address),socket.SOCK_DGRAM)
     sock.settimeout(timeout)
 
     try:
-        ping_start_time = time()
+        ping_start_time = time.time()
         ping_success = False
         for _ in range(3):
             try:
@@ -1162,9 +1216,9 @@ def ping_and_kang(
                     ping_success = True
                     break
             except: break
-            sleep(ping_wait)
+            time.sleep(ping_wait)
         if ping_success:
-            ping_result = (time() - ping_start_time) * 1000
+            ping_result = (time.time() - ping_start_time) * 1000
         else:
             pro.append((dex,999))
             return (999,[])
@@ -1198,8 +1252,8 @@ def ping_and_kang(
         BA_MESSAGE_PARTY_ROSTER = 0x09
         roster_parts = bytearray()
         collecting_roster = False
-        roster_listen_start_time = time()
-        while time() - roster_listen_start_time < (timeout / 2): # Use part of the total timeout
+        roster_listen_start_time = time.time()
+        while time.time() - roster_listen_start_time < (timeout / 2): # Use part of the total timeout
             packet = g(2048) # Increased buffer size for safety
 
             if not packet or len(packet) < 9: continue
@@ -1241,26 +1295,6 @@ bw = lambda *,oac=None,**k: obw(
     enable_sound=False,
     **k
 )
-#cw = lambda *,size=None,oac=None,**k: (p:=ocw(
-#    parent=zw('overlay_stack'),
-#    background=False,
-#    transition='in_scale',
-#    size=size,
-#    on_outside_click_call=oac,
-#    **k
-#)) and (p,iw(
-#    parent=p,
-#    texture=gt('softRect'),
-#    size=(size[0]*1.2,size[1]*1.2),
-#    position=(-size[0]*0.1,-size[1]*0.1),
-#    opacity=0.55,
-#    color=(0,0,0)
-#),iw(
-#    parent=p,
-#    size=size
-#))
-
-
 cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     parent=zw('overlay_stack'),
     background=False,
@@ -1270,12 +1304,32 @@ cw = lambda *,size=None,oac=None,**k: (p:=ocw(
     **k
 )) and (p,iw(
     parent=p,
+    texture=gt('softRect'),
+    size=(size[0]*1.2,size[1]*1.2),
+    position=(-size[0]*0.1,-size[1]*0.1),
+    opacity=0.55,
+    color=(0,0,0)
+),iw(
+    parent=p,
     size=size
 ))
+
+
+#cw = lambda *,size=None,oac=None,**k: (p:=ocw(
+#    parent=zw('overlay_stack'),
+#    background=False,
+#    transition='in_scale',
+#    size=size,
+#    on_outside_click_call=oac,
+#    **k
+#)) and (p,iw(
+#    parent=p,
+#    size=size
+#))
+
 # Global
 BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
 TIP = lambda t: push(t,Finder.COL3)
-
 
 # ba_meta export babase.Plugin
 class byLess(Plugin):
@@ -1307,6 +1361,7 @@ class byLess(Plugin):
         s.b = s.__class__.BTN = bw(
             parent=p,
             position=(x,y),
+            #position=(-120,200),
             label='Buscar',
             color=Finder.COL1,
             textcolor=Finder.COL3,

@@ -1,4 +1,5 @@
 # ba_meta require api 9
+# ba_meta nomod
 
 from __future__ import annotations
 from typing import Callable, TypeVar
@@ -17,6 +18,7 @@ only_empty = False
 ClassType = TypeVar('ClassType')
 MethodType = TypeVar('MethodType')
 
+
 def override(cls: ClassType) -> Callable[[MethodType], MethodType]:
     def decorator(new_method: MethodType) -> MethodType:
         method_name = new_method.__code__.co_name
@@ -26,16 +28,18 @@ def override(cls: ClassType) -> Callable[[MethodType], MethodType]:
         return new_method
     return decorator
 
+# Enhanced Gather Tab
+
+
 class EnhancedPublicGatherTab(PublicGatherTab):
     @override(PublicGatherTab)
     def _build_join_tab(self, width: float, height: float) -> None:
         self._original__build_join_tab(width, height)
         self._open_window_button = bui.buttonwidget(
             parent=self._container,
-            label='Filtros',
+            label='Party Filters',
             size=(120, 45),
             position=(110, height - 115),
-            color=(0.6, 0.6, 0.6),
             on_activate_call=bs.WeakCall(self._open_window))
 
     @override(PublicGatherTab)
@@ -57,7 +61,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
             size=(0, 0),
             h_align='center',
             v_align='center',
-            text='Menú de filtros',
+            text='Party Filters Menu',
             scale=1.5,
             color=(1, 1, 0.7),
             maxwidth=c_width * 0.8,
@@ -76,7 +80,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
         v = c_height - 175
         bui.checkboxwidget(
             parent=self.window_root,
-            text='Lista de partidas congeladas',
+            text='Freeze Party List',
             position=(c_height // 2, v),
             size=(200, 30),
             color=(0.6, 0.6, 0.6),
@@ -88,7 +92,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
         v -= v_
         bui.checkboxwidget(
             parent=self.window_root,
-            text='Ocultar partidas completas',
+            text='Hide Full Parties',
             position=(c_height // 2, v),
             size=(200, 30),
             autoselect=True,
@@ -100,7 +104,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
         v -= v_
         self._empty_checkbox = bui.checkboxwidget(
             parent=self.window_root,
-            text='Ocultar partidas vacias',
+            text='Hide Empty Parties',
             position=(c_height // 2, v),
             size=(200, 30),
             autoselect=True,
@@ -112,7 +116,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
         v -= v_
         self._only_empty_checkbox = bui.checkboxwidget(
             parent=self.window_root,
-            text='Solo partidas vacias',
+            text='Only Empty Parties',
             position=(c_height // 2, v),
             size=(200, 30),
             autoselect=True,
@@ -178,6 +182,6 @@ class EnhancedPublicGatherTab(PublicGatherTab):
 
 
 # ba_meta export babase.Plugin
-class ByYelllow(babase.Plugin):
+class ByLess(babase.Plugin):
     def on_app_running(self) -> None:
         pass  # Bruh

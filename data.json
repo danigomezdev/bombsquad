@@ -169,16 +169,16 @@
     }
 ,
     {
-        "name": "UltraServerFinder",
+        "name": "Ultra Server Finder",
         "file_name": "UltraServerFinder.py",
         "path": "UltraServerFinder/UltraServerFinder.py",
         "api_version": 9,
-        "version": "1.0.0",
+        "version": "1.1.4",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraServerFinder/UltraServerFinder.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraServerFinder/UltraServerFinder.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraServerFinder/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraServerFinder/README.md",
-        "description": "No description available"
+        "description": "A mod that allows you to do a full search for players on all game servers"
     }
 ,
     {
@@ -192,19 +192,6 @@
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/LessPartyWindow/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/LessPartyWindow/README.md",
         "description": "A mod that makes scaled modifications to the PartyWindow, giving multiple options for use in-game"
-    }
-,
-    {
-        "name": "PartyFilter",
-        "file_name": "PartyFilter.py",
-        "path": "PartyFilter/PartyFilter.py",
-        "api_version": 9,
-        "version": "1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PartyFilter/PartyFilter.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/PartyFilter/PartyFilter.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PartyFilter/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/PartyFilter/README.md",
-        "description": "No description available"
     }
 ,
     {
