@@ -1,4 +1,7 @@
 # ba_meta require api 9
+# ba_meta name Polish
+# ba_meta description A mod that allows you to create user interfaces in an easier way
+# ba_meta version 1.1.2
 
 from babase import (
     clipboard_set_text as COPY,

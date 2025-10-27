@@ -56,12 +56,12 @@
         "file_name": "Polish.py",
         "path": "Polish/Polish.py",
         "api_version": 9,
-        "version": "1.0.0",
+        "version": "1.1.2",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Polish/Polish.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Polish/Polish.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Polish/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Polish/README.md",
-        "description": "No description available"
+        "description": "A mod that allows you to create user interfaces in an easier way"
     }
 ,
     {
@@ -127,19 +127,6 @@
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/StoreEventSpecial/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/StoreEventSpecial/README.md",
         "description": "A mod that allows you to buy special characters that are unlocked only in specific seasons of the year or exclusive"
-    }
-,
-    {
-        "name": "FileShare",
-        "file_name": "FileShare.py",
-        "path": "FileShare/FileShare.py",
-        "api_version": 9,
-        "version": "1.0.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/FileShare/FileShare.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/FileShare/FileShare.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/FileShare/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/FileShare/README.md",
-        "description": "No description available"
     }
 ,
     {

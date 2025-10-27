@@ -1,4 +1,8 @@
 # ba_meta require api 9
+# ba_meta name File Share
+# ba_meta description A mod that will allow you to share replays between friends and between one device and another
+# ba_meta version 1.1.1
+# ba_meta nomod
 
 from __future__ import annotations
 
