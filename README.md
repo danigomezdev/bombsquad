@@ -189,10 +189,14 @@ The mod includes DNS workarounds for common ISP blocks. If you experience connec
 
 ## Screenshots
 
-<img width="524" height="386" alt="Image" src="https://github.com/user-attachments/assets/fe199c0a-7b2b-442b-aae1-41616cbe19a2" />
-<img width="525" height="418" alt="Image" src="https://github.com/user-attachments/assets/a39dfbdc-5618-49cc-94fd-dfc20d7841bb" />
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/fe199c0a-7b2b-442b-aae1-41616cbe19a2" width="49%" height="300px" />
+  <img src="https://github.com/user-attachments/assets/a39dfbdc-5618-49cc-94fd-dfc20d7841bb" width="49%" height="300px" />
+  <br>
+</p>
+<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/90bf7602-edd9-4f0b-9891-89b444e7e092" />
 
-## Video Tutorial
+## Video
 
 https://github.com/user-attachments/assets/cfd88288-e5a8-42bf-a3a7-765b4aa2d935
 
@@ -200,15 +204,3 @@ https://github.com/user-attachments/assets/cfd88288-e5a8-42bf-a3a7-765b4aa2d935
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  
 Forked by [Less](https://github.com/danigomezdev)
-
-### Repository
-- **Main Repository**: https://github.com/danigomezdev/bombsquad/tree/modmanager
-- **Issue Tracker**: https://github.com/danigomezdev/bombsquad/issues
-- **Discord Community**: https://discord.gg/q5GdnP85Ky
-
----
-
-**Version**: 1.1.2  
-**Last Updated**: January 2024  
-**Compatibility**: BombSquad API 9+  
-**Support**: Community Discord Server
