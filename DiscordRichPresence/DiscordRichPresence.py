@@ -869,7 +869,7 @@ class DiscordRP(babase.Plugin):
             ).start()
 
             self.update_timer = bs.AppTimer(
-                1, bs.WeakCall(self.update_status), repeat=True
+                1, bs.WeakCallStrict(self.update_status), repeat=True
             )
         if ANDROID:
             self.rpc_thread.start()

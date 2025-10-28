@@ -1,7 +1,7 @@
 # ba_meta require api 9
 # ba_meta name Less Party Window
 # ba_meta description A mod that makes scaled modifications to the PartyWindow, giving multiple options for use in-game
-# ba_meta version 1.1.3
+# ba_meta version 1.1.4
 
 from __future__ import annotations
 import re
@@ -27,7 +27,7 @@ import logging
 import babase
 import bauiv1 as bui
 import bascenev1 as bs
-from babase._general import Call
+from babase._general import Call, CallPartial, CallStrict
 from babase._mgen.enums import SpecialChar, UIScale
 
 import _babase # type: ignore
@@ -1003,7 +1003,7 @@ class Finder:
                 label='Conectar',
                 color=s.COL2,
                 textcolor=s.COL4,
-                oac=Call(CON, i['a'], i['p'], False)
+                oac=CallStrict(CON, i['a'], i['p'], False)
             ))
     
     def _saveConfigs(s, config: dict):
@@ -1200,7 +1200,7 @@ class Finder:
                 selectable=True,
                 click_activate=True,
                 v_align='center',
-                on_activate_call=Call(s._showFriendPopup, friend, (200, 100))
+                on_activate_call=CallStrict(s._showFriendPopup, friend, (200, 100))
             )
 
 
@@ -1263,7 +1263,7 @@ class Finder:
                 selectable=True,
                 click_activate=True,
                 v_align='center',
-                on_activate_call=Call(s._infoBestFriend, friend),
+                on_activate_call=CallStrict(s._infoBestFriend, friend),
             )
 
     def _showFriendPopup(s, friend: str, pos: tuple[float, float]):
@@ -1357,7 +1357,7 @@ class Finder:
                 label='Conectar',
                 color=s.COL2,
                 textcolor=s.COL4,
-                oac=Call(CON, i['a'], i['p'], False)
+                oac=CallStrict(CON, i['a'], i['p'], False)
             ))
 
             s.ibfriends.append(bw(
@@ -1520,7 +1520,7 @@ class Finder:
         a = ['Small','']
         for i,_ in enumerate(z):
             h = 'ding'+a[_]
-            teck(i/10,Call(s.snd,h) if i<(len(z)-1) else gs(h).play)
+            teck(i/10,CallStrict(s.snd,h) if i<(len(z)-1) else gs(h).play)
     
     def fresh(s):
         c = s.__class__
@@ -1626,7 +1626,7 @@ class Finder:
         c.ART = [cs(sc.OUYA_BUTTON_U)]*len(c.MEM)
         s.thr = []
         for i,_ in enumerate(c.MEM):
-            t = Thread(target=Call(s.ping,_,i))
+            t = Thread(target=CallStrict(s.ping,_,i))
             s.thr.append(t)
             t.start()
         s.sust = tuck(0.01,s.sus,repeat=True)
@@ -1674,7 +1674,7 @@ class Finder:
                 text=p,
                 position=(0,sy-30-30*_),
                 maxwidth=175,
-                on_activate_call=Call(s.hl,_,p),
+                on_activate_call=CallStrict(s.hl,_,p),
                 v_align='center'
             )
             if not dun and p == c.SL: ocw(c.MainParent2,visible_child=tt); dun = 1
@@ -1889,7 +1889,7 @@ class ButtonDelayHandler:
 
         button_delays_dict[delay_key]["current_delay"] = delay_time
         for i in range(int(delay_time * 10) + 1):
-            babase.apptimer(i / 10, babase.Call(self._update_delay, button_widget, delay_key, i / 10))
+            babase.apptimer(i / 10, CallStrict(self._update_delay, button_widget, delay_key, i / 10))
 
     def update_button_label(self, button: bui.Widget, delay_name: str):
         current_delay = button_delays_dict[delay_name]["current_delay"]
@@ -1919,7 +1919,7 @@ class ButtonDelayHandler:
         print(f'Continuing Button [{delay_name}] Delay From {last_delay}')
         if current_delay < sorry_delay:
             for i in range(int((last_delay) * 10) + 1):
-                babase.apptimer(i / 10, babase.Call(self._update_delay, button, delay_name, current_delay * 10 + i, True))
+                babase.apptimer(i / 10, Call(self._update_delay, button, delay_name, current_delay * 10 + i, True))
         return str(last_delay)
 
     def get_delay(self, delay_name: str) -> float | bool:
@@ -4219,7 +4219,7 @@ def _send_message_parted(msg: str):
             delay = i + 1
             if not len(lines) == delay:
                 line += "-"  # Continuous msg mark :)
-            babase.apptimer(delay * send_delay, babase.Call(chatmessage, line))
+            babase.apptimer(delay * send_delay, Call(chatmessage, line))
     else:
         chatmessage(msg)
 
@@ -4590,45 +4590,45 @@ all_toggles: list[str] = [
 ]
 
 info_msgs = [
-    f'Shortcut to open settings window (In Chat): {CMD_MAIN_PREFIX}{open_settings_window}',
-    f'The refresh button acts as a session restart, similar to restarting the game, but softer.',
-    f'You can change settings using {CMD_MAIN_PREFIX}{set_config} followed by setting names.',
-    f'You can also change the main prefix to anything you desire. Current prefix: {CMD_MAIN_PREFIX}',
-    f'There is a blacklist feature to block any player from using these plugin features.',
-    f'You can add questions using {CMD_MAIN_PREFIX}{add_question}',
-    f'Set a nickname for auto-greeting when players call you with "that nick" using {CMD_MAIN_PREFIX}{add_nick}',
-    f'There is a feature to save players\' names and profiles.',
-    f'Use {CMD_MAIN_PREFIX}{find_player_in_current_session} to find player data since you opened BombSquad.',
-    f'Use {CMD_MAIN_PREFIX}{show_session_list_window} to open the session list in a windowed version.',
-    f'Use {CMD_MAIN_PREFIX}{find_player_in_all_list} to find player data since you started using this plugin.',
-    f'Use {CMD_MAIN_PREFIX}{show_all_list_window} to open the all names list in a windowed version.',
-    f'Use {CMD_MAIN_PREFIX}{show_current_list_msg} to send the current list (in server) in chat.',
-    f'Use {CMD_MAIN_PREFIX}{show_all_list_msg} to send the all names list in chat. Avoid using this in a server.',
-    f'Use {CMD_MAIN_PREFIX}{add_abuse_cmd} & {CMD_MAIN_PREFIX}{remove_abuse_cmd} for adding/removing abuses.',
-    f'Use {CMD_MAIN_PREFIX}{add_abuse_exception} to add exception words for abuses.',
-    f'Use {CMD_MAIN_PREFIX}{add_name_exception} to add exception players/accounts for abuses.',
-    f'Other anti-abuse related commands: {CMD_MAIN_PREFIX}{add_warn_cmd}, {CMD_MAIN_PREFIX}{decrease_warn_cmd}, {CMD_MAIN_PREFIX}{reset_player_warning_cmd}, {CMD_MAIN_PREFIX}{reset_all_player_warning_cmd}',
-    f'Custom replies ({CMD_MAIN_PREFIX}{add_custom_reply_cmd}) support text customization:',
-    f'$name (profile), $acc (account name), $cid (client id), and ($unamused & $happy) are emojis.',
-    f'{CMD_MAIN_PREFIX}{translate_cmd} for translating, supports up to 4 cases.',
-    f'Use {CMD_MAIN_PREFIX}{update_pb_cmd} for merging all list data with player base from server data (if available).',
-    f'You can now search using windowed lists, similar to {CMD_MAIN_PREFIX}{find_player_in_current_session}.',
-    f'Commands for adding things related to account names support matching, so use more specific letters,',
-    f'and add it before closing BS, because the Player Data will be gone when you close the game.',
-    f'Matching it can be a trouble, but i\'ll try fix it in the feature updates.',
-    f'Resetting deletes all save files (except {saved_names_file_name}) and creates new ones.',
-    f'Show expanded recent messages with {CMD_MAIN_PREFIX}{open_all_chats_window}',
-    f'Use {CMD_MAIN_PREFIX}{info_player_in_current_session} to get player info window',
-    f'{config_name_partial_match_abuses} is for partial match abuses instead of full match/equally.',
-    f'Config \"{config_name_screenmessage_cmd}\" is for showing command prompt result as Screenmessage instead Send into a message.',
-    f'Config \"{config_name_show_my_master_ping}\" To send Your Ping automatically if you/someone do /ping',
-    f'All data are stored in:',
+    f'Atajo para abrir la ventana de configuración (en el chat): {CMD_MAIN_PREFIX}{open_settings_window}',
+    f'El botón de "refresh" actúa como un reinicio de sesión, similar a reiniciar el juego, pero de forma más suave.',
+    f'Puedes cambiar configuraciones usando {CMD_MAIN_PREFIX}{set_config} seguido del nombre del ajuste.',
+    f'También puedes cambiar el prefijo principal a lo que quieras. Prefijo actual: {CMD_MAIN_PREFIX}',
+    f'Hay una función de lista negra para bloquear a cualquier jugador de usar las funciones de este plugin.',
+    f'Puedes agregar preguntas usando {CMD_MAIN_PREFIX}{add_question}',
+    f'Configura un apodo para saludos automáticos cuando los jugadores te llamen con "ese apodo" usando {CMD_MAIN_PREFIX}{add_nick}',
+    f'Existe una función para guardar los nombres y perfiles de los jugadores.',
+    f'Usa {CMD_MAIN_PREFIX}{find_player_in_current_session} para buscar datos de jugadores desde que abriste BombSquad.',
+    f'Usa {CMD_MAIN_PREFIX}{show_session_list_window} para abrir la lista de sesión en una ventana.',
+    f'Usa {CMD_MAIN_PREFIX}{find_player_in_all_list} para buscar datos de jugadores desde que empezaste a usar este plugin.',
+    f'Usa {CMD_MAIN_PREFIX}{show_all_list_window} para abrir la lista completa de nombres en una versión con ventana.',
+    f'Usa {CMD_MAIN_PREFIX}{show_current_list_msg} para enviar la lista actual (del servidor) en el chat.',
+    f'Usa {CMD_MAIN_PREFIX}{show_all_list_msg} para enviar la lista completa de nombres en el chat. Evita usarlo en un servidor.',
+    f'Usa {CMD_MAIN_PREFIX}{add_abuse_cmd} y {CMD_MAIN_PREFIX}{remove_abuse_cmd} para agregar o eliminar abusos.',
+    f'Usa {CMD_MAIN_PREFIX}{add_abuse_exception} para añadir palabras de excepción a los abusos.',
+    f'Usa {CMD_MAIN_PREFIX}{add_name_exception} para añadir jugadores/cuentas de excepción a los abusos.',
+    f'Otros comandos relacionados con anti-abuso: {CMD_MAIN_PREFIX}{add_warn_cmd}, {CMD_MAIN_PREFIX}{decrease_warn_cmd}, {CMD_MAIN_PREFIX}{reset_player_warning_cmd}, {CMD_MAIN_PREFIX}{reset_all_player_warning_cmd}',
+    f'Las respuestas personalizadas ({CMD_MAIN_PREFIX}{add_custom_reply_cmd}) permiten personalizar el texto:',
+    f'$name (perfil), $acc (nombre de cuenta), $cid (client id), y ($unamused & $happy) son emojis.',
+    f'{CMD_MAIN_PREFIX}{translate_cmd} sirve para traducir, soporta hasta 4 casos.',
+    f'Usa {CMD_MAIN_PREFIX}{update_pb_cmd} para fusionar todos los datos de la lista con la base de jugadores del servidor (si está disponible).',
+    f'Ahora puedes buscar usando listas con ventana, similar a {CMD_MAIN_PREFIX}{find_player_in_current_session}.',
+    f'Los comandos para agregar cosas relacionadas con nombres de cuenta admiten coincidencias parciales, así que usa letras más específicas,',
+    f'y hazlo antes de cerrar BS, ya que los datos de jugador se pierden al cerrar el juego.',
+    f'Hacer coincidir puede ser problemático, pero intentaré arreglarlo en futuras actualizaciones.',
+    f'Al reiniciar se eliminan todos los archivos guardados (excepto {saved_names_file_name}) y se crean nuevos.',
+    f'Muestra los mensajes recientes ampliados con {CMD_MAIN_PREFIX}{open_all_chats_window}',
+    f'Usa {CMD_MAIN_PREFIX}{info_player_in_current_session} para obtener la ventana de información del jugador.',
+    f'{config_name_partial_match_abuses} es para coincidencias parciales de abusos en lugar de coincidencias exactas.',
+    f'La configuración \"{config_name_screenmessage_cmd}\" sirve para mostrar el resultado del comando como ScreenMessage en lugar de enviarlo al chat.',
+    f'La configuración \"{config_name_show_my_master_ping}\" envía tu ping automáticamente si tú o alguien usa /ping.',
+    f'Todos los datos se guardan en:',
     f'{str(responder_directory)}',
-    f'Don\'t forget to change the owner name for permission to use, and update your nicknames.',
-    f'If you\'re not a PC user, turn off {config_name_cmdprint} to reduce lag.',
-    f'Disclaimer: This plugin can\'t do 100% accuracy player name matching. Complicated names, multiple same names,',
-    f'dots names, can make Name Error/Inaccurate and causing some attributes became useless or instability.',
-    f'Double check any incorrect/inaccurate stuff related with Player Names.'
+    f'No olvides cambiar el nombre del propietario para tener permiso de uso y actualizar tus apodos.',
+    f'Si no usas PC, desactiva {config_name_cmdprint} para reducir el lag.',
+    f'Descargo de responsabilidad: este plugin no puede hacer coincidencias de nombres de jugadores con 100% de precisión. Nombres complicados, nombres duplicados,',
+    f'o con puntos pueden causar errores o imprecisiones y provocar que algunos atributos se vuelvan inútiles o inestables.',
+    f'Revisa dos veces cualquier dato incorrecto o inexacto relacionado con nombres de jugadores.'
 ]
 
 ###### INTERNAL CHATS DATA ######
@@ -6146,7 +6146,7 @@ def reset_all_player_warnings(cmd: bool=False) -> None:
                     screenmessage(msg, color=COLOR_SCREENCMD_NORMAL)
         else:
             pass
-           # babase.AppTimer(2.5, babase.Call(screenmessage, f"{CMD_LOGO_CAUTION} No player warnings to reset"))
+           # babase.AppTimer(2.5, Call(screenmessage, f"{CMD_LOGO_CAUTION} No player warnings to reset"))
     except Exception as e:
         screenmessage(f"{CMD_LOGO_CAUTION} Error On Player Warns Reset: {e}", color=COLOR_SCREENCMD_ERROR)
         print_internal_exception(e)
@@ -6206,7 +6206,7 @@ def load_players_server_data() -> dict[str, dict[str, Any]]:
                     try:
                         data: dict[str, dict[str, Any]] = json.load(file)
                         for pb_id, player_data in data.items():
-                            player_name = player_data.get('name')
+                            player_name = player_data.name
                             if player_name: # Check if player_name exists cuz we need it
                                 if server_players_data.get(player_name):
                                     # Handle duplicate player_name with different pb_id
@@ -6316,7 +6316,7 @@ def update_all_names_with_pb_id(server_pdata: dict[str, dict[str, Any]]):
 ##################### PING DATA #####################
 def do_manual_server_ping(is_cmd:bool=False):
     try:
-        info = bs.get_connection_to_host_info()
+        info = bs.get_connection_to_host_info_2()
         if not info and is_cmd:
             msg = f'{CMD_LOGO_CAUTION} Can\'t Get Server Name Right Now :('
             if not responder_config.get(config_name_screenmessage_cmd):
@@ -6325,7 +6325,7 @@ def do_manual_server_ping(is_cmd:bool=False):
                 screenmessage(msg, color=COLOR_SCREENCMD_ERROR)
             return
         elif info:
-            server_name = info.get('name', server_name_default)
+            server_name = info.name if info and info.name else server_name_default
             server_data = _get_server_data_from_fav(server_name)
 
             if server_data is None and is_cmd:
@@ -6439,8 +6439,8 @@ def _ping_server_accurate(callback: Callable[[], None]):
     Thread(target=start_accurate_ping).start()
 
 def _refresh_server_ip_and_port():
-    info = bs.get_connection_to_host_info()
-    server_name = info.get('name', server_name_default)
+    info = bs.get_connection_to_host_info_2()
+    server_name = info.name if info and info.name else server_name_default
 
     if server_name == server_name_default:
         global _server_ip, _server_port
@@ -6566,7 +6566,7 @@ def _group_matched_players(player_names: dict[str, dict[str, Any]], search_term:
 
     for real_name, profile_info in player_names.items():
         client_id = profile_info.get('client_id')
-        p_profile: list[str] | None = profile_info.get('profile_name')
+        p_profile: list[str] | None = profile_info.get('profile_name', [])
         if client_id == -1:
             pass#continue
 
@@ -6667,7 +6667,7 @@ def _match_player_acc_name_exme(player_names: dict[str, dict[str, Any]] | list[s
                 continue
 
             sanitized_real_name = sanitize_name(real_name_lower)
-            p_profiles = profile_info.get('profile_name', [])
+            p_profiles = getattr(profile_info, 'profile_name', []) if profile_info is not None else []
             sanitized_profile_names = [sanitize_name(profile) for profile in p_profiles] if p_profiles else None
 
             if search_query == sanitized_real_name or (sanitized_profile_names and any(search_query == sanitized_profile for sanitized_profile in sanitized_profile_names)):
@@ -6685,7 +6685,7 @@ def _match_player_acc_name_exme(player_names: dict[str, dict[str, Any]] | list[s
                 continue
 
             if (search_query in real_name.lower() or 
-                (profile_info.get('profile_name') and search_query in ', '.join(profile_info.get('profile_name', [])).lower())):
+                (profile_info.get('profile_name', []) and search_query in ', '.join(getattr(profile_info, 'profile_name', []) if profile_info is not None else []).lower())):
 
                 if should_skip_name(real_name):
                     if skip_my_name:
@@ -6914,8 +6914,8 @@ def _match_player_name(player_name: str, player_data: dict[str, dict[str, Any]])
         if profile_info.get('client_id') == -1:
             continue  # Skip server names
 
-        profile_names = set(profile_info.get('profile_name', []))
-        profile_names_short = set(profile_info.get('profile_name_short', []))
+        profile_names = set(getattr(profile_info, 'profile_name', []) if profile_info is not None else [])
+        profile_names_short = set(getattr(profile_info, 'profile_name_short', []) if profile_info is not None else [])
 
         # Check all possible name variations against profile names
         for possible_name in possible_names:
@@ -6971,7 +6971,8 @@ def _save_quick_responds(data: List[str]):
                 with open(quick_msg_file_path, 'w') as f:
                     f.write('\n'.join(data))
             else:
-                print('Same Quick Respond Data')
+                #print('Same Quick Respond Data')
+                pass
         else:
             with open(quick_msg_file_path, 'w') as f:
                 f.write('\n'.join(data))
@@ -7059,7 +7060,7 @@ def find_player(search_term: str, include_profile: bool, player_data: dict[str, 
             return name
 
         if include_profile:
-            profile = info.get('profile_name')
+            profile = info.profile_name
             if profile:
                 profile_names = ', '.join(profile).lower()
                 if search_term in profile_names:
@@ -7105,14 +7106,14 @@ def find_player_cmd(message: str, toggle: str, data_type: dict[str, dict[str, An
 
         # Search by real name
         found_real_name = find_player(arguments, True, data_type)
-        real_name_cid = data_type[found_real_name].get('client_id', '?') if found_real_name else None
+        real_name_cid = data_type[found_real_name].get('client_id') if found_real_name else None
         real_name_pb_id = all_names[found_real_name].get('pb_id') if found_real_name else None
 
         # Search by profile name and real name
-        profile_data = next(((info.get('profile_name', []), name, all_names.get(name, {}).get('pb_id', ''), info.get('client_id'))
+        profile_data = next(((getattr(info, 'profile_name', []), name, all_names.get(name, {}).get('pb_id', ''), info.get('client_id'))
                            for name, info in data_type.items()
                            if info.get('client_id') != -1 and 
-                           ((info.get('profile_name') and arguments in ', '.join(info['profile_name']).lower()) or
+                           ((getattr(info, 'profile_name', []) and arguments in ', '.join(getattr(info, 'profile_name', [])).lower()) or
                             arguments in name.lower())),
                           (None, None, None, 0))
         found_profile_name, found_real_name_from_profile, found_pb_id_from_profile, profile_cid = profile_data
@@ -7232,7 +7233,7 @@ def show_responder_data_window(message: str):
 
 #+++++++++++++++++++++# COMMANDS SECTION #+++++++++++++++++++++#
 def matched_name(text: str, widget: bui.Widget):
-    babase.pushcall(Call(bui.textwidget, edit=widget, text=text), from_other_thread=True) # type: ignore
+    babase.pushcall(CallStrict(bui.textwidget, edit=widget, text=text), from_other_thread=True) # type: ignore
 
 def save_last_game_replay(custom_name: Optional[str] = None) -> None:
     """
@@ -7376,7 +7377,7 @@ class ReplayNameSavingPopup(popup.PopupWindow):
                 v_align='center',
                 selectable=True,
                 click_activate=True,
-                on_activate_call=babase.Call(self._add_info, info)
+                on_activate_call=CallStrict(self._add_info, info)
             )
             info_y_pos -= 22.5
 
@@ -7452,7 +7453,7 @@ class ReplayNameSavingPopup(popup.PopupWindow):
                     text=f"{text}?",
                     width=min(len(text) * 13.5, 600),
                     height=120,
-                    action=babase.Call(self._do_save, new_file_path),
+                    action=Call(self._do_save, new_file_path),
                     cancel_button=True,
                     cancel_is_selected=True,
                     text_scale=1.0,
@@ -7528,9 +7529,9 @@ def _get_ping_color() -> tuple[float, float, float]:
 
 def _rejoin_server():
     if _server_ip != _default_server_ip or _server_port != _default_server_port:
-        if bs.get_connection_to_host_info():
+        if bs.get_connection_to_host_info_2():
             bs.disconnect_from_host()
-            babase.apptimer(0.1, babase.Call(bs.connect_to_party, _server_ip, _server_port))
+            babase.apptimer(0.1, Call(bs.connect_to_party, _server_ip, _server_port))
         else:
             bs.connect_to_party(_server_ip, _server_port)
     else:
@@ -7741,7 +7742,7 @@ class ModifiedGatherWindow(bui.MainWindow):
                 self._scroll_left + tab_inset,
                 self._scroll_bottom + self._scroll_height - 4.0,
             ),
-            on_select_call=bui.WeakCall(self._set_tab),
+            on_select_call=bui.WeakCallStrict(self._set_tab),
         )
 
         # Now instantiate handlers for these tabs.
@@ -7982,8 +7983,8 @@ ping_server_delay = 6
 def ping_server_recall():
     global is_pinging
     if is_pinging: return
-    info = bs.get_connection_to_host_info()
-    if info.get('name', '') != '': #and self._ping_button:
+    info = bs.get_connection_to_host_info_2()
+    if info is not None and info.name != '': #and self._ping_button:
         Thread(target=PingThread, args=(_server_ip, _server_port)).start()
 
 def reset_global_vars():
@@ -8010,13 +8011,11 @@ def replace_msg_emoji_var_with_emojis(text: str):
 class LessPartyWindow(bauiv1lib.party.PartyWindow):
 
     def __del__(self) -> None:
-        bui.set_party_window_open(False)
-
         self.ping_timer = None
         self._update_timer = None
 
     def __init__(self, origin: Sequence[float] = (0, 0)) -> None:
-        bui.set_party_window_open(True)
+        self._uiopenstate = bui.UIOpenState('classicparty')
         self.uiscale : babase.UIScale = bui.app.ui_v1.uiscale
         self.bg_color: tuple[float, float, float] = party_config.get(CFG_NAME_MAIN_COLOR, bui.app.ui_v1.heading_color)
 
@@ -8102,9 +8101,9 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             v_align='center')
 
         # Title Text
-        host_info = bs.get_connection_to_host_info()
-        if host_info.get('name'):
-            self.title = babase.Lstr(value=host_info['name'])
+        host_info = bs.get_connection_to_host_info_2()
+        if host_info and host_info.name: 
+            self.title = babase.Lstr(value=host_info.name)
         else:
             self.title = f"{get_lang_text('partyWindow.titleText')}"
         title_text_y_pos = (self._height - 20 if self.uiscale is babase.UIScale.SMALL else
@@ -8124,7 +8123,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             selectable=True,
             autoselect=False,
             click_activate=True,
-            on_activate_call=babase.Call(self._get_party_name),
+            on_activate_call=CallStrict(self._get_party_name),
             v_align='center')
 
         # Menu Button
@@ -8136,7 +8135,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             label='...',
             autoselect=False,
             button_type='square',
-            on_activate_call=bs.WeakCall(self._on_menu_button_press),
+            on_activate_call=bs.WeakCallStrict(self._on_menu_button_press),
             color=self.bg_color,
             iconscale=1.2)
 
@@ -8179,7 +8178,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
         )
         bui.buttonwidget(
             edit=self._thanks_button,
-            on_activate_call=babase.Call(
+            on_activate_call=CallStrict(
                 self._start_button_delay,
                 self._thanks_button,
                 thanks_ds,
@@ -8204,7 +8203,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
         #)
         #bui.buttonwidget(
         #    edit=self._sorry_button,
-        #    on_activate_call=babase.Call(
+        #    on_activate_call=Call(
         #        self._start_button_delay,
         #        self._sorry_button,
         #        sorry_ds,
@@ -8310,7 +8309,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                 position=(60, 35))
             bui.buttonwidget(
                 edit=self._quick_respond_button,
-                on_activate_call=babase.Call(self._show_quick_respond_window, self._quick_respond_button)
+                on_activate_call=Call(self._show_quick_respond_window, self._quick_respond_button)
             )
 
         # Next message button
@@ -8326,7 +8325,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             repeat=True,
             color=self.bg_color,
             scale=1.775,
-            on_activate_call=babase.Call(self._next_message))
+            on_activate_call=CallStrict(self._next_message))
 
         # Previous message button
         previous_button_height = (
@@ -8343,7 +8342,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             repeat=True,
             color=self.bg_color,
             scale=1.775,
-            on_activate_call=babase.Call(self._previous_message))
+            on_activate_call=CallStrict(self._previous_message))
 
         # Refresh Selected Msg Button
         refresh_button_pos = (
@@ -8357,7 +8356,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             scale=1.6,
             label='',
             color=self.bg_color,
-            on_activate_call=babase.Call(self._on_refresh_press),
+            on_activate_call=CallStrict(self._on_refresh_press),
             autoselect=False,
             icon=bui.gettexture('replayIcon'),
             iconscale=1.2)
@@ -8444,7 +8443,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                 icon=bui.gettexture('controllerIcon'),
                 enable_sound=False,
                 iconscale=1.2,
-                on_activate_call=babase.Call(_open_gather_window, self.close) #babase.Call(screenmessage, 'Unavailable, Sorry :(', COLOR_SCREENCMD_ERROR)
+                on_activate_call=CallStrict(_open_gather_window, self.close) #Call(screenmessage, 'Unavailable, Sorry :(', COLOR_SCREENCMD_ERROR)
             )
         #try:
             #if is_gather_window:
@@ -8522,7 +8521,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             #timetype=babase.TimeType.REAL)
         self._update_timer = babase.AppTimer(
             1.25,
-            bs.WeakCall(self._update),
+            bs.WeakCallStrict(self._update),
             repeat=True)#,
             #timetype=babase.TimeType.REAL)
         self._update()
@@ -8651,7 +8650,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
 
         bui.textwidget(
             edit=text_widget,
-            on_activate_call=babase.Call(self._on_party_text_press, msg, text_widget))
+            on_activate_call=CallStrict(self._on_party_text_press, msg, text_widget))
 
         self._chat_text_widgets.append(text_widget)
         self._chat_texts.append(msg)
@@ -8755,9 +8754,9 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
     def _on_menu_button_press(self) -> None:
         choices_key, choices_display = get_choices_key_lang_text(CHOICES_KEY_MENU)
 
-        if not self._roster:
-            choices_key.append('credit')
-            choices_display.append(get_lang_text('credit&help'))
+        #if not self._roster:
+        #    choices_key.append('credit')
+        #    choices_display.append(get_lang_text('credit&help'))
 
         self._focus_to_text_field()
         self._popup_type = POPUP_MENU_TYPE_MENU_PRESS
@@ -8937,7 +8936,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                         #  calls; not spec-string (perhaps should wait till
                         #  client_id is more readily available though).
                         bui.textwidget(edit=widget,
-                            on_activate_call=babase.Call(
+                            on_activate_call=CallStrict(
                                 self._on_party_member_press, # Action 
                                 self._roster[index]['client_id'],
                                 is_host,
@@ -8971,7 +8970,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                             is_muted_player = True
             bui.textwidget(edit=self._empty_str, text='')
             if not master:
-                babase.AppTimer(1, babase.Call(self._update, True))
+                babase.AppTimer(1, Call(self._update, True))
                 print(f"WARNING, Master Not Found On Force: {force}")
                 if force:
                     my_master_not_in_game()
@@ -9002,7 +9001,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                 selectable=True,
                 autoselect=False,
                 click_activate=True,
-                on_activate_call=babase.Call(screenmessage, v1_4_server_text_send, COLOR_SCREENCMD_NORMAL),
+                on_activate_call=Call(screenmessage, v1_4_server_text_send, COLOR_SCREENCMD_NORMAL),
                 text=v1_4_server_text)
 
     def _change_name_roster_viewer(self):
@@ -9025,9 +9024,9 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
         self._update(force=True)
 
     def _get_party_name(self):
-        info = bs.get_connection_to_host_info()
-        if info.get('name'):
-            party_name = info['name']
+        info = bs.get_connection_to_host_info_2()
+        if info is not None and info.name != '':
+            party_name = info.name
             _edit_text_field_global(party_name, 'replace')
 
     def _on_party_member_press(self, client_id: Optional[int], is_host: bool, widget: bui.Widget, player_name: str) -> None: # type: ignore
@@ -9037,7 +9036,8 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             pass
         else:
             # kick-votes appeared in build 14248
-            if (bs.get_connection_to_host_info().get('build_number', 0) < 14248):
+            host_info = bs.get_connection_to_host_info_2()
+            if host_info is not None and host_info.build_number < 14248:
                 return
 
         if client_id is None:
@@ -9499,7 +9499,8 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
 
             if choice == 'votekick':
                 # kick-votes appeared in build 14248
-                if (bs.get_connection_to_host_info().get('build_number', 0) < 14248):
+                host_info = bs.get_connection_to_host_info_2()
+                if host_info is not None and host_info.build_number < 14248:
                     return
                 name = account_name
                 if profiles:
@@ -9560,7 +9561,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                     text=f'{confirm_text}',
                     width=min((len(admin_kick_confirm_text) * 13.5), 600),
                     height=120,
-                    action=babase.Call(chatmessage, f'{KICK_CMD} {client_id}'),
+                    action=Call(chatmessage, f'{KICK_CMD} {client_id}'),
                     cancel_button=True,
                     cancel_is_selected=True,
                     ok_text=get_lang_text('yes'),
@@ -9579,7 +9580,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                     text=f'{confirm_text}',
                     width=min((len(admin_remove_confirm_text) * 13.5), 600),
                     height=120,
-                    action=babase.Call(chatmessage, f'{REMOVE_CMD} {client_id}'),
+                    action=Call(chatmessage, f'{REMOVE_CMD} {client_id}'),
                     cancel_button=True,
                     cancel_is_selected=True,
                     ok_text=get_lang_text('yes'),
@@ -9856,7 +9857,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             text=f"{get_lang_text('confirmCopy')}\n{text_title}",
             width= width,
             height=135,
-            action=babase.Call(_copy_to_clipboard, text),
+            action=Call(_copy_to_clipboard, text),
             cancel_is_selected=True,
             text_scale=1,
             ok_text=get_lang_text('copy')
@@ -9887,7 +9888,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             text=text,
             width=min((len(text) * 13.5)/1.5, 600),
             height=min(120*text.count('\n'), 300),
-            action=babase.Call(self._paste_textfield, cp_text),
+            action=CallStrict(self._paste_textfield, cp_text),
             cancel_button=True,
             cancel_is_selected=True,
             ok_text=get_lang_text('yes'),
@@ -10375,7 +10376,7 @@ def refresh_job(timer: float | int, job: str):
     global is_doing_jobs
     if job not in is_doing_jobs:
         is_doing_jobs.append(job)
-        babase.apptimer(timer, babase.Call(reset_job, job))
+        babase.apptimer(timer, Call(reset_job, job))
     #print(f"Job Started: {job}")
 
 
@@ -10439,9 +10440,9 @@ class LessAutoResponder:
     def _start_engine(self) -> None:
         """Start Func Loops"""
         #self.update_chats_and_name = babase.AppTimer(master_chats_interval, self.master_chats, repeat=True) # Our Master
-        self._get_player_info_timer = babase.AppTimer(update_player_info_interval, babase.Call(self._get_player_info), repeat=True)
+        self._get_player_info_timer = babase.AppTimer(update_player_info_interval, CallStrict(self._get_player_info), repeat=True)
 
-        self.log_chats_timer = babase.AppTimer(log_chats_interval, babase.Call(self.log_chats), repeat=True)
+        self.log_chats_timer = babase.AppTimer(log_chats_interval, CallStrict(self.log_chats), repeat=True)
 
     def master_chats(self, msg: Optional[str] = None):
         """Master Func To Get Chats And Toggle Responders"""
@@ -10777,7 +10778,7 @@ class LessAutoResponder:
         profile_only_entry = f"{profile_only}{PNAME_AND_MSG_SPLITTER_MODIFIED}{msg}"
 
         info = self.current_conncetion_info
-        server_name = info.get('name', server_name_default)
+        server_name = info.name if info and info.name else server_name_default
         #print(internal_chat_entry)
 
         if server_name == server_name_default:# or any(pname.startswith(name) for name in SERVER_NAMES):
@@ -10808,7 +10809,7 @@ class LessAutoResponder:
         chats_data_file_path = chats_data_file_folder_path + f"{chats_data_file_name}.json"
 
         info = self.current_conncetion_info
-        server_name = info.get('name', server_name_default)
+        server_name = info.name if info and info.name else server_name_default
 
         if server_name == server_name_default:# or any(pname.startswith(name) for name in SERVER_NAMES):
             return
@@ -10857,7 +10858,7 @@ class LessAutoResponder:
         global chats_log_file_path
 
         info = self.current_conncetion_info
-        server_name = info.get('name', server_name_default)
+        server_name = info.name if info and info.name else server_name_default
 
         def save():
             if server_name == server_name_default:# or any(player_name.startswith(name) for name in SERVER_NAMES):
@@ -10915,7 +10916,7 @@ class LessAutoResponder:
             if not current_session_namelist.get(name): continue
             if use_their_profile_for_greet_friends: name = current_session_namelist.get(name, {}).get('profile_name', name)
             halo: str = f"{random.choice(jawab_halo)} {name} {get_random_happy_emoji()}"
-            babase.apptimer(i + random.choice(delays), babase.Call(self.greet, name, halo))
+            babase.apptimer(i + random.choice(delays), Call(self.greet, name, halo))
         print('\n')
         self._players_to_be_greeted.clear()
 
@@ -10932,7 +10933,7 @@ class LessAutoResponder:
         if self.current_roster == roster:
             return
         self.current_roster = roster
-        self.current_conncetion_info = bs.get_connection_to_host_info()
+        self.current_conncetion_info = bs.get_connection_to_host_info_2()
         babase.apptimer(1.5, self._send_greet_player_msg)
         if self._players_to_be_greeted and not current_namelist:
             self._players_to_be_greeted.clear() # Cancel master's greeting
@@ -10948,7 +10949,7 @@ class LessAutoResponder:
         current_namelist = {}  # Reset The Current List
         identical_all_names = False
         last_met_timestamp = datetime.now().strftime("[%d-%m-%Y | %I:%M %p]")
-        server_name: str | None = self.current_conncetion_info.get('name')
+        server_name = self.current_conncetion_info.name if self.current_conncetion_info is not None else "Unknown"
         profile_names_list: List[str] = []
 
         if not self.current_roster:
@@ -11066,12 +11067,12 @@ class LessAutoResponder:
                     if responder_config.get(config_name_cmdprint):
                         print(f"[NEW NAME] [{current_real_name}] With Profile [{profile_str_joint}] Added! CID: ({client_id})")
                     if responder_config.get(config_name_logmsg2):    
-                        babase.pushcall(Call(screenmessage, f"[NEW NAME] [{current_real_name}] With Profile [{profile_str_joint}] Added! CID: ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
+                        babase.pushcall(CallPartial(screenmessage, f"[NEW NAME] [{current_real_name}] With Profile [{profile_str_joint}] Added! CID: ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
                 else:
                     if responder_config.get(config_name_cmdprint):
                         print(f"[NEW NAME] [{current_real_name}] (No Profile) Added! CID: ({client_id})")
                     if responder_config.get(config_name_logmsg2):    
-                        babase.pushcall(Call(screenmessage, f"[NEW NAME] [{current_real_name}] (No Profile) Added! CID: ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
+                        babase.pushcall(CallPartial(screenmessage, f"[NEW NAME] [{current_real_name}] (No Profile) Added! CID: ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
             else:
                 if not current_namelist.get(current_real_name):
                     if all_names[current_real_name]['client_id'] != client_id:
@@ -11085,9 +11086,9 @@ class LessAutoResponder:
                         if responder_config.get(config_name_logmsg2):    
                             if all_names[current_real_name]['profile_name']:
                                 profile_str_joint = ', '.join(all_names[current_real_name]['profile_name'])
-                                babase.pushcall(Call(screenmessage, f"Updating [CLIENT ID]: [{current_real_name}] With Last Profile [{profile_str_joint}] -> From ({all_names[current_real_name]['client_id']}) To ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
+                                babase.pushcall(CallStrict(screenmessage, f"Updating [CLIENT ID]: [{current_real_name}] With Last Profile [{profile_str_joint}] -> From ({all_names[current_real_name]['client_id']}) To ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
                             else:
-                                babase.pushcall(Call(screenmessage, f"Updating [CLIENT ID]: [{current_real_name}] With (No Last Profile) -> From ({all_names[current_real_name]['client_id']}) To ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
+                                babase.pushcall(CallStrict(screenmessage, f"Updating [CLIENT ID]: [{current_real_name}] With (No Last Profile) -> From ({all_names[current_real_name]['client_id']}) To ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
 
                         all_names[current_real_name]['client_id'] = client_id
 
@@ -11103,7 +11104,7 @@ class LessAutoResponder:
                                 if responder_config.get(config_name_cmdprint):
                                     print(f"Updating Profile Name [{current_real_name}]: From [{profile_str_joint}] To [{profile_names_joint}] CID: ({client_id})")
                                 if responder_config.get(config_name_logmsg2):                
-                                    babase.pushcall(Call(screenmessage, f"[{current_real_name}] Profile Name Updated To [{profile_names_joint}] CID: ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
+                                    babase.pushcall(CallStrict(screenmessage, f"[{current_real_name}] Profile Name Updated To [{profile_names_joint}] CID: ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
                                 all_names[current_real_name]['profile_name'] = profile_names
                             else:
                                 # Refresh profile name
@@ -11112,7 +11113,7 @@ class LessAutoResponder:
                                     if responder_config.get(config_name_cmdprint):
                                         print(msg_print)
                                     if responder_config.get(config_name_logmsg2):            
-                                        babase.pushcall(Call(screenmessage, msg_print, COLOR_SCREENCMD_NORMAL), from_other_thread=True)
+                                        babase.pushcall(CallStrict(screenmessage, msg_print, COLOR_SCREENCMD_NORMAL), from_other_thread=True)
                                     all_names[current_real_name]['profile_name'] = profile_names
                         else:
                             # Add new profile name
@@ -11120,7 +11121,7 @@ class LessAutoResponder:
                                 if responder_config.get(config_name_cmdprint):
                                     print(f"[JOIN] Adding [{current_real_name}] Profile Name -> Profile: [{profile_names_joint}] CID: ({client_id})")
                                 if responder_config.get(config_name_logmsg2):        
-                                    babase.pushcall(Call(screenmessage, f"[JOIN] Adding [{current_real_name}] Profile Name -> Profile: [{profile_names_joint}] CID: ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
+                                    babase.pushcall(CallStrict(screenmessage, f"[JOIN] Adding [{current_real_name}] Profile Name -> Profile: [{profile_names_joint}] CID: ({client_id})", COLOR_SCREENCMD_NORMAL), from_other_thread=True)
                     else:
                         if profile_names:
                             current_profiles: list[str] = all_names[current_real_name].get('profile_name', [])
@@ -11186,8 +11187,8 @@ class LessAutoResponder:
             how_many_dots_name = sum(1 for name in current_namelist.values() if name.get('profile_name_short') == '...')
             for _player_real_name, profile_info in current_namelist.items():
                 # Handle profile names
-                if profile_info.get('profile_name') and isinstance(profile_info['profile_name'], list):
-                    for profile in profile_info['profile_name']:
+                if profile_info.get('profile_name', []) and isinstance(profile_info.get('profile_name', []), list):
+                    for profile in profile_info.get('profile_name', []):
                         if profile and profile_info.get('client_id') != -1:
                             sanitized_profile = sanitize_name(profile)
                             # Check if profile already exists and delete if same
@@ -11243,7 +11244,7 @@ class LessAutoResponder:
 
         # Get server information
         info = self.current_conncetion_info
-        server_name = info.get('name', server_name_default)  # Use a default if the server name is empty
+        server_name = info.name if info and info.name else server_name_default  # Use a default if the server name is empty
 
         # Clean server name for display purposes (optional)
         server_name_clean_display = ''.join(c for c in server_name if c.isalnum() or c in (' ', '_')).strip()
@@ -11287,7 +11288,7 @@ class LessAutoResponder:
                 if t:
                     jawaban_mtk = eval(jawab_mtk[t[0]:t[-1] + 1])  # Evaluasi Soal MTK
                     babase.pushcall(Call(bs.chatmessage, str(jawaban_mtk)), from_other_thread=True)
-                    babase.pushcall(Call(babase.apptimer, 2.25, babase.Call(self.soal_smart_check, str(jawaban_mtk))), from_other_thread=True)
+                    babase.pushcall(Call(babase.apptimer, 2.25, Call(self.soal_smart_check, str(jawaban_mtk))), from_other_thread=True)
                     return
             except Exception as e:
          #       bs.chatmessage(f"{CMD_LOGO_CAUTION} Error Evaluating -> [{e}] :')")
@@ -11297,7 +11298,7 @@ class LessAutoResponder:
             for pertanyaan, jawaban in kunci_jawaban.items():
                 if pertanyaan.lower() in pesan.lower() and not any(name == self.nama_pemain for name in MY_MASTER):
                     babase.pushcall(Call(chatmessage, str(jawaban)), from_other_thread=True)
-                    babase.pushcall(Call(babase.apptimer, 2.25, babase.Call(self.soal_smart_check, jawaban)), from_other_thread=True)
+                    babase.pushcall(Call(babase.apptimer, 2.25, Call(self.soal_smart_check, jawaban)), from_other_thread=True)
                     break
 
     def soal_smart_check(self, answer):
@@ -11444,7 +11445,7 @@ class LessAutoResponder:
 
         if not any(name in self.nama_pemain for name in SERVER_NAMES) and not any(name == self.nama_pemain for name in MY_MASTER):
             if any(word in self.jawab_lain_lower for word in kata_noob):
-                babase.pushcall(Call(babase.apptimer, noob_respone_delay, babase.Call(bs.chatmessage, 'N')), from_other_thread=True)
+                babase.pushcall(Call(babase.apptimer, noob_respone_delay, Call(bs.chatmessage, 'N')), from_other_thread=True)
                 babase.pushcall(Call(refresh_job, noob_respone_delay, defname), from_other_thread=True)
 
     def deteksi_sus(self):
@@ -11465,7 +11466,7 @@ class LessAutoResponder:
         if any(name in self.nama_pemain for name in SERVER_NAMES): return
 
         if any(word in self.jawab_lain_lower for word in sus):
-            babase.pushcall(Call(babase.apptimer, sus_respone_delay, babase.Call(chatmessage, '𐐘 𐑀 ඞා')), from_other_thread=True)
+            babase.pushcall(Call(babase.apptimer, sus_respone_delay, Call(chatmessage, '𐐘 𐑀 ඞා')), from_other_thread=True)
             babase.pushcall(Call(refresh_job, sus_respone_delay, defname), from_other_thread=True)
 
     def less(self):
@@ -11516,7 +11517,7 @@ class LessAutoResponder:
                 any(word in self.jawab_lain_lower for word in custom_replies.keys()) and not
                 any(name == self.nama_pemain for name in player_blacklisted_list)):
                 for i, baris in enumerate(baris_baris):
-                    babase.pushcall(Call(babase.apptimer, i*0.2, babase.Call(chatmessage, baris)), from_other_thread=True)
+                    babase.pushcall(Call(babase.apptimer, i*0.2, Call(chatmessage, baris)), from_other_thread=True)
                 babase.pushcall(Call(refresh_job, bruh_respone_delay, defname), from_other_thread=True)
 
     def vote_kick_analyzer(self):
@@ -11635,7 +11636,7 @@ class Translate:
             if str(translated_text).lower() == text_to_translate.lower():
                 babase.pushcall(Call(screenmessage, f"{CMD_LOGO_CAUTION} {get_lang_text('translateSameResult')}", COLOR_SCREENCMD_ERROR), from_other_thread=True)
             else:
-                babase.pushcall(babase.Call(self._apply_translation, translated_text), from_other_thread=True)
+                babase.pushcall(Call(self._apply_translation, translated_text), from_other_thread=True)
             #print(f"{self.run.__name__} {text} -> {translated_text}")
         #else:
             #babase.pushcall(Call(screenmessage, f"{CMD_LOGO_CAUTION} {get_lang_text('translateFailed')}", COLOR_SCREENCMD_ERROR), from_other_thread=True)
@@ -11765,7 +11766,7 @@ class PingThread:
 
                 if babase.app.classic.party_window(): # type: ignore
                     #if _ping_button.exists():
-                        babase.pushcall(Call(bui.buttonwidget,
+                        babase.pushcall(CallStrict(bui.buttonwidget,
                             edit=_ping_button, # type: ignore
                             label=f'{str(round(_server_ping))}', # type: ignore
                             textcolor=_get_ping_color()), from_other_thread=True # type: ignore
@@ -12050,7 +12051,7 @@ class SortMessagesList:
                 size=(self._scroll_width - 10, 30),
                 selectable=True,
                 always_highlight=True,
-                on_select_call=babase.Call(self._on_msg_select, msg),
+                on_select_call=CallStrict(self._on_msg_select, msg),
                 text=msg[1],
                 h_align='left',
                 v_align='center',
@@ -12556,7 +12557,7 @@ class PartySettingsWindow:
                 )
                 bui.checkboxwidget(
                     edit=widget,
-                    on_value_change_call=babase.Call(callback, cfg_key, msg, widget) if callback else None
+                    on_value_change_call=CallStrict(callback, cfg_key, msg, widget) if callback else None
                 )
                 self._bool_options_textwidgets[cfg_key] = widget
                 y_pos -= 10
@@ -12851,7 +12852,7 @@ class TranslationSettings:
             choices=['api', 'link'],
             choices_display=[babase.Lstr(value=get_lang_text('translateMethodAPI')), babase.Lstr(value=get_lang_text('translateMethodLINK'))],
             button_size=(130, 35),
-            on_value_change_call=babase.Call(self._change_setting, CFG_NAME_TRANSLATE_PREFERRED_MACHINE)
+            on_value_change_call=CallStrict(self._change_setting, CFG_NAME_TRANSLATE_PREFERRED_MACHINE)
         )
 
     def _create_setting_ui(self, setting:Dict[str, Any], y_pos: float, x_offset: float):
@@ -12877,7 +12878,7 @@ class TranslationSettings:
             choices=setting['choices'],
             choices_display=list(babase.Lstr(value=i) for i in [LANGUAGES[l] for l in setting['choices']]),
             button_size=(130, 35),
-            on_value_change_call=babase.Call(self._change_setting, setting['config'])
+            on_value_change_call=CallStrict(self._change_setting, setting['config'])
         )
 
     def _get_translation_settings(self) -> dict[str, dict[str, dict[str, Any]]]:
@@ -12956,7 +12957,7 @@ class ResponderSettingsWindow(popup.PopupWindow):
             scale=0.7,
             label='Refresh',
             color=self.bg_color,
-            on_activate_call=babase.Call(self._on_refresh_press),
+            on_activate_call=CallStrict(self._on_refresh_press),
             autoselect=False,
             icon=bui.gettexture('replayIcon'),
             iconscale=1.2)
@@ -12982,7 +12983,7 @@ class ResponderSettingsWindow(popup.PopupWindow):
             scale=0.7,
             label="Reset",
             color=self.bg_color,
-            on_activate_call= babase.Call(self._on_reset_press),
+            on_activate_call= CallStrict(self._on_reset_press),
             autoselect=False,
             icon=bui.gettexture('graphicsIcon'),
             iconscale=1.2)
@@ -13049,7 +13050,7 @@ class ResponderSettingsWindow(popup.PopupWindow):
             textcolor=(0.8, 0.8, 0.8),
             value=responder_config.get(config_key),
             text=display_name,
-            on_value_change_call=babase.Call(self._set_config, config_key, display_name),
+            on_value_change_call=CallPartial(self._set_config, config_key, display_name),
         )
 
     def _colorful_new_setting(self):
@@ -13090,7 +13091,7 @@ class ResponderSettingsWindow(popup.PopupWindow):
                 screenmessage(f'Whoa, Slowdown Pal {get_random_happy_emoji()}', color=COLOR_SCREENCMD_NORMAL)
                 return
             self._is_refreshing = True
-            babase.apptimer(3, babase.Call(self._reset_refresh))
+            babase.apptimer(3, Call(self._reset_refresh))
             self._column.delete()
             self._column = bui.columnwidget(parent=self._scroll_widget)
             self._checkboxes = {}
@@ -13161,28 +13162,28 @@ class ResponderSettingsWindow(popup.PopupWindow):
                     os.remove(file_path)
 
             #### Load Main Config ####
-            babase.AppTimer(0, babase.Call(load_responder_config))
-            babase.AppTimer(1/radius, babase.Call(_load_nicknames))
-            babase.AppTimer(2/radius, babase.Call(_load_saved_kunci_jawaban))
-            babase.AppTimer(3/radius, babase.Call(_load_saved_custom_replies))
+            babase.AppTimer(0, Call(load_responder_config))
+            babase.AppTimer(1/radius, Call(_load_nicknames))
+            babase.AppTimer(2/radius, Call(_load_saved_kunci_jawaban))
+            babase.AppTimer(3/radius, Call(_load_saved_custom_replies))
 
             #### Load Players Data ####
-            babase.AppTimer(4/radius, babase.Call(load_all_names_data))
-            babase.AppTimer(5/radius, babase.Call(load_responder_blacklist_names))
-            babase.AppTimer(6/radius, babase.Call(load_player_name_exceptions))
-            babase.AppTimer(7/radius, babase.Call(load_player_warnings))
-            babase.AppTimer(8/radius, babase.Call(load_muted_players))
+            babase.AppTimer(4/radius, Call(load_all_names_data))
+            babase.AppTimer(5/radius, Call(load_responder_blacklist_names))
+            babase.AppTimer(6/radius, Call(load_player_name_exceptions))
+            babase.AppTimer(7/radius, Call(load_player_warnings))
+            babase.AppTimer(8/radius, Call(load_muted_players))
 
             #### Load Abuses ####
-            babase.AppTimer(9/radius, babase.Call(load_abuses, id_lang))
-            babase.AppTimer(10/radius, babase.Call(load_abuses, en_lang))
-            babase.AppTimer(11/radius, babase.Call(load_abuses, hi_lang))
-            babase.AppTimer(12/radius, babase.Call(load_anti_abuse_exception_words))
+            babase.AppTimer(9/radius, Call(load_abuses, id_lang))
+            babase.AppTimer(10/radius, Call(load_abuses, en_lang))
+            babase.AppTimer(11/radius, Call(load_abuses, hi_lang))
+            babase.AppTimer(12/radius, Call(load_anti_abuse_exception_words))
 
             #### Server Players Data ####
-            babase.AppTimer(13/radius, babase.Call(load_players_server_data))
-            babase.AppTimer(14/radius, babase.Call(load_internal_chats_data))
-            babase.AppTimer(15/radius, babase.Call(load_internal_all_chats_data))
+            babase.AppTimer(13/radius, Call(load_players_server_data))
+            babase.AppTimer(14/radius, Call(load_internal_chats_data))
+            babase.AppTimer(15/radius, Call(load_internal_all_chats_data))
 
         except Exception as e:
             screenmessage(f"{CMD_LOGO_CAUTION} Error On Reset: {e}", color=COLOR_SCREENCMD_ERROR)
@@ -13382,7 +13383,7 @@ class PlayerInfoPopup(popup.PopupWindow):
             size=(40, 40),
             label='',
             scale=1,
-            on_activate_call=babase.Call(self.on_send_click, real_name, self.player_data[real_name].get('profile_name', None), self.player_data[real_name].get('client_id', '?'), self.player_data[real_name].get('pb_id', None)),
+            on_activate_call=CallStrict(self.on_send_click, real_name, self.player_data[real_name].get('profile_name', None), self.player_data[real_name].get('client_id', '?'), self.player_data[real_name].get('pb_id', None)),
             color=self.bg_color,
             autoselect=False,
             icon=bui.gettexture('rightButton'),
@@ -13430,7 +13431,7 @@ class PlayerInfoPopup(popup.PopupWindow):
                 size=(40, 40),
                 label='',
                 scale=1,
-                on_activate_call=babase.Call(ListPopup, all_names[self.real_name]['mutual_server'], "Mutual Servers"),
+                on_activate_call=CallStrict(ListPopup, all_names[self.real_name]['mutual_server'], "Mutual Servers"),
                 color=self.bg_color,
                 autoselect=False,
                 icon=bui.gettexture('achievementFreeLoader'),
@@ -13443,7 +13444,7 @@ class PlayerInfoPopup(popup.PopupWindow):
             size=(40, 40),
             label='',
             scale=1,
-            on_activate_call=babase.Call(self._on_other_option_pressed),
+            on_activate_call=CallStrict(self._on_other_option_pressed),
             color=self.bg_color,
             autoselect=False,
             icon=bui.gettexture('settingsIcon'),
@@ -13536,7 +13537,7 @@ class PlayerInfoPopup(popup.PopupWindow):
             text=text_str,
             width=550,
             height=150,
-            action=babase.Call(self._get_pb_online),
+            action=Call(self._get_pb_online),
             cancel_is_selected=True,
             text_scale=1,
             ok_text=get_lang_text('yes'),
@@ -13617,7 +13618,7 @@ class PlayerInfoPopup(popup.PopupWindow):
                 always_highlight=True,
                 color=(0.8, 0.8, 0.8)
             )
-            bui.textwidget(edit=widget, on_activate_call=babase.Call(self._on_textwidget_pressed, chat, widget))
+            bui.textwidget(edit=widget, on_activate_call=CallStrict(self._on_textwidget_pressed, chat, widget))
         if len(self.chats) > self.chats_per_page:
             bui.textwidget(edit=self._page_text, text=f"{get_lang_text('page')}: {self.current_page + 1} / {self.total_pages}")
 
@@ -13936,7 +13937,7 @@ class PlayerInfoPopup(popup.PopupWindow):
                 selectable=True,
                 autoselect=False,
                 click_activate=True,
-                on_activate_call=babase.Call(self._confirm_copy, text),
+                on_activate_call=CallStrict(self._confirm_copy, text),
                 color=bui.app.ui_v1.title_color)
         else:
             self._pb_text_widget = bui.textwidget(
@@ -13951,7 +13952,7 @@ class PlayerInfoPopup(popup.PopupWindow):
                 selectable=True,
                 autoselect=False,
                 click_activate=True,
-                on_activate_call=babase.Call(self._confirm_copy, text, True),
+                on_activate_call=CallStrict(self._confirm_copy, text, True),
                 color=bui.app.ui_v1.title_color)
 
     def _confirm_copy_chat(self, text: str):
@@ -13967,7 +13968,7 @@ class PlayerInfoPopup(popup.PopupWindow):
             text=f"{get_lang_text('confirmCopy')}\n{text_title}",
             width= width,
             height=135,
-            action=babase.Call(_copy_to_clipboard, text),
+            action=Call(_copy_to_clipboard, text),
             cancel_is_selected=True,
             text_scale=1,
             ok_text=get_lang_text('yes'),
@@ -13983,7 +13984,7 @@ class PlayerInfoPopup(popup.PopupWindow):
                     text=f"{get_lang_text('confirmCopy')}\n{text}",
                     width=max(200, len(text) * 10),
                     height=125,
-                    action=babase.Call(_copy_to_clipboard, text),
+                    action=CallStrict(_copy_to_clipboard, text),
                     cancel_is_selected=True,
                     text_scale=1,
                     cancel_text=get_lang_text('cancel'),
@@ -14017,7 +14018,7 @@ class PlayerInfoPopup(popup.PopupWindow):
                     text=text_str,
                     width=550,
                     height=150,
-                    action=babase.Call(self._get_pb_online),
+                    action=CallStrict(self._get_pb_online),
                     cancel_is_selected=True,
                     text_scale=1,
                     cancel_text=get_lang_text('cancel'),
@@ -14028,7 +14029,7 @@ class PlayerInfoPopup(popup.PopupWindow):
                     text=f"{get_lang_text('confirmCopy')}\n{text}",
                     width=min(len(text) * 13.5, 600),
                     height=125,
-                    action=babase.Call(_copy_to_clipboard, text),
+                    action=Call(_copy_to_clipboard, text),
                     cancel_is_selected=True,
                     text_scale=1,
                     cancel_text=get_lang_text('cancel'),
@@ -14193,7 +14194,7 @@ class ErrorPopup(popup.PopupWindow):
             text= text,
             width=(len(text) * 13.5),
             height=125,
-            action=babase.Call(self._copy_error),
+            action=CallStrict(self._copy_error),
             cancel_is_selected=True,
             cancel_text=get_lang_text('cancel'),
             text_scale=1,
@@ -14247,7 +14248,7 @@ class ErrorPopup(popup.PopupWindow):
                         selectable=True if line.strip() else False,
                         autoselect=False,
                         click_activate=True,
-                        on_activate_call=babase.Call(self._confirm_copy, line) if line.strip() else None,
+                        on_activate_call=CallStrict(self._confirm_copy, line) if line.strip() else None,
                         color=(0.8, 0.8, 0.8)
                     )
 
@@ -14268,7 +14269,7 @@ class ErrorPopup(popup.PopupWindow):
             text=f"{get_lang_text('confirmCopy')}?\n{text_title}",
             width= width,
             height=135,
-            action=babase.Call(_copy_to_clipboard, text),
+            action=Call(_copy_to_clipboard, text),
             cancel_is_selected=True,
             cancel_text=get_lang_text('cancel'),
             text_scale=1,
@@ -14323,7 +14324,7 @@ def _automatic_get_player_info_from_bcs():
             if name in ["LessPal"]: continue
             if name in MY_MASTER: continue # No
             if name in names_asked_bcs: continue
-            babase.pushcall(Call(babase.apptimer, time_out_asked_names_delay, Call(clear_timeout_asked_names, name)), from_other_thread=True)
+            babase.pushcall(CallStrict(babase.apptimer, time_out_asked_names_delay, CallStrict(clear_timeout_asked_names, name)), from_other_thread=True)
             data = _get_bcs_player_info(name)
             if data and isinstance(data, dict):
                 _bcs_player_info_obtained(account_name=name, account_data=data, no_confirmation=True, print_progress_only=True)
@@ -14573,7 +14574,7 @@ def _bcs_player_info_obtained(account_name: str, account_data: Dict[str, Any], n
             babase.pushcall(Call(ConfirmWindow,
                 origin_widget=None, # type: ignore
                 text=f"{text}:\n{account_name}?", # type: ignore
-                action= babase.Call(_overwrite_current_player_data_with_bcs_data, account_name, new_player_all_names_data), # type: ignore
+                action= Call(_overwrite_current_player_data_with_bcs_data, account_name, new_player_all_names_data), # type: ignore
                 cancel_is_selected=True, # type: ignore
                 width= min(len(text)*13.5, 600), # type: ignore
                 height= 150, # type: ignore
@@ -14712,7 +14713,7 @@ class PlayerListPopup(popup.PopupWindow):
             autoselect=False,
             selectable=True,
             click_activate=True,
-            on_activate_call=babase.Call(bs.broadcastmessage, get_random_happy_emoji(), COLOR_SCREENCMD_NORMAL),
+            on_activate_call=Call(bs.broadcastmessage, get_random_happy_emoji(), COLOR_SCREENCMD_NORMAL),
             color=bui.app.ui_v1.title_color)
         
         self._page_text = bui.textwidget(
@@ -14897,7 +14898,7 @@ class PlayerListPopup(popup.PopupWindow):
                 bs.broadcastmessage(f'Cooldown A Bit Pal {get_random_happy_emoji()}', color=COLOR_SCREENCMD_NORMAL)
                 return
             self._is_refreshing = True
-            babase.apptimer(6, babase.Call(self._reset_refresh))
+            babase.apptimer(6, Call(self._reset_refresh))
             load_all_names_data()
             if not self._is_searhing:
                 self.player_names = self._get_player_data_type(self._label, load_only=self._is_searhing)
@@ -14949,7 +14950,7 @@ class PlayerListPopup(popup.PopupWindow):
         #print(f"{self._show_page.__name__} is searhing: {self._is_searhing}")
         for i, (real_name, profile_info) in enumerate(list(self.player_names.items())[start_index:end_index]):
             row = bui.rowwidget(parent=self.scroll, size=(self.scroll_size[0], 40))
-            full_name = profile_info.get('profile_name')
+            full_name = profile_info.get('profile_name', [])
             client_id = profile_info.get('client_id')
             pb_id = all_names[real_name].get('pb_id')
 
@@ -14965,7 +14966,7 @@ class PlayerListPopup(popup.PopupWindow):
                 label=display_name,
                 position=(-10, 0),
                 size=(self.scroll_size[0] - 20, 38.5),
-                on_activate_call=babase.Call(self.on_player_data_pressed, real_name),
+                on_activate_call=Call(self.on_player_data_pressed, real_name),
                 enable_sound=False,
                 color=server_color_button if client_id == -1 else self.bg_color)
 
@@ -15084,7 +15085,7 @@ class ListPopup(popup.PopupWindow):
                 size=(40, 40),
                 label='',
                 color=self.bg_color,
-                on_activate_call= babase.Call(self._refresh, self._func_list_data),
+                on_activate_call= Call(self._refresh, self._func_list_data),
                 autoselect=False,
                 icon=bui.gettexture('replayIcon'),
                 iconscale=1.2)
@@ -15175,8 +15176,8 @@ class ListPopup(popup.PopupWindow):
 
         bui.textwidget(
             edit=text_widget,
-            on_activate_call=babase.Call(self._confirm_copy, text))
-        #    babase.Call(ListPopupInternalDataConfirmation, text, self._list_data, self) if not self._is_dict else
+            on_activate_call=CallStrict(self._confirm_copy, text))
+        #    Call(ListPopupInternalDataConfirmation, text, self._list_data, self) if not self._is_dict else
         self._text_widgets.append(text_widget)
 
     def _translate_textwidget(self, text_widget_text: str, text_widget: bui.Widget):
@@ -15216,7 +15217,7 @@ class ListPopup(popup.PopupWindow):
                         screenmessage(f'Cooldown A Bit Pal {get_random_happy_emoji()}', color=COLOR_SCREENCMD_NORMAL)
                         return
                     self._is_refreshing = True
-                    babase.apptimer(1.75, babase.Call(self._reset_refresh))
+                    babase.apptimer(1.75, Call(self._reset_refresh))
                     self._list_data = data()
                     screenmessage('Data Refreshed', color=COLOR_SCREENCMD_NORMAL)
                     self._show_page(self.current_page, is_refresh=True)
@@ -15255,7 +15256,7 @@ class ListPopup(popup.PopupWindow):
             text=f"{get_lang_text('confirmCopy')}?\n{text_title}",
             width= width,
             height=135,
-            action=babase.Call(_copy_to_clipboard, text),
+            action=CallStrict(_copy_to_clipboard, text),
             cancel_is_selected=True,
             cancel_text=get_lang_text('cancel'),
             text_scale=1,
@@ -15642,7 +15643,7 @@ class TranslateTextsPopup(popup.PopupWindow):
             text=text,
             width=min(len(text) * 13.5, 600),
             height=150,
-            action=babase.Call(self._exit_without_save),
+            action=Call(self._exit_without_save),
             cancel_button=True,
             cancel_is_selected=True,
             ok_text='Yes',
@@ -15658,7 +15659,7 @@ class TranslateTextsPopup(popup.PopupWindow):
                 text=text,
                 width=min(len(text) * 13.5, 600),
                 height=150,
-                action=babase.Call(args[0], args[1], [args[2]]),
+                action=Call(args[0], args[1], [args[2]]),
                 cancel_button=True,
                 cancel_is_selected=True,
                 ok_text=get_lang_text('yes'),
@@ -15675,7 +15676,7 @@ class TranslateTextsPopup(popup.PopupWindow):
                 text=text,
                 width=min(len(text) * 13.5, 600),
                 height=150,
-                action=babase.Call(args[0], args[1]),
+                action=Call(args[0], args[1]),
                 cancel_button=True,
                 cancel_is_selected=True,
                 ok_text=get_lang_text('yes'),
@@ -15741,7 +15742,7 @@ class TranslateTextsPopup(popup.PopupWindow):
             text=f'{text}',
             width=min(len(text) * 13.5, 600),
             height=150,
-            action=babase.Call(self._start_add_new_lang, lang_id, lang),
+            action=Call(self._start_add_new_lang, lang_id, lang),
             cancel_button=True,
             cancel_is_selected=True,
             ok_text=get_lang_text('yes'),
@@ -15786,7 +15787,7 @@ class TranslateTextsPopup(popup.PopupWindow):
                 v_align='center',
                 color=COLOR_SCREENCMD_NORMAL
            #     click_activate=True,
-           #     on_activate_call=babase.Call(self._select_key, key)
+           #     on_activate_call=Call(self._select_key, key)
             )
 
             invalid_format = INVALID_KEY_TEXT.format(f"{self._current_lang_id} {key}") if not self._is_editing_new_lang else ""
@@ -15807,7 +15808,7 @@ class TranslateTextsPopup(popup.PopupWindow):
                         edit=widget,
                         selectable=True,
                         click_activate=True,
-                        on_activate_call=babase.Call(self._confirm_copy, translated_lang)
+                        on_activate_call=Call(self._confirm_copy, translated_lang)
                     )
             else:
                 separted_texts = translated_lang.splitlines()
@@ -15826,7 +15827,7 @@ class TranslateTextsPopup(popup.PopupWindow):
                             edit=widget2,
                             selectable=True,
                             click_activate=True,
-                            on_activate_call=babase.Call(self._confirm_copy, str(text))
+                            on_activate_call=Call(self._confirm_copy, str(text))
                         )
                     if key in self._translation_text_widgets:
                         self._translation_text_widgets[key].append(widget2)
@@ -15848,7 +15849,7 @@ class TranslateTextsPopup(popup.PopupWindow):
             text=f"{get_lang_text('confirmCopy')}?\n{text_title}",
             width= width,
             height=135,
-            action=babase.Call(_copy_to_clipboard, text),
+            action=Call(_copy_to_clipboard, text),
             cancel_is_selected=True,
             cancel_text=get_lang_text('cancel'),
             ok_text=get_lang_text('copy'),
@@ -16470,7 +16471,7 @@ class EditableDataPopup(popup.PopupWindow):
         )
         bui.textwidget(
             edit=widget,
-            on_activate_call=babase.Call(self._on_textwidget_pressed, text, widget)
+            on_activate_call=Call(self._on_textwidget_pressed, text, widget)
         )
         self._text_widgets.append(widget)
 
@@ -16828,7 +16829,7 @@ class InternalChatsPopup(popup.PopupWindow):
             size=(40, 40),
             label='',
             color=self.bg_color,
-            on_activate_call= babase.Call(self._refresh, self._list_data_func),
+            on_activate_call= Call(self._refresh, self._list_data_func),
             autoselect=False,
             icon=bui.gettexture('replayIcon'),
             iconscale=1.2)
@@ -16846,7 +16847,7 @@ class InternalChatsPopup(popup.PopupWindow):
                         screenmessage(f'Cooldown A Bit Pal {get_random_happy_emoji()}', color=COLOR_SCREENCMD_NORMAL)
                         return
                     self._is_refreshing = True
-                    babase.apptimer(1.75, babase.Call(self._reset_refresh))
+                    babase.apptimer(1.75, Call(self._reset_refresh))
                     self._list_data = data()
                     screenmessage('Data Refreshed', color=COLOR_SCREENCMD_NORMAL)
                     self._show_page(self.current_page, is_refresh=True)
@@ -16917,7 +16918,7 @@ class InternalChatsPopup(popup.PopupWindow):
 
         bui.textwidget(
             edit=text_widget,
-            on_activate_call=babase.Call(self._on_internal_chats_data_pressed, text, text_widget) if not text.startswith('[SERVER]') else babase.Call(self._confirm_copy, text))
+            on_activate_call=Call(self._on_internal_chats_data_pressed, text, text_widget) if not text.startswith('[SERVER]') else Call(self._confirm_copy, text))
         self._text_widgets.append(text_widget)
 
     def _confirm_copy(self, text: str):
@@ -16933,7 +16934,7 @@ class InternalChatsPopup(popup.PopupWindow):
             text=f"{get_lang_text('confirmCopy')}?\n{text_title}",
             width= width,
             height=135,
-            action=babase.Call(_copy_to_clipboard, text),
+            action=Call(_copy_to_clipboard, text),
             cancel_is_selected=True,
             cancel_text=get_lang_text('cancel'),
             text_scale=1,
@@ -16950,7 +16951,7 @@ class InternalChatsPopup(popup.PopupWindow):
         choices_key, choices_display = get_choices_key_lang_text(POPUP_MENU_TYPE_CHAT_PRESS)
 
         # Using current session may cause less accurate current player
-        # current_namelist if bs.get_connection_to_host_info() else all_names
+        # current_namelist if bs.get_connection_to_host_info_2() else all_names
 
         # Show on party member press
         if name != "...":
@@ -17056,7 +17057,8 @@ class InternalChatsPopup(popup.PopupWindow):
 
             if choice == 'votekick':
                 # kick-votes appeared in build 14248
-                if (bs.get_connection_to_host_info().get('build_number', 0) < 14248):
+                host_info = bs.get_connection_to_host_info_2()
+                if host_info is not None and host_info.build_number < 14248:
                     return
                 name = account_name
                 if profiles:
@@ -17116,7 +17118,7 @@ class InternalChatsPopup(popup.PopupWindow):
                     text=f'{confirm_text}',
                     width=min((len(admin_kick_confirm_text) * 13.5), 600),
                     height=120,
-                    action=babase.Call(chatmessage, f'{KICK_CMD} {client_id}'),
+                    action=Call(chatmessage, f'{KICK_CMD} {client_id}'),
                     cancel_button=True,
                     cancel_is_selected=True,
                     cancel_text=get_lang_text('cancel'),
@@ -17135,7 +17137,7 @@ class InternalChatsPopup(popup.PopupWindow):
                     text=f'{confirm_text}',
                     width=min((len(admin_remove_confirm_text) * 13.5), 600),
                     height=120,
-                    action=babase.Call(chatmessage, f'{REMOVE_CMD} {client_id}'),
+                    action=Call(chatmessage, f'{REMOVE_CMD} {client_id}'),
                     cancel_button=True,
                     cancel_is_selected=True,
                     cancel_text=get_lang_text('cancel'),
@@ -17457,7 +17459,7 @@ class CustomAccountViewerWindow(AccountViewerWindow):
                 text=f"{get_lang_text('confirmCopy')}?\n{text_title}",
                 width= width,
                 height=135,
-                action=babase.Call(_copy_to_clipboard, text),
+                action=Call(_copy_to_clipboard, text),
                 cancel_is_selected=True,
                 text_scale=1,
                 ok_text=get_lang_text('copy'),
@@ -17607,7 +17609,7 @@ class CustomAccountViewerWindow(AccountViewerWindow):
                             maxwidth=sub_width * 0.9,
                             selectable=True,
                             click_activate=True,
-                            on_activate_call=babase.Call(self._confirm_copy_text, info)
+                            on_activate_call=Call(self._confirm_copy_text, info)
                         )
 
                 if player_mutual_server:
@@ -17644,7 +17646,7 @@ class CustomAccountViewerWindow(AccountViewerWindow):
                             maxwidth=sub_width * 0.9,
                             selectable=True,
                             click_activate=True,
-                            on_activate_call=babase.Call(self._confirm_copy_text, f"{mutual_server}")
+                            on_activate_call=Call(self._confirm_copy_text, f"{mutual_server}")
                         )
 
                 title_scale = 0.37
@@ -17745,7 +17747,7 @@ class CustomAccountViewerWindow(AccountViewerWindow):
                         maxwidth=sub_width * maxwidth_scale,
                         selectable=True,
                         click_activate=True,
-                        on_activate_call=babase.Call(self._confirm_copy_text, account_string)
+                        on_activate_call=Call(self._confirm_copy_text, account_string)
                     )
                     v -= account_name_spacing
 
@@ -18066,7 +18068,7 @@ def __popup_menu_window_init__(
         wdg = bui.textwidget(
             parent=self._columnwidget,
             size=(self._width - 40, 28),
-            on_select_call=babase.Call(self._select, index),
+            on_select_call=CallStrict(self._select, index),
             click_activate=True,
             color=(
                 (0.5, 0.5, 0.5, 0.5) if inactive else
@@ -18276,7 +18278,7 @@ class byLess(babase.Plugin):
         global auto_save_data_timer
         auto_save_data_timer = babase.AppTimer(
             auto_save_data_ratio,
-            babase.Call(_save_internal_data_normal),
+            CallStrict(_save_internal_data_normal),
             repeat=True
         )
 

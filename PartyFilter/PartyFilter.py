@@ -1,5 +1,6 @@
 # ba_meta require api 9
 # ba_meta nomod
+# ba_meta version 1.1.2
 
 from __future__ import annotations
 from typing import Callable, TypeVar
@@ -40,7 +41,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
             label='Party Filters',
             size=(120, 45),
             position=(110, height - 115),
-            on_activate_call=bs.WeakCall(self._open_window))
+            on_activate_call=bs.WeakCallPartial(self._open_window))
 
     @override(PublicGatherTab)
     def _open_window(self) -> None:
@@ -53,7 +54,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
             size=(c_width, c_height),
             color=(0.5, 0.5, 0.5),
             transition='in_scale',
-            on_outside_click_call=bs.WeakCall(self._close_window))
+            on_outside_click_call=bs.WeakCallPartial(self._close_window))
 
         v_ = 50
         bui.textwidget(
@@ -87,7 +88,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
             autoselect=True,
             textcolor=(0.8, 0.8, 0.8),
             value=not is_refreshing,
-            on_value_change_call=bs.WeakCall(self._toggle_refresh))
+            on_value_change_call=bs.WeakCallPartial(self._toggle_refresh))
 
         v -= v_
         bui.checkboxwidget(
@@ -99,7 +100,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
             color=(0.6, 0.6, 0.6),
             textcolor=(0.8, 0.8, 0.8),
             value=hide_full,
-            on_value_change_call=bs.WeakCall(self._toggle_full))
+            on_value_change_call=bs.WeakCallPartial(self._toggle_full))
 
         v -= v_
         self._empty_checkbox = bui.checkboxwidget(
@@ -111,7 +112,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
             color=(0.6, 0.6, 0.6),
             textcolor=(0.8, 0.8, 0.8),
             value=hide_empty,
-            on_value_change_call=bs.WeakCall(self._toggle_empty))
+            on_value_change_call=bs.WeakCallPartial(self._toggle_empty))
 
         v -= v_
         self._only_empty_checkbox = bui.checkboxwidget(
@@ -123,7 +124,7 @@ class EnhancedPublicGatherTab(PublicGatherTab):
             color=(0.6, 0.6, 0.6),
             textcolor=(0.8, 0.8, 0.8),
             value=only_empty,
-            on_value_change_call=bs.WeakCall(self._toggle_only_empty))
+            on_value_change_call=bs.WeakCallPartial(self._toggle_only_empty))
 
     @override(PublicGatherTab)
     def _close_window(self) -> None:
