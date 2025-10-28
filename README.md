@@ -1,6 +1,4 @@
-# Bombsquad Server
-
-## BombSquad Less Server Scripts v1.1.1
+# BombSquad Less Server Scripts v1.1.1
 #### A handy BombSquad server manager that makes it easy to keep your server up to date with the latest versions — packed with features and ready to use or tweak however you like.
 
 > [!NOTE]
@@ -59,7 +57,7 @@ Edit `config.yaml` in the root directory to set your server name, port, admins, 
 ./bombsquad_server.py
 ```
 
-<img width="771" height="670" alt="Image" src="https://github.com/user-attachments/assets/cacf9b0e-66a1-4037-80ef-cfde38b4dcc0" />
+<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/9cd5cb30-93c9-4f80-8477-f4b2d389b2d4" />
 
 ---
 
@@ -91,7 +89,7 @@ Manage your community in `dist/ba_root/mods/playersData/profiles.json`:
 
 ### Ranking & Social Systems
 - Advanced Rank System with progression tracking
-- Live Leaderboard displaying top 3 players
+- Live Leaderboard displaying top 5 players
 - Team Chat using comma prefix for team-only messages
 - In-game Popup Chat using dot prefix for prominent messages
 
@@ -106,7 +104,6 @@ Manage your community in `dist/ba_root/mods/playersData/profiles.json`:
 - Flexible Role System supporting unlimited custom roles with specific commands
 - Rejoin Cooldown to prevent spam rejoining
 - Automatic Stats Reset on configured schedule
-- New Account Restrictions to control joining and chatting permissions
 
 ### Moderation & Voting
 - Custom Voting System activated by end, sm, nv, dv commands
