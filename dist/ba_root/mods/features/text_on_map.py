@@ -129,8 +129,6 @@ class textonmap:
             print("Error showing team score:", e)
 
     def left_watermark(self, text: str):
-        #print("[left_watermark] Creando texto principal...")
-
         bs.newnode('text', attrs={
             'text': text,
             'flatness': 1.0,
@@ -221,18 +219,21 @@ class textonmap:
 
     def restart_msg(self):
         if hasattr(_babase, 'restart_scheduled'):
-            _babase.get_foreground_host_activity().restart_msg = bs.newnode(
-                'text',
-                attrs={
-                    'text': "El servidor se reiniciará después de esta serie.",
-                    'flatness': 1.0,
-                    'h_align': 'right',
-                    'v_attach': 'bottom',
-                    'h_attach': 'right',
-                    'scale': 0.5,
-                    'position': (-25, 54),
-                    'color': (1, 0.5, 0.7),
-                })
+            activity = bs.get_foreground_host_activity()
+            if not hasattr(activity, "restart_msg_node"):
+                activity.restart_msg_node = bs.newnode(
+                    'text',
+                    attrs={
+                        'text': "El servidor se reiniciará después de esta serie.",
+                        'flatness': 1.0,
+                        'h_align': 'right',
+                        'v_attach': 'bottom',
+                        'h_attach': 'right',
+                        'scale': 0.5,
+                        'position': (-25, 54),
+                        'color': (1, 0.5, 0.7),
+                    }
+                )
 
     def top_message(self, text):
         bs.newnode('text', attrs={

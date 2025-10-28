@@ -82,7 +82,7 @@ def get_profiles() -> dict:
                 f = open(PLAYERS_DATA_PATH + "profiles.json", "r")
                 profiles = json.load(f)
                 f.close()
-                print("Loading old profiles.json")
+                #print("Loading old profiles.json")
                 #os.system("pwd; ls")
                 #os.system("cat $HOME/serverbs/art.txt")
             CacheData.profiles = profiles

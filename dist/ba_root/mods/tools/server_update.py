@@ -12,10 +12,8 @@ from playersdata import pdata
 
 VERSION = 81
 
-
 def check():
     _thread.start_new_thread(updateProfilesJson, ())
-    _thread.start_new_thread(checkChangelog, ())
 
     bascenev1.apptimer(15, postStatus)
 
@@ -83,43 +81,3 @@ def checkSpammer(data):
 
     _thread.start_new_thread(checkMaster, (data,))
     return
-
-
-def fetchChangelogs():
-    url = "https://raw.githubusercontent.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/public-server/dist/ba_root/mods/changelogs.json"
-    try:
-        data = urllib.request.urlopen(url)
-        changelog = json.loads(data.read())
-    except:
-        return None
-    else:
-        return changelog
-
-
-def checkChangelog():
-    changelog = fetchChangelogs()
-    if changelog is None:
-        print(
-            f'{Clr.BRED} UNABLE TO CHECK UPDATES , CHECK MANUALLY FROM URL {Clr.RST}',
-            flush=True)
-    else:
-        msg = ""
-        avail = False
-        for log in changelog:
-            if int(log) > VERSION:
-                avail = True
-
-        if not avail:
-            print(
-                f'{Clr.BGRN}{Clr.WHT} YOU ARE ON LATEST VERSION {Clr.RST}',
-                flush=True)
-        else:
-            print(f'{Clr.BYLW}{Clr.BLU} UPDATES AVAILABLE {Clr.RST}',
-                  flush=True)
-            for log in changelog:
-                if int(log) > VERSION:
-                    msg = changelog[log]["time"]
-                    print(f'{Clr.CYN} {msg} {Clr.RST}', flush=True)
-
-                    msg = changelog[log]["log"]
-                    print(f'{Clr.MAG} {msg} {Clr.RST}', flush=True)

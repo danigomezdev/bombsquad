@@ -1,109 +1,155 @@
 # Bombsquad Server
 
-Modded server scripts to host Ballistica (BombSquad) server.  
-Running on **BS 1.7.41 (API 9)**  
+## BombSquad Less Server Scripts v1.1.1
+#### A handy BombSquad server manager that makes it easy to keep your server up to date with the latest versions — packed with features and ready to use or tweak however you like.
 
-## Requirements
+> [!NOTE]
+>  ### Running on **Bombsquad 1.7.51 (API 9)**
 
-- Basic knowledge of Linux  
-- A VPS (e.g. [Amazon Web Services](https://aws.amazon.com/), [Google Cloud](https://cloud.google.com/), [Microsoft Azure](https://portal.azure.com/))  
-- Any Linux distribution (recommended: **Ubuntu 22 or higher**)  
-- Python **3.13**  
-- At least **1 GB free memory** (recommended: 2 GB)  
+---
 
-## Installation
+## Quick Start
 
-### Install Python 3.13  
+### What You'll Need
 
-    sudo apt install python3.13 python3.13-dev python3.13-venv python3-pip -y  
+- **Basic Linux knowledge**
+- **A VPS** - Amazon Web Services, Google Cloud, Microsoft Azure, or your favorite provider
+- **Linux distro** - Ubuntu 22+ recommended
+- **Python 3.13**
+- **Memory** - 1 GB minimum (2 GB recommended)
 
-### Update installed and existing packages  
+---
 
-    sudo apt update && sudo apt upgrade -y  
+## Installation Guide
 
-### Start a new tmux session  
+### Step 1: Install Python 3.13
+```
+sudo apt install python3.13 python3.13-dev python3.13-venv python3-pip -y
+```
 
-    tmux new -s server  
+### Step 2: Update System Packages
+```
+sudo apt update && sudo apt upgrade -y
+```
 
-### Download Server Files
+### Step 3: Start a tmux Session
+```
+tmux new -s server
+```
 
-    git clone --depth=1 https://github.com/danigomezdev/bombsquad
+### Step 4: Download Server Files
+```
+git clone --depth=1 https://github.com/danigomezdev/bombsquad
+```
 
-#### Now edit config.yaml in root dir change server name, port, admins, playlist, team name etc.. Making the server files executable.
+### Step 5: Make Files Executable
+```
+chmod 777 bombsquad_server
+chmod 777 dist/bombsquad_headless
+```
 
+### Step 6: Configure Your Server
+Edit `config.yaml` in the root directory to set your server name, port, admins, playlist, and team names.
 
-    chmod 777 bombsquad_server
-    chmod 777 dist/bombsquad_headless
-    chmod 777 dist/bombsquad_headless_aarch64
+---
 
-## Starting the server
- 
-    ./bombsquad_server.py  
+## Starting Your Server
 
-<img width="503" height="694" alt="Image" src="https://github.com/user-attachments/assets/93d5fdc5-e1dd-4203-9962-896665858ec1" />
+```
+./bombsquad_server.py
+```
 
-___
-### More Configuration
-Open `dist/ba_root/mods/setting.json` in your prefered editor and change values according to you.
+<img width="771" height="670" alt="Image" src="https://github.com/user-attachments/assets/cacf9b0e-66a1-4037-80ef-cfde38b4dcc0" />
 
-[How to edit settings.json](https://github.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/wiki/Server-Settings)
+---
 
-[Available chat commands](https://github.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/wiki/Chat-commands)
+## Advanced Configuration
 
-___
-### Adding yourself as owner
-- Open `dist/ba_root/mods/playersData/roles.json` in your prefered editor.
-- Add your Pb-id in owner id list.
-- Restart your server
+### Server Settings
+Open `dist/ba_root/mods/setting.json` to customize your server settings.
 
-___
-### Managing players
-Open `dist/ba_root/mods/playersData/profiles.json` in your prefered editor.
+<!--
+**Useful Resources:**
+- [How to edit settings.json](https://github.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/wiki/Server-Settings)
+- [Available chat commands](https://github.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/wiki/Chat-commands)
+-->
 
-Here you can ban players, mute them, or disable their kick votes.
+### Adding Yourself as Owner
+1. Open `dist/ba_root/mods/playersData/roles.json`
+2. Add your Pb-id to the owner list
+3. Restart your server
 
+### Player Management
+Manage your community in `dist/ba_root/mods/playersData/profiles.json`:
+- Ban players
+- Mute players
+- Disable kick votes
+
+---
 
 ## Features
-- Rank System.
-- [Chat commands](https://github.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/wiki/Chat-commands).
-- V2 Account with cloud console for server.
-- check clients ping , use /ping chat command to check ping of any player._ba.get_client_ping().
-- Hide player specs from cleints, chatcommand /hideid /showid .
-- [Easy role management](https://github.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/wiki/Chat-commands#role-management-system) , create 1000 of roles as you wish add specific chat command to the role , give tag to role ..many more.
-- Rejoin cooldown.
-- Leaderboard , top 3 rank players name on top right corner.
-- Restrict some player to start kick vote.
-- Allow server owners to join even when server is full by looking owner IP address which was used earlier(don't join by queue).
-- Auto kick fake accounts (unsigned/not verified by master server).
-- Auto enable/disable public queue when server is full.
-- Auto night mode.
-- Transparent Kickvote , can see who started kick vote for whom.
-- Kickvote msg to chat/screen , can choose to show kickvote start msg either as screen message or chat message.
-- Players IP Address and Device UUID tracking and banning.
-- Team Chat, send msg starting with (,) comma to deliver it to team mates only.
-- In game popup chat , send msg starting with (.) Dot to send in game popup msg.
-- Custom Voting System , type end in chat to start end vote or sm , nv, dv.
-- support for [Ballisitca-web-stats](https://github.com/imayushsaini/ballistica-web-stats).
-- Integrated Discord bot to sync live stats(current players, chats , all logs) to discord.
-- Execute chat command remotely from discord.
-- Many New mini games and maps.
-- Colourfull bomb explosion.
-- Floater
-- Auto stats reset after configured days .
-- Auto remove afk/idle players.
-- Auto check server updates.
-- All settings at one place ,no coding exp. required just edit settings.json 
-- Configurable Server Host name.
-- Character chooser , players can choose any character while joining .
-- Restrict New accounts to join or chat in server.
-- Custom characters , easy to load and use characters made by character maker.
-- Auto Team Balance , player shift to small team in dualteam mode.
-- Integrated ElPatronPowerups.
-- Auto switch to coop mode when players are less then threshold.
-- Change playlist on fly with playlist code or name , i.e /playlist teams , /playlist coop , /playlist 34532
-- rotate prop nodes with node.changerotation(x,y,z)
-- set 2d mode with _ba.set_2d_mode(true)
-- set 2d plane with _ba.set_2d_plane(z) - beta , not works with spaz.fly = true. 
-- New Splitted Team in game score screen.
-- New final score screen , StumbledScoreScreen.
-- other small small feature improvement here there find yourself.
+
+### Ranking & Social Systems
+- Advanced Rank System with progression tracking
+- Live Leaderboard displaying top 3 players
+- Team Chat using comma prefix for team-only messages
+- In-game Popup Chat using dot prefix for prominent messages
+
+### Gameplay Enhancements
+- Character Chooser allowing players to select characters when joining
+- Custom Characters support with easy loading from character maker
+- Floater system for enhanced visual effects
+- Ping checking using /ping command to monitor connection quality
+
+### Server Management
+- V2 Account System with cloud console for remote management
+- Flexible Role System supporting unlimited custom roles with specific commands
+- Rejoin Cooldown to prevent spam rejoining
+- Automatic Stats Reset on configured schedule
+- New Account Restrictions to control joining and chatting permissions
+
+### Moderation & Voting
+- Custom Voting System activated by end, sm, nv, dv commands
+- Player ID hiding with /hideid and /showid commands
+- Automatic update checking to keep server current
+- Spectator control to hide player specs from clients
+
+### Customization Options
+- Configurable Server Host Names
+- Centralized Settings in settings.json file (no coding required)
+- Easy role management with custom tags and permissions
+
+---
+
+## Screenshots
+
+![Gameplay 1](https://github.com/user-attachments/assets/4c8024c0-4562-41b6-83a5-f493a960245f)
+
+![Gameplay 2](https://github.com/user-attachments/assets/5b95068c-1286-4aa7-914e-a8eb760ebf24)
+
+- ### More characters
+
+<div align="center">
+
+| | |
+|:---:|:---:|
+| <img src="https://github.com/user-attachments/assets/0b34cf2f-27d1-4998-b04e-196abea0c703" width="100%"> | <img src="https://github.com/user-attachments/assets/7728892e-f71a-40f8-9ce4-cefb3008c1d2" width="100%"> |
+| <img src="https://github.com/user-attachments/assets/3556ac0a-8885-4945-bc87-3ea699ca4f58" width="100%"> | <img src="https://github.com/user-attachments/assets/a03d32c7-953d-47a8-864c-3e299e551716" width="100%"> |
+
+</div>
+
+---
+
+## Videos
+
+
+- ###  Effects
+
+https://github.com/user-attachments/assets/a03445ed-0081-4cf6-a24a-335c49ef3f02
+
+---
+
+## Credits
+
+**Original Creation:** [Bombsquad Community](https://github.com/bombsquad-community/)  
+**Maintained by:** [Less](https://github.com/danigomezdev)

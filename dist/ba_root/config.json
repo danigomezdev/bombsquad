@@ -133,23 +133,38 @@
    "asyncio.selector_events._SelectorSocketTransport"
   ]
  },
+ "Custom Team Colors": [
+  [
+   0.1,
+   0.25,
+   1.0
+  ],
+  [
+   1.0,
+   0.25,
+   0.2
+  ]
+ ],
+ "Custom Team Names": [
+  "Azul",
+  "Rojo"
+ ],
  "Default Player Profiles": {
-  "Client Input Device #1": "[Denial]",
-  "Client Input Device #2": "__account__",
-  "Client Input Device #3": "perro peruano",
-  "Client Input Device #4": "_random",
-  "Client Input Device #5": "\u2133\ud804\udc64\u02d1 \u05b4 \u05b6 \ud80c\udc83",
-  "Client Input Device #6": "alexcrashres"
+  "Client Input Device #1": "__account__",
+  "Client Input Device #2": "eque fo\u0142\u0142a\ud83e\udd75\ud83d\ude0e",
+  "Client Input Device #3": "__account__",
+  "Client Input Device #4": "__account__",
+  "Client Input Device #5": "LEBRON JAMES 67",
+  "Client Input Device #6": "__account__",
+  "Client Input Device #7": "AntiChefsitos"
  },
  "FFA Series Length": 24,
- "Fleet Zone Ping Last Flush Time": 1759196305,
+ "Fleet Zone Ping Last Flush Time": 1761360649,
  "Fleet Zone Pings": {
   "prod": {
-   "atlanta.v4": 20.179086334786035,
-   "columbus.v4": 30.62886329586709,
-   "montreal.v4": 32.59597315788631,
-   "n_virginia.v4": 19.703637606736166,
-   "new_york.v4": 18.723822735944356
+   "atlanta.v4": 12.745638978570447,
+   "columbus.v4": 35.49092872923561,
+   "n_virginia.v4": 18.783540369989552
   }
  },
  "Free-for-All Playlist Randomize": true,
@@ -185,9 +200,214 @@
  "Signed In Last Session": false,
  "Team Tournament Playlist Randomize": true,
  "Team Tournament Playlist Selection": "__default__",
- "Team Tournament Playlists": {},
+ "Team Tournament Playlists": {
+  "REJCTX OFFICIAL PLAYLIST": [
+   {
+    "settings": {
+     "Epic Mode": false,
+     "Kills to Win Per Player": 5,
+     "Respawn Times": 0.5,
+     "Time Limit": 0,
+     "map": "Courtyard"
+    },
+    "type": "bastd.game.deathmatch.DeathMatchGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 4,
+     "Respawn Times": 1.0,
+     "Solo Mode": true,
+     "Time Limit": 0,
+     "map": "Rampage"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 3,
+     "Respawn Times": 0.5,
+     "Solo Mode": false,
+     "Time Limit": 0,
+     "map": "The Pad"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 3,
+     "Respawn Times": 0.5,
+     "Solo Mode": false,
+     "Time Limit": 0,
+     "map": "Crag Castle"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 2,
+     "Respawn Times": 0.5,
+     "Solo Mode": false,
+     "Time Limit": 0,
+     "map": "Step Right Up"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   },
+   {
+    "settings": {
+     "Epic Mode": false,
+     "Lives (0 = Unlimited)": 2,
+     "Respawn Times": 1.0,
+     "Time Limit": 0,
+     "map": "The Pad"
+    },
+    "type": "SuperSmash.SuperSmash"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 3,
+     "Players Per Team In Arena": 2,
+     "Respawn Times": 0.25,
+     "Time Limit": 0,
+     "map": "Crag Castle"
+    },
+    "type": "alliance_elimination.AllianceEliminationGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 3,
+     "Players Per Team In Arena": 2,
+     "Respawn Times": 0.25,
+     "Time Limit": 0,
+     "map": "Roundabout"
+    },
+    "type": "alliance_elimination.AllianceEliminationGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 3,
+     "Respawn Times": 1.0,
+     "Solo Mode": true,
+     "Time Limit": 0,
+     "map": "Courtyard"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 3,
+     "Respawn Times": 0.5,
+     "Solo Mode": false,
+     "Time Limit": 0,
+     "map": "Courtyard"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   },
+   {
+    "settings": {
+     "Epic Mode": false,
+     "Lives (0 = Unlimited)": 2,
+     "Respawn Times": 1.0,
+     "Time Limit": 0,
+     "map": "Courtyard"
+    },
+    "type": "SuperSmash.SuperSmash"
+   },
+   {
+    "settings": {
+     "Epic Mode": false,
+     "Kills to Win Per Player": 5,
+     "Respawn Times": 0.5,
+     "Time Limit": 0,
+     "map": "Doom Shroom"
+    },
+    "type": "bastd.game.deathmatch.DeathMatchGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 4,
+     "Respawn Times": 1.0,
+     "Solo Mode": true,
+     "Time Limit": 0,
+     "map": "Rampage"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 3,
+     "Respawn Times": 0.5,
+     "Solo Mode": false,
+     "Time Limit": 0,
+     "map": "Doom Shroom"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   },
+   {
+    "settings": {
+     "Epic Mode": false,
+     "Kills to Win Per Player": 5,
+     "Respawn Times": 0.5,
+     "Time Limit": 0,
+     "map": "Monkey Face"
+    },
+    "type": "bastd.game.deathmatch.DeathMatchGame"
+   },
+   {
+    "settings": {
+     "Epic Mode": false,
+     "Lives (0 = Unlimited)": 3,
+     "Respawn Times": 1.0,
+     "Time Limit": 0,
+     "map": "Doom Shroom"
+    },
+    "type": "SuperSmash.SuperSmash"
+   },
+   {
+    "settings": {
+     "Epic Mode": false,
+     "Kills to Win Per Player": 5,
+     "Respawn Times": 0.5,
+     "Time Limit": 0,
+     "map": "The Pad"
+    },
+    "type": "bastd.game.deathmatch.DeathMatchGame"
+   },
+   {
+    "settings": {
+     "Balance Total Lives": true,
+     "Epic Mode": false,
+     "Lives Per Player": 4,
+     "Respawn Times": 1.0,
+     "Solo Mode": true,
+     "Time Limit": 0,
+     "map": "Rampage"
+    },
+    "type": "bastd.game.elimination.EliminationGame"
+   }
+  ]
+ },
  "Teams Series Length": 7,
- "launchCount": 4,
+ "launchCount": 37,
  "lc14173": 1,
  "lc14292": 1
 }

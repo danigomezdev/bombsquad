@@ -5,7 +5,7 @@
 # Uncomment any of these values to override defaults.
 
 # Name of our server in the public parties list.
-party_name = "Teams @ Less East C 1"
+party_name = "Teams @ Less test"
 
 # If true, your party will show up in the global public party list
 # Otherwise it will still be joinable via LAN or connecting by IP
@@ -49,7 +49,7 @@ party_name = "Teams @ Less East C 1"
 #
 # 43210 is the default and the only port that will show up in the
 # LAN browser tab.
-port = 43210
+port = 6666
 
 # Max devices in the party. Note that this does *NOT* mean max
 # players. Any device in the party can have more than one player on
