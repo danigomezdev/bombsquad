@@ -57,7 +57,7 @@ Edit `config.yaml` in the root directory to set your server name, port, admins, 
 ./bombsquad_server.py
 ```
 
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/9cd5cb30-93c9-4f80-8477-f4b2d389b2d4" />
+<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/ccb85dc6-86ca-45a7-816f-11b86ab23be3" />
 
 ---
 
