@@ -117,6 +117,19 @@
     }
 ,
     {
+        "name": "Replay",
+        "file_name": "Replay.py",
+        "path": "Replay/Replay.py",
+        "api_version": 9,
+        "version": "3.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Replay/Replay.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Replay/Replay.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Replay/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Replay/README.md",
+        "description": "A mod that lets you watch game replays, with multiple extra features and guaranteeing a better experience"
+    }
+,
+    {
         "name": "Events Special Store",
         "file_name": "StoreEventSpecial.py",
         "path": "StoreEventSpecial/StoreEventSpecial.py",
