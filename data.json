@@ -130,6 +130,19 @@
     }
 ,
     {
+        "name": "Auto Respond",
+        "file_name": "AutoRespond.py",
+        "path": "AutoRespond/AutoRespond.py",
+        "api_version": 9,
+        "version": "2.8",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/AutoRespond/AutoRespond.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/AutoRespond/AutoRespond.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/AutoRespond/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/AutoRespond/README.md",
+        "description": "A mod that allows you to have automatic replies to specific messages"
+    }
+,
+    {
         "name": "Events Special Store",
         "file_name": "StoreEventSpecial.py",
         "path": "StoreEventSpecial/StoreEventSpecial.py",
