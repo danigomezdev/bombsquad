@@ -1,7 +1,7 @@
 # ba_meta require api 9
 # ba_meta name Less Party Window
 # ba_meta description A mod that makes scaled modifications to the PartyWindow, giving multiple options for use in-game
-# ba_meta version 1.1.4
+# ba_meta version 1.1.5
 
 from __future__ import annotations
 import re
@@ -26,11 +26,49 @@ from threading import Thread
 import logging
 import babase
 import bauiv1 as bui
+from bauiv1 import (
+    get_special_widget as gsw,
+    app as APP,
+    UIScale as uis
+)
 import bascenev1 as bs
 from babase._general import Call, CallPartial, CallStrict
 from babase._mgen.enums import SpecialChar, UIScale
 
 import _babase # type: ignore
+
+##
+from babase import (
+    clipboard_is_supported as clipboard_supported,
+    clipboard_get_text as get_clipboard_text,
+    clipboard_has_text as has_clipboard_text,
+    Plugin
+)
+from bauiv1 import (
+    get_special_widget as get_special_widget,
+    containerwidget as container_widget,
+    screenmessage as show_message,
+    checkboxwidget as checkbox_widget,
+    scrollwidget as scroll_widget,
+    buttonwidget as button_widget,
+    SpecialChar as SpecialChar,
+    textwidget as text_widget,
+    checkboxwidget as checkbox_widget,
+    gettexture as get_texture,
+    apptimer as timer,
+    getsound as get_sound,
+    UIScale as UIScale,
+    charstr as char_string,
+    app as app,
+    Call,
+    CallStrict,
+    CallPartial
+)
+from bascenev1 import (
+    get_chat_messages as get_chat_messages,
+    chatmessage as send_chat_message
+)
+##
 
 import bauiv1lib.party # Our Party Window Package
 from bauiv1lib.confirm import ConfirmWindow
@@ -86,6 +124,7 @@ from random import (
 )
 
 import _babase
+from _babase import get_string_width as strw
 import os
 
 from bauiv1lib.tabs import TabRow
@@ -303,6 +342,8 @@ backup_interval = 2
 
 sorry_delay = 5
 thanks_delay = 5
+toxic_delay = 0.2
+
 
 SORRY_WORDS = ["Sryyy", "Sorryy", "Sry", "Sowwy", "Forgive me"] # %
 SORRY_CONFESSION = ["My bad", "My fault", "My mistake", "My apologies", "Shouldn't have done that"] # $
@@ -457,6 +498,9 @@ party_window_backup_directory = main_directory + f"/{party_window_folder_name} B
 ## Main Data ##
 quick_msg_file_name = 'QuickMessages'
 quick_msg_file_path = party_window_directory + f'{quick_msg_file_name}.txt'
+
+toxic_msg_file_name = 'ToxicMessages'
+toxic_msg_file_path = party_window_directory + f'{toxic_msg_file_name}.txt'
 
 custom_command_file_name = 'Custom Commands'
 custom_command_file_path = party_window_directory + f'{custom_command_file_name}.txt'
@@ -617,6 +661,12 @@ def get_random_thanks_word() -> str:
     thanks = (random.choice(THANKS_ARGUMENTS).replace(
         '%',  random.choice(THANKS_WORDS)))
     return thanks
+
+def get_random_toxic_words() -> str:
+    words = _load_toxic_responds()
+    if not words:
+        words = default_toxic_responds
+    return random.choice(words)
 
 my_directory = _babase.env()['python_directory_user'] + "/UltraServerFinder"
 best_friends_file = os.path.join(my_directory, "BestFriends.txt")
@@ -955,7 +1005,7 @@ class Finder:
                 selectable=True,
                 click_activate=True,
                 glow_type='uniform',
-                on_activate_call=Call(s.copy,t)
+                on_activate_call=CallStrict(s.copy,t)
             ))
 
         account_v2 = [str(list(_.values())[1]) for _ in pz]
@@ -967,7 +1017,7 @@ class Finder:
             label=str(account_v2[0]) if account_v2 and account_v2[0] != [] else p,
             color=s.COL2,
             textcolor=s.COL4,
-            oac=Call(s.oke,'\n'.join([' | '.join([str(j) for j in _.values()]) for _ in pz]) or 'Nothing')
+            oac=CallStrict(s.oke,'\n'.join([' | '.join([str(j) for j in _.values()]) for _ in pz]) or 'Nothing')
         ))
 
         if account_v2 and str(account_v2[0]).startswith("\ue063"):
@@ -1849,6 +1899,562 @@ cw = lambda *,size=None,oac=None,**k: (p:=ocw(
 # Global
 BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
 TIP = lambda t: push(t,Finder.COL3)
+
+
+
+# Auto Respond #
+
+# Config
+CONFIG_PREFIX = 'ar3_'
+
+def get_config(key, value=None):
+    config_key = CONFIG_PREFIX + key
+    if value is None:
+        return app.config.get(config_key)
+    app.config[config_key] = value
+    app.config.commit()
+
+def reset_config():
+    config = app.config
+    for key in list(config.keys()):
+        if key.startswith(CONFIG_PREFIX):
+            del config[key]
+    config.commit()
+
+# Default configuration
+for i in range(4):
+    config_key = f'tune{i}'
+    current_value = get_config(config_key)
+    if current_value is None:
+        get_config(config_key, i < 3)
+
+if get_config('state') is None:
+    get_config('state', 1)
+
+if get_config('time') is None:
+    get_config('time', '0.5')
+
+if get_config('list') is None:
+    get_config('list', {})
+
+if get_config('list_lowercase') is None:
+    get_config('list_lowercase', {})
+
+class AddResponse:
+    """Add a response"""
+    def __init__(self, source):
+        self.window = AutoResponder.create_container_widget(
+            source=source,
+            size=(300, 295),
+            scale=AutoResponder.get_ui_scale() * 0.6
+        )
+        
+        self.text_widgets = []
+        for i in range(2):
+            label_text = ['If found', 'Respond with'][i]
+            text_widget(
+                parent=self.window,
+                text=label_text + ':',
+                position=(30, 250 - 70 * i)
+            )
+            
+            text_field = text_widget(
+                parent=self.window,
+                maxwidth=230,
+                size=(230, 30),
+                editable=True,
+                v_align='center',
+                color=(0.75, 0.75, 0.75),
+                position=(30, 218 - 70 * i),
+                allow_clear_button=False
+            )
+            self.text_widgets.append(text_field)
+            
+            AutoResponder.create_button(
+                parent=self.window,
+                size=(20, 30),
+                iconscale=1.3,
+                icon=get_texture('file'),
+                position=(265, 218 - 70 * i),
+                on_activate_call=CallStrict(self.paste_text, text_field)
+            )
+
+        for i in range(2):
+            text_widget(
+                parent=self.window,
+                text=['After', 'seconds'][i],
+                position=(30 + 160 * i, 105)
+            )
+            
+        self.time_text = text_widget(
+            parent=self.window,
+            size=(90, 30),
+            editable=True,
+            text=get_config('time'),
+            h_align='center',
+            position=(95, 105),
+            color=(0.75, 0.75, 0.75),
+            allow_clear_button=False
+        )
+        
+        self.wildcard_value = False
+        self.wildcard_checkbox = checkbox_widget(
+            parent=self.window,
+            size=(250, 30),
+            position=(27.5, 65),
+            text='Search in message',
+            value=self.wildcard_value,
+            on_value_change_call=CallPartial(setattr, self, 'wildcard_value'),
+            color=(0.75, 0.75, 0.75),
+            textcolor=(1, 1, 1),
+        )
+        
+        text_widget(
+            parent=self.window,
+            scale=0.6,
+            position=(20, 37.5),
+            text=f'%m: Your v2 name ({byLess.get_username()})\n%s: Sender name\n%t: Time (HH:MM:SS)',
+            maxwidth=190,
+            color=(0.65, 0.65, 0.65)
+        )
+        
+        AutoResponder.create_button(
+            parent=self.window,
+            label='Add',
+            size=(50, 35),
+            position=(230, 25),
+            on_activate_call=CallStrict(self.add_response, self.text_widgets)
+        )
+        
+        AutoResponder.play_swish_sound()
+
+    def add_response(self, text_widgets):
+        """Actually add the response"""
+        time_text = text_widget(query=self.time_text)
+        try:
+            time_value = float(time_text)
+        except ValueError:
+            AutoResponder.show_error('Invalid time. Fix your input!')
+            return
+            
+        get_config('time', str(time_value))
+        
+        trigger, response = [text_widget(query=widget).strip().replace('\n', ' ') for widget in text_widgets]
+        if not trigger or not response:
+            AutoResponder.show_error('Write something!')
+            return
+            
+        responses_list = get_config('list') or {}
+        responses_lowercase = get_config('list_lowercase') or {}
+        trigger_lower = trigger.lower()
+        
+        if trigger_lower in responses_lowercase:
+            AutoResponder.show_error('Trigger already exists!')
+            return
+            
+        responses_list.update({trigger: (response, time_value, self.wildcard_value)})
+        responses_lowercase.update({trigger_lower: (response, time_value, self.wildcard_value)})
+        
+        get_config('list', responses_list)
+        get_config('list_lowercase', responses_lowercase)
+        
+        # Clear input fields
+        for widget in text_widgets:
+            text_widget(widget, text='')
+            
+        AutoResponder.show_success()
+
+    def paste_text(self, target_widget):
+        """Paste from clipboard"""
+        if not clipboard_supported():
+            AutoResponder.show_error('Unsupported!')
+            return
+            
+        if not has_clipboard_text():
+            AutoResponder.show_error('Your clipboard is empty!')
+            return
+            
+        clipboard_content = get_clipboard_text().replace('\n', ' ')
+        text_widget(target_widget, text=clipboard_content, color=(0, 1, 0))
+        get_sound('gunCocking').play()
+        timer(0.3, CallStrict(text_widget, target_widget, color=(1, 1, 1)))
+        show_message('Pasted!', color=(0, 1, 0))
+
+
+class RemoveResponse:
+    """Remove a response"""
+    def __init__(self, source):
+        responses_count = len(get_config('list'))
+        if not responses_count:
+            AutoResponder.show_error('Add some triggers first!')
+            return
+            
+        self.window = AutoResponder.create_container_widget(
+            source=source,
+            size=(260, 350),
+            scale=AutoResponder.get_ui_scale() * 0.4
+        )
+        
+        scroll_area = scroll_widget(
+            parent=self.window,
+            size=(220, 290),
+            position=(20, 40)
+        )
+        
+        self.container = container_widget(
+            parent=scroll_area,
+            size=(220, responses_count * 30),
+            background=False
+        )
+        
+        AutoResponder.create_button(
+            parent=self.window,
+            label='Remove',
+            size=(60, 25),
+            position=(180, 10),
+            on_activate_call=CallStrict(self.remove_selected)
+        )
+        
+        self.response_widgets = []
+        self.selected_index = None
+        self.refresh_list()
+
+    def remove_selected(self):
+        """Actually remove the selected response"""
+        if self.selected_index is None:
+            AutoResponder.show_error('Select something!')
+            return
+            
+        responses_list = get_config('list')
+        responses_lowercase = get_config('list_lowercase')
+        
+        # Remove from both dictionaries
+        trigger_key = list(responses_list.keys())[self.selected_index]
+        responses_list.pop(trigger_key)
+        responses_lowercase.pop(trigger_key.lower())
+        
+        get_config('list', responses_list)
+        get_config('list_lowercase', responses_lowercase)
+        
+        self.selected_index = None
+        self.refresh_list()
+        AutoResponder.show_bye_message()
+
+    def refresh_list(self):
+        """Refresh the responses list"""
+        for widget in self.response_widgets:
+            widget.delete()
+        self.response_widgets.clear()
+        
+        responses_list = get_config('list')
+        triggers = list(responses_list.keys())
+        count = len(triggers)
+        
+        for i in range(count):
+            widget = text_widget(
+                text=triggers[i],
+                parent=self.container,
+                size=(220, 30),
+                selectable=True,
+                click_activate=True,
+                position=(0, (30 * count) - 30 * (i + 1)),
+                on_activate_call=CallStrict(self.highlight_item, i),
+            )
+            self.response_widgets.append(widget)
+            
+        container_widget(self.container, size=(220, count * 30))
+
+    def highlight_item(self, index):
+        """Highlight selected item"""
+        for widget in self.response_widgets:
+            text_widget(widget, color=(1, 1, 1))
+        text_widget(self.response_widgets[index], color=(0, 1, 0))
+        self.selected_index = index
+
+
+class Settings:
+    """The settings"""
+    def __init__(self, source):
+        self.window = AutoResponder.create_container_widget(
+            source=source,
+            size=(350, 190),
+            scale=AutoResponder.get_ui_scale() * 0.8
+        )
+        
+        AutoResponder.play_swish_sound()
+        
+        for i in range(4):
+            setting_text = [
+                'Notify upon responding',
+                'Ding upon responding',
+                'Respond to ' + byLess.get_username(),
+                'Case sensitive'
+            ][i]
+            config_key = f'tune{i}'
+            checkbox_widget(
+                text=setting_text,
+                parent=self.window,
+                size=(290, 30),
+                textcolor=(1, 1, 1),
+                value=get_config(config_key),
+                position=(30, 20 + 40 * i),
+                color=(0.13, 0.13, 0.13),
+                on_value_change_call=CallPartial(get_config, config_key)
+            )
+
+
+class ListResponses:
+    """List responses"""
+    def __init__(self, source):
+        responses_count = len(get_config('list'))
+        if not responses_count:
+            AutoResponder.show_error('Add some triggers first!')
+            return
+            
+        self.window = AutoResponder.create_container_widget(
+            source=source,
+            size=(450, 300),
+            scale=AutoResponder.get_ui_scale() * 0.6
+        )
+        
+        scroll_area = scroll_widget(
+            parent=self.window,
+            size=(150, 260),
+            position=(30, 20)
+        )
+        
+        self.container = container_widget(
+            parent=scroll_area,
+            size=(220, responses_count * 30),
+            background=False,
+        )
+        
+        self.info_texts = []
+        for i in range(3):
+            label_text = ['Trigger', 'Response', 'Parsed'][i]
+            text_color = [(0, 1, 1), (1, 1, 0), (1, 0, 1)][i]
+            text_widget(
+                color=text_color,
+                parent=self.window,
+                text=label_text + ':',
+                position=(190, 240 - 80 * i)
+            )
+            
+            info_text = text_widget(
+                parent=self.window,
+                maxwidth=250,
+                max_height=60,
+                v_align='top',
+                position=(190, 215 - 80 * i)
+            )
+            self.info_texts.append(info_text)
+            
+        button_widget(
+            parent=self.window,
+            position=(390, 240),
+            size=(40, 40),
+            label='',
+            texture=get_texture('achievementEmpty'),
+            on_activate_call=self.show_info,
+            color=(1, 1, 1),
+        )
+        
+        self.response_widgets = []
+        self.selected_index = None
+        self.refresh_list()
+        AutoResponder.play_swish_sound()
+
+    def show_info(self):
+        """Show response info"""
+        if self.selected_index is None:
+            AutoResponder.show_error('Select a trigger first!')
+            return
+            
+        response_data = list(get_config('list').values())[self.selected_index]
+        response_text, delay, wildcard = response_data
+        show_message(f'Trigger order: {self.selected_index + 1}\nResponds after: {delay} seconds\nWildcard: {wildcard}')
+        get_sound('tap').play()
+
+    def refresh_list(self):
+        """Refresh the responses list"""
+        for widget in self.response_widgets:
+            widget.delete()
+        self.response_widgets.clear()
+        
+        responses_list = get_config('list')
+        triggers = list(responses_list.keys())
+        count = len(triggers)
+        
+        for i in range(count):
+            widget = text_widget(
+                text=triggers[i],
+                parent=self.container,
+                size=(150, 30),
+                selectable=True,
+                click_activate=True,
+                position=(0, (30 * count) - 30 * (i + 1)),
+                on_activate_call=CallStrict(self.highlight_item, i),
+            )
+            self.response_widgets.append(widget)
+            
+        container_widget(self.container, size=(220, count * 30))
+
+    def highlight_item(self, index):
+        """Highlight selected item"""
+        for widget in self.response_widgets:
+            text_widget(widget, color=(1, 1, 1))
+        text_widget(self.response_widgets[index], color=(0, 1, 0))
+        self.selected_index = index
+        
+        responses_list = get_config('list')
+        trigger = list(responses_list.keys())[index]
+        response_data = responses_list[trigger]
+        parsed_response = AutoResponder.parse_response(response_data[0])
+        
+        display_texts = [trigger, response_data[0], parsed_response]
+        for i in range(3):
+            text_widget(self.info_texts[i], text=self.format_text(display_texts[i]))
+
+    def format_text(self, text):
+        """Format text for display"""
+        output = ''
+        current_width = 0.0
+        for char in text:
+            char_width = strw(char, suppress_warning=True)
+            if current_width + char_width > 520:
+                output += '\n'
+                current_width = 0.0
+            output += char
+            current_width += char_width
+        return output
+
+
+class AutoResponder:
+    """The AutoResponder base class"""
+    
+    @classmethod
+    def get_ui_scale(cls):
+        ui_scale = app.ui_v1.uiscale
+        scale_map = {UIScale.SMALL: 1.5, UIScale.MEDIUM: 1.1, UIScale.LARGE: 0.8}
+        return scale_map.get(ui_scale, 1.0)
+
+    @classmethod
+    def parse_response(cls, text, sender=None):
+        """Parse response text with variables"""
+        username = byLess.get_username()
+        return (text
+                .replace('%t', datetime.now().strftime("%H:%M:%S"))
+                .replace('%s', sender or char_string(SpecialChar.V2_LOGO) + 'BroBordd')
+                .replace('%m', username))
+
+    @classmethod
+    def create_button(cls, **kwargs):
+        """Create a styled button"""
+        return button_widget(
+            **kwargs,
+            textcolor=(1, 1, 1),
+            color=(0.18, 0.18, 0.18)
+        )
+
+    @classmethod
+    def create_container_widget(cls, source, scale=0, **kwargs):
+        """Create a container widget"""
+        center = source.get_screen_space_center() if source else None
+        container = container_widget(
+            **kwargs,
+            scale=cls.get_ui_scale() + scale,
+            transition='in_scale',
+            color=(0.18, 0.18, 0.18),
+            parent=get_special_widget('overlay_stack'),
+            scale_origin_stack_offset=center
+        )
+        container_widget(container, on_outside_click_call=CallStrict(cls.play_swish_sound, target=container))
+        return container
+
+    @classmethod
+    def play_swish_sound(cls, target=None):
+        get_sound('swish').play()
+        if target:
+            container_widget(target, transition='out_scale')
+
+    @classmethod
+    def show_error(cls, message):
+        get_sound('block').play()
+        show_message(message, color=(1, 1, 0))
+
+    @classmethod
+    def show_success(cls):
+        get_sound('dingSmallHigh').play()
+        show_message('Okay!', color=(0, 1, 0))
+
+    @classmethod
+    def show_bye_message(cls):
+        get_sound('laser').play()
+        show_message('Bye!', color=(0, 1, 0))
+
+    def __init__(self, source=None):
+        self.window = self.create_container_widget(
+            source=source,
+            size=(260, 370),
+        )
+        
+        # Title with shadow effect
+        for i in [1, 0]:
+            text_widget(
+                scale=2,
+                parent=self.window,
+                text='Auto',
+                h_align='center',
+                position=(65 - i * 3, 325 - i * 3),
+                color=[(1, 1, 1), (0.6, 0.6, 0.6)][i]
+            )
+            
+        # Menu buttons
+        menu_items = ['Add', 'Remove', 'Settings', 'List']
+        button_textures = ['ouyaOButton', 'ouyaAButton', 'ouyaUButton', 'ouyaYButton']
+        
+        for i in range(4):
+            button = self.create_button(
+                label=menu_items[i],
+                parent=self.window,
+                size=(200, 65),
+                position=(30, 230 - 70 * i),
+                icon=get_texture(button_textures[i])
+            )
+            
+            # Use lambda to create the proper callback
+            button_widget(button, on_activate_call=lambda btn=button, idx=i: 
+                         [AddResponse, RemoveResponse, Settings, ListResponses][idx](btn))
+        
+        # Toggle button
+        self.toggle_button = self.create_button(
+            parent=self.window,
+            size=(60, 40),
+            position=(155, 315),
+            button_type='square',
+            on_activate_call=self.toggle_state
+        )
+        self.update_toggle_button()
+        self.play_swish_sound()
+
+    def toggle_state(self, dry_run=False):
+        current_state = get_config('state')
+        if not dry_run:
+            new_state = 1 if not current_state else 0
+            get_config('state', new_state)
+            get_sound('deek').play()
+            self.update_toggle_button()
+
+    def update_toggle_button(self):
+        current_state = get_config('state')
+        button_widget(
+            self.toggle_button,
+            label=['OFF', 'ON'][current_state],
+            color=[(0.35, 0, 0), (0, 0.45, 0)][current_state],
+            textcolor=[(0.5, 0, 0), (0, 0.6, 0)][current_state]
+        )
+
+# Auto Respond #
 
 
 button_delays_dict: Dict[str, dict[str, float]] = {}
@@ -3421,6 +4027,20 @@ Translate_Texts: Dict[str, dict[str, str]] = {
     'es': 'Buscar',    
     'ml': 'തിരയുക'       
 },
+'auto_respond': {
+    "id": "Penjawab Otomatis",
+    "en": "Auto",
+    "hi": "स्वचालित उत्तरदाता",
+    "es": "Auto",
+    "ml": "സ്വയമേവ പ്രതികരിക്കുക"
+},
+'toxic': {
+    "id": "Beracun",
+    "en": "Hate",
+    "hi": "ज़हरीला व्यवहार",
+    "es": "Hate",
+    "ml": "വിഷമുള്ള പെരുമാറ്റം"
+},
 'thanks': {
     'id': 'Makasih',
     'en': 'Thanks',
@@ -4406,6 +5026,10 @@ add_custom_reply_cmd = 'addcr'
 remove_custom_reply_cmd = 'rmcr'
 custom_reply_divider = ':'
 
+add_custom_toxic_responses_cmd = 'txr'
+remove_custom_toxic_responses = 'toxic'
+custom_toxic_responses_divider = ':'
+
 add_abuse_cmd = 'addab'
 remove_abuse_cmd = 'rmab'
 abuse_cmd_divider = ':'
@@ -4556,7 +5180,9 @@ toggle_remove_question = CMD_MAIN_PREFIX + remove_question
 toggle_add_nick = CMD_MAIN_PREFIX + add_nick
 toggle_remove_nick = CMD_MAIN_PREFIX + remove_nick
 toggle_add_custom_replies = CMD_MAIN_PREFIX + add_custom_reply_cmd
+toggle_add_custom_toxic_responses = CMD_MAIN_PREFIX + add_custom_toxic_responses_cmd
 toggle_remove_custom_replies = CMD_MAIN_PREFIX + remove_custom_reply_cmd
+toggle_remove_custom_toxic_responses = CMD_MAIN_PREFIX + remove_custom_reply_cmd
 toggle_add_responder_blacklist = CMD_MAIN_PREFIX + add_blacklist
 toggle_remove_responder_blacklist = CMD_MAIN_PREFIX + remove_blacklist
 toggle_add_player_anti_abuse_exception = CMD_MAIN_PREFIX + add_name_exception
@@ -4590,45 +5216,55 @@ all_toggles: list[str] = [
 ]
 
 info_msgs = [
+    # --- Main / Useful Commands ---
     f'Atajo para abrir la ventana de configuración (en el chat): {CMD_MAIN_PREFIX}{open_settings_window}',
-    f'El botón de "refresh" actúa como un reinicio de sesión, similar a reiniciar el juego, pero de forma más suave.',
-    f'Puedes cambiar configuraciones usando {CMD_MAIN_PREFIX}{set_config} seguido del nombre del ajuste.',
-    f'También puedes cambiar el prefijo principal a lo que quieras. Prefijo actual: {CMD_MAIN_PREFIX}',
-    f'Hay una función de lista negra para bloquear a cualquier jugador de usar las funciones de este plugin.',
-    f'Puedes agregar preguntas usando {CMD_MAIN_PREFIX}{add_question}',
-    f'Configura un apodo para saludos automáticos cuando los jugadores te llamen con "ese apodo" usando {CMD_MAIN_PREFIX}{add_nick}',
-    f'Existe una función para guardar los nombres y perfiles de los jugadores.',
-    f'Usa {CMD_MAIN_PREFIX}{find_player_in_current_session} para buscar datos de jugadores desde que abriste BombSquad.',
     f'Usa {CMD_MAIN_PREFIX}{show_session_list_window} para abrir la lista de sesión en una ventana.',
-    f'Usa {CMD_MAIN_PREFIX}{find_player_in_all_list} para buscar datos de jugadores desde que empezaste a usar este plugin.',
     f'Usa {CMD_MAIN_PREFIX}{show_all_list_window} para abrir la lista completa de nombres en una versión con ventana.',
-    f'Usa {CMD_MAIN_PREFIX}{show_current_list_msg} para enviar la lista actual (del servidor) en el chat.',
-    f'Usa {CMD_MAIN_PREFIX}{show_all_list_msg} para enviar la lista completa de nombres en el chat. Evita usarlo en un servidor.',
-    f'Usa {CMD_MAIN_PREFIX}{add_abuse_cmd} y {CMD_MAIN_PREFIX}{remove_abuse_cmd} para agregar o eliminar abusos.',
-    f'Usa {CMD_MAIN_PREFIX}{add_abuse_exception} para añadir palabras de excepción a los abusos.',
-    f'Usa {CMD_MAIN_PREFIX}{add_name_exception} para añadir jugadores/cuentas de excepción a los abusos.',
-    f'Otros comandos relacionados con anti-abuso: {CMD_MAIN_PREFIX}{add_warn_cmd}, {CMD_MAIN_PREFIX}{decrease_warn_cmd}, {CMD_MAIN_PREFIX}{reset_player_warning_cmd}, {CMD_MAIN_PREFIX}{reset_all_player_warning_cmd}',
-    f'Las respuestas personalizadas ({CMD_MAIN_PREFIX}{add_custom_reply_cmd}) permiten personalizar el texto:',
-    f'$name (perfil), $acc (nombre de cuenta), $cid (client id), y ($unamused & $happy) son emojis.',
-    f'{CMD_MAIN_PREFIX}{translate_cmd} sirve para traducir, soporta hasta 4 casos.',
-    f'Usa {CMD_MAIN_PREFIX}{update_pb_cmd} para fusionar todos los datos de la lista con la base de jugadores del servidor (si está disponible).',
-    f'Ahora puedes buscar usando listas con ventana, similar a {CMD_MAIN_PREFIX}{find_player_in_current_session}.',
+    f'Muestra los mensajes recientes ampliados con {CMD_MAIN_PREFIX}{open_all_chats_window}',
+    f'Usando {CMD_MAIN_PREFIX}{add_custom_toxic_responses_cmd} podrás editar o agregar mensajes tóxicos personalizados',
+
+    # --- Player Data / Management ---
+    f'Hay una función de lista negra para bloquear a cualquier jugador de usar las funciones de este plugin.',
+    f'Existe una función para guardar los nombres y perfiles de los jugadores.',
     f'Los comandos para agregar cosas relacionadas con nombres de cuenta admiten coincidencias parciales, así que usa letras más específicas,',
     f'y hazlo antes de cerrar BS, ya que los datos de jugador se pierden al cerrar el juego.',
     f'Hacer coincidir puede ser problemático, pero intentaré arreglarlo en futuras actualizaciones.',
+
+    # --- Configuration / Preferences ---
+    f'También puedes cambiar el prefijo principal a lo que quieras. Prefijo actual: {CMD_MAIN_PREFIX}',
+    f'Si no usas PC, desactiva {config_name_cmdprint} para reducir el lag.',
+    f'No olvides cambiar el nombre del propietario para tener permiso de uso y actualizar tus apodos.',
+
+    # --- Files / Persistence ---
     f'Al reiniciar se eliminan todos los archivos guardados (excepto {saved_names_file_name}) y se crean nuevos.',
-    f'Muestra los mensajes recientes ampliados con {CMD_MAIN_PREFIX}{open_all_chats_window}',
-    f'Usa {CMD_MAIN_PREFIX}{info_player_in_current_session} para obtener la ventana de información del jugador.',
-    f'{config_name_partial_match_abuses} es para coincidencias parciales de abusos en lugar de coincidencias exactas.',
-    f'La configuración \"{config_name_screenmessage_cmd}\" sirve para mostrar el resultado del comando como ScreenMessage en lugar de enviarlo al chat.',
-    f'La configuración \"{config_name_show_my_master_ping}\" envía tu ping automáticamente si tú o alguien usa /ping.',
     f'Todos los datos se guardan en:',
     f'{str(responder_directory)}',
-    f'No olvides cambiar el nombre del propietario para tener permiso de uso y actualizar tus apodos.',
-    f'Si no usas PC, desactiva {config_name_cmdprint} para reducir el lag.',
+
+    # --- Disclaimer / Notes ---
     f'Descargo de responsabilidad: este plugin no puede hacer coincidencias de nombres de jugadores con 100% de precisión. Nombres complicados, nombres duplicados,',
     f'o con puntos pueden causar errores o imprecisiones y provocar que algunos atributos se vuelvan inútiles o inestables.',
-    f'Revisa dos veces cualquier dato incorrecto o inexacto relacionado con nombres de jugadores.'
+    f'Revisa dos veces cualquier dato incorrecto o inexacto relacionado con nombres de jugadores.',
+
+    # --- Comments (Disabled Original Info) ---
+    #f'Puedes cambiar configuraciones usando {CMD_MAIN_PREFIX}{set_config} seguido del nombre del ajuste.',
+    #f'Puedes agregar preguntas usando {CMD_MAIN_PREFIX}{add_question}',
+    #f'Configura un apodo para saludos automáticos cuando los jugadores te llamen con "ese apodo" usando {CMD_MAIN_PREFIX}{add_nick}',
+    #f'Usa {CMD_MAIN_PREFIX}{find_player_in_current_session} para buscar datos de jugadores desde que abriste BombSquad.',
+    #f'Usa {CMD_MAIN_PREFIX}{find_player_in_all_list} para buscar datos de jugadores desde que empezaste a usar este plugin.',
+    #f'Usa {CMD_MAIN_PREFIX}{show_current_list_msg} para enviar la lista actual (del servidor) en el chat.',
+    #f'Usa {CMD_MAIN_PREFIX}{show_all_list_msg} para enviar la lista completa de nombres en el chat. Evita usarlo en un servidor.',
+    #f'Usa {CMD_MAIN_PREFIX}{add_abuse_cmd} y {CMD_MAIN_PREFIX}{remove_abuse_cmd} para agregar o eliminar abusos.',
+    #f'Usa {CMD_MAIN_PREFIX}{add_abuse_exception} para añadir palabras de excepción a los abusos.',
+    #f'Usa {CMD_MAIN_PREFIX}{add_name_exception} para añadir jugadores/cuentas de excepción a los abusos.',
+    #f'Otros comandos relacionados con anti-abuso: {CMD_MAIN_PREFIX}{add_warn_cmd}, {CMD_MAIN_PREFIX}{decrease_warn_cmd}, {CMD_MAIN_PREFIX}{reset_player_warning_cmd}, {CMD_MAIN_PREFIX}{reset_all_player_warning_cmd}',
+    #f'Las respuestas personalizadas ({CMD_MAIN_PREFIX}{add_custom_reply_cmd}) permiten personalizar el texto:',
+    #f'$name (perfil), $acc (nombre de cuenta), $cid (client id), y ($unamused & $happy) son emojis.',
+    #f'{CMD_MAIN_PREFIX}{translate_cmd} sirve para traducir, soporta hasta 4 casos.',
+    #f'Usa {CMD_MAIN_PREFIX}{update_pb_cmd} para fusionar todos los datos de la lista con la base de jugadores del servidor (si está disponible).',
+    #f'Usa {CMD_MAIN_PREFIX}{info_player_in_current_session} para obtener la ventana de información del jugador.',
+    #f'{config_name_partial_match_abuses} es para coincidencias parciales de abusos en lugar de coincidencias exactas.',
+    #f'La configuración \"{config_name_screenmessage_cmd}\" sirve para mostrar el resultado del comando como ScreenMessage en lugar de enviarlo al chat.',
+    #f'La configuración \"{config_name_show_my_master_ping}\" envía tu ping automáticamente si tú o alguien usa /ping.',
 ]
 
 ###### INTERNAL CHATS DATA ######
@@ -6945,6 +7581,7 @@ default_quick_responds: List[str] = [
     'Dude That\'s Amazing!',
     'Good Game! $happy'
 ]
+
 quick_responds: List[str] = []
 """Our Quick Responds"""
 def _load_quick_responds() -> List[str]:
@@ -6980,6 +7617,47 @@ def _save_quick_responds(data: List[str]):
     except Exception as e:
         logging.exception()
         screenmessage(f'Error writing quick responds: {e}', (1, 0, 0))
+        bui.getsound('error').play(1.5)
+
+default_toxic_responds: List[str] = [
+    'ez',
+    'zzz'
+]
+toxic_responds: List[str] = []
+"""Our Quick Responds"""
+def _load_toxic_responds() -> List[str]:
+    global toxic_responds
+    try:
+        if os.path.exists(toxic_msg_file_path):
+            with open(toxic_msg_file_path, 'r') as f:
+                toxic_responds = f.read().splitlines()
+                return toxic_responds
+        else:
+            toxic_responds = default_toxic_responds
+            _save_toxic_responds(default_toxic_responds)
+            return default_toxic_responds
+    except Exception as e:
+        print_internal_exception(e)
+    return default_toxic_responds
+
+def _save_toxic_responds(data: List[str]):
+    try:
+        if os.path.exists(toxic_msg_file_path):
+            with open(toxic_msg_file_path, 'r') as f:
+                existing_data = f.read().splitlines()
+            if existing_data != data:
+                with open(toxic_msg_file_path, 'w') as f:
+                    f.write('\n'.join(data))
+            else:
+                #print('Same Quick Respond Data')
+                pass
+        else:
+            with open(toxic_msg_file_path, 'w') as f:
+                f.write('\n'.join(data))
+
+    except Exception as e:
+        logging.exception()
+        screenmessage(f'Error writing toxic responds: {e}', (1, 0, 0))
         bui.getsound('error').play(1.5)
 ####### QUICK MESSAGES #######
 
@@ -8166,30 +8844,57 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             color=self.bg_color)
         bui.buttonwidget(edit=self._chat_name_view_type_button, on_activate_call=self._on_chat_view_button_press)
 
-        thanks_ds: str = f'{get_lang_text("thanks")}!'
-        self._thanks_button = bui.buttonwidget(
+
+        toxic_ds: str = f'{get_lang_text("toxic")}!'
+        self._toxic_button = bui.buttonwidget(
             parent=self._root_widget,
             size=(45, 30),
             scale=2.15,
-            label=thanks_ds,
+            label=toxic_ds,
             button_type='square',
             color=self.bg_color,
-            position=(self._width-25, self._height * 0.615 if not self.uiscale is babase.UIScale.SMALL else self._height * 0.55),
+            position=(self._width-25, self._height * 0.55 if not self.uiscale is babase.UIScale.SMALL else self._height * 0.46),
         )
+
         bui.buttonwidget(
-            edit=self._thanks_button,
+            edit=self._toxic_button,
             on_activate_call=CallStrict(
                 self._start_button_delay,
-                self._thanks_button,
-                thanks_ds,
-                get_random_thanks_word,
-                thanks_delay
+                self._toxic_button,
+                toxic_ds,
+                get_random_toxic_words,
+                toxic_delay
             ),
             label=(
-                thanks_ds if ButtonDelayHandler().get_delay(thanks_ds) is False else
-                ButtonDelayHandler().continue_delay(self._thanks_button, thanks_ds)
+                toxic_ds if ButtonDelayHandler().get_delay(toxic_ds) is False else
+                ButtonDelayHandler().continue_delay(self._toxic_button, toxic_ds)
             )
         )
+
+        #thanks_ds: str = f'{get_lang_text("thanks")}!'
+        #self._thanks_button = bui.buttonwidget(
+        #    parent=self._root_widget,
+        #    size=(45, 30),
+        #    scale=2.15,
+        #    label=thanks_ds,
+        #    button_type='square',
+        #    color=self.bg_color,
+        #    position=(self._width-25, self._height * 0.55 if not self.uiscale is babase.UIScale.SMALL else self._height * 0.46),
+        #)
+        #bui.buttonwidget(
+        #    edit=self._thanks_button,
+        #    on_activate_call=CallStrict(
+        #        self._start_button_delay,
+        #        self._thanks_button,
+        #        thanks_ds,
+        #        get_random_thanks_word,
+        #        thanks_delay
+        #    ),
+        #    label=(
+        #        thanks_ds if ButtonDelayHandler().get_delay(thanks_ds) is False else
+        #        ButtonDelayHandler().continue_delay(self._thanks_button, thanks_ds)
+        #    )
+        #)
 
         #sorry_ds: str = f'{get_lang_text("sorry")}!'
         #self._sorry_button = bui.buttonwidget(
@@ -9191,16 +9896,16 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             return
         else:
             if msg.startswith(CMD_MAIN_PREFIX) and len(msg) > 1 and msg[1].isalpha(): 
-                if msg.startswith(cmd_toggle_findall_pdata):
-                    #if not identical_all_names:
-                        #load_all_names_data()
-                    find_player_cmd(message=msg, data_type=all_names, is_master=True, toggle=cmd_toggle_findall_pdata)
-                elif msg.startswith(cmd_toggle_find_pdata):
-                    #if not identical_all_names:
-                        #load_all_names_data()
-                    find_player_cmd(message=msg, data_type=current_session_namelist, is_master=True, toggle=cmd_toggle_find_pdata)
+                #if msg.startswith(cmd_toggle_findall_pdata):
+                #    #if not identical_all_names:
+                #        #load_all_names_data()
+                #    find_player_cmd(message=msg, data_type=all_names, is_master=True, toggle=cmd_toggle_findall_pdata)
+                #elif msg.startswith(cmd_toggle_find_pdata):
+                #    #if not identical_all_names:
+                #        #load_all_names_data()
+                #    find_player_cmd(message=msg, data_type=current_session_namelist, is_master=True, toggle=cmd_toggle_find_pdata)
 
-                elif msg.startswith(cmd_toggle_all_pdata_window):
+                if msg.startswith(cmd_toggle_all_pdata_window):
                     popup_player_list(msg, all_names)
                 elif msg.startswith(cmd_toggle_session_pdata_window):
                     popup_player_list(msg, current_session_namelist)
@@ -9214,9 +9919,12 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                 elif msg.startswith(toggle_add_nick) or msg.startswith(toggle_remove_nick):
                     EditableDataPopup(load_func=_load_nicknames, save_func_list=save_nicknames, label="My Nicknames")
 
-                elif msg.startswith(toggle_add_custom_replies) or msg.startswith(toggle_remove_custom_replies):
-                    EditableDataPopup(load_func=_load_saved_custom_replies, save_func_dict=_save_custom_replies_to_file, label="Custom Replies")
-
+                #elif msg.startswith(toggle_add_custom_replies) or msg.startswith(toggle_remove_custom_replies):
+                #    #EditableDataPopup(load_func=_load_saved_custom_replies, save_func_dict=_save_custom_replies_to_file, label="Custom Replies")
+                #    SortMessagesList(_load_toxic_responds(), _save_toxic_responds, 'Sort/Edit Quick Respond')
+                elif msg.startswith(toggle_add_custom_toxic_responses) or msg.startswith(toggle_remove_custom_toxic_responses):
+                    #EditableDataPopup(load_func=_load_saved_custom_replies, save_func_dict=_save_custom_replies_to_file, label="Custom Replies")
+                    SortMessagesList(_load_toxic_responds(), _save_toxic_responds, 'Sort/Edit Toxic Respond')
                 elif msg.startswith(toggle_add_responder_blacklist) or msg.startswith(toggle_remove_responder_blacklist):
                     EditableDataPopup(load_func=load_responder_blacklist_names, save_func_list=save_blacklist_names, is_player=True, label="Blacklisted Player")
 
@@ -12557,7 +13265,7 @@ class PartySettingsWindow:
                 )
                 bui.checkboxwidget(
                     edit=widget,
-                    on_value_change_call=CallStrict(callback, cfg_key, msg, widget) if callback else None
+                    on_value_change_call=CallPartial(callback, cfg_key, msg, widget) if callback else None
                 )
                 self._bool_options_textwidgets[cfg_key] = widget
                 y_pos -= 10
@@ -13537,7 +14245,7 @@ class PlayerInfoPopup(popup.PopupWindow):
             text=text_str,
             width=550,
             height=150,
-            action=Call(self._get_pb_online),
+            action=CallStrict(self._get_pb_online),
             cancel_is_selected=True,
             text_scale=1,
             ok_text=get_lang_text('yes'),
@@ -14389,15 +15097,15 @@ def fetch_data(player_name: str, widget=None, no_confirmation: bool = False, pri
     elif data is False:
         msg = f"{CMD_LOGO_CAUTION} {get_lang_text('bcsFetchError').format(player_name)} {sad}"
         if not print_progress_only:
-            babase.pushcall(Call(screenmessage, msg, COLOR_SCREENCMD_ERROR), from_other_thread=True)
+            babase.pushcall(CallStrict(screenmessage, msg, COLOR_SCREENCMD_ERROR), from_other_thread=True)
     elif data is None:
         msg = f"{CMD_LOGO_CAUTION} {get_lang_text('bcsFetchFailedConnect').format(player_name)} {sad}"
         if not print_progress_only:
-            babase.pushcall(Call(screenmessage, msg, COLOR_SCREENCMD_ERROR), from_other_thread=True)
+            babase.pushcall(CallStrict(screenmessage, msg, COLOR_SCREENCMD_ERROR), from_other_thread=True)
     else:
         msg = f"{CMD_LOGO_CAUTION} {get_lang_text('bcsFetchNotFound').format(player_name)} {sad}"
         if not print_progress_only:
-            babase.pushcall(Call(screenmessage, msg, COLOR_SCREENCMD_ERROR), from_other_thread=True)
+            babase.pushcall(CallStrict(screenmessage, msg, COLOR_SCREENCMD_ERROR), from_other_thread=True)
         all_names[player_name]['searched_bcs'] = False
         all_names_updated = True
         name = player_name
@@ -14713,7 +15421,7 @@ class PlayerListPopup(popup.PopupWindow):
             autoselect=False,
             selectable=True,
             click_activate=True,
-            on_activate_call=Call(bs.broadcastmessage, get_random_happy_emoji(), COLOR_SCREENCMD_NORMAL),
+            on_activate_call=CallStrict(bs.broadcastmessage, get_random_happy_emoji(), COLOR_SCREENCMD_NORMAL),
             color=bui.app.ui_v1.title_color)
         
         self._page_text = bui.textwidget(
@@ -14966,7 +15674,7 @@ class PlayerListPopup(popup.PopupWindow):
                 label=display_name,
                 position=(-10, 0),
                 size=(self.scroll_size[0] - 20, 38.5),
-                on_activate_call=Call(self.on_player_data_pressed, real_name),
+                on_activate_call=CallStrict(self.on_player_data_pressed, real_name),
                 enable_sound=False,
                 color=server_color_button if client_id == -1 else self.bg_color)
 
@@ -15085,7 +15793,7 @@ class ListPopup(popup.PopupWindow):
                 size=(40, 40),
                 label='',
                 color=self.bg_color,
-                on_activate_call= Call(self._refresh, self._func_list_data),
+                on_activate_call= CallStrict(self._refresh, self._func_list_data),
                 autoselect=False,
                 icon=bui.gettexture('replayIcon'),
                 iconscale=1.2)
@@ -15174,9 +15882,9 @@ class ListPopup(popup.PopupWindow):
         if len(self._list_data) > self.chats_per_page:
             bui.textwidget(edit=self._page_text, text=f"{get_lang_text('page')}: {self.current_page + 1} / {self.total_pages}")
 
-        bui.textwidget(
-            edit=text_widget,
-            on_activate_call=CallStrict(self._confirm_copy, text))
+        #bui.textwidget(
+        #    edit=text_widget,
+        #    on_activate_call=CallStrict(self._confirm_copy, text))
         #    Call(ListPopupInternalDataConfirmation, text, self._list_data, self) if not self._is_dict else
         self._text_widgets.append(text_widget)
 
@@ -15808,7 +16516,7 @@ class TranslateTextsPopup(popup.PopupWindow):
                         edit=widget,
                         selectable=True,
                         click_activate=True,
-                        on_activate_call=Call(self._confirm_copy, translated_lang)
+                        on_activate_call=CallStrict(self._confirm_copy, translated_lang)
                     )
             else:
                 separted_texts = translated_lang.splitlines()
@@ -15827,7 +16535,7 @@ class TranslateTextsPopup(popup.PopupWindow):
                             edit=widget2,
                             selectable=True,
                             click_activate=True,
-                            on_activate_call=Call(self._confirm_copy, str(text))
+                            on_activate_call=CallStrict(self._confirm_copy, str(text))
                         )
                     if key in self._translation_text_widgets:
                         self._translation_text_widgets[key].append(widget2)
@@ -16829,7 +17537,7 @@ class InternalChatsPopup(popup.PopupWindow):
             size=(40, 40),
             label='',
             color=self.bg_color,
-            on_activate_call= Call(self._refresh, self._list_data_func),
+            on_activate_call= CallStrict(self._refresh, self._list_data_func),
             autoselect=False,
             icon=bui.gettexture('replayIcon'),
             iconscale=1.2)
@@ -16847,7 +17555,7 @@ class InternalChatsPopup(popup.PopupWindow):
                         screenmessage(f'Cooldown A Bit Pal {get_random_happy_emoji()}', color=COLOR_SCREENCMD_NORMAL)
                         return
                     self._is_refreshing = True
-                    babase.apptimer(1.75, Call(self._reset_refresh))
+                    babase.apptimer(1.75, CallStrict(self._reset_refresh))
                     self._list_data = data()
                     screenmessage('Data Refreshed', color=COLOR_SCREENCMD_NORMAL)
                     self._show_page(self.current_page, is_refresh=True)
@@ -16918,7 +17626,7 @@ class InternalChatsPopup(popup.PopupWindow):
 
         bui.textwidget(
             edit=text_widget,
-            on_activate_call=Call(self._on_internal_chats_data_pressed, text, text_widget) if not text.startswith('[SERVER]') else Call(self._confirm_copy, text))
+            on_activate_call=CallStrict(self._on_internal_chats_data_pressed, text, text_widget) if not text.startswith('[SERVER]') else CallStrict(self._confirm_copy, text))
         self._text_widgets.append(text_widget)
 
     def _confirm_copy(self, text: str):
@@ -18269,6 +18977,15 @@ auto_save_data_ratio = 300 # Seconds
 
 # ba_meta export babase.Plugin
 class byLess(babase.Plugin):
+
+    INVISIBLE_CHAR = '​'  # Zero-width space character
+    
+    @classmethod
+    def get_username(cls):
+        if app.plus.get_v1_account_state() == 'signed_in':
+            return app.plus.get_v1_account_name()
+        return '???'
+
     def on_app_running(self) -> None:
         _load_all_internal_data()
         setbs_uiscale()
@@ -18308,6 +19025,9 @@ class byLess(babase.Plugin):
         a = '__init__'
         o = getattr(p, a)
         setattr(p, a, lambda z, *a, **k: (o(z, *a, **k), self.make(z))[0])
+
+        self.chat_messages = []
+        timer(5, self.monitor_chat)
 
     @property
     def uiscale(self):
@@ -18357,4 +19077,87 @@ class byLess(babase.Plugin):
             on_activate_call=lambda: Finder(self.search_button)
         )
 
-        #print(f"[byLess] Button position: ({x}, {y}) size={sz}")
+        auto_respond_ds: str = f'{get_lang_text("auto_respond")}!'
+        self.auto_respond_button = bui.buttonwidget(
+            icon=gt('achievementOutline'),
+            parent=p,
+            position=(x, y-70),
+            label=auto_respond_ds,
+            color=Finder.COL1,
+            textcolor=Finder.COL3,
+            size=sz,
+            on_activate_call=lambda: AutoResponder(self.auto_respond_button )
+        )
+
+        #bui.buttonwidget(self.auto_respond_button , on_activate_call=lambda: AutoResponder(self.auto_respond_button ))
+
+    def monitor_chat(self):
+        """Monitor chat for triggers"""
+        current_messages = get_chat_messages()
+        timer(0.3, self.monitor_chat)
+        
+        if current_messages == self.chat_messages:
+            return
+            
+        self.chat_messages = current_messages
+        latest_message = current_messages[-1]
+        
+        # Skip if message ends with invisible character (to avoid responding to ourselves)
+        if latest_message.endswith(self.INVISIBLE_CHAR):
+            return
+            
+        try:
+            sender, message = latest_message.split(': ', 1)
+        except ValueError:
+            return
+            
+        username = self.get_username()
+        
+        # Skip if message is from ourselves and setting is disabled
+        if sender in [username, char_string(SpecialChar.V2_LOGO) + username] and not get_config('tune2'):
+            return
+            
+        responses_list = get_config('list_lowercase') if not get_config('tune3') else get_config('list')
+        search_message = message if get_config('tune3') else message.lower()
+        
+        # Check for exact matches
+        response_data = responses_list.get(search_message)
+        if response_data is not None:
+            response_text, delay, _ = response_data
+            self.send_response(response_text, delay, sender, False)
+        else:
+            # Check for wildcard matches
+            wildcard_triggers = [(trigger, data) for trigger, data in responses_list.items() 
+                               if data[2] and trigger in search_message]
+            
+            # Sort by position in message
+            sorted_triggers = sorted(wildcard_triggers, key=lambda x: search_message.find(x[0]))
+            
+            for trigger, (response_text, delay, _) in sorted_triggers:
+                if trigger and response_text:
+                    self.send_response(response_text, delay, sender, True)
+
+    def send_response(self, response_text, delay, sender, is_wildcard):
+        """Send the response after delay"""
+        if not get_config('state'):
+            return
+            
+        parsed_response = AutoResponder.parse_response(response_text, sender)
+        
+        # Schedule the response
+        timer(delay, CallStrict(send_chat_message, parsed_response + self.INVISIBLE_CHAR))
+        
+        # Show notification if enabled
+        if get_config('tune0'):
+            match_type = 'Wildcard' if is_wildcard else 'Exact'
+            show_message(
+                f"{match_type} match!\n"
+                f"Replying to: {sender}\n"
+                f"With text: {parsed_response}\n"
+                f"After {delay} seconds!",
+                color=(0, 0.8, 0.8)
+            )
+            
+        # Play sound if enabled
+        if get_config('tune1'):
+            get_sound('dingSmallHigh').play()
