@@ -91,6 +91,19 @@
     }
 ,
     {
+        "name": "Practice Tools",
+        "file_name": "PracticeTools.py",
+        "path": "PracticeTools/PracticeTools.py",
+        "api_version": 9,
+        "version": "3.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PracticeTools/PracticeTools.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/PracticeTools/PracticeTools.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PracticeTools/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/PracticeTools/README.md",
+        "description": "A mod that allows you to deploy different entities so you can practice"
+    }
+,
+    {
         "name": "Camera",
         "file_name": "Camera.py",
         "path": "Camera/Camera.py",
