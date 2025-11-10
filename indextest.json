@@ -1,0 +1,31 @@
+[
+    {
+        "name": "UltraReplay",
+        "file_name": "UltraReplay.py",
+        "path": "UltraReplay/UltraReplay.py",
+        "api_version": 9,
+        "version": "3",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/UltraReplay.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/UltraReplay.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/README.md",
+        "description": "A mod that lets you watch game replays, with multiple extra features and guaranteeing a better experience",
+        "description-es": "Un mod que te permite ver repeticiones de partidas, con múltiples funciones adicionales y que garantiza una mejor experiencia",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/UltraReplay.json"
+    }
+,
+    {
+        "name": "Less Party Window",
+        "file_name": "LessPartyWindow.py",
+        "path": "LessPartyWindow/LessPartyWindow.py",
+        "api_version": 9,
+        "version": "1.1.5",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/LessPartyWindow/LessPartyWindow.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/LessPartyWindow/LessPartyWindow.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/LessPartyWindow/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/LessPartyWindow/README.md",
+        "description": "A mod that makes scaled modifications to the PartyWindow, giving multiple options for use in-game",
+        "description-es": "Un mod que realiza modificaciones a escala en la PartyWindow, ofreciendo múltiples opciones de uso dentro del juego",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/LessPartyWindow.json"
+    }
+]

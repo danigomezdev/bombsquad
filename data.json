@@ -65,6 +65,19 @@
     }
 ,
     {
+        "name": "UltraReplay",
+        "file_name": "UltraReplay.py",
+        "path": "UltraReplay/UltraReplay.py",
+        "api_version": 9,
+        "version": "3.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/UltraReplay.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/UltraReplay.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/README.md",
+        "description": "A mod that lets you watch game replays, with multiple extra features and guaranteeing a better experience"
+    }
+,
+    {
         "name": "Custom Hits",
         "file_name": "CustomHits.py",
         "path": "CustomHits/CustomHits.py",
@@ -127,19 +140,6 @@
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BombRadiusVisualizer/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BombRadiusVisualizer/README.md",
         "description": "A mod that displays dynamic visual indicators showing the blast radius of all explosives in BombSquad with colorful animations"
-    }
-,
-    {
-        "name": "Replay",
-        "file_name": "Replay.py",
-        "path": "Replay/Replay.py",
-        "api_version": 9,
-        "version": "3.0",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Replay/Replay.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Replay/Replay.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Replay/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Replay/README.md",
-        "description": "A mod that lets you watch game replays, with multiple extra features and guaranteeing a better experience"
     }
 ,
     {

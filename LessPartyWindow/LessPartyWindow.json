@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "name": "Less Party Window",
+    "file_name": "LessPartyWindow.py",
+    "description-es": "Un mod que realiza modificaciones a escala en la PartyWindow, ofreciendo múltiples opciones de uso dentro del juego",
+    "description-en": "A mod that makes scaled modifications to the PartyWindow, giving multiple options for use in-game",
+    "createdAt": "2022-09-11T02:45:00.000Z",
+    "lastActivityAt": "2025-04-08T04:18:49.835Z",
+    "api": 9,
+    "version": "1.1.5",
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "partywindow",
+      "finder",
+      "add friends",
+      "blacklist",
+      "autorespond",
+      "ping",
+      "servers"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_03.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_04.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_05.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_06.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_07.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_08.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/image_09.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/video_01.webm"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/LessPartyWindow/LessPartyWindow.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/LessPartyWindow/LessPartyWindow.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/LessPartyWindow/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/LessPartyWindow/README.md"
+  },
+  "content": "Un mod de Party Window avanzado que transforma por la interfaz de chat del juego con potentes funciones para la gestión del servidor, la interacción de los jugadores y la comunicación.\n\n## Features\n\n- **Sistema de chat avanzado**: Interfaz de chat mejorada con navegación e historial de mensajes\n- **Herramientas de gestión de jugadores**: Expulsa, banea, advierte y gestiona jugadores con información detallada\n- **Respuesta automática**: Sistema inteligente de respuesta automática con respuestas personalizables\n- **Traducción en tiempo real**: Traducción integrada a varios idiomas\n- **Sistema de respuesta rápida**: Respuestas rápidas preconfiguradas y comandos personalizados\n- **Visualización de información del jugador**: Perfiles detallados de los jugadores con ID de cuenta y cliente\n- **Administración del servidor**: Herramientas integrales de gestión del servidor\n- **Interfaz personalizable**: Temas de color y opciones de diseño\n- **Moderación del chat**: Opciones de silenciamiento y filtrado del chat\n- **Compatibilidad con emojis e iconos**: Amplia biblioteca de caracteres especiales y emojis\n- **Integración con el portapapeles**: Función de copiar y pegar para los mensajes del chat\n- **Monitoreo de ping**: Visualización del ping del servidor en tiempo real\n- **Compatibilidad con varios idiomas**: Compatibilidad total con la internacionalización\n- **Buscador de partidas/Jugadores**: Hace un mapeo de todos los servidores de bombsquad y muestra en una lista los disponibles"
+}

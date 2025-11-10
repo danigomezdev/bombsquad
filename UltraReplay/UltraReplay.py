@@ -1,5 +1,5 @@
 # ba_meta require api 9
-# ba_meta name Replay
+# ba_meta name UltraReplay
 # ba_meta description A mod that lets you watch game replays, with multiple extra features and guaranteeing a better experience
 # ba_meta version 3.0
 
@@ -15,7 +15,7 @@ from threading import Thread
 from struct import unpack
 
 class Replay:
-    VER = '2.5'
+    VER = '3.0'
     COL1 = (0.18, 0.18, 0.18)
     COL2 = (1, 1, 1)
     COL3 = (0, 1, 0)

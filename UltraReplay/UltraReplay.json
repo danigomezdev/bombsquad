@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "name": "UltraReplay",
+    "file_name": "UltraReplay.py",
+    "description-es": "Un mod que te permite ver repeticiones de partidas, con múltiples funciones adicionales y que garantiza una mejor experiencia",
+    "description-en": "A mod that lets you watch game replays, with multiple extra features and guaranteeing a better experience",
+    "createdAt": "2024-11-29T23:35:00.000Z",
+    "lastActivityAt": "2025-11-03T15:34:00.000Z",
+    "api": 9,
+    "version": 3.0,
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "replay",
+      "viewer",
+      "video",
+      "partys",
+      "servers",
+      "game"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_03.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/video_01.mp4",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/video_02.mp4"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/UltraReplay.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/UltraReplay.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/README.md"
+  },
+  "content": "Un sistema de repetición avanzado. Vé más allá de la reproducción básica.\n\n## Features\n\n- Carga instantánea sin esperas\n- Análisis inteligente en segundo plano  \n- Navegación entre múltiples repeticiones\n\n**Controles de Reproducción:**\n- Velocidad ajustable desde cámara lenta a ultra rápida\n- Navegación precisa a cualquier momento\n- Pausa, reanuda y reinicia fácilmente\n\n**Sistema de Cámara:**\n- Movimiento libre 360°\n- Zoom manual con control total\n- Seguimiento automático o manual de jugadores\n- Modo cine sin interfaz\n\n**Interfaz de Usuario:**\n- Diseño limpio y minimalista\n- Barra de progreso en tiempo real\n- Indicadores de carga inteligentes\n- Mensajes contextuales útiles\n\n**Características Avanzadas:**\n- Gestión y compartición de archivos\n- Manejo elegante de errores\n- Procesamiento en segundo plano\n- Optimizado para máximo rendimiento"
+}
