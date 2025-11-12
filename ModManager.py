@@ -1,6 +1,6 @@
 # ba_meta require api 9
 # ba_meta description A mod that allows you to easily install, update and delete multiple mods in the remote repository
-# ba_meta version 1.1.3
+# ba_meta version 1.1.4
 # ba_meta nomod
 
 import urllib.request
@@ -26,7 +26,7 @@ from bauiv1lib import popup, confirm
 from bauiv1lib.settings.allsettings import AllSettingsWindow
 
 
-MOD_MANAGER_VERSION = "1.1.3"
+MOD_MANAGER_VERSION = "1.1.4"
 MOD_MANAGER_MOD = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/ModManager.py"
 REPOSITORY_URL = "https://github.com/danigomezdev/bombsquad/tree/modmanager"
 MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/data.json"
@@ -463,11 +463,13 @@ class StartupTasks:
                                                                  new_supported_plugins[0:show_max_names])
                                                       ))
                 if new_supported_plugins_count == 1:
-                    notification_text = f"{new_supported_plugins_count} new plugin ({new_supported_plugins}) is available!"
+                    #notification_text = f"{new_supported_plugins_count} new plugin ({new_supported_plugins}) is available!"
+                    notification_text = f"¡Nuevo mod disponible, ve a verlo en tu ModManager!"
                 else:
-                    notification_text = new_supported_plugins + \
-                        ('' if new_supported_plugins_count <= show_max_names else ' and +' +
-                         str(new_supported_plugins_count-show_max_names)) + " new plugins are available"
+                    #notification_text = new_supported_plugins + \
+                    #    ('' if new_supported_plugins_count <= show_max_names else ' and +' +
+                    #     str(new_supported_plugins_count-show_max_names)) + " new plugins are available"
+                    notification_text = f"¡Nuevos mods disponible, ve a verlos en tu ModManager!"
                 bui.screenmessage(notification_text, color=(0, 1, 0))
 
         if existing_num_of_plugins != new_num_of_plugins:

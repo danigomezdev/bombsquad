@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "name": "Events Special Store",
+    "file_name": "StoreEventSpecial.py",
+    "description-en": "A mod that allows you to buy special characters that are unlocked only in specific seasons of the year or exclusive",
+    "description-es": "Un mod que te permite comprar personajes especiales que solo se desbloquean en determinadas épocas del año o de forma exclusiva",
+    "createdAt": "2023-01-27T03:36:00.000Z",
+    "lastActivityAt": "2025-11-11T15:32:00.000Z",
+    "api": 9,
+    "version": 1.5,
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "store",
+      "profile",
+      "characters",
+      "mainwindow"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/StoreEventSpecial/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/StoreEventSpecial/media/image_01.png"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/StoreEventSpecial/StoreEventSpecial.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/StoreEventSpecial/StoreEventSpecial.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/StoreEventSpecial/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/StoreEventSpecial/README.md"
+  },
+  "content": "Modifica la tienda del juego para que puedas comprar personajes y minijuegos de eventos o temporadas especiales en cualquier momento. ¡Ya no tendrás que esperar a que lleguen las fiestas o eventos para disfrutar de tu contenido favorito!\n\n## Features\n\n* **Desbloqueo de personajes de temporada**: hace que los personajes especiales estén disponibles de forma permanente:\n\n  * Bunny (personaje de Pascua)\n  * Taobao Mascot (personaje de evento especial)\n  * Santa (personaje de Navidad)\n\n* **Desbloqueo de minijuegos especiales**: añade minijuegos exclusivos a la tienda:\n\n  * *Easter Egg Hunt* (búsqueda de huevos de Pascua)\n\n* **Acceso permanente**: compra y usa el contenido especial sin importar la temporada actual.\n\n* **Integración fluida**: se adapta automáticamente al diseño actual de la tienda.\n\n* **Sin cambios en el gameplay**: no modifica las mecánicas del juego, solo desbloquea opciones de compra."
+}

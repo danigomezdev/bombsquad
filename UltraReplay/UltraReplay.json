@@ -1,28 +1,28 @@
 {
   "metadata": {
-    "name": "UltraReplay",
+    "name": "Ultra Replay",
     "file_name": "UltraReplay.py",
-    "description-es": "Un mod que te permite ver repeticiones de partidas, con múltiples funciones adicionales y que garantiza una mejor experiencia",
-    "description-en": "A mod that lets you watch game replays, with multiple extra features and guaranteeing a better experience",
-    "createdAt": "2024-11-29T23:35:00.000Z",
-    "lastActivityAt": "2025-11-03T15:34:00.000Z",
+    "description-en": "Real-time 3D Profile editor with live preview",
+    "description-es": "Editor de perfiles con vista 3D en tiempo real",
+    "createdAt": "2025-07-23T18:29:00.000Z",
+    "lastActivityAt": "2025-11-11T03:38:00.000Z",
     "api": 9,
-    "version": 3.0,
+    "version": 3.2,
     "show": true,
     "category": "mod",
     "tags": [
       "replay",
       "viewer",
-      "video",
       "partys",
       "servers",
-      "game"
+      "game",
+      "mainwindow"
     ],
     "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/banner.png",
     "media": [
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_02.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_03.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_02.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_03.png\",",
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/video_01.mp4",
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/video_02.mp4"
     ],
@@ -31,5 +31,5 @@
     "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/README.md",
     "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/README.md"
   },
-  "content": "Un sistema de repetición avanzado. Vé más allá de la reproducción básica.\n\n## Features\n\n- Carga instantánea sin esperas\n- Análisis inteligente en segundo plano  \n- Navegación entre múltiples repeticiones\n\n**Controles de Reproducción:**\n- Velocidad ajustable desde cámara lenta a ultra rápida\n- Navegación precisa a cualquier momento\n- Pausa, reanuda y reinicia fácilmente\n\n**Sistema de Cámara:**\n- Movimiento libre 360°\n- Zoom manual con control total\n- Seguimiento automático o manual de jugadores\n- Modo cine sin interfaz\n\n**Interfaz de Usuario:**\n- Diseño limpio y minimalista\n- Barra de progreso en tiempo real\n- Indicadores de carga inteligentes\n- Mensajes contextuales útiles\n\n**Características Avanzadas:**\n- Gestión y compartición de archivos\n- Manejo elegante de errores\n- Procesamiento en segundo plano\n- Optimizado para máximo rendimiento"
+  "content": "Mira tus partidas desde cualquier ángulo, a cualquier velocidad, con controles al estilo transmisión profesional que te ponen en el papel de director de tus propias producciones de BombSquad.\n\n## Features\n\n### Funciones principales\n\n* **Carga instantánea de repeticiones**: empieza a verlas sin esperar a que se analicen los archivos.\n* **Escaneo inteligente de duración**: calcula la duración mientras ves la repetición.\n* **Soporte para múltiples repeticiones**: explora y selecciona cualquiera de tus archivos de replay.\n\n### Controles de reproducción\n\n* **Velocidad variable**: ajusta la velocidad desde ultra lento hasta modo rápido.\n* **Búsqueda precisa**: salta a cualquier punto de la repetición con la barra de progreso o con tiempos específicos.\n* **Pausa/Reanudar**: control total de la reproducción con indicadores visuales.\n* **Reinicio rápido**: vuelve al inicio con un solo clic.\n\n### Sistema de cámara\n\n* **Movimiento libre**: mira en cualquier dirección arrastrando o usando el modo cine.\n* **Zoom manual**: ajusta el acercamiento con precisión.\n* **Seguimiento de jugadores**: sigue automáticamente a un jugador o define tus propios puntos de vista.\n* **Modo cine**: oculta la interfaz para una experiencia más cinematográfica.\n\n### Interfaz de usuario\n\n* **Diseño limpio**: barra de control discreta que puedes ocultar.\n* **Progreso en tiempo real**: barra visual con indicadores de tiempo.\n* **Buffer inteligente**: muestra cuánto de la repetición está cargado.\n* **Mensajes contextuales**: retroalimentación útil en cada acción.\n\n### Funciones avanzadas\n\n* **Gestión de archivos**: copia rutas o abre directamente la ubicación del archivo.\n* **Manejo de errores**: gestiona archivos dañados o incompletos sin crashear.\n* **Procesamiento en segundo plano**: las tareas pesadas no bloquean la interfaz.\n* **Eficiencia de memoria**: transmite los datos sin cargar el archivo completo."
 }

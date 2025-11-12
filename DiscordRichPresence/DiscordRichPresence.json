@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "name": "Discord Rich Presence",
+    "file_name": "DiscordRichPresence.py",
+    "description-en": "A mod that allows you to update your gaming activity on Discord specifically for BombSquad",
+    "description-es": "Un mod que te permite actualizar tu actividad de juego en Discord específicamente para BombSquad",
+    "createdAt": "2024-12-11T22:36:00.000Z",
+    "lastActivityAt": "2025-11-11T16:36:00.000Z",
+    "api": 9,
+    "version": "1.1.4",
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "viewer",
+      "profile",
+      "discord",
+      "partys",
+      "servers",
+      "mainwindow",
+      "presence",
+      "rpc",
+      "richpresence"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/media/image_02.png"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/DiscordRichPresence/DiscordRichPresence.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/DiscordRichPresence/DiscordRichPresence.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/DiscordRichPresence/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/DiscordRichPresence/README.md"
+  },
+  "content": "Conecta **BombSquad** con **Discord** para mostrar información del juego en tiempo real directamente en tu perfil. Podrás ver qué mapas están jugando tus amigos, los detalles del servidor e incluso unirte a sus partidas con un solo clic desde Discord.\n\n## Features\n\n* **Estado en tiempo real**: muestra el modo de juego, mapa y actividad actual.\n* **Información del servidor**: enseña el número de jugadores y el nombre del servidor.\n* **Unirse directamente**: entra a la partida de un amigo con un clic desde Discord.\n* **Compatibilidad multiplataforma**: funciona en Windows, Linux, Mac y Android.\n* **Datos detallados del juego**: muestra estadísticas como supervivientes, puntajes y temporizadores.\n* **Imágenes personalizadas**: enseña vistas previas del mapa e íconos del modo de juego.\n* **Detección de inactividad (AFK)**: cambia tu estado automáticamente cuando no estás activo.\n* **Autenticación segura**: opción de iniciar sesión con Discord para funciones adicionales.\n* **Soporte multilenguaje**: incluye un modo especial de idioma “Gibberish”."
+}

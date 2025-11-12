@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "name": "Practice Tools",
+    "file_name": "PracticeTools.py",
+    "description-en": "A mod that allows you to deploy different entities so you can practice",
+    "description-es": "Un mod que te permite desplegar diferentes entidades para que puedas practicar",
+    "createdAt": "2022-11-03T19:49:00.000Z",
+    "lastActivityAt": "2025-11-11T15:48:00.000Z",
+    "api": 9,
+    "version": 3.1,
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "practice",
+      "bots",
+      "game",
+      "tools",
+      "party",
+      "powerups"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_02.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_04.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_05.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/video_01.mp4"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PracticeTools/PracticeTools.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/PracticeTools/PracticeTools.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PracticeTools/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/PracticeTools/README.md"
+  },
+  "content": "Convierte tu experiencia en un completo entorno de entrenamiento. Con este mod puedes generar bots, crear power-ups y usar distintas herramientas para mejorar tus habilidades en un espacio de práctica controlado.\n\n## Features\n\n* **Sistema de generación de bots**: crea diferentes tipos de bots con cantidad y radio de aparición personalizables.\n* **Gestión de power-ups**: genera cualquier tipo de power-up o elimina todos los activos.\n* **Ayudas visuales**: muestra temporizadores de bombas y visualizadores del radio de explosión.\n* **Herramientas de entrenamiento**: modo invencible, congelar bots o hacer que los muñecos sean inmortales.\n* **Configuración en tiempo real**: activa o desactiva funciones sin reiniciar el juego.\n* **Soporte multijugador**: funciona también en partidas locales con varios jugadores.\n* **Ajustes personalizables**: muchas opciones para adaptar el entrenamiento a tu estilo."
+}

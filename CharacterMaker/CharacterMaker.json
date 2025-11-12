@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "name": "Character Maker",
+    "file_name": "CharacterMaker.py",
+    "description-en": "A mod that allows you to create your own characters using parts of other characters in the game as a base",
+    "description-es": "Un mod que te permite crear tus propios personajes usando partes de otros personajes del juego como base",
+    "createdAt": "2023-05-11T13:28:00.000Z",
+    "lastActivityAt": "2025-11-11T21:28:00.000Z",
+    "api": 9,
+    "version": "2.1.5",
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "viewer",
+      "profile",
+      "characters",
+      "editor",
+      "creator",
+      "maker"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CharacterMaker/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CharacterMaker/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CharacterMaker/media/image_02.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CharacterMaker/media/video_01.webm"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CharacterMaker/CharacterMaker.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CharacterMaker/CharacterMaker.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CharacterMaker/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CharacterMaker/README.md"
+  },
+  "content": "Un mod de creación de personajes. Este mod agrega un modo de juego totalmente dedicado a diseñar tus propios personajes, combinando partes del cuerpo, texturas, colores y estilos de todos los personajes disponibles en el juego.\n\n## Features\n\n* **Personalización completa de personajes**: mezcla y combina cabezas, torsos, brazos, piernas y más de distintos personajes.\n* **Vista previa 3D en tiempo real**: ve cómo tu personaje cobra vida al instante mientras haces cambios.\n* **Personalización de colores**: elige entre colores predeterminados o crea tus propias combinaciones.\n* **Intercambio de texturas**: aplica diferentes sets de texturas a tu personaje personalizado.\n* **Sistema de exportación e importación**: guarda tus creaciones como archivos JSON y compártelas con otros jugadores.\n* **Soporte multijugador**: varios jugadores pueden crear personajes al mismo tiempo.\n* **Comandos por chat**: administra tus creaciones directamente desde el chat del juego.\n* **Biblioteca de presets**: acceso a todas las partes y texturas base de los personajes originales."
+}

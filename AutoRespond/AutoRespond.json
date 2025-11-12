@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "Auto Respond",
+    "file_name": "AutoRespond.py",
+    "description-en": "A mod that allows you to have automatic replies to specific messages",
+    "description-es": "Un mod que permite configurar respuestas automáticas a mensajes específicos.",
+    "createdAt": "2024-06-12T02:41:00.000Z",
+    "lastActivityAt": "2025-11-11T21:37:00.000Z",
+    "api": 9,
+    "version": 2.8,
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "responder",
+      "auto",
+      "partys",
+      "servers",
+      "game",
+      "auto responses"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/image_02.png\","
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/AutoRespond/AutoRespond.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/AutoRespond/AutoRespond.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/AutoRespond/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/AutoRespond/README.md"
+  },
+  "content": "Un mod avanzado de automatización del chat que detecta frases específicas y responde automáticamente con mensajes que tú configures. Es perfecto para dueños de servidores, moderadores o cualquier jugador que quiera simplificar interacciones comunes sin tener que escribir cada vez.\n\n## Features\n\n* **Sistema de activadores inteligentes**: responde a coincidencias exactas o fragmentos de texto dentro de los mensajes.\n* **Respuestas personalizables**: crea mensajes personalizados con texto dinámico.\n* **Tiempo ajustable**: define el retraso exacto antes de enviar una respuesta.\n* **Sensibilidad a mayúsculas/minúsculas**: elige si el sistema debe distinguir entre ellas o no.\n* **Varios tipos de coincidencias**: admite respuestas por coincidencia exacta o parcial (con comodines).\n* **Soporte para variables**: reemplazo dinámico de texto con:\n\n  * `%m`: tu nombre de cuenta V2\n  * `%s`: nombre del remitente\n  * `%t`: hora actual (HH:MM:SS)\n* **Notificaciones visuales**: muestra un aviso cuando se activa una respuesta.\n* **Alertas de sonido**: opción para reproducir un sonido al responder.\n* **Control de autorrespuesta**: decide si el mod también debe responder tus propios mensajes.\n* **Gestión sencilla**: interfaz intuitiva para agregar, eliminar y organizar respuestas fácilmente."
+}

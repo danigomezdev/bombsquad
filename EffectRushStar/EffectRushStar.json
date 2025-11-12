@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "Effect Rush Star",
+    "file_name": "EffectRushStar.py",
+    "description-en": "A mod that creates a flashy star that floats around the map",
+    "description-es": "Un mod que crea una estrella llamativa que flota por el mapa",
+    "createdAt": "2025-11-03T05:31:00.000Z",
+    "lastActivityAt": "2025-11-11T16:27:00.000Z",
+    "api": 9,
+    "version": "1.1.2",
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "effect",
+      "star",
+      "colors",
+      "game",
+      "party",
+      "servers"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/EffectRushStar/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/EffectRushStar/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/EffectRushStar/media/video_01.webm"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/EffectRushStar/EffectRushStar.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/EffectRushStar/EffectRushStar.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/EffectRushStar/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/EffectRushStar/README.md"
+  },
+  "content": "Añade dos estrellas brillantes con partículas de colores y texto animado flotan suavemente por el mapa, creando una experiencia visual hipnotizante que mejora la ambientación sin afectar el gameplay.\n\n## Features\n\n* **Estrellas animadas duales**: dos estrellas independientes con movimientos únicos.\n* **Ciclo dinámico de colores**: transiciones continuas con efectos tipo arcoíris.\n* **Efectos de partículas**: destellos luminosos con efectos de escudo brillante.\n* **Texto animado**: texto flotante con animaciones de color sincronizadas.\n* **Movimientos fluidos**: trayectorias predefinidas que recorren todo el mapa.\n* **Diseño no intrusivo**: mejora visual pura sin interferir con el juego.\n* **Activación automática**: funciona en todos los modos de juego, excepto en el menú principal."
+}

@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "name": "Polish",
+    "file_name": "Polish.py",
+    "description-en": "A mod that allows you to create user interfaces in an easier way",
+    "description-es": "Un mod que te permite crear interfaces de usuario de forma más sencilla",
+    "createdAt": "2025-06-08T16:27:00.000Z",
+    "lastActivityAt": "2025-11-11T15:59:00.000Z",
+    "api": 9,
+    "version": "1.1.2",
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "ui",
+      "editor",
+      "mainwindow",
+      "librarywidgets",
+      "widgets"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/banner.png",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/image_02.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/image_03.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/image_04.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/image_05.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/image_06.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/video_01.webm",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/video_02.mp4"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Polish/Polish.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Polish/Polish.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Polish/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Polish/README.md"
+  },
+  "content": "Es una herramienta completa para crear interfaces en mods de **BombSquad**, diseñada para hacer el desarrollo de UI mucho más fácil y visual. Te permite construir interfaces en tiempo real con un editor donde puedes arrastrar, soltar y personalizar widgets sin escribir una sola línea de código — y luego exportar el resultado como código Python totalmente funcional para tus mods.\n\n## Features\n\n* **Constructor visual de interfaz**: crea tus interfaces colocando y organizando widgets de forma visual.\n* **Edición en tiempo real**: ve los cambios al instante mientras ajustas propiedades.\n* **Biblioteca de widgets**: acceso a todos los tipos de widgets de BombSquad (botones, texto, imágenes, áreas con scroll, etc.).\n* **Inspector de propiedades**: modifica posición, tamaño, colores, texturas y más desde una vista visual.\n* **Sistema de cuadrícula**: activa el ajuste a cuadrícula para una alineación precisa.\n* **Soporte de animaciones**: configura animaciones de entrada y salida para tus interfaces.\n* **Exportación de código**: genera código Python limpio y listo para usar a partir de tus diseños.\n* **Copiar al portapapeles**: copia el código generado directamente.\n* **Plantillas de widgets**: usa presets prediseñados para elementos comunes de UI.\n* **Gestión de widgets**: duplica, elimina y organiza widgets fácilmente.\n* **Relaciones padre-hijo**: configura jerarquías entre widgets de forma sencilla."
+}
