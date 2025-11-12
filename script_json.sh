@@ -57,8 +57,8 @@ should_show_mod() {
 # Function to escape JSON strings
 escape_json_string() {
     local string="$1"
-    # Escape backslashes, quotes, and newlines
-    string=$(echo "$string" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\//\\\//g' -e 's/\\n/\\\\n/g' -e 's/\\t/\\\\t/g')
+    # Escape backslashes, quotes, and newlines - but NOT forward slashes
+    string=$(echo "$string" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\\n/\\\\n/g' -e 's/\\t/\\\\t/g')
     echo "$string"
 }
 
@@ -79,6 +79,13 @@ extract_mod_data() {
     local url_readme=$(jq -r '.metadata.url_readme // ""' "$json_path")
     local url_raw_readme=$(jq -r '.metadata.url_raw_readme // ""' "$json_path")
     
+    # Extract new fields
+    local created_at=$(jq -r '.metadata.createdAt // ""' "$json_path")
+    local last_activity_at=$(jq -r '.metadata.lastActivityAt // ""' "$json_path")
+    local category=$(jq -r '.metadata.category // ""' "$json_path")
+    local banner=$(jq -r '.metadata.banner // ""' "$json_path")
+    local tags=$(jq -c '.metadata.tags // []' "$json_path")
+    
     # Generate more_url (raw URL for the JSON file)
     local more_url="https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/${relative_path}"
     
@@ -96,6 +103,15 @@ extract_mod_data() {
     local escaped_desc=$(escape_json_string "$description")
     local escaped_version=$(escape_json_string "$version")
     local escaped_desc_es=$(escape_json_string "$description_es")
+    local escaped_created_at=$(escape_json_string "$created_at")
+    local escaped_last_activity_at=$(escape_json_string "$last_activity_at")
+    local escaped_category=$(escape_json_string "$category")
+    local escaped_banner=$(escape_json_string "$banner")
+    local escaped_url_mod=$(escape_json_string "$url_mod")
+    local escaped_url_raw_mod=$(escape_json_string "$url_raw_mod")
+    local escaped_url_readme=$(escape_json_string "$url_readme")
+    local escaped_url_raw_readme=$(escape_json_string "$url_raw_readme")
+    local escaped_more_url=$(escape_json_string "$more_url")
     
     # Construct the path for the Python file (without ./ prefix)
     local dir_path=$(dirname "$json_path")
@@ -103,21 +119,26 @@ extract_mod_data() {
     # Remove ./ prefix if present
     py_path=$(echo "$py_path" | sed 's|^\./||')
     
-    # Create mod entry
+    # Create mod entry in the specified order
     cat << EOF
     {
         "name": "$escaped_name",
+        "description": "$escaped_desc",
+        "description-es": "$escaped_desc_es",
         "file_name": "$file_name",
+        "banner": "$escaped_banner",
+        "createdAt": "$escaped_created_at",
+        "lastActivityAt": "$escaped_last_activity_at",
+        "category": "$escaped_category",
+        "tags": $tags,
         "path": "$py_path",
         "api_version": $api_version,
         "version": "$escaped_version",
-        "url_mod": "$url_mod",
-        "url_raw_mod": "$url_raw_mod",
-        "url_readme": "$url_readme",
-        "url_raw_readme": "$url_raw_readme",
-        "description": "$escaped_desc",
-        "description-es": "$escaped_desc_es",
-        "more_url": "$more_url"
+        "url_mod": "$escaped_url_mod",
+        "url_raw_mod": "$escaped_url_raw_mod",
+        "url_readme": "$escaped_url_readme",
+        "url_raw_readme": "$escaped_url_raw_readme",
+        "more_url": "$escaped_more_url"
     }
 EOF
     
@@ -311,6 +332,16 @@ main() {
             # Show mods with Spanish description
             local spanish_mods=$(jq -r '.[] | select(."description-es" != null and ."description-es" != "") | .name' "$DATA_FILE" | wc -l)
             log "Mods with Spanish description: $spanish_mods"
+            
+            # Show category distribution
+            log "Category distribution:"
+            jq -r '.[].category' "$DATA_FILE" | sort | uniq -c | while read count category; do
+                echo "  $category: $count mods"
+            done
+            
+            # Show mods with banners
+            local mods_with_banners=$(jq -r '.[] | select(.banner != null and .banner != "") | .name' "$DATA_FILE" | wc -l)
+            log "Mods with banners: $mods_with_banners"
             
             # List all mods found
             log "Mods found:"
