@@ -21,9 +21,9 @@
     "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/banner.webp",
     "media": [
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_02.png\",",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_04.png\",",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_05.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_04.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/image_05.png",
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/video_01.mp4"
     ],
     "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PracticeTools/PracticeTools.py",

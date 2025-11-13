@@ -19,8 +19,8 @@
     "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/banner.webp",
     "media": [
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_02.png\",",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_03.png\",",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_03.png",
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/video_01.webm"
     ],
     "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BetterProfileEditor/BetterProfileEditor.py",

@@ -182,7 +182,7 @@
     {
         "name": "Auto Respond",
         "description": "A mod that allows you to have automatic replies to specific messages",
-        "description-es": "Un mod que permite configurar respuestas automáticas a mensajes específicos.",
+        "description-es": "Un mod que permite configurar respuestas automáticas a mensajes específicos",
         "file_name": "AutoRespond.py",
         "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/banner.webp",
         "createdAt": "2024-06-12T02:41:00.000Z",

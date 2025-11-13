@@ -3,7 +3,7 @@
     "name": "Auto Respond",
     "file_name": "AutoRespond.py",
     "description-en": "A mod that allows you to have automatic replies to specific messages",
-    "description-es": "Un mod que permite configurar respuestas automáticas a mensajes específicos.",
+    "description-es": "Un mod que permite configurar respuestas automáticas a mensajes específicos",
     "createdAt": "2024-06-12T02:41:00.000Z",
     "lastActivityAt": "2025-11-11T21:37:00.000Z",
     "api": 9,
@@ -21,7 +21,7 @@
     "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/banner.webp",
     "media": [
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/image_02.png\","
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/image_02.png"
     ],
     "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/AutoRespond/AutoRespond.py",
     "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/AutoRespond/AutoRespond.py",
