@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta description A mod that allows you to easily install, update and delete multiple mods in the remote repository
-# ba_meta version 1.1.4
-# ba_meta nomod
 
 import urllib.request
 import http.client
@@ -26,7 +23,7 @@ from bauiv1lib import popup, confirm
 from bauiv1lib.settings.allsettings import AllSettingsWindow
 
 
-MOD_MANAGER_VERSION = "1.1.4"
+MOD_MANAGER_VERSION = "1.1.5"
 MOD_MANAGER_MOD = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/ModManager.py"
 REPOSITORY_URL = "https://github.com/danigomezdev/bombsquad/tree/modmanager"
 MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/index.json"
@@ -131,7 +128,6 @@ async def check_for_update():
     Returns a dictionary with information about the update.
     """
     try:
-        #print("DEBUG: Checking for update...")
         
         # Create request for the mod manager file
         request = urllib.request.Request(
@@ -143,33 +139,35 @@ async def check_for_update():
         response = await async_send_network_request(request)
         remote_content = response.read().decode('utf-8')
         
-        # Find version in content using regex
-        version_pattern = r'#\s*ba_meta\s+version\s+([\d.]+)'
-        version_match = re.search(version_pattern, remote_content)
+        remote_version = None
+        for line in remote_content.split('\n'):
+            if 'MOD_MANAGER_VERSION' in line and '=' in line:
+                parts = line.split('=')
+                if len(parts) > 1:
+                    version_str = parts[1].strip()
+                    version_str = version_str.replace('"', '').replace("'", "").strip()
+                    version_match = re.search(r'([\d.]+)', version_str)
+                    if version_match:
+                        remote_version = version_match.group(1)
+                        break
         
-        if not version_match:
-            #print("DEBUG: Version not found in remote file")
+        if not remote_version:
             return {
                 'update_available': False,
                 'current_version': MOD_MANAGER_VERSION,
                 'remote_version': None
             }
             
-        remote_version = version_match.group(1)
         current_version = MOD_MANAGER_VERSION
-        
-        #print(f"DEBUG: Local version: {current_version}, Remote version: {remote_version}")
         
         # Compare versions
         if remote_version != current_version:
-            #print(f"DEBUG: New version available: {remote_version}")
             return {
                 'update_available': True,
                 'current_version': current_version,
                 'remote_version': remote_version
             }
         else:
-            #print("DEBUG: The Mod Manager is updated")
             return {
                 'update_available': False,
                 'current_version': current_version,
@@ -177,7 +175,7 @@ async def check_for_update():
             }
             
     except Exception as e:
-        #print(f"DEBUG: Error checking for update: {e}")
+        print(f"DEBUG: Error checking for update: {e}")
         return {
             'update_available': False,
             'current_version': MOD_MANAGER_VERSION,
@@ -231,9 +229,6 @@ async def auto_update_mod_manager():
     and updates it if necessary.
     """
     
-    if not babase.app.config["Mod Manager"]["Settings"]["Actualizar automáticamente Mod Manager"]:
-        return
-    
     # Check if an update is available
     update_info = await check_for_update()
     
@@ -242,6 +237,12 @@ async def auto_update_mod_manager():
     #    print(f"Remote version: {update_info['remote_version']}")
     
     if not update_info['update_available']:
+        return
+    
+    if not babase.app.config["Mod Manager"]["Settings"]["Actualizar automáticamente Mod Manager"]:
+        bui.screenmessage(f"¡Actualización v{update_info['remote_version']} de Mod Manager disponible!", color=(0.2, 0.8, 1))
+        bui.screenmessage(f"Actualízalo desde: Ajustes > Mod Manager > Settings > Actualizar a v{update_info['remote_version']}", color=(1, 0.8, 0.2))
+        bui.getsound('ding').play()
         return
     
     await update_mod_manager(update_info['current_version'], update_info['remote_version'])
