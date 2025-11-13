@@ -1,6 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Effect Rush Star
-# ba_meta description A mod that creates a flashy star that floats around the map
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, cast

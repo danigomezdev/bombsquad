@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Custom Hits
-# ba_meta description A mod that shows reactions to real-time gameplay, for example when you hit a player multiple times.
-# ba_meta version 1.0.1
 
 from __future__ import annotations
 

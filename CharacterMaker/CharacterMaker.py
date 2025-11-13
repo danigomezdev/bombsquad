@@ -1,6 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Character Maker
-# ba_meta description A mod that allows you to create your own characters using parts of other characters in the game as a base
 
 from typing import Sequence
 import _babase

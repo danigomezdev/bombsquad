@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Auto Respond
-# ba_meta description A mod that allows you to have automatic replies to specific messages
-# ba_meta version 2.8
 
 from babase import (
     clipboard_is_supported as CIS,

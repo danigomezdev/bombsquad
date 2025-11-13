@@ -2,8 +2,8 @@
   "metadata": {
     "name": "Better Profile Editor",
     "file_name": "BetterProfileEditor.py",
-    "description-en": "Real-time 3D Profile editor with live preview",
-    "description-es": "Editor de perfiles con vista 3D en tiempo real",
+    "description-en": "Advanced viewer of your Bombsquad profiles, with a live character that updates based on your profile choices",
+    "description-es": "Visor avanzado de tus perfiles de Bombsquad, con un personaje interactivo que se actualiza según las opciones de tu perfil",
     "createdAt": "2025-04-29T21:29:00.000Z",
     "lastActivityAt": "2025-11-10T22:32:00.000Z",
     "api": 9,
@@ -16,7 +16,7 @@
       "characters",
       "editor"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/banner.png",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/banner.webp",
     "media": [
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_01.png",
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_02.png\",",

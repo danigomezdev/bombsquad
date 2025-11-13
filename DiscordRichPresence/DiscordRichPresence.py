@@ -1,9 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Discord Rich Presence
-# ba_meta description A mod that allows you to update your gaming activity on Discord specifically for BombSquad
-# ba_meta version 1.1.4
-
-#!"Made to you by @brostos, @Dliwk & Less"
 
 from __future__ import annotations
 from urllib.request import Request, urlopen, urlretrieve

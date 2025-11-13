@@ -1,6 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Bomb Radius Visualizer
-# ba_meta description A mod that displays dynamic visual indicators showing the blast radius of all explosives in BombSquad with colorful animations
 
 from __future__ import annotations
 

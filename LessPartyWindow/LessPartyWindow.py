@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Less Party Window
-# ba_meta description A mod that makes scaled modifications to the PartyWindow, giving multiple options for use in-game
-# ba_meta version 1.1.5
 
 from __future__ import annotations
 import re

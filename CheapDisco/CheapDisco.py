@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Cheap Disco
-# ba_meta description A mod that changes the background color of the Bombsquad MainMenu, using random dark colors
-# ba_meta version 1.0.1
 
 from __future__ import annotations
 

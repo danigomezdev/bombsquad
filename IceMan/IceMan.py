@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Ice Man
-# ba_meta description A mod that provides your character with ice abilities, special effects, and more
-# ba_meta version 1.1.2
 
 from __future__ import annotations
 

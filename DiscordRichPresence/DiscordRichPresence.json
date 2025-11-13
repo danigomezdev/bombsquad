@@ -21,7 +21,7 @@
       "rpc",
       "richpresence"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/media/banner.png",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/media/banner.webp",
     "media": [
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/media/image_01.png",
       "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/media/image_02.png"

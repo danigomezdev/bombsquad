@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Ultra Server Finder
-# ba_meta description A mod that allows you to do a full search for players on all game servers
-# ba_meta version 1.1.4
 
 from __future__ import annotations
 import re

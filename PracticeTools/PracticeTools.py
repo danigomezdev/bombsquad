@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta name Practice Tools
-# ba_meta description A mod that allows you to deploy different entities so you can practice
-# ba_meta version 3.0
 
 from __future__ import annotations
 

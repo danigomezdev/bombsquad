@@ -1,7 +1,4 @@
 # ba_meta require api 9
-# ba_meta name UltraReplay
-# ba_meta description A mod that lets you watch game replays, with multiple extra features and guaranteeing a better experience
-# ba_meta version 3.0
 
 from babase import Plugin
 import bauiv1 as bui

@@ -29,7 +29,7 @@ from bauiv1lib.settings.allsettings import AllSettingsWindow
 MOD_MANAGER_VERSION = "1.1.4"
 MOD_MANAGER_MOD = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/ModManager.py"
 REPOSITORY_URL = "https://github.com/danigomezdev/bombsquad/tree/modmanager"
-MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/data.json"
+MODS_DATA_URL = "https://raw.githubusercontent.com/danigomezdev/bombsquad/refs/heads/modmanager/index.json"
 CURRENT_TAG = "modmanager"
 
 _env = _babase.env()
