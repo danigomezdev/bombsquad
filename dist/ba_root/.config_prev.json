@@ -130,7 +130,8 @@
  "CloudVals": {
   "gct": [
    "asyncio.trsock.TransportSocket",
-   "asyncio.selector_events._SelectorSocketTransport"
+   "asyncio.selector_events._SelectorSocketTransport",
+   "TimeoutError"
   ]
  },
  "Custom Team Colors": [
@@ -150,21 +151,27 @@
   "Rojo"
  ],
  "Default Player Profiles": {
-  "Client Input Device #1": "__account__",
-  "Client Input Device #2": "eque fo\u0142\u0142a\ud83e\udd75\ud83d\ude0e",
-  "Client Input Device #3": "__account__",
-  "Client Input Device #4": "__account__",
-  "Client Input Device #5": "LEBRON JAMES 67",
-  "Client Input Device #6": "__account__",
-  "Client Input Device #7": "AntiChefsitos"
+  "Client Input Device #1": "Santill\u00e1n",
+  "Client Input Device #12": "__account__",
+  "Client Input Device #13": "9999999999",
+  "Client Input Device #14": "9999999999",
+  "Client Input Device #2": "_random",
+  "Client Input Device #3": "sloten",
+  "Client Input Device #4": "H4K3R",
+  "Client Input Device #5": "__account__",
+  "Client Input Device #6": "JAJAMIMI",
+  "Client Input Device #7": "Andres",
+  "Client Input Device #8": "sardina"
  },
  "FFA Series Length": 24,
- "Fleet Zone Ping Last Flush Time": 1761360649,
+ "Fleet Zone Ping Last Flush Time": 1765249698,
  "Fleet Zone Pings": {
   "prod": {
-   "atlanta.v4": 11.4107882813675,
-   "columbus.v4": 35.03819483284699,
-   "n_virginia.v4": 19.328779436480254
+   "atlanta.v4": 11.742707148052787,
+   "columbus.v4": 33.92057271827926,
+   "n_virginia.v4": 19.389343670746985,
+   "new_york.v4": 22.552914330566296,
+   "sao_paulo.v4": 130.27620688080788
   }
  },
  "Free-for-All Playlist Randomize": true,
@@ -407,7 +414,7 @@
   ]
  },
  "Teams Series Length": 7,
- "launchCount": 37,
+ "launchCount": 203,
  "lc14173": 1,
  "lc14292": 1
 }
