@@ -7,11 +7,14 @@ import socket
 from threading import Thread
 from random import randint, uniform as uf
 from json import load, loads, dump, JSONDecodeError, dumps
+import babase
 from babase import app, Plugin
 import _babase
-import bascenev1 as bs
-from bascenev1 import connect_to_party as CON, protocol_version as PT
-import bauiv1
+from bascenev1 import (
+    connect_to_party as CON,
+    protocol_version as PT,
+    app as app
+)
 from bauiv1 import (
     get_ip_address_type as IPT,
     clipboard_set_text as COPY,
@@ -24,6 +27,7 @@ from bauiv1 import (
     SpecialChar as sc,
     textwidget as tw,
     gettexture as gt,
+    apptime as apptime,
     apptimer as teck,
     AppTimer as tuck,
     getsound as gs,
@@ -31,41 +35,66 @@ from bauiv1 import (
     charstr as cs,
     Call,
     CallStrict,
-    widget as ow
+    widget as ow,
+    pushcall as pushcall,
+    open_url as open_url,
+    app as APP
 )
 from bauiv1lib.popup import PopupMenuWindow
 from bauiv1lib import colorpicker
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence, Optional, Dict, Any
 import _bauiv1
 import re
 
+import urllib
 import urllib.request
 import urllib.error
 import json
 from threading import Thread
-import bauiv1 as bui
 
 if TYPE_CHECKING:
     from typing import Dict, Optional, Any, Sequence
 
+from babase._general import Call
+import bauiv1lib.party as party
+from bauiv1lib.confirm import ConfirmWindow
+import bauiv1 as bui
+import bascenev1 as bs
+
+# I know you're looking at this code for a reason.
+# Congrats, you found it — but yeah, I made it easy.
+# Still, welcome.
 BASE_URL = "https://www.bombsquadapi.lat"
+V2_LOGO = "\ue063"
+CREATOR = "\ue043Less"
+
 # Constants and file paths
-MY_DIRECTORY = _babase.env()['python_directory_user'] + "/LessLessFinder"
-BEST_FRIENDS_FILE = os.path.join(MY_DIRECTORY, "BestFriends.txt")
+MY_DIRECTORY = _babase.env()['python_directory_user'] + "/LessFinder"
 CONFIGS_FILE = os.path.join(MY_DIRECTORY, "configs.json")
 FRIENDS_FILE = os.path.join(MY_DIRECTORY, "friends.json")
 
-DEFAULT_LANGUAGES_DICT          = {
-    "es": "Spanish",
-    "en": "English",
-    "hi": "Hindi",
-    "ml": "Malayalam",
-    "id": "Indonesian"
+DEFAULT_LANGUAGES_DICT = {
+    "es": {"name": "Español", "pc_compatible": True},
+    "en": {"name": "English", "pc_compatible": True},
+    "pt": {"name": "Português", "pc_compatible": True},
+    "ru": {"name": "Русский", "pc_compatible": True},
+    "hi": {"name": "हिन्दी", "pc_compatible": False},
+    "ml": {"name": "മലയാളം", "pc_compatible": False},
+    "id": {"name": "Bahasa Indonesia", "pc_compatible": False}
 }
 
-INVALID_KEY_TEXT                = '[{0}]'
-DEFAULT_AVAILABLE_LANG_LIST     = list(DEFAULT_LANGUAGES_DICT.values())
-DEFAULT_AVAILABLE_LANG_ID_LIST  = list(DEFAULT_LANGUAGES_DICT.keys())
+# Utility functions to get language names and IDs
+def get_language_name(lang_id: str) -> str:
+    """Get the display name for a language ID."""
+    return DEFAULT_LANGUAGES_DICT.get(lang_id, {}).get("name", "English")
+
+def get_language_names_dict() -> dict:
+    """Get a simple dict of lang_id: name for compatibility with existing code."""
+    return {lang_id: info["name"] for lang_id, info in DEFAULT_LANGUAGES_DICT.items()}
+
+INVALID_KEY_TEXT = '[{0}]'
+DEFAULT_AVAILABLE_LANG_LIST = [info["name"] for info in DEFAULT_LANGUAGES_DICT.values()]
+DEFAULT_AVAILABLE_LANG_ID_LIST = list(DEFAULT_LANGUAGES_DICT.keys())
 CFG_NAME_PREFFERED_LANG = 'Less Finder Language'
 CFG_NAME_FILTER_ACCOUNT = 'Acounts Filter'
 CFG_NAME_COLOR_BACKGROUND = 'COLOR BACKGROUND'
@@ -78,474 +107,760 @@ JSONS_DEFAULT_INDENT_FILE       = 1
 COLOR_SCREENCMD_NORMAL  = (1.0, 0.65, 0.8)
 COLOR_SCREENCMD_ERROR   = (1.0, 0.20, 0.0)
 
-## CMD Logo ##
-CMD_LOGO_CAUTION = "[!]"
-CMD_LOGO_POSITIVE = "[+]"
-CMD_LOGO_NEGATIVE = "[-]"
-CMD_LOGO_POSITIVE_WARNING = "[+!]"
-CMD_LOGO_NEGATIVE_WARNING = "[-!]"
-CMD_LOGO_PERCENT = "[%]"
-CMD_LOGO_SERVER = "[SERVER]"
-
 default_finder_config: Dict[str, Any] = {
     CFG_NAME_PREFFERED_LANG: '',
-    CFG_NAME_FILTER_ACCOUNT: '',
+    CFG_NAME_FILTER_ACCOUNT: 'all',
     CFG_NAME_COLOR_BACKGROUND: (0.1, 0.1, 0.1),
     CFG_NAME_COLOR_SECONDARY: (0.2, 0.2, 0.2),
-    CFG_NAME_COLOR_TERTIARY: (0.6, 0.2, 0.4),
-    CFG_NAME_COLOR_PRIMARY: (1, 0.08, 0.58),
-    CFG_NAME_COLOR_ACCENT: (1, 0.3, 0.6)
+    CFG_NAME_COLOR_TERTIARY: (0.6, 0.6, 0.6),
+    CFG_NAME_COLOR_PRIMARY: (1.0, 1.0, 1.0),
+    CFG_NAME_COLOR_ACCENT: (1.0, 1.0, 1.0)
 }
 
 Translate_Texts: Dict[str, dict[str, str]] = {
-    'searchServers': {
-        'id': 'Cari Semua Server',
-        'en': 'Search All Servers',
-        'hi': 'सभी सर्वर खोजें',
-        'es': 'Buscar todos los servidores',
-        'ml': 'എല്ലാ സര്‍വറുകളും അന്വേഷിക്കുക'
-    },
-    'search': {
-        'id': 'Cari',
+    'Global.search': {
         'en': 'Search',
-        'hi': 'खोजें',
         'es': 'Buscar',
-        'ml': 'തിരയുക'
+        'pt': 'Buscar',
+        'ru': 'Поиск',
+        'hi': 'खोजें',
+        'ml': 'തിരയുക',
+        'id': 'Cari'
     },
-    'selectToViewInfo': {
-        'id': 'Pilih sesuatu untuk\nmelihat info server',
-        'en': 'Select something to\nview server info',
-        'hi': 'कुछ चुनें ताकि आप\nसर्वर की जानकारी देखें',
-        'es': 'Selecciona algo para\nver la info del servidor',
-        'ml': 'ഏതെങ്കിലും തിരഞ്ഞെടുക്കുക\nസർവർ വിവരങ്ങൾ കാണാൻ'
-    },
-    'noFriendsOnline': {
-        'id': 'Uh, sepertinya\nbelum ada teman\nyang online,\ncoba cari server',
-        'en': 'Uh, it seems\nthere are no friends\nonline, try\nsearching servers',
-        'hi': 'अरे, लगता है कि\nकोई दोस्त ऑनलाइन\nनहीं है, सर्वर\nखोजकर देखें',
-        'es': 'Uh, parece que\nno hay amigos\nen línea, prueba\nbuscando servidores',
-        'ml': 'ഉഫ്, ഓൺലൈൻ\nസുഹൃത്തുക്കൾ ഇല്ലെന്ന്\nതോന്നുന്നു, സർവർ\nതിരഞ്ഞ് നോക്കൂ'
-    },
-    'allFriends': {
-        'id': 'Semua Teman Anda',
-        'en': 'All Your Friends',
-        'hi': 'आपके सभी दोस्त',
-        'es': 'Todos tus Amigos',
-        'ml': 'നിങ്ങളുടെ എല്ലാ സുഹൃത്തുക്കളും'
-    },
-    'addManually': {
-        'id': 'Tambah\nManual',
-        'en': 'Add\nManually Set',
-        'hi': 'मैन्युअली\nजोड़ें',
-        'es': 'Agregar\nManualmente',
-        'ml': 'മാനുവൽ\nചേർക്കുക'
-    },
-    'delete': {
-        'id': 'Hapus',
+    'Global.delete': {
         'en': 'Delete',
-        'hi': 'हटाएं',
         'es': 'Eliminar',
-        'ml': 'ഇല്ലാതാക്കുക'
+        'pt': 'Excluir',
+        'ru': 'Удалить',
+        'hi': 'हटाएं',
+        'ml': 'ഇല്ലാതാക്കുക',
+        'id': 'Hapus'
     },
-    'searchProfiles': {
-        'id': 'Cari Profil',
-        'en': 'Search Profiles',
-        'hi': 'प्रोफ़ाइल खोजें',
-        'es': 'Buscar Perfiles',
-        'ml': 'പ്രൊഫൈലുകൾ തിരയുക'
-    },
-    'changeColors': {
-        'id': 'Ubah Warna',
-        'en': 'Change Colors',
-        'hi': 'रंग बदलें',
-        'es': 'Cambiar colores',
-        'ml': 'നിറങ്ങൾ മാറ്റുക'
-    },
-    'changeLanguage': {
-        'id': 'Ubah Bahasa',
-        'en': 'Change Language',
-        'hi': 'भाषा बदलें',
-        'es': 'Cambiar idioma',
-        'ml': 'ഭാഷ മാറ്റുക'
-    },
-    'searchPlayers': {
-        'id': 'Cari pemain tanpa harus bergabung ke pertandingan',
-        'en': 'Search players without having to join a match',
-        'hi': 'खिलाड़‍ियों को खोजें बिना\nमैच में जुड़ने की ज़रूरत',
-        'es': 'Busca jugadores sin tener que unirse a partida',
-        'ml': 'മത്സരത്തിൽ ചേരേണ്ടതില്ലാതെ കളിക്കാരെ തിരയുക'
-    },
-    'pressSearch': {
-        'id': 'Tekan cari dan\nbiar aku urus sisanya!',
-        'en': 'Press search and\nI’ll handle the rest!',
-        'hi': 'सर्च दबाएँ और\nबाकी मैं संभाल लूँगा!',
-        'es': '¡Pulsa buscar y yo me\nencargo del resto!',
-        'ml': 'സെർച്ച് അമർത്തൂ,\nമറ്റെല്ലാം ഞാൻ നോക്കാം!'
-    },
-    'searchServersForPlayers': {
-        'id': 'Cari di beberapa server\nuntuk menemukan pemain\nhasil dapat berbeda\nsesuai waktu dan koneksi',
-        'en': 'Search some servers\nto find players\nresults may vary\nby time and connection',
-        'hi': 'कुछ सर्वरों में खोजें\nखिलाड़ी खोजने के लिए\nपरिणाम बदल सकते हैं\nसमय और कनेक्शन के अनुसार',
-        'es': 'Busca en algunos servidores\npara encontrar jugadores\nLos resultados pueden variar\nsegún la hora y la conexión',
-        'ml': 'ചില സര്‍വറുകളില്‍ തിരയുക\nകളിക്കാരെ കണ്ടെത്താൻ\nഫലങ്ങൾ മാറാം\nസമയം மற்றும் കണക്ഷൻ അനുസരിച്ച്'
-    },
-    'addFriend': {
-        'id': 'Tambah\nTeman',
-        'en': 'Add\nTo Friends',
-        'hi': 'दोस्त\nजोड़ें',
-        'es': 'Agregar\nAmigo',
-        'ml': 'സുഹൃത്ത്\nചേർക്കുക'
-    },
-    'selectFriendToView': {
-        'id': 'Pilih seorang teman\nuntuk melihat di mana ia berada',
-        'en': 'Select a friend\nto see where they are',
-        'hi': 'किसी दोस्त को चुनें\nयह देखने के लिए कि वह कहाँ है',
-        'es': 'Selecciona un amigo\npara ver donde está',
-        'ml': 'ഒരു സുഹൃത്തിനെ തിരഞ്ഞെടുക്കുക\nഅവൻ എവിടെയെന്ന് കാണാൻ'
-    },
-    'online': {
-        'id': 'Online',
-        'en': 'Online',
-        'hi': 'ऑनलाइन',
-        'es': 'En línea',
-        'ml': 'ഓൺലൈൻ'
-    },
-    'scanningServers': {
-        'id': 'Sedang memindai server!\nIni seharusnya hanya\nmembutuhkan beberapa detik.\nAnda bisa menutup jendela ini.',
-        'en': 'Scanning servers!\nThis should take a few seconds.\nYou can close this window.',
-        'hi': 'सर्वर स्कैन हो रहे हैं!\nइसमें कुछ सेकंड लगेंगे।\nआप यह विंडो बंद कर सकते हैं।',
-        'es': '¡Escaneando servidores!\nEsto debería tardar unos segundos.\nPuedes cerrar esta ventana.',
-        'ml': 'സര്‍വറുകൾ സ്കാന്‍ ചെയ്യുന്നു!\nഇതിന് കുറച്ച് സെക്കൻഡ് മാത്രം എടുക്കും.\nഈ ജാലകം നിങ്ങൾക്ക് അടയ്ക്കാം.'
-    },
-    'stillBusy': {
-        'id': 'Masih sibuk!',
-        'en': '¡Still busy!',
-        'hi': 'मैं अभी भी व्यस्त हूँ!',
-        'es': '¡Sigo ocupado!',
-        'ml': 'ഞാൻ ഇതുവരെ തിരക്കിലാണ്!'
-    },
-    'connect': {
-        'id': 'Sambungkan',
-        'en': 'Connect',
-        'hi': 'कनेक्ट',
-        'es': 'Conectar',
-        'ml': 'കണക്റ്റ്'
-    },
-    'deleteFriend': {
-        'id': 'Hapus Teman',
-        'en': 'Delete Friend',
-        'hi': 'दोस्त\nहटाएँ',
-        'es': 'Eliminar Amigo',
-        'ml': 'സുഹൃത്ത് ഇല്ലാതാക്കുക'
-    },
-    'fieldEmpty': {
-        'id': 'Kolom kosong, tidak dapat menambahkan',
-        'en': 'The field is empty, cannot add',
-        'hi': 'फ़ील्ड खाली है, जोड़ नहीं सकते',
-        'es': 'El campo está vacío, no se puede agregar',
-        'ml': 'ഫീൽഡ് ശൂന്യമാണ്, ചേർക്കാൻ സാധിക്കില്ല'
-    },
-    'scan.finished': {
-        'id': 'Selesai!',
-        'en': 'Finished!',
-        'hi': 'समाप्त!',
-        'es': '¡Terminado!',
-        'ml': 'പൂർത്തിയായി!'
-    },
-    'scan.scanned': {
-        'id': 'Dipindai',
-        'en': 'Scanned',
-        'hi': 'स्कैन किए',
-        'es': 'Escaneados',
-        'ml': 'സ്കാൻ ചെയ്തു'
-    },
-    'scan.servers': {
-        'id': 'server',
-        'en': 'servers',
-        'hi': 'सर्वर',
-        'es': 'servidores',
-        'ml': 'സർവർ'
-    },
-    'scan.in': {
-        'id': 'dalam',
-        'en': 'in',
-        'hi': 'में',
-        'es': 'en',
-        'ml': 'ഇൽ'
-    },
-    'scan.seconds': {
-        'id': 'detik!',
-        'en': 'seconds!',
-        'hi': 'सेकंड!',
-        'es': 'segundos!',
-        'ml': 'സെക്കൻഡുകൾ!'
-    },
-    'scan.approximately': {
-        'id': 'Sekitar',
-        'en': 'Approximately',
-        'hi': 'लगभग',
-        'es': 'Aproximadamente',
-        'ml': 'ഏകദേശം'
-    },
-    'scan.server': {
-        'id': 'servers',
-        'en': 'servers',
-        'hi': 'सर्वर',
-        'es': 'servidores',
-        'ml': 'സർവർ'
-    },
-    'scan.perSecond': {
-        'id': '/detik',
-        'en': '/sec',
-        'hi': '/सेक',
-        'es': '/seg',
-        'ml': '/സെക്'
-    },
-    'profileSearch': {
-        'id': 'Pencarian Profil',
-        'en': 'Profile Search',
-        'hi': 'प्रोफ़ाइल खोज',
-        'es': 'Búsqueda de Perfil',
-        'ml': 'പ്രൊഫൈൽ തിരയൽ'
-    },
-    'filter': {
-        'id': 'Saring',
+    'Global.filter': {
         'en': 'Filter',
-        'hi': 'फ़िल्टर',
         'es': 'Filtrar',
-        'ml': 'ഫിൽട്ടർ'
+        'pt': 'Filtrar',
+        'ru': 'Фильтр',
+        'hi': 'फ़िल्टर',
+        'ml': 'ഫിൽട്ടർ',
+        'id': 'Saring'
     },
-    'enterNameAndPressSearch': {
-        'id': 'Masukkan nama dan tekan Cari',
-        'en': 'Enter a name and press Search',
-        'hi': 'एक नाम दर्ज करें और खोज दबाएँ',
-        'es': 'Ingresa un nombre y presiona Buscar',
-        'ml': 'ഒരു പേര് നൽകുക, തിരയൽ അമർത്തുക'
+    'Global.connect': {
+        'en': 'Connect',
+        'es': 'Conectar',
+        'pt': 'Conectar',
+        'ru': 'Подключить',
+        'hi': 'कनेक्ट',
+        'ml': 'കണക്റ്റ്',
+        'id': 'Sambungkan'
     },
-    'searching': {
-        'id': 'Mencari...',
-        'en': 'Searching...',
-        'hi': 'खोज रहा है...',
-        'es': 'Buscando...',
-        'ml': 'തിരയുന്നു...'
+    'Global.online': {
+        'en': 'Online',
+        'es': 'En línea',
+        'pt': 'Online',
+        'ru': 'Онлайн',
+        'hi': 'ऑनलाइन',
+        'ml': 'ഓൺലൈൻ',
+        'id': 'Online'
     },
-    'loadingProfileData': {
-        'id': 'Memuat data profil...',
+    'Global.fieldEmpty': {
+        'en': 'The field is empty, cannot add',
+        'es': 'El campo está vacío, no se puede agregar',
+        'pt': 'O campo está vazio, não é possível adicionar',
+        'ru': 'Поле пустое, нельзя добавить',
+        'hi': 'फ़ील्ड खाली है, जोड़ नहीं सकते',
+        'ml': 'ഫീൽഡ് ശൂന്യമാണ്, ചേർക്കാൻ സാധിക്കില്ല',
+        'id': 'Kolom kosong, tidak dapat menambahkan'
+    },
+    'Global.results': {
+        'en': 'Results',
+        'es': 'Resultados',
+        'pt': 'Resultados',
+        'ru': 'Результаты',
+        'hi': 'परिणाम',
+        'ml': 'ഫലങ്ങൾ',
+        'id': 'Hasil'
+    },
+    'Global.credits': {
+        'en': 'Credits',
+        'es': 'Créditos',
+        'pt': 'Créditos',
+        'ru': 'Благодарности',
+        'hi': 'श्रेय',
+        'ml': 'ക്രെഡിറ്റുകൾ',
+        'id': 'Kredit'
+    },
+    'Global.deletedSuccessfully': {
+        'en': 'Deleted successfully',
+        'es': 'Eliminado correctamente',
+        'pt': 'Excluído com sucesso',
+        'ru': 'Успешно удалено',
+        'hi': 'सफलतापूर्वक हटाया गया',
+        'ml': 'വിജയകരമായി നീക്കം ചെയ്തു',
+        'id': 'Berhasil dihapus'
+    },
+    'Global.addedSuccessfully': {
+        'en': 'Added successfully',
+        'es': 'Agregado correctamente',
+        'pt': 'Adicionado com sucesso',
+        'ru': 'Успешно добавлено',
+        'hi': 'सफलतापूर्वक जोड़ा गया',
+        'ml': 'വിജയകരമായി ചേർത്തു',
+        'id': 'Berhasil ditambahkan'
+    },
+    'Global.addedToFriendsList': {
+        'en': 'Added to friends list!',
+        'es': '¡Agregado a la lista de amigos!',
+        'pt': 'Adicionado à lista de amigos!',
+        'ru': 'Добавлено в список друзей!',
+        'hi': 'दोस्तों की सूची में जोड़ा गया!',
+        'ml': 'സുഹൃത്തുകളുടെ പട്ടികയിൽ ചേർത്തു!',
+        'id': 'Ditambahkan ke daftar teman!'
+    },
+    'Global.alreadyInList': {
+        'en': 'Already in list',
+        'es': 'Ya está en la lista',
+        'pt': 'Já está na lista',
+        'ru': 'Уже в списке',
+        'hi': 'पहले से सूची में है',
+        'ml': 'ഇതിനകം പട്ടികയിൽ ഉണ്ട്',
+        'id': 'Sudah ada dalam daftar'
+    },
+    'Global.alreadyInFriendsList': {
+        'en': 'Already in friends list',
+        'es': 'Ya está en la lista de amigos',
+        'pt': 'Já está na lista de amigos',
+        'ru': 'Уже в списке друзей',
+        'hi': 'पहले से दोस्तों की सूची में है',
+        'ml': 'ഇതിനകം സുഹൃത്തുകളുടെ പട്ടികയിൽ ഉണ്ട്',
+        'id': 'Sudah ada dalam daftar teman'
+    },
+    'Global.copiedToClipboard': {
+        'en': 'Copied to clipboard!',
+        'es': '¡Copiado al portapapeles!',
+        'pt': 'Copiado para a área de transferência!',
+        'ru': 'Скопировано в буфер обмена!',
+        'hi': 'क्लिपबोर्ड में कॉपी किया गया!',
+        'ml': 'ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി!',
+        'id': 'Disalin ke papan klip!'
+    },
+    'ProfileSearchWindow.profileSearch': {
+        'en': 'Profile Search',
+        'es': 'Búsqueda de Perfil',
+        'pt': 'Busca de Perfil',
+        'ru': 'Поиск профиля',
+        'hi': 'प्रोफ़ाइल खोज',
+        'ml': 'പ്രൊഫൈൽ തിരയൽ',
+        'id': 'Pencarian Profil'
+    },
+    'ProfileSearchWindow.loadingProfileData': {
         'en': 'Loading profile data...',
-        'hi': 'प्रोफ़ाइल डेटा लोड हो रहा है...',
         'es': 'Cargando datos del perfil...',
-        'ml': 'പ്രൊഫൈൽ ഡാറ്റ ലോഡ് ചെയ്യുന്നു...'
+        'pt': 'Carregando dados do perfil...',
+        'ru': 'Загрузка данных профиля...',
+        'hi': 'प्रोफ़ाइल डेटा लोड हो रहा है...',
+        'ml': 'പ്രൊഫൈൽ ഡാറ്റ ലോഡ് ചെയ്യുന്നു...',
+        'id': 'Memuat data profil...'
     },
-    'character': {
-        'id': 'Karakter',
-        'en': 'Character',
-        'hi': 'चरित्र',
-        'es': 'Personaje',
-        'ml': 'കഥാപാത്രം'
-    },
-    'name': {
-        'id': 'Nama',
+    'ProfileSearchWindow.name': {
         'en': 'Name',
-        'hi': 'नाम',
         'es': 'Nombre',
-        'ml': 'പേര്'
+        'pt': 'Nome',
+        'ru': 'Имя',
+        'hi': 'नाम',
+        'ml': 'പേര്',
+        'id': 'Nama'
     },
-    'rankInfo': {
-        'id': 'Info Peringkat',
+    'ProfileSearchWindow.character': {
+        'en': 'Character',
+        'es': 'Personaje',
+        'pt': 'Personagem',
+        'ru': 'Персонаж',
+        'hi': 'चरित्र',
+        'ml': 'കഥാപാത്രം',
+        'id': 'Karakter'
+    },
+    'ProfileSearchWindow.accounts': {
+        'en': 'Accounts',
+        'es': 'Cuentas',
+        'pt': 'Contas',
+        'ru': 'Аккаунты',
+        'hi': 'खाते',
+        'ml': 'അക്കൗണ്ടുകൾ',
+        'id': 'Akun'
+    },
+    'ProfileSearchWindow.rankInfo': {
         'en': 'Rank Info',
-        'hi': 'रैंक जानकारी',
         'es': 'Información de Rango',
-        'ml': 'റാങ്ക് വിവരങ്ങൾ'
+        'pt': 'Informações de Classificação',
+        'ru': 'Информация о ранге',
+        'hi': 'रैंक जानकारी',
+        'ml': 'റാങ്ക് വിവരങ്ങൾ',
+        'id': 'Info Peringkat'
     },
-    'current': {
-        'id': 'Saat Ini',
+    'ProfileSearchWindow.current': {
         'en': 'Current',
-        'hi': 'वर्तमान',
         'es': 'Actual',
-        'ml': 'നിലവിലെ'
+        'pt': 'Atual',
+        'ru': 'Текущий',
+        'hi': 'वर्तमान',
+        'ml': 'നിലവിലെ',
+        'id': 'Saat Ini'
     },
-    'previousRanks': {
-        'id': 'Peringkat Sebelumnya',
+    'ProfileSearchWindow.previousRanks': {
         'en': 'Previous Ranks',
-        'hi': 'पिछले रैंक',
         'es': 'Rangos Anteriores',
-        'ml': 'മുൻ റാങ്കുകൾ'
+        'pt': 'Classificações Anteriores',
+        'ru': 'Предыдущие ранги',
+        'hi': 'पिछले रैंक',
+        'ml': 'മുൻ റാങ്കുകൾ',
+        'id': 'Peringkat Sebelumnya'
     },
-    'season': {
-        'id': 'Musim',
+    'ProfileSearchWindow.season': {
         'en': 'Season',
-        'hi': 'सीज़न',
         'es': 'Temporada',
-        'ml': 'സീസൺ'
+        'pt': 'Temporada',
+        'ru': 'Сезон',
+        'hi': 'सीज़न',
+        'ml': 'സീസൺ',
+        'id': 'Musim'
     },
-    'achievements': {
-        'id': 'Pencapaian',
+    'ProfileSearchWindow.achievements': {
         'en': 'Achievements',
-        'hi': 'उपलब्धियाँ',
         'es': 'Logros',
-        'ml': 'നേട്ടങ്ങൾ'
+        'pt': 'Conquistas',
+        'ru': 'Достижения',
+        'hi': 'उपलब्धियाँ',
+        'ml': 'നേട്ടങ്ങൾ',
+        'id': 'Pencapaian'
     },
-    'moreInfo': {
-        'id': 'Info Lebih Lanjut',
+    'ProfileSearchWindow.trophies': {
+        'en': 'Trophies',
+        'es': 'Trofeos',
+        'pt': 'Troféus',
+        'ru': 'Трофеи',
+        'hi': 'ट्रॉफी',
+        'ml': 'ട്രോഫികൾ',
+        'id': 'Trofi'
+    },
+    'ProfileSearchWindow.moreInfo': {
         'en': 'More Info',
-        'hi': 'अधिक जानकारी',
         'es': 'Más Información',
-        'ml': 'കൂടുതൽ വിവരങ്ങൾ'
+        'pt': 'Mais Informações',
+        'ru': 'Подробнее',
+        'hi': 'अधिक जानकारी',
+        'ml': 'കൂടുതൽ വിവരങ്ങൾ',
+        'id': 'Info Lebih Lanjut'
     },
-    'accountType': {
-        'id': 'Jenis Akun',
+    'ProfileSearchWindow.accountType': {
         'en': 'Account Type',
-        'hi': 'खाते का प्रकार',
         'es': 'Tipo de Cuenta',
-        'ml': 'അക്കൗണ്ട് തരം'
+        'pt': 'Tipo de Conta',
+        'ru': 'Тип аккаунта',
+        'hi': 'खाते का प्रकार',
+        'ml': 'അക്കൗണ്ട് തരം',
+        'id': 'Jenis Akun'
     },
-    'activeDays': {
-        'id': 'Hari Aktif',
+    'ProfileSearchWindow.activeDays': {
         'en': 'Active Days',
-        'hi': 'सक्रिय दिन',
         'es': 'Días Activos',
-        'ml': 'സജീവ ദിവസങ്ങൾ'
+        'pt': 'Dias Ativos',
+        'ru': 'Активные дни',
+        'hi': 'सक्रिय दिन',
+        'ml': 'സജീവ ദിവസങ്ങൾ',
+        'id': 'Hari Aktif'
     },
-    'created': {
-        'id': 'Dibuat',
+    'ProfileSearchWindow.created': {
         'en': 'Created',
-        'hi': 'बनाया गया',
         'es': 'Creado',
-        'ml': 'സൃഷ്ടിച്ചത്'
+        'pt': 'Criado',
+        'ru': 'Создан',
+        'hi': 'बनाया गया',
+        'ml': 'സൃഷ്ടിച്ചത്',
+        'id': 'Dibuat'
     },
-    'lastActive': {
-        'id': 'Terakhir Aktif',
+    'ProfileSearchWindow.lastActive': {
         'en': 'Last Active',
-        'hi': 'आखिरी बार सक्रिय',
         'es': 'Última Actividad',
-        'ml': 'അവസാനമായി സജീവമായ'
+        'pt': 'Última Atividade',
+        'ru': 'Последняя активность',
+        'hi': 'आखिरी बार सक्रिय',
+        'ml': 'അവസാനമായി സജീവമായ',
+        'id': 'Terakhir Aktif'
     },
-    "name": {
-        "id": "Nama",
-        "en": "Name",
-        "hi": "नाम",
-        "es": "Nombre",
-        "ml": "പേര്"
+    'ProfileSearchWindow.accountExistence': {
+        'en': 'Account Existence',
+        'es': 'Existencia de la Cuenta',
+        'pt': 'Existência da Conta',
+        'ru': 'Существование учетной записи',
+        'hi': 'खाता अस्तित्व',
+        'ml': 'അക്കൗണ്ട് നിലവിലുണ്ട്',
+        'id': 'Keberadaan Akun'
     },
-    "character": {
-        "id": "Karakter",
-        "en": "Character",
-        "hi": "पात्र",
-        "es": "Personaje",
-        "ml": "പാത്രം"
+    'ProfileSearchWindow.Error.searchingAccount': {
+        'en': 'Oops, an error occurred while searching for this account',
+        'es': 'Ups, ocurrió un error al buscar esta cuenta',
+        'pt': 'Ops, ocorreu um erro ao buscar esta conta',
+        'ru': 'Упс, произошла ошибка при поиске этой учетной записи',
+        'hi': 'ओह, इस खाते को खोजते समय एक त्रुटि हुई',
+        'ml': 'അയ്യോ, ഈ അക്കൗണ്ട് തിരയുന്നതിനിടെ ഒരു പിശക് സംഭവിച്ചു',
+        'id': 'Ups, terjadi kesalahan saat mencari akun ini'
     },
-    "accounts": {
-        "id": "Akun",
-        "en": "Accounts",
-        "hi": "खाते",
-        "es": "Cuentas",
-        "ml": "അക്കൗണ്ടുകൾ"
+    'ProfileSearchWindow.Error.networkShort': {
+        'en': 'Network error:',
+        'es': 'Error de red:',
+        'pt': 'Erro de rede:',
+        'ru': 'Ошибка сети:',
+        'hi': 'नेटवर्क त्रुटि:',
+        'ml': 'നെറ്റ്‌വർക്ക് പിശക്:',
+        'id': 'Kesalahan jaringan:'
     },
-    "rankInfo": {
-        "id": "Info Peringkat",
-        "en": "Rank Info",
-        "hi": "रैंक जानकारी",
-        "es": "Información de Rango",
-        "ml": "റാങ്ക് വിവരം"
+    'ProfileSearchWindow.Error.accountNotFound': {
+        'en': 'Account not found',
+        'es': 'Cuenta no encontrada',
+        'pt': 'Conta não encontrada',
+        'ru': 'Учетная запись не найдена',
+        'hi': 'खाता नहीं मिला',
+        'ml': 'അക്കൗണ്ട് കണ്ടെത്തിയില്ല',
+        'id': 'Akun tidak ditemukan'
     },
-    "current": {
-        "id": "Saat Ini",
-        "en": "Current",
-        "hi": "वर्तमान",
-        "es": "Actual",
-        "ml": "നിലവിലെ"
+    'ProfileSearchWindow.Error.noValidParameter': {
+        'en': 'No valid parameter provided',
+        'es': 'No se proporcionó un parámetro válido',
+        'pt': 'Nenhum parâmetro válido fornecido',
+        'ru': 'Не указан действительный параметр',
+        'hi': 'कोई मान्य पैरामीटर प्रदान नहीं किया गया',
+        'ml': 'സാധുവായ ഒരു പാരാമീറ്ററും നൽകിയിട്ടില്ല',
+        'id': 'Tidak ada parameter valid yang diberikan'
     },
-    "previousRanks": {
-        "id": "Peringkat Sebelumnya",
-        "en": "Previous Ranks",
-        "hi": "पिछली रैंक",
-        "es": "Rangos Previos",
-        "ml": "മുമ്പത്തെ റാങ്കുകൾ"
+    'ProfileSearch.profileSearch': {
+        'en': 'Profile Search',
+        'es': 'Búsqueda de Perfil',
+        'pt': 'Busca de Perfil',
+        'ru': 'Поиск профиля',
+        'hi': 'प्रोफ़ाइल खोज',
+        'ml': 'പ്രൊഫൈൽ തിരയൽ',
+        'id': 'Pencarian Profil'
     },
-    "season": {
-        "id": "Musim",
-        "en": "Season",
-        "hi": "सीज़न",
-        "es": "Temporada",
-        "ml": "സീസൺ"
+    'ProfileSearch.enterNameAndPressSearch': {
+        'en': 'Enter a name and press Search',
+        'es': 'Ingresa un nombre y presiona Buscar',
+        'pt': 'Digite um nome e pressione Buscar',
+        'ru': 'Введите имя и нажмите "Поиск"',
+        'hi': 'एक नाम दर्ज करें और खोज दबाएँ',
+        'ml': 'ഒരു പേര് നൽകുക, തിരയൽ അമർത്തുക',
+        'id': 'Masukkan nama dan tekan Cari'
     },
-    "achievements": {
-        "id": "Pencapaian",
-        "en": "Achievements",
-        "hi": "उपलब्धियां",
-        "es": "Logros",
-        "ml": "നേട്ടങ്ങൾ"
+    'ProfileSearch.searching': {
+        'en': 'Searching...',
+        'es': 'Buscando...',
+        'pt': 'Buscando...',
+        'ru': 'Поиск...',
+        'hi': 'खोज रहा है...',
+        'ml': 'തിരയുന്നു...',
+        'id': 'Mencari...'
     },
-    "moreInfo": {
-        "id": "Info Lebih Lanjut",
-        "en": "More Info",
-        "hi": "अधिक जानकारी",
-        "es": "Más Información",
-        "ml": "കൂടുതൽ വിവരം"
+    'ProfileSearch.Error.noAccountFound': {
+        'en': 'No account found with Public ID:',
+        'es': 'No se encontró ninguna cuenta con el ID público:',
+        'pt': 'Nenhuma conta encontrada com ID Público:',
+        'ru': 'Не найдена учетная запись с публичным ID:',
+        'hi': 'इस सार्वजनिक आईडी के साथ कोई खाता नहीं मिला:',
+        'ml': 'പബ്ലിക് ഐഡിയോടൊപ്പം യാതൊരു അക്കൗണ്ടും കണ്ടെത്തിയില്ല:',
+        'id': 'Tidak ditemukan akun dengan ID Publik:'
     },
-    "accountType": {
-        "id": "Jenis Akun",
-        "en": "Account Type",
-        "hi": "खाते का प्रकार",
-        "es": "Tipo de Cuenta",
-        "ml": "അക്കൗണ്ട് തരം"
+    'ProfileSearch.Error.network': {
+        'en': 'Network error. Please check your connection and try again.',
+        'es': 'Error de red. Por favor revisa tu conexión e inténtalo de nuevo.',
+        'pt': 'Erro de rede. Por favor, verifique sua conexão e tente novamente.',
+        'ru': 'Ошибка сети. Пожалуйста, проверьте подключение и попробуйте снова.',
+        'hi': 'नेटवर्क त्रुटि। कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।',
+        'ml': 'നെറ്റ്‌വർക്ക് പിശക്. ദയവായി നിങ്ങളുടെ കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Kesalahan jaringan. Silakan periksa koneksi Anda dan coba lagi.'
     },
-    "activeDays": {
-        "id": "Hari Aktif",
-        "en": "Active Days",
-        "hi": "सक्रिय दिन",
-        "es": "Días Activos",
-        "ml": "സജീവ ദിവസങ്ങൾ"
+    'ProfileSearch.Error.serviceUnavailable': {
+        'en': 'Search service is currently unavailable. Please try again later.',
+        'es': 'El servicio de búsqueda no está disponible actualmente. Por favor inténtalo más tarde.',
+        'pt': 'O serviço de busca está indisponível no momento. Por favor, tente novamente mais tarde.',
+        'ru': 'Служба поиска в настоящее время недоступна. Пожалуйста, попробуйте позже.',
+        'hi': 'खोज सेवा वर्तमान में उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।',
+        'ml': 'തിരച്ചിൽ സേവനം നിലവിൽ ലഭ്യമല്ല. ദയവായി പിന്നീട് വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Layanan pencarian saat ini tidak tersedia. Silakan coba lagi nanti.'
     },
-    "created": {
-        "id": "Dibuat",
-        "en": "Created",
-        "hi": "बनाया गया",
-        "es": "Creado",
-        "ml": "സൃഷ്ടിച്ചത്"
+    'ProfileSearch.Error.searchFailed': {
+        'en': 'Oops, an error occurred while searching. Please try again.',
+        'es': 'Ups, ocurrió un error al realizar la búsqueda. Por favor inténtalo de nuevo.',
+        'pt': 'Ops, ocorreu um erro durante a busca. Por favor, tente novamente.',
+        'ru': 'Упс, произошла ошибка при поиске. Пожалуйста, попробуйте снова.',
+        'hi': 'ओह, खोज करते समय एक त्रुटि हुई। कृपया पुनः प्रयास करें।',
+        'ml': 'അയ്യോ, തിരച്ചിൽ നടത്തുന്നതിനിടെ ഒരു പിശക് സംഭവിച്ചു. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Ups, terjadi kesalahan saat melakukan pencarian. Silakan coba lagi.'
     },
-    "lastActive": {
-        "id": "Terakhir Aktif",
-        "en": "Last Active",
-        "hi": "आखिरी बार सक्रिय",
-        "es": "Última Actividad",
-        "ml": "അവസാനമായി സജീവമായ"
+    'ProfileSearch.Error.invalidResponse': {
+        'en': 'Invalid response from server. Please try again.',
+        'es': 'Respuesta inválida del servidor. Por favor inténtalo de nuevo.',
+        'pt': 'Resposta inválida do servidor. Por favor, tente novamente.',
+        'ru': 'Неверный ответ от сервера. Пожалуйста, попробуйте снова.',
+        'hi': 'सर्वर से अमान्य प्रतिक्रिया मिली। कृपया पुनः प्रयास करें।',
+        'ml': 'സെർവറിൽ നിന്ന് അസാധുവായ പ്രതികരണം ലഭിച്ചു. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Respons tidak valid dari server. Silakan coba lagi.'
     },
-    "results": {
-        "id": "Hasil",
-        "en": "Results",
-        "hi": "परिणाम",
-        "es": "Resultados",
-        "ml": "ഫലങ്ങൾ"
+    'ProfileSearch.Error.unexpected': {
+        'en': 'Oops, an unexpected error occurred. Please try again.',
+        'es': 'Ups, ocurrió un error inesperado. Por favor inténtalo de nuevo.',
+        'pt': 'Ops, ocorreu um erro inesperado. Por favor, tente novamente.',
+        'ru': 'Упс, произошла непредвиденная ошибка. Пожалуйста, попробуйте снова.',
+        'hi': 'ओह, एक अप्रत्याशित त्रुटि हुई। कृपया पुनः प्रयास करें।',
+        'ml': 'അയ്യോ, പ്രതീക്ഷിക്കാത്ത ഒരു പിശക് സംഭവിച്ചു. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Ups, terjadi kesalahan tak terduga. Silakan coba lagi.'
     },
-    "filter": {
-        "id": "Filter",
-        "en": "Filter",
-        "hi": "फ़िल्टर",
-        "es": "Filtro",
-        "ml": "ഫിൽട്ടർ"
+    'ProfileSearch.Error.noExactMatch': {
+        'en': 'No exact match found for',
+        'es': 'No se encontró una coincidencia exacta para',
+        'pt': 'Nenhuma correspondência exata encontrada para',
+        'ru': 'Точное совпадение не найдено для',
+        'hi': 'इसके लिए कोई सटीक मेल नहीं मिला',
+        'ml': 'ഇതിനായി കൃത്യമായ പൊരുത്തം കണ്ടെത്തിയില്ല',
+        'id': 'Tidak ditemukan kecocokan yang tepat untuk'
     },
-    "trophies": {
-        "id": "Trofi",
-        "en": "Trophies",
-        "hi": "ट्रॉफी",
-        "es": "Trofeos",
-        "ml": "ട്രോഫികൾ"
+    'ProfileSearch.Error.noAccountFoundWithId': {
+        'en': 'No account found with ID:',
+        'es': 'No se encontró ninguna cuenta con el ID:',
+        'pt': 'Nenhuma conta encontrada com ID:',
+        'ru': 'Не найдена учетная запись с ID:',
+        'hi': 'इस आईडी के साथ कोई खाता नहीं मिला:',
+        'ml': 'ഐഡിയോടൊപ്പം യാതൊരു അക്കൗണ്ടും കണ്ടെത്തിയില്ല:',
+        'id': 'Tidak ditemukan akun dengan ID:'
     },
-    "accountExistence": {
-        "id": "Keberadaan Akun",
-        "en": "Account Existence",
-        "hi": "खाता अस्तित्व",
-        "es": "Existencia de la Cuenta",
-        "ml": "അക്കൗണ്ട് നിലവില 있음"
+    'FriendsWindow.allFriends': {
+        'en': 'All Your Friends',
+        'es': 'Todos tus Amigos',
+        'pt': 'Todos os Seus Amigos',
+        'ru': 'Все ваши друзья',
+        'hi': 'आपके सभी दोस्त',
+        'ml': 'നിങ്ങളുടെ എല്ലാ സുഹൃത്തുക്കളും',
+        'id': 'Semua Teman Anda'
+    },
+    'FriendsWindow.addManually': {
+        'en': 'Add\nManually',
+        'es': 'Agregar\nManualmente',
+        'pt': 'Adicionar\nManualmente',
+        'ru': 'Добавить\nВручную',
+        'hi': 'मैन्युअली\nजोड़ें',
+        'ml': 'മാനുവൽ\nചേർക്കുക',
+        'id': 'Tambah\nManual'
+    },
+    'FriendsWindow.selectFriendToView': {
+        'en': 'Select a friend\nto see where they are',
+        'es': 'Selecciona un amigo\npara ver donde está',
+        'pt': 'Selecione um amigo\npara ver onde ele está',
+        'ru': 'Выберите друга,\nчтобы увидеть его местоположение',
+        'hi': 'किसी दोस्त को चुनें\nयह देखने के लिए कि वह कहाँ है',
+        'ml': 'ഒരു സുഹൃത്തിനെ തിരഞ്ഞെടുക്കുക\nഅവൻ എവിടെയെന്ന് കാണാൻ',
+        'id': 'Pilih seorang teman\nuntuk melihat di mana ia berada'
+    },
+    'FriendsWindow.noFriendsOnline': {
+        'en': 'Uh, it seems\nthere are no friends\nonline, try\nsearching servers',
+        'es': 'Uh, parece que\nno hay amigos\nen línea, prueba\nbuscando servidores',
+        'pt': 'Uh, parece que\nnão há amigos\nonline, tente\nbuscar servidores',
+        'ru': 'Кажется, что\nнет друзей\nв сети, попробуйте\nпоискать серверы',
+        'hi': 'अरे, लगता है कि\nकोई दोस्त ऑनलाइन\nनहीं है, सर्वर\nखोजकर देखें',
+        'ml': 'ഉഫ്, ഓൺലൈൻ\nസുഹൃത്തുക്കൾ ഇല്ലെന്ന്\nതോന്നുന്നു, സർവർ\nതിരഞ്ഞ് നോക്കൂ',
+        'id': 'Uh, sepertinya\nbelum ada teman\nyang online,\ncoba cari server'
+    },
+    'FriendsWindow.viewProfile': {
+        'en': 'View Profile',
+        'es': 'Ver Perfil',
+        'pt': 'Ver Perfil',
+        'ru': 'Просмотреть профиль',
+        'hi': 'प्रोफ़ाइल देखें',
+        'ml': 'പ്രൊഫൈൽ കാണുക',
+        'id': 'Lihat Profil'
+    },
+    'FriendsWindow.deleteFriend': {
+        'en': 'Delete Friend',
+        'es': 'Eliminar Amigo',
+        'pt': 'Excluir Amigo',
+        'ru': 'Удалить друга',
+        'hi': 'दोस्त\nहटाएँ',
+        'ml': 'സുഹൃത്ത് ഇല്ലാതാക്കുക',
+        'id': 'Hapus Teman'
+    },
+    'FriendsWindow.addFriend': {
+        'en': 'Add\nTo Friends',
+        'es': 'Agregar\nAmigo',
+        'pt': 'Adicionar\nAmigo',
+        'ru': 'Добавить\nв друзья',
+        'hi': 'दोस्त\nजोड़ें',
+        'ml': 'സുഹൃത്ത്\nചേർക്കുക',
+        'id': 'Tambah\nTeman'
+    },
+    'FinderWindow.searchServers': {
+        'en': 'Search All Servers',
+        'es': 'Buscar todos los servidores',
+        'pt': 'Buscar Todos os Servidores',
+        'ru': 'Искать все серверы',
+        'hi': 'सभी सर्वर खोजें',
+        'ml': 'എല്ലാ സര്‍വറുകളും അന്വേഷിക്കുക',
+        'id': 'Cari Semua Server'
+    },
+    'FinderWindow.searchPlayers': {
+        'en': 'Search players without having to join a match',
+        'es': 'Busca jugadores sin tener que unirse a partida',
+        'pt': 'Busque jogadores sem precisar entrar em uma partida',
+        'ru': 'Искать игроков без необходимости присоединяться к матчу',
+        'hi': 'खिलाड़‍ियों को खोजें बिना मैच में जुड़ने की ज़रूरत',
+        'ml': 'മത്സരത്തിൽ ചേരേണ്ടതില്ലാതെ കളിക്കാരെ തിരയുക',
+        'id': 'Cari pemain tanpa harus bergabung ke pertandingan'
+    },
+    'FinderWindow.pressSearch': {
+        'en': 'Press search and\nI\'ll handle the rest!',
+        'es': '¡Pulsa buscar y yo me\nencargo del resto!',
+        'pt': 'Pressione buscar e\nEu cuido do resto!',
+        'ru': 'Нажмите поиск, и\nя позабочусь об остальном!',
+        'hi': 'सर्च दबाएँ और\nबाकी मैं संभाल लूँगा!',
+        'ml': 'സെർച്ച് അമർത്തൂ,\nമറ്റെല്ലാം ഞാൻ നോക്കാം!',
+        'id': 'Tekan cari dan\nbiar aku urus sisanya!'
+    },
+    'FinderWindow.filterDescription': {
+        'en': 'Filter by player/server names or by specific characters',
+        'es': 'Filtra por el nombre de los jugadores/servidores o por caracteres específicos',
+        'pt': 'Filtre por nomes de jogadores/servidores ou por caracteres específicos',
+        'ru': 'Фильтруйте по именам игроков/серверов или по определённым символам',
+        'hi': 'खिलाड़ियों/सर्वरों के नाम या विशिष्ट अक्षरों के अनुसार फ़िल्टर करें',
+        'ml': 'കളിക്കാരുടെ/സെർവറുകളുടെ പേരുകളോ പ്രത്യേക അക്ഷരങ്ങളോ അടിസ്ഥാനമാക്കി ഫിൽട്ടർ ചെയ്യുക',
+        'id': 'Saring berdasarkan nama pemain/server atau karakter tertentu'
+    },
+    'FinderWindow.searchServersForPlayers': {
+        'en': 'Search some servers\nto find players\nresults may vary\nby time and connection',
+        'es': 'Busca en algunos servidores\npara encontrar jugadores\nLos resultados pueden variar\nsegún la hora y la conexión',
+        'pt': 'Pesquise alguns servidores\npara encontrar jogadores\nos resultados podem variar\npor horário e conexão',
+        'ru': 'Ищите на некоторых серверах,\nчтобы найти игроков\nрезультаты могут различаться\nв зависимости от времени и подключения',
+        'hi': 'कुछ सर्वरों में खोजें\nखिलाड़ी खोजने के लिए\nपरिणाम बदल सकते हैं\nसमय और कनेक्शन के अनुसार',
+        'ml': 'ചില സര്‍വറുകളില്‍ തിരയുക\nകളിക്കാരെ കണ്ടെത്താൻ\nഫലങ്ങൾ മാറാം\nസമയം മറ്റും കണക്ഷൻ അനുസരിച്ച്',
+        'id': 'Cari di beberapa server\nuntuk menemukan pemain\nhasil dapat berbeda\nsesuai waktu dan koneksi'
+    },
+    'FinderWindow.selectToViewInfo': {
+        'en': 'Select something to\nview server info',
+        'es': 'Selecciona algo para\nver la info del servidor',
+        'pt': 'Selecione algo para\nver informações do servidor',
+        'ru': 'Выберите что-нибудь,\nчтобы просмотреть информацию о сервере',
+        'hi': 'कुछ चुनें ताकि आप\nसर्वर की जानकारी देखें',
+        'ml': 'ഏതെങ്കിലും തിരഞ്ഞെടുക്കുക\nസർവർ വിവരങ്ങൾ കാണാൻ',
+        'id': 'Pilih sesuatu untuk\nmelihat info server'
+    },
+    'FinderWindow.scanningServers': {
+        'en': 'Scanning servers!\nThis should take a few seconds.\nYou can close this window.',
+        'es': '¡Escaneando servidores!\nEsto debería tardar unos segundos.\nPuedes cerrar esta ventana.',
+        'pt': 'Escaneando servidores!\nIsso deve levar alguns segundos.\nVocê pode fechar esta janela.',
+        'ru': 'Сканирование серверов!\nЭто займет несколько секунд.\nВы можете закрыть это окно.',
+        'hi': 'सर्वर स्कैन हो रहे हैं!\nइसमें कुछ सेकंड लगेंगे।\nआप यह विंडो बंद कर सकते हैं।',
+        'ml': 'സര്‍വറുകൾ സ്കാന്‍ ചെയ്യുന്നു!\nഇതിന് കുറച്ച് സെക്കൻഡ് മാത്രം എടുക്കും.\nഈ ജാലകം നിങ്ങൾക്ക് അടയ്ക്കാം.',
+        'id': 'Sedang memindai server!\nIni seharusnya hanya\nmembutuhkan beberapa detik.\nAnda bisa menutup jendela ini.'
+    },
+    'FinderWindow.stillBusy': {
+        'en': '¡Still busy!',
+        'es': '¡Sigo ocupado!',
+        'pt': 'Ainda ocupado!',
+        'ru': 'Все еще занят!',
+        'hi': 'मैं अभी भी व्यस्त हूँ!',
+        'ml': 'ഞാൻ ഇതുവരെ തിരക്കിലാണ്!',
+        'id': 'Masih sibuk!'
+    },
+    'FinderWindow.searchProfiles': {
+        'en': 'Search Profiles',
+        'es': 'Buscar Perfiles',
+        'pt': 'Buscar Perfis',
+        'ru': 'Поиск профилей',
+        'hi': 'प्रोफ़ाइल खोजें',
+        'ml': 'പ്രൊഫൈലുകൾ തിരയുക',
+        'id': 'Cari Profil'
+    },
+    'FinderWindow.changeColors': {
+        'en': 'Change Colors',
+        'es': 'Cambiar colores',
+        'pt': 'Mudar Cores',
+        'ru': 'Изменить цвета',
+        'hi': 'रंग बदलें',
+        'ml': 'നിറങ്ങൾ മാറ്റുക',
+        'id': 'Ubah Warna'
+    },
+    'FinderWindow.changeLanguage': {
+        'en': 'Change Language',
+        'es': 'Cambiar idioma',
+        'pt': 'Mudar Idioma',
+        'ru': 'Изменить язык',
+        'hi': 'भाषा बदलें',
+        'ml': 'ഭാഷ മാറ്റുക',
+        'id': 'Ubah Bahasa'
+    },
+    'Scan.finished': {
+        'en': 'Finished!',
+        'es': '¡Terminado!',
+        'pt': 'Terminado!',
+        'ru': 'Завершено!',
+        'hi': 'समाप्त!',
+        'ml': 'പൂർത്തിയായി!',
+        'id': 'Selesai!'
+    },
+    'Scan.scanned': {
+        'en': 'Scanned',
+        'es': 'Escaneados',
+        'pt': 'Escaneado',
+        'ru': 'Отсканировано',
+        'hi': 'स्कैन किए',
+        'ml': 'സ്കാൻ ചെയ്തു',
+        'id': 'Dipindai'
+    },
+    'Scan.servers': {
+        'en': 'servers',
+        'es': 'servidores',
+        'po': 'servidores',
+        'ru': 'серверы',
+        'hi': 'सर्वर',
+        'ml': 'സർവർ',
+        'id': 'server'
+    },
+    'Scan.in': {
+        'en': 'in',
+        'es': 'en',
+        'po': 'em',
+        'ru': 'в',
+        'hi': 'में',
+        'ml': 'ഇൽ',
+        'id': 'dalam'
+    },
+    'Scan.seconds': {
+        'en': 'seconds!',
+        'es': 'segundos!',
+        'po': 'segundos!',
+        'ru': 'секунд!',
+        'hi': 'सेकंड!',
+        'ml': 'സെക്കൻഡുകൾ!',
+        'id': 'detik!'
+    },
+    'Scan.approximately': {
+        'en': 'Approximately',
+        'es': 'Aproximadamente',
+        'po': 'Aproximadamente',
+        'ru': 'Приблизительно',
+        'hi': 'लगभग',
+        'ml': 'ഏകദേശം',
+        'id': 'Sekitar'
+    },
+    'Scan.server': {
+        'en': 'servers',
+        'es': 'servidores',
+        'po': 'servidores',
+        'ru': 'серверы',
+        'hi': 'सर्वर',
+        'ml': 'സർവർ',
+        'id': 'servers'
+    },
+    'Scan.perSecond': {
+        'en': '/sec',
+        'es': '/seg',
+        'po': '/seg',
+        'ru': '/сек',
+        'hi': '/सेक',
+        'ml': '/സെക്',
+        'id': '/detik'
+    },
+    'PartyWindow.addFriend': {
+        'en': 'Add friend',
+        'es': 'Agregar amigo',
+        'po': 'Adicionar amigo',
+        'ru': 'Добавить друга',
+        'hi': 'दोस्त जोड़ें',
+        'ml': 'സുഹൃത്ത് ചേർക്കുക',
+        'id': 'Tambah teman'
+    },
+    'PartyWindow.areYouSureToKick': {
+        'en': 'Are you sure to kick',
+        'es': '¿Estás seguro de expulsar?',
+        'po': 'Tem certeza de que quer expulsar',
+        'ru': 'Вы уверены, что хотите кикнуть',
+        'hi': 'क्या आप वाकई निकालना चाहते हैं',
+        'ml': 'നിങ്ങൾ പുറത്താക്കാൻ ഉറപ്പാണോ',
+        'id': 'Apakah Anda yakin untuk mengeluarkan'
+    },
+    'PartyWindow.voteToKick': {
+        'en': 'Vote to kick',
+        'es': 'Votar para expulsar',
+        'po': 'Votar para expulsar',
+        'ru': 'Голосовать за кик',
+        'hi': 'निकालने के लिए मतदान',
+        'ml': 'പുറത്താക്കാൻ വോട്ട് ചെയ്യുക',
+        'id': 'Pemungutan suara untuk mengeluarkan'
+    },
+    'PartyWindow.viewAccount': {
+        'en': 'View account',
+        'es': 'Ver cuenta',
+        'po': 'Ver conta',
+        'ru': 'Просмотреть аккаунт',
+        'hi': 'खाता देखें',
+        'ml': 'അക്കൗണ്ട് കാണുക',
+        'id': 'Lihat akun'
+    },
+    'CreditsWindow.developer': {
+        'en': 'Developer',
+        'es': 'Desarrollador',
+        'po': 'Desenvolvedor',
+        'ru': 'Разработчик',
+        'hi': 'डेवलपर',
+        'ml': 'ഡെവലപ്പർ',
+        'id': 'Pengembang'
+    },
+    'CreditsWindow.motivation': {
+        'en': 'Motivation',
+        'es': 'Motivación',
+        'po': 'Motivação',
+        'ru': 'Мотивация',
+        'hi': 'प्रेरणा',
+        'ml': 'പ്രേരണം',
+        'id': 'Motivasi'
+    },
+    'CreditsWindow.motivationDescription': {
+        'en': 'My motivation to create this was trying to make a friends system so you can easily find your friends and play some parties, also to see a player’s level by viewing their profile and time spent playing BombSquad',
+        'es': 'Mi motivación para crear esto fue intentar hacer un sistema de amigos para poder encontrar fácilmente a tus amigos y jugar algunas fiestas, también mirar el nivel de un jugador viendo su perfil y tiempo jugando BombSquad',
+        'po': 'Minha motivação para criar isso foi tentar fazer um sistema de amigos para que você possa encontrar facilmente seus amigos e jogar algumas festas, também para ver o nível de um jogador visualizando seu perfil e tempo gasto jogando BombSquad',
+        'ru': 'Моей мотивацией для создания этого была попытка сделать систему друзей, чтобы вы могли легко находить своих друзей и играть в некоторые вечеринки, а также видеть уровень игрока, просматривая его профиль и время, проведенное за игрой в BombSquad',
+        'hi': 'इसे बनाने की मेरी प्रेरणा एक मित्र प्रणाली बनाने की कोशिश थी ताकि आप अपने दोस्तों को आसानी से ढूंढ सकें और कुछ पार्टियाँ खेल सकें, साथ ही उनके प्रोफ़ाइल और BombSquad खेलने में बिताए गए समय को देखकर किसी खिलाड़ी का स्तर भी देख सकें',
+        'ml': 'ഇത് സൃഷ്ടിക്കാൻ എനിക്ക് പ്രചോദനമായത് നിങ്ങളുടെ സുഹൃത്തുകളെ എളുപ്പത്തിൽ കണ്ടെത്താനും ചില പാർട്ടികൾ കളിക്കാനും കഴിയുന്ന ഒരു സുഹൃത്ത് സംവിധാനം ഉണ്ടാക്കുക, കൂടാതെ അവരുടെ പ്രൊഫൈലും BombSquad കളിച്ച സമയവും देखकर ഒരു കളിക്കാരന്റെ ലെവൽ കാണുക എന്നതുമായിരുന്നു',
+        'id': 'Motivasi saya untuk membuat ini adalah mencoba membuat sistem teman agar dapat dengan mudah menemukan teman Anda dan bermain beberapa pesta, juga melihat level seorang pemain dengan melihat profil mereka dan waktu bermain BombSquad'
+    },
+    'CreditsWindow.inspiration': {
+        'en': 'Inspiration',
+        'es': 'Inspiración',
+        'po': 'Inspiração',
+        'ru': 'Вдохновение',
+        'hi': 'प्रेरणा',
+        'ml': 'പ്രചോദനം',
+        'id': 'Inspirasi'
+    },
+    'CreditsWindow.inspirationDescription': {
+        'en': 'This is my first official mod, I took inspiration from features of some mods I saw within the community, I hope they do not mind, in the same way I will list them below',
+        'es': 'Este es mi primer mod oficial, tomé como inspiración funcionalidades de algunos mods que vi dentro de la comunidad, espero no se molesten, de igual forma los pondré aquí abajo',
+        'po': 'Este é meu primeiro mod oficial, me inspirei em recursos de alguns mods que vi na comunidade, espero que não se importem, da mesma forma os listarei abaixo',
+        'ru': 'Это мой первый официальный мод, я черпал вдохновение из функций некоторых модов, которые я видел в сообществе, надеюсь, они не против, точно так же я перечислю их ниже',
+        'hi': 'यह मेरा पहला आधिकारिक मॉड है, मैंने समुदाय के भीतर देखे गए कुछ मॉड्स की विशेषताओं से प्रेरणा ली है, आशा है कि उन्हें आपत्ति नहीं होगी, इसी तरह मैं उन्हें नीचे सूचीबद्ध करूँगा',
+        'ml': 'ഇത് എന്റെ ആദ്യ ഔദ്യോഗിക മോഡാണ്, കമ്മ്യൂണിറ്റിക്കുള്ളിൽ ഞാൻ കണ്ട ചില മോഡുകളുടെ സവിശേഷതകളിൽ നിന്ന് ഞാൻ പ്രചോദനം നേടി, അവർക്ക് അതിൽ പ്രശ്നമില്ലെന്ന് ഞാൻ പ്രതീക്ഷിക്കുന്നു, അതുപോലെ അവയെ ഞാൻ താഴെ ചേർക്കും',
+        'id': 'Ini adalah mod resmi pertama saya, saya mengambil inspirasi dari fitur beberapa mod yang saya lihat di dalam komunitas, saya harap mereka tidak keberatan, dengan cara yang sama saya akan mencantumkannya di bawah'
+    },
+    'CreditsWindow.thanksMessage': {
+        'en': f'Thank you {V2_LOGO}VanyOne for trying this and making the preview video, and to the people who helped with their opinions and support. I may add new features in the future. I know it is not perfect and that there are several bugs, but that is all for now. I will gradually fix the existing issues. I hope you enjoy it, with love - {CREATOR}',      
+        'es': f'Gracias {V2_LOGO}VanyOne por probar esto y hacer el video preview, y a las personas que ayudaron con sus opiniones y apoyo. Puede que añada nuevas funcionalidades en un futuro. Sé que no es perfecto y que hay varios errores, pero es todo por el momento. Igual solucionaré gradualmente los errores que existen. Espero lo disfruten, con cariño - {CREATOR}',     
+        'po': f'Obrigado {V2_LOGO}VanyOne por testar isso e fazer o vídeo de prévia, e às pessoas que ajudaram com suas opiniões e apoio. Posso adicionar novas funcionalidades no futuro. Sei que não é perfeito e que há vários erros, mas por enquanto é só isso. Também corrigirei gradualmente os erros existentes. Espero que você goste, com carinho - {CREATOR}',       
+        'ru': f'Спасибо {V2_LOGO}VanyOne за то, что попробовали это и сделали видео-превью, а также людям, которые помогли своими мнениями и поддержкой. Возможно, я добавлю новые функции в будущем. Я знаю, что это не идеально и что есть несколько ошибок, но на данный момент это всё. Я буду постепенно исправлять существующие ошибки. Надеюсь, вам понравится, с любовью - {CREATOR}',      
+        'hi': f'{V2_LOGO}VanyOne को इसे आज़माने और प्रीव्यू वीडियो बनाने के लिए धन्यवाद, साथ ही उन लोगों को भी जिन्होंने अपनी राय और समर्थन से मदद की। मैं भविष्य में नई सुविधाएँ जोड़ सकता हूँ। मुझे पता है कि यह परफेक्ट नहीं है और इसमें कई त्रुटियाँ हैं, लेकिन फिलहाल इतना ही है। मैं मौजूदा समस्याओं को धीरे-धीरे ठीक करता रहूँगा। आशा है कि आप इसका आनंद लेंगे, स्नेह सहित - {CREATOR}',      
+        'ml': f'{V2_LOGO}VanyOne ഇത് പരീക്ഷിക്കുകയും പ്രിവ്യൂ വീഡിയോ തയ്യാറാക്കുകയും ചെയ്തതിന് നന്ദി, അവരുടെ അഭിപ്രായങ്ങളും പിന്തുണയും നൽകിയ എല്ലാവർക്കും നന്ദി. ഭാവിയിൽ ഞാൻ പുതിയ ഫീച്ചറുകൾ ചേർക്കാൻ സാധ്യതയുണ്ട്. ഇത് പൂർണ്ണമായതല്ലെന്നും പല പിശകുകളും ഉണ്ടെന്നും എനിക്ക് അറിയാം, പക്ഷേ ഇപ്പോൾ ഇത്രയേ ഉള്ളൂ. നിലവിലുള്ള പ്രശ്നങ്ങൾ ഞാൻ ക്രമേണ പരിഹരിക്കും. നിങ്ങൾ ഇത് ആസ്വദിക്കുമെന്ന് ഞാൻ പ്രതീക്ഷിക്കുന്നു, സ്നേഹത്തോടെ - {CREATOR}',        
+        'id': f'Terima kasih {V2_LOGO}VanyOne telah mencoba ini dan membuat video pratinjau, serta kepada orang-orang yang membantu dengan pendapat dan dukungan mereka. Saya mungkin akan menambahkan fitur baru di masa depan. Saya tahu ini belum sempurna dan masih ada beberapa kesalahan, tetapi untuk saat ini hanya itu. Saya akan memperbaiki masalah yang ada secara bertahap. Semoga kalian menikmatinya, dengan penuh kasih - {CREATOR}'
     }
-
 }
 
-
-####### PARTY WINDOW MAIN SETTINGS #######
+####### FINDER MAIN SETTINGS #######
 finder_config: Dict[str, Any] = {}
-"""Global Less Party Window Main Settings,
+"""Global Less Finder Settings,
 
 Usages: `finder_config.get(config_key)` OR `finder_config[config_key]`"""
 
@@ -559,7 +874,7 @@ def load_finder_config(is_from_backup: bool=False, read_only: bool=False) -> Dic
             with open(CONFIGS_FILE, 'r') as file:
                 finder_config = load(file)
 
-            # Validate config: Remove any keys that are not in default_finder_config
+            # Validate config
             if not read_only:
                 keys_to_remove = []
                 for key in finder_config:
@@ -567,14 +882,14 @@ def load_finder_config(is_from_backup: bool=False, read_only: bool=False) -> Dic
                         keys_to_remove.append(key)
 
                 for key in keys_to_remove:
-                    screenmessage(f"{get_lang_text('partyConfigLoadRemoveKey')}: {key}", color=COLOR_SCREENCMD_ERROR)
+                    TIP(f"{get_lang_text('partyConfigLoadRemoveKey')}: {key}", color=COLOR_SCREENCMD_ERROR)
                     del finder_config[key]
                     if not updated: updated = True
 
                 # Ensure all default configs are present, if not, add them
                 for default_key, default_value in default_finder_config.items():
                     if default_key not in finder_config:
-                        screenmessage(f"{get_lang_text('partyConfigLoadAddKey')}: {default_key}", color=COLOR_SCREENCMD_NORMAL)
+                        TIP(f"{get_lang_text('partyConfigLoadAddKey')}: {default_key}", color=COLOR_SCREENCMD_NORMAL)
                         finder_config[default_key] = default_value
                         if not updated: updated = True
 
@@ -585,12 +900,12 @@ def load_finder_config(is_from_backup: bool=False, read_only: bool=False) -> Dic
         else:
             # If the file doesn't exist, create it with default values
             if not os.path.exists(MY_DIRECTORY):
-                os.makedirs(MY_DIRECTORY)  # Create the main directory if it doesn't exist
-            save_finder_config(default_finder_config, first_boot=True)  # Save the default config into a file
+                os.makedirs(MY_DIRECTORY)
+            save_finder_config(default_finder_config, first_boot=True)
             finder_config = default_finder_config
             return default_finder_config
     except Exception as e:
-        screenmessage(f"{CMD_LOGO_CAUTION} {get_lang_text('partyConfigLoadError')}: {e}", color=COLOR_SCREENCMD_ERROR)
+        TIP(f"Error loading config: {e}", color=COLOR_SCREENCMD_ERROR)
         print(e)
         try:
             if os.path.exists(CONFIGS_FILE):
@@ -624,11 +939,8 @@ def update_finder_config(key: str, value: Any):
         finder_config[key] = value
         save_finder_config(finder_config)
         load_finder_config()
-####### PARTY WINDOW MAIN SETTINGS #######
 
-
-### FRIENDS WINDOW STORAGE ####
-
+### FRIENDS STORAGE ####
 friends_list: list[dict[str, Any]] = []
 """
     Friends list storage.
@@ -651,11 +963,9 @@ def load_friends(is_from_backup: bool = False) -> list[dict[str, Any]]:
             with open(FRIENDS_FILE, "r", encoding="utf-8") as file:
                 friends_list = load(file)
 
-            # Validate: ensure all entries have required fields
             changed = False
             for friend in friends_list:
                 if "name" not in friend or "id" not in friend:
-                    # Invalid entry → remove
                     friends_list.remove(friend)
                     changed = True
                     continue
@@ -671,7 +981,7 @@ def load_friends(is_from_backup: bool = False) -> list[dict[str, Any]]:
 
             return friends_list
 
-        # If file does not exist → create empty list
+        # If file does not exist
         if not os.path.exists(MY_DIRECTORY):
             os.makedirs(MY_DIRECTORY)
 
@@ -680,7 +990,7 @@ def load_friends(is_from_backup: bool = False) -> list[dict[str, Any]]:
         return friends_list
 
     except Exception as e:
-        screenmessage(f"{CMD_LOGO_CAUTION} Error loading friends: {e}", color=COLOR_SCREENCMD_ERROR)
+        TIP(f"Error loading friends: {e}", color=COLOR_SCREENCMD_ERROR)
         print(e)
 
         try:
@@ -693,7 +1003,6 @@ def load_friends(is_from_backup: bool = False) -> list[dict[str, Any]]:
 
     friends_list = []
     return friends_list
-
 
 def save_friends(data: list[dict[str, Any]],
                  first_boot: bool = False,
@@ -711,11 +1020,9 @@ def save_friends(data: list[dict[str, Any]],
     except Exception as e:
         print(e)
 
-
 # -----------------------------------------------------
 # CRUD FUNCTIONS
 # -----------------------------------------------------
-
 def add_friend(name: str, friend_id: str,
                accounts: list[str] | None = None,
                account_pb: str | None = None,
@@ -726,7 +1033,7 @@ def add_friend(name: str, friend_id: str,
     # Prevent duplicates by id
     for f in friends_list:
         if f["id"] == friend_id:
-            screenmessage("Friend ID already exists.", color=COLOR_SCREENCMD_ERROR)
+            TIP("Friend ID already exists.", color=COLOR_SCREENCMD_ERROR)
             return
 
     new_friend = {
@@ -786,7 +1093,6 @@ def remove_account(friend_id: str, account_name: str):
                 f["accounts"].remove(account_name)
                 save_friends(friends_list)
             return
-### FRIENDS WINDOW SETTINGS ####
 
 def get_app_lang_as_id() -> str:
     """
@@ -802,23 +1108,36 @@ def get_app_lang_as_id() -> str:
         return party_lang
     
     # Fallback to the app's language
-    App_Lang = bs.app.lang.language
+    App_Lang = app.lang.language
     lang_id = 'en'
-    if App_Lang in DEFAULT_AVAILABLE_LANG_LIST:
-        if App_Lang == 'Indonesian':
-            lang_id = 'id'
-        elif App_Lang == 'Spanish':
-            lang_id = 'es'
-        elif App_Lang == 'Malayalam':
-            lang_id = 'ml'
-        elif App_Lang == 'Hindi':
-            lang_id = 'hi'
-        else:
-            lang_id = 'en'
+    
+    # Search for matching language name
+    for lang_code, lang_info in DEFAULT_LANGUAGES_DICT.items():
+        if App_Lang == lang_info["name"]:
+            lang_id = lang_code
+            break
     
     # Save the detected language as preferred
     update_finder_config(CFG_NAME_PREFFERED_LANG, lang_id)
     return lang_id
+
+
+def get_languages_for_current_platform() -> dict:
+    """
+    Returns language IDs and names filtered for the current platform.
+    On non-Android platforms, only shows alphabet-compatible languages.
+    """
+    
+    if babase.app.classic.platform != 'android':
+        # Only show PC-compatible languages
+        return {
+            lang_id: lang_info["name"]
+            for lang_id, lang_info in DEFAULT_LANGUAGES_DICT.items()
+            if lang_info["pc_compatible"]
+        }
+    else:
+        # Android: show all languages
+        return get_language_names_dict()
 
 def get_lang_text(key: str, lang_id: Optional[str] = None) -> str:
     """
@@ -843,26 +1162,6 @@ def get_lang_text(key: str, lang_id: Optional[str] = None) -> str:
 
     return text if text else f"**{invalid_text}" 
 
-def screenmessage(
-	message: str,
-	color: Optional[Sequence[float]] = None,
-	top: bool = False,
-	image: dict[str, Any] | None = None,
-	log: bool = False,
-	clients: Optional[Sequence[int]] = None,
-	transient: bool = False
-) -> None:
-    original_screenmessage(message=message, color=color, top=top, image=image, log=log, clients=clients, transient=transient)
-
-"""
-bs.broadcastmessage = screenmessage
-bsscreenmessage = screenmessage
-bs.broadcastmessage = screenmessage
-"""
-
-original_screenmessage  = bs.broadcastmessage
-original_chatmessage    = bs.chatmessage
-
 # UI helper functions
 def bw(*, oac=None, **k):
     """Create a custom button widget."""
@@ -883,22 +1182,23 @@ def cw(*, size=None, oac=None, **k):
         on_outside_click_call=oac,
         **k
     )
+    x,y = babase.get_virtual_screen_size()
     iw(
         parent=p,
         texture=gt('white'),
-        size=(size[0]*20, size[1]*20),
-        position=(-size[0]*0.5, -size[1]*0.5),
+        size=(x*2, y*2),
+        position=(-x*0.5, 0-200),
         opacity=0.55,
         color=(0, 0, 0)
     )
     iw(parent=p, size=size)
     return (p,)
 
-def TIP(text):
+def TIP(text, color=None):
     """Show a tooltip message."""
     theme = ReactiveTheme()
-    push(text, theme.get_color('COLOR_TERTIARY'))
-
+    final_color = color if color is not None else theme.get_color('COLOR_TERTIARY')
+    push(text, final_color)
 
 _spinner_states = {}
 
@@ -953,7 +1253,7 @@ def spinner(
         'visible': visible,
         'presence': 1.0 if visible else 0.0,
         'current_frame': 0,
-        'last_update': bui.apptime(),
+        'last_update': apptime(),
         'image_widget': image_widget
     }
     
@@ -968,7 +1268,7 @@ def spinner(
             return
             
         state = _spinner_states[widget_id]
-        current_time = bui.apptime()
+        current_time = apptime()
         elapsed = current_time - state['last_update']
         
         # Update visibility and presence
@@ -1002,10 +1302,10 @@ def spinner(
         
         # Continue animation if visible and present
         if state['visible'] or state['presence'] > 0:
-            bui.apptimer(0.016, update_spinner)
+            teck(0.016, update_spinner)
     
     # Start the animation
-    bui.apptimer(0.016, update_spinner)
+    teck(0.016, update_spinner)
     
     return main_widget
 
@@ -1072,7 +1372,6 @@ def error_display(
     
     # Default text color if not provided
     if text_color is None:
-        # Try to get from theme, fallback to white
         try:
             theme = ReactiveTheme()
             text_color = theme.get_color('COLOR_PRIMARY')
@@ -1088,14 +1387,14 @@ def error_display(
             
             # Update text widget if exists
             if state['text_widget'] and state['text_widget'].exists():
-                bui.textwidget(
+                tw(
                     edit=state['text_widget'],
                     text=error_text
                 )
         return edit
 
     # Create container for icon and text
-    container = bui.containerwidget(
+    container = ocw(
         parent=parent,
         size=size,
         position=position,
@@ -1103,8 +1402,8 @@ def error_display(
     )
     
     # Calculate positions for icon and text
-    icon_size = (size[0], size[1] * 0.7)  # Icon takes 70% of height
-    text_height = size[1] * 0.3  # Text takes 30% of height
+    icon_size = (size[0], size[1] * 0.7) 
+    text_height = size[1] * 0.3
     
     # Create icon widget
     try:
@@ -1114,7 +1413,7 @@ def error_display(
             position=(0, text_height),
             color=color,
             opacity=1.0 if visible else 0.0,
-            texture=bui.gettexture(icon_texture),
+            texture=gt(icon_texture),
             has_alpha_channel=True
         )
     except Exception as e:
@@ -1127,7 +1426,7 @@ def error_display(
                 position=(size[0] * 0.225, text_height + size[1] * 0.15),
                 color=color,
                 opacity=1.0 if visible else 0.0,
-                texture=bui.gettexture('neoSpazIcon'),
+                texture=gt('neoSpazIcon'),
                 has_alpha_channel=True
             )
         except Exception as e2:
@@ -1137,12 +1436,12 @@ def error_display(
                 parent=container,
                 size=(1, 1),
                 position=(0, 0),
-                texture=bui.gettexture('white'),
+                texture=gt('white'),
                 opacity=0.0
             )
     
     # Create text widget
-    text_widget = bui.textwidget(
+    text_widget = tw(
         parent=container,
         text=error_text,
         color=text_color,
@@ -1164,7 +1463,7 @@ def error_display(
         'text_widget': text_widget,
         'container': container,
         'error_text': error_text,
-        'last_update': bui.apptime()
+        'last_update': apptime()
     }
     
     # Set up update timer for fade animation
@@ -1178,7 +1477,7 @@ def error_display(
             return
             
         state = _error_states[widget_id]
-        current_time = bui.apptime()
+        current_time = apptime()
         elapsed = current_time - state['last_update']
         
         # Update visibility and presence
@@ -1203,10 +1502,10 @@ def error_display(
                 opacity=alpha
             )
         
-        # Update text opacity (via color with alpha)
+        # Update text opacity
         if state['text_widget'] and state['text_widget'].exists():
             text_r, text_g, text_b = text_color
-            bui.textwidget(
+            tw(
                 edit=state['text_widget'],
                 color=(text_r, text_g, text_b, alpha)
             )
@@ -1215,10 +1514,10 @@ def error_display(
         
         # Continue animation if visible or fading out
         if state['visible'] or state['presence'] > 0:
-            bui.apptimer(0.016, update_error_display)
+            teck(0.016, update_error_display)
     
     # Start the animation
-    bui.apptimer(0.016, update_error_display)
+    teck(0.016, update_error_display)
     
     return container
 
@@ -1241,7 +1540,7 @@ def error_display_set_text(error_widget: _bauiv1.Widget, text: str):
         state = _error_states[widget_id]
         state['error_text'] = text
         if state['text_widget'] and state['text_widget'].exists():
-            bui.textwidget(
+            tw(
                 edit=state['text_widget'],
                 text=text
             )
@@ -1262,11 +1561,62 @@ def error_display_set_icon(error_widget: _bauiv1.Widget, icon_texture: str):
             try:
                 iw(
                     edit=state['icon_widget'],
-                    texture=bui.gettexture(icon_texture)
+                    texture=gt(icon_texture)
                 )
             except:
                 print(f"Error: Texture '{icon_texture}' not found")
 
+def wrap_text(text, max_line_length=80):
+    """Wrap text to specified line length with word boundaries.
+    
+    Args:
+        text: The text to wrap.
+        max_line_length: Maximum line length in characters.
+    
+    Returns:
+        A list of lines.
+    """
+    # Split text into words
+    words = text.split()
+    
+    # Break words that are too long
+    broken_words = []
+    for word in words:
+        if len(word) > max_line_length:
+            # Break the word into chunks
+            for i in range(0, len(word), max_line_length):
+                broken_words.append(word[i:i+max_line_length])
+        else:
+            broken_words.append(word)
+    
+    # Build lines
+    lines = []
+    current_line = []
+    current_length = 0
+    
+    for word in broken_words:
+        # Check if we can add this word to the current line
+        if current_line:
+            # Account for a space
+            new_length = current_length + 1 + len(word)
+        else:
+            new_length = len(word)
+        
+        if new_length <= max_line_length:
+            current_line.append(word)
+            current_length = new_length
+        else:
+            # Start a new line
+            if current_line:
+                lines.append(' '.join(current_line))
+            current_line = [word]
+            current_length = len(word)
+    
+    # Add the last line
+    if current_line:
+        lines.append(' '.join(current_line))
+    
+    return lines
 
 class ReactiveLanguage:
     """Class for handling texts reactively."""
@@ -1289,7 +1639,6 @@ class ReactiveLanguage:
         """Load all texts for a specific language."""
         self._texts = {}
         for text_key, translations in Translate_Texts.items():
-            # Use the specified language, with fallback to English
             text = translations.get(lang_id, translations.get('en', f'[{text_key}]'))
             self._texts[text_key] = text
     
@@ -1346,7 +1695,6 @@ class ReactiveLanguage:
                     except Exception as e:
                         print(f"Error in callback of {text_key}: {e}")
 
-
 class ReactiveTheme:
     """Class for handling colors reactively."""
     
@@ -1363,9 +1711,9 @@ class ReactiveTheme:
         self._colors = {
             'COLOR_BACKGROUND': tuple(finder_config.get(CFG_NAME_COLOR_BACKGROUND, (0.1, 0.1, 0.1))),
             'COLOR_SECONDARY': tuple(finder_config.get(CFG_NAME_COLOR_SECONDARY, (0.2, 0.2, 0.2))),
-            'COLOR_TERTIARY': tuple(finder_config.get(CFG_NAME_COLOR_TERTIARY, (0.6, 0.2, 0.4))),
-            'COLOR_PRIMARY': tuple(finder_config.get(CFG_NAME_COLOR_PRIMARY, (1, 0.08, 0.58))),
-            'COLOR_ACCENT': tuple(finder_config.get(CFG_NAME_COLOR_ACCENT, (1, 0.3, 0.6)))
+            'COLOR_TERTIARY': tuple(finder_config.get(CFG_NAME_COLOR_TERTIARY, (0.6, 0.6, 0.6))),
+            'COLOR_PRIMARY': tuple(finder_config.get(CFG_NAME_COLOR_PRIMARY, (1.0, 1.0, 1.0))),
+            'COLOR_ACCENT': tuple(finder_config.get(CFG_NAME_COLOR_ACCENT, (1.0, 1.0, 1.0)))
         }
     
     def get_color(self, color_name):
@@ -1459,12 +1807,269 @@ class BorderWindow:
     def _make_border(self, size, position):
         return BorderWindow.BorderInfo(size=size, position=position)
 
+class CreditsWindow:
+    """Window for displaying credits."""
+    
+    def __init__(self, source_widget):
+        self.source_widget = source_widget
+        
+        self.theme = ReactiveTheme()
+        self.language = ReactiveLanguage()
+        
+        self._create_ui()
+        self._build_content()
+    
+    def _format_inspiration(self):
+        """Format the inspiration dictionary into readable text."""
+        inspiration_data = {
+            'BrotherBoard': ['finder'],
+            'FluffyPal': ['FluffyPartyWindow'],
+            'Mr.Smoothy': ['adv']
+        }
+        
+        formatted = []
+        for author, mods in inspiration_data.items():
+            mods_str = ', '.join(mods)
+            formatted.append(f"{author} -> mods: {mods_str}")
+        
+        return '\n'.join(formatted)
+    
+    def _create_ui(self):
+        window_size = (600, 550)
+        borders = BorderWindow(window_size)
+        
+        self.root = cw(
+            scale_origin_stack_offset=self.source_widget.get_screen_space_center(),
+            size=window_size,
+            oac=self.close,
+        )[0]
+        
+        # Window background
+        iw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+        
+        # Borders
+        iw(
+            parent=self.root,
+            size=borders.border_left.size,
+            position=borders.border_left.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=borders.border_top.size,
+            position=borders.border_top.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=borders.border_right.size,
+            position=borders.border_right.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=borders.border_bottom.size,
+            position=borders.border_bottom.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        # Window title
+        tw(
+            parent=self.root,
+            text=self.language.get_text('Global.credits'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(window_size[0] * 0.45, window_size[1] - 50),
+            h_align='center',
+            v_align='center',
+            scale=1.2,
+            maxwidth=400
+        )
+        
+        # Scroll widget for content
+        self.main_scroll = sw(
+            parent=self.root,
+            size=(550, 440),
+            position=(25, 40),
+            border_opacity=0.3,
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        # Container for scroll
+        self.scroll_content = ocw(
+            parent=self.main_scroll,
+            size=(550, 1000),
+            background=False
+        )
+    
+    def _build_content(self):
+        """Build all content sections within the scroll container."""
+        current_y = 680
+        section_spacing = 40
+        line_spacing = 5
+        line_height = 25
+        self.text_widgets = []
+        
+        # Developer section
+        dev_title = tw(
+            parent=self.scroll_content,
+            text=self.language.get_text('CreditsWindow.developer'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(240, current_y),
+            h_align='center',
+            v_align='center',
+            scale=1.0,
+            maxwidth=500
+        )
+        self.text_widgets.append(dev_title)
+        current_y -= line_height + 10
+        
+        dev_name = tw(
+            parent=self.scroll_content,
+            text=CREATOR,
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            position=(240, current_y),
+            h_align='center',
+            v_align='center',
+            scale=1.1,
+            maxwidth=500
+        )
+        self.text_widgets.append(dev_name)
+        current_y -= section_spacing
+        
+        # Motivation section
+        motivation_title = tw(
+            parent=self.scroll_content,
+            text=self.language.get_text('CreditsWindow.motivation'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(240, current_y),
+            h_align='center',
+            v_align='center',
+            scale=1.0,
+            maxwidth=500
+        )
+        self.text_widgets.append(motivation_title)
+        current_y -= line_height + 10
+        
+        # Get and wrap motivation description
+        motivation_text = self.language.get_text('CreditsWindow.motivationDescription')
+        wrapped_motivation = wrap_text(motivation_text, 60)
+        
+        for i, line in enumerate(wrapped_motivation):
+            widget = tw(
+                parent=self.scroll_content,
+                text=line,
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                position=(240, current_y - (i * (line_height + line_spacing))),
+                h_align='center',
+                v_align='center',
+                scale=0.8,
+                maxwidth=500
+            )
+            self.text_widgets.append(widget)
+        
+        current_y -= (len(wrapped_motivation) * (line_height + line_spacing)) + section_spacing
+        
+        # Inspiration section
+        inspiration_title = tw(
+            parent=self.scroll_content,
+            text=self.language.get_text('CreditsWindow.inspiration'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(240, current_y),
+            h_align='center',
+            v_align='center',
+            scale=1.0,
+            maxwidth=500
+        )
+        self.text_widgets.append(inspiration_title)
+        current_y -= line_height
+        
+        inspiration_desc = self.language.get_text('CreditsWindow.inspirationDescription')
+        wrapped_inspiration = wrap_text(inspiration_desc, 60)
+        
+        for i, line in enumerate(wrapped_inspiration):
+            widget = tw(
+                parent=self.scroll_content,
+                text=line,
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                position=(240, current_y - (i * (line_height + line_spacing))),
+                h_align='center',
+                v_align='center',
+                scale=0.8,
+                maxwidth=500
+            )
+            self.text_widgets.append(widget)
+        
+        current_y -= (len(wrapped_inspiration) * (line_height + line_spacing)) + 20
+        
+        # Format and display inspiration data
+        inspiration_data = self._format_inspiration()
+        inspiration_lines = inspiration_data.split('\n')
+        
+        for i, line in enumerate(inspiration_lines):
+            widget = tw(
+                parent=self.scroll_content,
+                text=line,
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                position=(240, current_y - (i * (line_height + line_spacing))),
+                h_align='center',
+                v_align='center',
+                scale=0.9,
+                maxwidth=500
+            )
+            self.text_widgets.append(widget)
+        
+        current_y -= (len(inspiration_lines) * (line_height + line_spacing)) + section_spacing
+        
+        # Thanks message section
+        thanks_text = self.language.get_text('CreditsWindow.thanksMessage')
+        wrapped_thanks = wrap_text(thanks_text, 80)
+        
+        for i, line in enumerate(wrapped_thanks):
+            widget = tw(
+                parent=self.scroll_content,
+                text=line,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                position=(240, current_y - (i * (line_height + line_spacing))),
+                h_align='center',
+                v_align='center',
+                scale=0.9,
+                maxwidth=500
+            )
+            self.text_widgets.append(widget)
+        
+        # Calculate the bottom position
+        last_line_bottom = current_y - (len(wrapped_thanks) * (line_height + line_spacing))
+        total_height_needed = 720  
+        
+        ocw(
+            edit=self.scroll_content,
+            size=(550, total_height_needed)
+        )
+    
+    def close(self):
+        """Close the window."""
+        if self.root.exists():
+            ocw(edit=self.root, transition='out_scale')
+
 class ProfileSearchWindow:
+    """ Profile Search Window """
 
     # Character mapping to textures
     CHARACTER_MAP = {
         "Frosty": "frosty",
-        "Taobao Mascot": "ali", 
+        "Taobao Mascot": "ali",
         "Kronk": "kronk",
         "Zoe": "zoe",
         "Bernard": "bear",
@@ -1478,18 +2083,18 @@ class ProfileSearchWindow:
         "Santa Claus": "santa",
         "Spaz": "neoSpaz",
         "Grumbledorf": "wizard",
+        "Penguin": "penguin",
         "Pascal": "jack",
         "Jack Morgan": "jack",
         "Easter Bunny": "bunny",
         "Agent Johnson": "agent",
-        "Mel": "mel"
+        "Mel": "mel",
+        "Pixel": "pixie"
     }
 
-    """Window for searching profiles with API data."""    
+    """Window for searching profiles with API."""    
     def __init__(self, source_widget, search=None, v2=None, pb=None, id=None):
-        print(f"[ProfileSearchWindow] Initializing with source_widget: {source_widget}")
 
-        # Initialize reactive theme
         self.theme = ReactiveTheme()
         self.language = ReactiveLanguage() 
 
@@ -1501,7 +2106,7 @@ class ProfileSearchWindow:
         self.error = None
         self.account_not_found = False
 
-        # Check which parameters were explicitly provided (non-None)
+        # Check which parameters
         params_provided = []
         if search is not None:
             params_provided.append(("search", search))
@@ -1514,14 +2119,11 @@ class ProfileSearchWindow:
 
         if len(params_provided) == 1:
             self.passed_param, self.passed_value = params_provided[0]
-            print(f"[ProfileSearchWindow] Using explicit parameter: {self.passed_param}={self.passed_value}")
         elif len(params_provided) == 0:
-            # Default to v2="less" if no parameters provided
+            # Default to v2="less"
             self.passed_param = "v2"
             self.passed_value = "less"
-            print(f"[ProfileSearchWindow] Using default parameter: {self.passed_param}={self.passed_value}")
         else:
-            # If multiple explicit parameters provided, use the first one and log warning
             self.passed_param, self.passed_value = params_provided[0]
             print(f"[ProfileSearchWindow] Multiple parameters provided, using first: {self.passed_param}={self.passed_value}")
             print(f"[ProfileSearchWindow] Ignored parameters: {params_provided[1:]}")
@@ -1530,7 +2132,6 @@ class ProfileSearchWindow:
         self._fetch_profile_data()
     
     def _create_ui(self, source_widget):
-        # Window size
         window_size = (550, 650)
         borders = BorderWindow(window_size)
         
@@ -1540,28 +2141,19 @@ class ProfileSearchWindow:
             oac=self.close,
         )[0]
 
-        self.footer = bui.buttonwidget(
+        self.footer = obw(
             parent=self.root,
             size=window_size,
-            texture=bui.gettexture('empty'),
+            texture=gt('empty'),
             label='',
             enable_sound=False
         )
-
-        iw(
-            parent=self.root,
-            texture=gt('white'), #softRect
-            size=(window_size[0]*10, window_size[1]*10),
-            position=(-window_size[0], -window_size[1]),
-            opacity=0.55,
-            color=(0, 0, 0)
-        )
         
         # Window background
-        bui.imagewidget(
+        iw(
             parent=self.root,
             size=window_size,
-            texture=bui.gettexture('white'),
+            texture=gt('white'),
             color=self.theme.get_color('COLOR_BACKGROUND')
         )
 
@@ -1598,20 +2190,22 @@ class ProfileSearchWindow:
         )
         
         # Window title
-        self.title_widget = bui.textwidget(
+        self.title_widget = tw(
             parent=self.root,
-            text=self.language.get_text('profileSearch'),
+            text=self.language.get_text('ProfileSearchWindow.profileSearch'),
             color=self.theme.get_color('COLOR_PRIMARY'),
-            position=(window_size[0] * 0.25, window_size[1] - 50),
+            position=(window_size[0] * 0.20, window_size[1] - 50),
             h_align='center',
             v_align='center',
-            scale=1.5
+            scale=1.5,
+            maxwidth = 200,
+            max_height=45,
         )
         
         # Loading/status text
-        self.status_widget = bui.textwidget(
+        self.status_widget = tw(
             parent=self.root,
-            text=self.language.get_text('loadingProfileData'),
+            text=self.language.get_text('ProfileSearchWindow.loadingProfileData'),
             color=self.theme.get_color('COLOR_TERTIARY'),
             position=(window_size[0] * 0.5, window_size[1] * 0.5),
             h_align='center',
@@ -1633,60 +2227,48 @@ class ProfileSearchWindow:
         except Exception as e:
             print(f"Error creating spinner: {e}")
 
-        # Initially don't create profile content until we have data
         self.header_container = None
         self.main_scroll = None
         self.basic_info_widgets = []
         self.info_text_widgets = []
-        
-        # Error display widget
         self.error_display_widget = None
+        self.add_friend_button = None
 
     def _create_profile_content(self):
         """Create profile content after data is loaded."""
         window_size = (550, 650)
         
-        # Header container for basic profile info (fixed position)
-        self.header_container = bui.containerwidget(
+        # Header container
+        self.header_container = ocw(
             parent=self.root,
             size=(500, 120),
             position=(25, window_size[1] - 180),
             background=False
         )
         
-        # Character display in header (left side)
-        self.character_widget = bui.imagewidget(
+        # Character display
+        self.character_widget = iw(
             parent=self.header_container,
             size=(100, 105),
             position=(10, 10),
-            texture=bui.gettexture('white'),
+            texture=gt('white'),
             color=(1, 1, 1),
             opacity=0
         )
 
-        # Discord button maybe later
-        #self.discord_button = bui.buttonwidget(
-        #    parent=self.header_container,
-        #    label='',
-        #    size=(50, 50),
-        #    position=(440, 110),
-        #    texture=bui.gettexture('discordLogo'),
-        #    selectable=False,
-        #    color=(1,1,1),
-        #    enable_sound=False,
-        #    on_activate_call=lambda: self._open_discord_url("id")
-        #)
+        # Create friend button with initial state
+        self._create_friend_button()
         
-        # Basic info container (right side of header)
-        self.basic_info_container = bui.containerwidget(
+        # Basic info container
+        self.basic_info_container = ocw(
             parent=self.header_container,
             size=(380, 110),
             position=(120, -5),
             background=False
         )
         
-        # Main scroll container for detailed profile info
-        self.main_scroll = bui.scrollwidget(
+        # Main scroll container
+        self.main_scroll = sw(
             parent=self.root,
             size=(500, 455),
             position=(25, 10),
@@ -1695,11 +2277,181 @@ class ProfileSearchWindow:
         )
         
         # Container for scroll content
-        self.scroll_content = bui.containerwidget(
+        self.scroll_content = ocw(
             parent=self.main_scroll,
             size=(500, 600),
             background=False
         )
+
+    def _create_friend_button(self):
+        """Create or recreate the friend button based on current friend status."""
+        # Remove existing button if any
+        if self.add_friend_button and self.add_friend_button.exists():
+            self.add_friend_button.delete()
+        
+        # Check friend status
+        is_already_friend = self._check_if_friend()
+        
+        if is_already_friend:
+            try:
+                texture = gt('cuteSpaz')
+                on_activate = lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+            except Exception as e:
+                print(f"Error loading cuteSpaz texture: {e}")
+                try:
+                    texture = gt('achievementStayinAlive')
+                    on_activate = lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+                except Exception as e2:
+                    print(f"Error loading achievementStayinAlive texture: {e2}")
+                    texture = gt('star')
+                    color = (0, 1, 0)
+                    on_activate = lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+        else:
+            # Not friend
+            try:
+                texture = gt('achievementStayinAlive')
+                on_activate = self._add_friend_from_profile
+            except Exception as e:
+                print(f"Error loading achievementStayinAlive texture: {e}")
+                try:
+                    texture = gt('cuteSpaz')
+                    on_activate = self._add_friend_from_profile
+                except Exception as e2:
+                    print(f"Error loading cuteSpaz texture: {e2}")
+                    texture = gt('star')
+                    on_activate = self._add_friend_from_profile
+        
+        # Create the button
+        self.add_friend_button = obw(
+            parent=self.header_container,
+            label='',
+            size=(50, 50),
+            position=(440, 110),
+            texture=texture,
+            color=(1,1,1),
+            enable_sound=True,
+            on_activate_call=on_activate
+        )
+
+    def _check_if_friend(self):
+        """Check if current profile is already in friends list."""
+        if not self.profile_data:
+            return False
+
+        profile_name = self.profile_data.get("name", "Unknown")
+        if profile_name == "Unknown":
+            return False
+
+        # Check if name start
+        if not profile_name.startswith(V2_LOGO):
+            prefixed_name = f"{V2_LOGO}{profile_name}"
+        else:
+            prefixed_name = profile_name
+
+        friends = load_friends()
+        for friend in friends:
+            if friend["name"] == prefixed_name:
+                return True
+        return False
+
+    def _add_friend_from_profile(self):
+        """Add the current profile to friends list."""
+        if not self.profile_data:
+            TIP("No profile data available")
+            return
+
+        try:
+            # Get profile data
+            profile_name = self.profile_data.get("name", "Unknown")
+            account_id = self.profile_data.get("account_id", None)
+            account_pb = self.profile_data.get("account_pb", None)
+            accounts = self.profile_data.get("accounts", [])
+
+            # Load existing friends to check for duplicates
+            friends = load_friends()
+
+            # Check if already exists by name
+            for f in friends:
+                if f["name"] == profile_name:
+                    TIP(f"{profile_name} {get_lang_text('Global.alreadyInFriendsList')}")
+                    # Update button state just in case
+                    self._update_friend_button_state()
+                    return
+
+            # Generate a new ID
+            existing_ids = [int(f["id"]) for f in friends if f["id"].isdigit()]
+            new_id = str(max(existing_ids) + 1 if existing_ids else 0).zfill(2)
+
+            # Add friend using the CRUD function
+            add_friend(
+                name=profile_name,
+                friend_id=new_id,
+                accounts=accounts,
+                account_pb=account_pb,
+                account_id=account_id
+            )
+
+            TIP(f"{profile_name} {get_lang_text('Global.addedToFriendsList')}")
+            gs('ding').play()
+
+            self._update_friend_button_state(is_friend=True)
+            self._try_refresh_friends_panel()
+
+        except Exception as e:
+            print(f"Error adding friend: {e}")
+            TIP("Error adding friend")
+
+    def _update_friend_button_state(self, is_friend=False):
+        """Update the friend button appearance based on friend status."""
+        if not hasattr(self, 'add_friend_button') or not self.add_friend_button or not self.add_friend_button.exists():
+            return
+
+        # Current friend status
+        current_is_friend = is_friend or self._check_if_friend()
+        
+        if current_is_friend:
+            # Already friend
+            try:
+                obw(
+                    edit=self.add_friend_button,
+                    texture=gt('cuteSpaz'),
+                    on_activate_call=lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+                )
+            except Exception as e:
+                print(f"Error updating to cuteSpaz: {e}")
+                try:
+                    obw(
+                        edit=self.add_friend_button,
+                        texture=gt('achievementStayinAlive'),
+                        on_activate_call=lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+                    )
+                except Exception as e2:
+                    print(f"Error updating to achievementStayinAlive: {e2}")
+        else:
+            # Not friend
+            try:
+                obw(
+                    edit=self.add_friend_button,
+                    texture=gt('achievementStayinAlive'),
+                    on_activate_call=self._add_friend_from_profile
+                )
+            except Exception as e:
+                print(f"Error updating to achievementStayinAlive: {e}")
+                try:
+                    obw(
+                        edit=self.add_friend_button,
+                        texture=gt('cuteSpaz'),
+                        on_activate_call=self._add_friend_from_profile
+                    )
+                except Exception as e2:
+                    print(f"Error updating to cuteSpaz: {e2}")
+
+    def _try_refresh_friends_panel(self):
+        """Try to refresh the friends panel if it exists."""
+        try:
+            FriendsWindow.refresh_friends_lists()
+        except Exception as e:
+            print(f"Error refreshing friends panel: {e}")
 
     def _display_error(self, error_message=None):
         """Display error message with error_display component."""
@@ -1713,12 +2465,14 @@ class ProfileSearchWindow:
 
         # Use custom message or default
         if error_message is None:
-            error_text = "Oops, an error occurred while a\nsearching for this account"
+            error_text = get_lang_text('ProfileSearchWindow.Error.searchingAccount')
         else:
             error_text = error_message
 
         # Clear status
-        bui.textwidget(edit=self.status_widget, text="")
+        tw(edit=self.status_widget, text="")
+        wrapped_lines = wrap_text(error_text, 30)
+        display_text = '\n'.join(wrapped_lines)
 
         # Display error with component
         try:
@@ -1726,7 +2480,7 @@ class ProfileSearchWindow:
                 parent=self.root,
                 size=(180, 200),
                 position=(185, 250),
-                error_text=error_text,
+                error_text=display_text,
                 text_color=self.theme.get_color('COLOR_PRIMARY'),
                 text_scale=1.2,
                 text_maxwidth=400,
@@ -1735,14 +2489,12 @@ class ProfileSearchWindow:
                 visible=True
             )
         except Exception as e:
-            print(f"Error creating error display: {e}")
-            # Fallback to regular Spaz if cuteSpaz not available
             try:
                 self.error_display_widget = error_display(
                     parent=self.root,
                     size=(100, 150),
                     position=(225, 250),
-                    error_text=error_text,
+                    error_text=display_text,
                     text_color=self.theme.get_color('COLOR_PRIMARY'),
                     text_scale=1.2,
                     text_maxwidth=400,
@@ -1751,20 +2503,16 @@ class ProfileSearchWindow:
                     visible=True
                 )
             except Exception as e2:
-                print(f"Fallback also failed: {e2}")
-                # Just show text if both icons fail
-                bui.textwidget(edit=self.status_widget, text=error_text)
+                tw(edit=self.status_widget, text=error_text)
 
     def _extract_value_from_text(self, text):
-        """Extract the value part from text (everything after the first colon)."""
+        """Extract the value part from text."""
         if ':' in text:
-            # Find the first colon
             colon_index = text.find(':')
             if colon_index != -1:
-                # Get everything after the colon and strip whitespace
                 value = text[colon_index + 1:].strip()
                 return value
-        # If no colon found, return the original text
+        # If no colon found
         return text
 
     def _copy_data_to_clipboard(self, text):
@@ -1773,13 +2521,8 @@ class ProfileSearchWindow:
             # Extract the value part
             value = self._extract_value_from_text(text)
             
-            # Copy to clipboard
-            bui.clipboard_set_text(value)
-            
-            # Show confirmation
-            TIP("Copied to clipboard!")
-            
-            # Play sound
+            COPY(value)
+            TIP(get_lang_text('Global.copiedToClipboard'))
             gs('dingSmall').play()
             
         except Exception as e:
@@ -1791,13 +2534,13 @@ class ProfileSearchWindow:
         """Open Discord URL for the given user ID."""
         discord_url = f"https://discord.com/users/{user_id}"
         print(f"[ProfileSearchWindow] Opening Discord URL: {discord_url}")
-        bui.open_url(discord_url)
+        open_url(discord_url)
 
     def _fetch_profile_data(self):
         """Fetch profile data from API in a separate thread."""
         def fetch_thread():
             try:
-                # Build API URL based on parameter
+                # Build API URL
                 base_url = f"{BASE_URL}/api/account"
                 if self.passed_param == "v2":
                     url = f"{base_url}?v2={self.passed_value}"
@@ -1806,12 +2549,10 @@ class ProfileSearchWindow:
                 elif self.passed_param == "id":
                     url = f"{base_url}?id={self.passed_value}"
                 else:
-                    self.error = "No valid parameter provided"
+                    self.error = get_lang_text('ProfileSearchWindow.Error.noValidParameter')
                     self.loading = False
-                    bui.pushcall(self._update_ui, from_other_thread=True)
+                    pushcall(self._update_ui, from_other_thread=True)
                     return
-
-                print(f"[ProfileSearchWindow] Fetching URL: {url}")
 
                 # Make API request
                 req = urllib.request.Request(
@@ -1820,44 +2561,40 @@ class ProfileSearchWindow:
                 )
 
                 with urllib.request.urlopen(req, timeout=10) as response:
-                    print(f"[ProfileSearchWindow] Response received: {response.status}")
                     data = response.read().decode()
                     parsed_data = json.loads(data)
-                    print(f"[ProfileSearchWindow] JSON parsed successfully")
 
                 if "result" in parsed_data and parsed_data["result"]:
                     self.profile_data = parsed_data["result"]
                     self.loading = False
                     self.error = None
                     self.account_not_found = False
-                    print(f"[ProfileSearchWindow] Profile data loaded: {self.profile_data.get('name', 'Unknown')}")
                 else:
-                    self.error = "Account not found"
+                    self.error = get_lang_text('ProfileSearchWindow.Error.accountNotFound')
                     self.loading = False
                     self.account_not_found = True
 
             except urllib.error.URLError as e:
-                self.error = f"Network error: {str(e)}"
+                self.error = f"{get_lang_text('ProfileSearchWindow.Error.networkShort')} {str(e)}"
                 self.loading = False
             except urllib.error.HTTPError as e:
                 if e.code == 404:
-                    self.error = "Account not found"
+                    self.error = get_lang_text('ProfileSearchWindow.Error.accountNotFound')
                     self.account_not_found = True
                 else:
-                    # Use custom message instead of technical error
-                    self.error = "Oops, an error occurred while searching for this account"
+                    self.error = get_lang_text('ProfileSearchWindow.Error.searchingAccount')
                     self.account_not_found = False
             except json.JSONDecodeError as e:
-                self.error = "Oops, an error occurred while searching for this account"
+                self.error = get_lang_text('ProfileSearchWindow.Error.searchingAccount')
                 self.loading = False
             except Exception as e:
-                self.error = "Oops, an error occurred while searching for this account"
+                self.error = get_lang_text('ProfileSearchWindow.Error.searchingAccount')
                 self.loading = False
                 import traceback
                 print(f"[ProfileSearchWindow] Traceback: {traceback.format_exc()}")
 
             # Update UI in main thread
-            bui.pushcall(self._update_ui, from_other_thread=True)
+            pushcall(self._update_ui, from_other_thread=True)
 
         # Start the API call in a separate thread
         thread = Thread(target=fetch_thread)
@@ -1866,7 +2603,6 @@ class ProfileSearchWindow:
     
     def _update_ui(self):
         """Update the UI with profile data or error message."""
-        print(f"[ProfileSearchWindow] Updating UI - loading: {self.loading}, error: {self.error}, account_not_found: {self.account_not_found}")
         
         if not self.root.exists():
             return
@@ -1876,12 +2612,12 @@ class ProfileSearchWindow:
             self.loading_spinner.delete()
             
         if self.loading:
-            bui.textwidget(edit=self.status_widget, text=self.language.get_text('loadingProfileData'))
+            tw(edit=self.status_widget, text=self.language.get_text('ProfileSearchWindow.loadingProfileData'))
             return
             
         if self.error:
             # Always show error with cuteSpaz icon
-            error_message = "Account not found" if self.account_not_found else "Oops, an error occurred while \nsearching for this account"
+            error_message = get_lang_text('ProfileSearchWindow.Error.accountNotFound') if self.account_not_found else get_lang_text('ProfileSearchWindow.Error.searchingAccount')
             self._display_error(error_message)
             return
             
@@ -1891,23 +2627,21 @@ class ProfileSearchWindow:
             self.error_display_widget = None
             
         # Clear status and create profile content
-        bui.textwidget(edit=self.status_widget, text="")
+        tw(edit=self.status_widget, text="")
         
         # Create profile content only when we have data
         if self.profile_data and not self.header_container:
             self._create_profile_content()
         
+        # Update friend button state
+        self._update_friend_button_state()
+        
         # Update title with profile name
         profile_name = self.profile_data.get("name", "Unknown")
-        print(f"[ProfileSearchWindow] Displaying profile: {profile_name}")
         
-        # Display character with colors
+        # Display
         self._display_character()
-        
-        # Display basic profile information in header
         self._display_basic_info()
-        
-        # Display detailed profile information in scroll
         self._display_profile_info()
     
     def _display_character(self):
@@ -1924,36 +2658,33 @@ class ProfileSearchWindow:
         color = profile_info.get("color", [1, 1, 1])
         highlight = profile_info.get("highlight", [1, 1, 1])
         
-        # Convert to tuples
-        color_tuple = tuple(color)
-        highlight_tuple = tuple(highlight)
+        # Convert to tuples (RGB format)
+        color_tuple = tuple(color[:3])
+        highlight_tuple = tuple(highlight[:3])
         
         # Map character name to texture name
         char_key = self.CHARACTER_MAP.get(character_name, "neoSpaz")
         texture_name = f"{char_key}Icon"
         mask_texture_name = f"{char_key}IconColorMask"
         
-        print(f"[ProfileSearchWindow] Loading character: {character_name} -> {texture_name}")
-
         try:
-            bui.imagewidget(
+            iw(
                 edit=self.character_widget,
-                texture=bui.gettexture(texture_name),
-                tint_texture=bui.gettexture(mask_texture_name),
-                mask_texture=bui.gettexture("characterIconMask"),
+                texture=gt(texture_name),
+                tint_texture=gt(mask_texture_name),
+                mask_texture=gt("characterIconMask"),
                 tint_color=color_tuple,
                 tint2_color=highlight_tuple,
                 opacity=1
             )
         except Exception as e:
-            # Fallback if textures not found
             print(f"Error loading character textures: {e}")
             try:
-                bui.imagewidget(
+                iw(
                     edit=self.character_widget,
-                    texture=bui.gettexture('neoSpazIcon'),
-                    tint_texture=bui.gettexture('neoSpazIconColorMask'),
-                    mask_texture=bui.gettexture("characterIconMask"),
+                    texture=gt('neoSpazIcon'),
+                    tint_texture=gt('neoSpazIconColorMask'),
+                    mask_texture=gt("characterIconMask"),
                     tint_color=color_tuple,
                     tint2_color=highlight_tuple,
                     opacity=1
@@ -1979,17 +2710,17 @@ class ProfileSearchWindow:
 
         # Basic profile info lines
         basic_info_data = [
-            (f"{self.language.get_text('name')}:", base_info.get('name', self.profile_data.get('name'))),
+            (f"{self.language.get_text('ProfileSearchWindow.name')}:", base_info.get('name', self.profile_data.get('name'))),
             ("Account ID:", self.profile_data.get('account_id', 'Unknown')),
             ("Account PB:", self.profile_data.get('account_pb', 'Unknown')),
-            (f"{self.language.get_text('character')}:", profile_info.get('character', 'Unknown'))
+            (f"{self.language.get_text('ProfileSearchWindow.character')}:", profile_info.get('character', 'Unknown'))
         ]
 
         # Add basic info to header
         line_height = 25
         for i, (label, value) in enumerate(basic_info_data):
             full_text = f"{label} {value}"
-            text_widget = bui.textwidget(
+            text_widget = tw(
                 parent=self.basic_info_container,
                 text=full_text,
                 color=self.theme.get_color('COLOR_PRIMARY'),
@@ -1999,6 +2730,7 @@ class ProfileSearchWindow:
                 v_align='top',
                 scale=0.8,
                 maxwidth=390,
+                max_height=25,
                 selectable=True,
                 click_activate=True,
                 glow_type='uniform',
@@ -2023,7 +2755,7 @@ class ProfileSearchWindow:
         ballistica_info = external_info.get("ballisticaAccountInfo", {})
         profile_info = bs_info.get("profile", {})
 
-        # Start position for content (from top of scroll container)
+        # Start position
         current_y = 550
         line_height = 25
         section_spacing = 15
@@ -2031,9 +2763,8 @@ class ProfileSearchWindow:
         # Accounts section
         accounts = self.profile_data.get("accounts", [])
         if accounts:
-            # Accounts title
-            accounts_title_text = f"{self.language.get_text('accounts')}:"
-            accounts_title = bui.textwidget(
+            accounts_title_text = f"{self.language.get_text('ProfileSearchWindow.accounts')}:"
+            accounts_title = tw(
                 parent=self.scroll_content,
                 text=accounts_title_text,
                 color=self.theme.get_color('COLOR_PRIMARY'),
@@ -2050,7 +2781,7 @@ class ProfileSearchWindow:
             # Display accounts
             for account in accounts:
                 account_text = f"• {account}"
-                account_widget = bui.textwidget(
+                account_widget = tw(
                     parent=self.scroll_content,
                     text=account_text,
                     color=self.theme.get_color('COLOR_TERTIARY'),
@@ -2076,8 +2807,8 @@ class ProfileSearchWindow:
 
         if rank or prev_ranks:
             # Rank Info title
-            rank_title_text = f"{self.language.get_text('rankInfo')}:"
-            rank_title = bui.textwidget(
+            rank_title_text = f"{self.language.get_text('ProfileSearchWindow.rankInfo')}:"
+            rank_title = tw(
                 parent=self.scroll_content,
                 text=rank_title_text,
                 color=self.theme.get_color('COLOR_PRIMARY'),
@@ -2093,8 +2824,8 @@ class ProfileSearchWindow:
 
             # Current rank
             if rank and len(rank) >= 3:
-                rank_text = f"  {self.language.get_text('current')}: {rank[0]} {rank[1]} #{rank[2]}"
-                rank_widget = bui.textwidget(
+                rank_text = f"  {self.language.get_text('ProfileSearchWindow.current')}: {rank[0]} {rank[1]} #{rank[2]}"
+                rank_widget = tw(
                     parent=self.scroll_content,
                     text=rank_text,
                     color=self.theme.get_color('COLOR_TERTIARY'),
@@ -2114,8 +2845,8 @@ class ProfileSearchWindow:
 
             # Previous ranks
             if prev_ranks:
-                prev_title_text = f"  {self.language.get_text('previousRanks')}:"
-                prev_title = bui.textwidget(
+                prev_title_text = f"  {self.language.get_text('ProfileSearchWindow.previousRanks')}:"
+                prev_title = tw(
                     parent=self.scroll_content,
                     text=prev_title_text,
                     color=self.theme.get_color('COLOR_TERTIARY'),
@@ -2132,8 +2863,8 @@ class ProfileSearchWindow:
                 for prev_rank in prev_ranks:
                     if len(prev_rank) >= 4:
                         season, rank_name, points, position = prev_rank
-                        rank_line_text = f"{self.language.get_text('season')} {season}: #{position} {rank_name} {points}"
-                        rank_line = bui.textwidget(
+                        rank_line_text = f"{self.language.get_text('ProfileSearchWindow.season')} {season}: #{position} {rank_name} {points}"
+                        rank_line = tw(
                             parent=self.scroll_content,
                             text=rank_line_text,
                             color=self.theme.get_color('COLOR_TERTIARY'),
@@ -2154,9 +2885,9 @@ class ProfileSearchWindow:
                 current_y -= section_spacing
 
         # Achievements section
-        achievements = bui.app.classic.ach.achievements
-        achievements_text_str = f"{self.language.get_text('achievements')}: {bs_info.get('achievementsCompleted', 0)}/{str(len(achievements))}"
-        achievements_widget = bui.textwidget(
+        achievements = APP.classic.ach.achievements
+        achievements_text_str = f"{self.language.get_text('ProfileSearchWindow.achievements')}: {bs_info.get('achievementsCompleted', 0)}/{str(len(achievements))}"
+        achievements_widget = tw(
             parent=self.scroll_content,
             text=achievements_text_str,
             color=self.theme.get_color('COLOR_PRIMARY'),
@@ -2203,8 +2934,8 @@ class ProfileSearchWindow:
                     final_trophy_string += f"{current_char}"
 
             # Trophies title
-            trophies_title_text = f"{self.language.get_text('trophies')}:"
-            trophies_title = bui.textwidget(
+            trophies_title_text = f"{self.language.get_text('ProfileSearchWindow.trophies')}:"
+            trophies_title = tw(
                 parent=self.scroll_content,
                 text=trophies_title_text,
                 color=self.theme.get_color('COLOR_PRIMARY'),
@@ -2219,7 +2950,7 @@ class ProfileSearchWindow:
             current_y -= line_height
 
             # Trophies display
-            trophy_display = bui.textwidget(
+            trophy_display = tw(
                 parent=self.scroll_content,
                 text=final_trophy_string,
                 color=self.theme.get_color('COLOR_ACCENT'),
@@ -2237,11 +2968,11 @@ class ProfileSearchWindow:
             self.info_text_widgets.append(trophy_display)
             current_y -= line_height + section_spacing
 
-        # Ballistica Info section
-        ballistica_title_text = f"{self.language.get_text('moreInfo')}:"
-        ballistica_title = bui.textwidget(
+        # More Info
+        more_info_title_text = f"{self.language.get_text('ProfileSearchWindow.moreInfo')}:"
+        more_info_title = tw(
             parent=self.scroll_content,
-            text=ballistica_title_text,
+            text=more_info_title_text,
             color=self.theme.get_color('COLOR_PRIMARY'),
             position=(10, current_y),
             h_align='left',
@@ -2250,11 +2981,10 @@ class ProfileSearchWindow:
             maxwidth=480,
             glow_type='uniform',
         )
-        self.info_text_widgets.append(ballistica_title)
+        self.info_text_widgets.append(more_info_title)
         current_y -= line_height
 
         from datetime import datetime
-
         raw_date = base_info.get('created', 'Unknown')
 
         if raw_date != 'Unknown':
@@ -2263,18 +2993,18 @@ class ProfileSearchWindow:
         else:
             formatted = 'Unknown'
 
-        # Ballistica Info
-        ballistica_data = [
-            (f"{self.language.get_text('accountType')}:", ballistica_info.get('accountType', 'Unknown')),
-            (f"{self.language.get_text('activeDays')}:", ballistica_info.get('totalActiveDays', 'Unknown')),
-            (f"{self.language.get_text('created')}:", ballistica_info.get('created', 'Unknown')),
-            (f"{self.language.get_text('lastActive')}:", ballistica_info.get('lastActive', 'Unknown')),
-            (f"{self.language.get_text('accountExistence')}:", formatted)
+        # More Data
+        more_data = [
+            (f"{self.language.get_text('ProfileSearchWindow.accountType')}:", ballistica_info.get('accountType', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.activeDays')}:", ballistica_info.get('totalActiveDays', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.created')}:", ballistica_info.get('created', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.lastActive')}:", ballistica_info.get('lastActive', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.accountExistence')}:", formatted)
         ]
 
-        for label, value in ballistica_data:
+        for label, value in more_data:
             full_text = f"{label} {value}"
-            text_widget = bui.textwidget(
+            text_widget = tw(
                 parent=self.scroll_content,
                 text=full_text,
                 color=self.theme.get_color('COLOR_TERTIARY'),
@@ -2293,28 +3023,28 @@ class ProfileSearchWindow:
             current_y -= line_height
 
         # Set fixed height for scroll container
-        bui.containerwidget(edit=self.scroll_content, size=(500, 585))
+        ocw(edit=self.scroll_content, size=(500, 585))
 
     def close(self):
         """Close the window."""
         if self.root.exists():
-            bui.containerwidget(edit=self.root, transition='out_scale')
-
+            ocw(edit=self.root, transition='out_scale')
 
 class AccountCard():
-    def __init__(self,
-                name: str,
-                accounts: list[str],
-                call: callable = None,
-                parent: str = None,
-                position: tuple[float, float] = (0.0, 0.0),
+    def __init__(
+        self,
+        name: str,
+        accounts: list[str],
+        call: callable = None,
+        parent: str = None,
+        position: tuple[float, float] = (0.0, 0.0),
     ) -> None:
         super().__init__()
         self._name = name
         self._accounts = accounts
         self._call = call
 
-        # Card size - adjusted to the scroll width
+        # Card size
         card_width = 650 - 40
         card_height = 100
         
@@ -2325,8 +3055,8 @@ class AccountCard():
             if call:
                 call()
 
-        # Main button
-        self._main_button = obw(
+        # Container
+        self._container = obw(
             parent=parent,
             label='',
             size=(card_width, card_height),
@@ -2344,7 +3074,7 @@ class AccountCard():
 
         self.character_widget = iw(
             parent=parent,
-            draw_controller=self._main_button,
+            draw_controller=self._container,
             size=character_size,
             position=(character_x, character_y),
             texture=gt('cuteSpaz'),
@@ -2361,7 +3091,7 @@ class AccountCard():
             # Vertically centered title
             self.title_widget = tw(
                 parent=parent,
-                draw_controller=self._main_button,
+                draw_controller=self._container,
                 position=(content_x, y + card_height / 2 - 15),
                 text=name,
                 color=(0.95, 0.95, 0.95),
@@ -2376,7 +3106,7 @@ class AccountCard():
             # Title at the top
             self.title_widget = tw(
                 parent=parent,
-                draw_controller=self._main_button,
+                draw_controller=self._container,
                 position=(content_x, y + card_height - 40),
                 text=name,
                 color=(0.95, 0.95, 0.95),
@@ -2392,7 +3122,7 @@ class AccountCard():
             # Account text at the bottom
             self.accounts_widget = tw(
                 parent=parent,
-                draw_controller=self._main_button,
+                draw_controller=self._container,
                 position=(content_x, y + 15),
                 text=accounts_text,
                 color=(0.7, 0.7, 0.7),
@@ -2413,7 +3143,10 @@ class AccountCard():
         return False
 
     def _format_accounts(self, accounts: list[str]) -> str:
-        """Format the account list with a maximum of 5 accounts and line breaks every 3 accounts."""
+        """ 
+            Format the account list with a maximum of 5
+            accounts and line breaks every 3 accounts.
+        """
         if not accounts:
             return "No accounts"
         
@@ -2432,24 +3165,20 @@ class AccountCard():
         # Add "..." if there are more accounts
         if has_more:
             if len(display_accounts) % 3 == 0:
-                # If the last group is complete, add "..." on a new line
                 formatted.append("\n...")
             else:
-                # If the last group is incomplete, add "..." after the comma
                 formatted.append(", ...")
         
         return "".join(formatted)
 
     def get_button(self):
         """Return the main button widget for external use"""
-        return self._main_button
+        return self._container
     
 class ProfileSearch:
     """Window for searching profiles by name."""
     
     def __init__(self, source_widget, search_term: str = ""):
-        print(f"[ProfileSearch] Initializing search for: {search_term}")
-        
         self.source_widget = source_widget
         self.search_term = search_term
         self.loading = True if search_term else False
@@ -2460,20 +3189,19 @@ class ProfileSearch:
         self.total_results = 0
         self.page_size = 0
 
-        # Initialize reactive theme
         self.theme = ReactiveTheme()
         self.language = ReactiveLanguage() 
 
         if not finder_config:
             load_finder_config()
-        self.current_filter = finder_config.get(CFG_NAME_FILTER_ACCOUNT, 'v2') 
+        self.current_filter = finder_config.get(CFG_NAME_FILTER_ACCOUNT, 'all') 
 
         self._create_ui()
         if self.search_term:
             self._fetch_search_results()
 
     def _create_ui(self):
-        # Window size
+
         window_size = (700, 550)
         borders = BorderWindow(window_size)
 
@@ -2483,19 +3211,20 @@ class ProfileSearch:
             oac=self.close,
         )[0]
 
-        self.footer = bui.buttonwidget(
+        # Footer
+        self.footer = obw(
             parent=self.root,
             size=window_size,
-            texture=bui.gettexture('empty'),
+            texture=gt('empty'),
             label='',
             enable_sound=False
         )
 
         # Window background
-        bui.imagewidget(
+        iw(
             parent=self.root,
             size=window_size,
-            texture=bui.gettexture('white'),
+            texture=gt('white'),
             color=self.theme.get_color('COLOR_BACKGROUND')
         )
 
@@ -2533,21 +3262,23 @@ class ProfileSearch:
         )
 
         # Window title
-        self.title_widget = bui.textwidget(
+        self.title_widget = tw(
             parent=self.root,
-            text=self.language.get_text('profileSearch'),
+            text=self.language.get_text('ProfileSearch.profileSearch'),
             color=self.theme.get_color('COLOR_PRIMARY'),
             position=(window_size[0] * 0.5, window_size[1] - 50),
             h_align='center',
             v_align='center',
-            scale=1.2
+            scale=1.2,
+            maxwidth = 400,
+            max_height=32,
         )
 
         # Search input field
-        self.search_input = bui.textwidget(
+        self.search_input = tw(
             parent=self.root,
-            position=(70, window_size[1] - 100),
-            size=(350, 40),
+            position=(35, window_size[1] - 100),
+            size=(330, 40),
             text=self.search_term,
             editable=True,
             description="Enter player name to search",
@@ -2558,7 +3289,7 @@ class ProfileSearch:
         )
 
         # Search placeholder
-        self.search_placeholder = bui.textwidget(
+        self.search_placeholder = tw(
             parent=self.root,
             position=(75, window_size[1] - 103),
             text="",
@@ -2566,24 +3297,25 @@ class ProfileSearch:
         )
 
         # Search button
-        buttonSearchSize = (80, 40)
-        buttonSearchPosition = (440, window_size[1] - 100)
+        buttonSearchSize = (120, 40)
+        buttonSearchPosition = (405, window_size[1] - 100)
         self.search_button = bw(
             parent=self.root,
             position=buttonSearchPosition,
             size=buttonSearchSize,
-            label=self.language.get_text('search'),
+            label=self.language.get_text('Global.search'),
             color=self.theme.get_color('COLOR_SECONDARY'),
             textcolor=self.theme.get_color('COLOR_PRIMARY'),
             oac=self._on_search_pressed
         )
 
         borders = BorderWindow(buttonSearchSize)
-
+        
+        # Search borders button
         self.search_border_left = iw(
             parent=self.root,
             size=(borders.border_left.size[0]-1, borders.border_left.size[1]+3.5),
-            position=(buttonSearchPosition[0]-3, buttonSearchPosition[1]-1),
+            position=(buttonSearchPosition[0]-5, buttonSearchPosition[1]-1),
             texture=gt('white'),
             color=self.theme.get_color('COLOR_PRIMARY')
         )
@@ -2613,15 +3345,15 @@ class ProfileSearch:
         )
 
         # Filter button
-        buttonFilterSize = (130, 40)
-        buttonFilterPosition = (535, window_size[1] - 100)
+        buttonFilterSize = (120, 40)
+        buttonFilterPosition = (545, window_size[1] - 100)
         borders = BorderWindow(buttonFilterSize)
 
         self.filter_button = bw(
             parent=self.root,
             position=buttonFilterPosition,
             size=buttonFilterSize,
-            label=f"{self.language.get_text('filter')}: {self.current_filter.upper()}",
+            label=f"{self.language.get_text('Global.filter')}: {self.current_filter.upper()}",
             color=self.theme.get_color('COLOR_SECONDARY'),
             textcolor=self.theme.get_color('COLOR_PRIMARY'),
             oac=self._show_filter_popup
@@ -2629,7 +3361,7 @@ class ProfileSearch:
 
         self.filter_border_left = iw(
             parent=self.root,
-            size=(borders.border_left.size[0]-1, borders.border_left.size[1]+3.5),
+            size=(borders.border_left.size[0], borders.border_left.size[1]+3.5),
             position=(buttonFilterPosition[0]-5, buttonFilterPosition[1]-1),
             texture=gt('white'),
             color=self.theme.get_color('COLOR_PRIMARY')
@@ -2660,14 +3392,14 @@ class ProfileSearch:
         )
 
         # Loading/status text
-        self.status_widget = bui.textwidget(
+        self.status_widget = tw(
             parent=self.root,
-            text=self.language.get_text('enterNameAndPressSearch') if not self.search_term else self.language.get_text('searching'),
+            text=self.language.get_text('ProfileSearch.enterNameAndPressSearch') if not self.search_term else self.language.get_text('ProfileSearch.searching'),
             color=self.theme.get_color('COLOR_TERTIARY'),
-            position=(window_size[0] * 0.5, window_size[1] * 0.5),
+            position=(window_size[0] * 0.47, window_size[1] * 0.45),
             h_align='center',
             v_align='center',
-            scale=1.0,
+            scale=1.3,
             maxwidth=window_size[0] - 50
         )
 
@@ -2688,7 +3420,7 @@ class ProfileSearch:
 
             
         # Scroll widget for results
-        self.scroll_widget = bui.scrollwidget(
+        self.scroll_widget = sw(
             parent=self.root,
             size=(650, 380),
             position=(25, 50),
@@ -2696,7 +3428,7 @@ class ProfileSearch:
         )
 
         # Container for content
-        self.container_widget = bui.containerwidget(
+        self.container_widget = ocw(
             parent=self.scroll_widget,
             size=(650, 0),
             background=False
@@ -2707,7 +3439,7 @@ class ProfileSearch:
 
         # Set up filter updater
         self._update_search_placeholder()
-        self.filter_updater = bui.AppTimer(0.1, self._update_search_placeholder, repeat=True)
+        self.filter_updater = tuck(0.1, self._update_search_placeholder, repeat=True)
     
     def _update_search_placeholder(self):
         """Update the search placeholder visibility."""
@@ -2715,8 +3447,8 @@ class ProfileSearch:
             self.filter_updater = None
             return
             
-        current_text = bui.textwidget(query=self.search_input)
-        bui.textwidget(edit=self.search_placeholder, text="" if current_text else "")
+        current_text = tw(query=self.search_input)
+        tw(edit=self.search_placeholder, text="" if current_text else "")
     
     def _show_filter_popup(self):
         """Show filter options popup."""
@@ -2738,7 +3470,7 @@ class ProfileSearch:
                 label=filter_type.upper(),
                 color=self.theme.get_color('COLOR_SECONDARY'),
                 textcolor=self.theme.get_color('COLOR_PRIMARY'),
-                oac=bui.Call(self._on_filter_selected, filter_type, popup)
+                oac=CallStrict(self._on_filter_selected, filter_type, popup)
             )
             self._popup_target = "filter_accounts"
     
@@ -2755,12 +3487,12 @@ class ProfileSearch:
         update_finder_config(CFG_NAME_FILTER_ACCOUNT, filter_type)
 
         # Update filter button text
-        bui.buttonwidget(
+        obw(
             edit=self.filter_button,
-            label=f"{self.language.get_text('filter')}: {filter_type.upper()}"
+            label=f"{self.language.get_text('Global.filter')}: {filter_type.upper()}"
         )
 
-        # Update placeholder text based on filter
+        # Update placeholder
         placeholder_text = {
             "all": "Enter player name (shows all matches)",
             "v2": "Enter exact player name (finds specific account)",
@@ -2768,10 +3500,7 @@ class ProfileSearch:
             "pb": "Enter public ID (e.g., pb-IF4JU08_Jg==)"
         }.get(filter_type, "Enter search term")
 
-        bui.textwidget(edit=self.search_input, description=placeholder_text)
-
-        # Print filter change
-        print(f"[ProfileSearch] Filter changed to: {filter_type}")
+        tw(edit=self.search_input, description=placeholder_text)
     
     def _clear_error_display(self):
         """Clear any existing error display."""
@@ -2779,19 +3508,16 @@ class ProfileSearch:
             self.error_display_widget.delete()
             self.error_display_widget = None
         
-        # Clear error text from status widget
-        bui.textwidget(edit=self.status_widget, text="")
+        # Clear error text
+        tw(edit=self.status_widget, text="")
     
     def _on_search_pressed(self):
         """Handle search button press."""
-        search_term = bui.textwidget(query=self.search_input)
+        search_term = tw(query=self.search_input)
         if not search_term:
             return
 
-        print(f"[ProfileSearch] Performing search with filter: {self.current_filter}")
-        print(f"[ProfileSearch] Search term: {search_term}")
-
-        # Clear previous error display
+        # Clear previous error
         self._clear_error_display()
 
         self.search_term = search_term
@@ -2800,13 +3526,13 @@ class ProfileSearch:
         self.results = []
 
         # Update UI for loading
-        bui.textwidget(edit=self.status_widget, text=self.language.get_text('searching'))
+        tw(edit=self.status_widget, text=self.language.get_text('ProfileSearch.searching'))
         if self.loading_spinner and self.loading_spinner.exists():
             self.loading_spinner.delete()
         try:
             self.loading_spinner = spinner(
                 parent=self.root,
-                position=(350 - 25, 250 - 25),
+                position=(350 - 25, 250 - 50),
                 size=(50, 50),
                 style='simple',
                 color=(1, 1, 1),
@@ -2819,7 +3545,7 @@ class ProfileSearch:
         if self.container_widget.exists():
             self.container_widget.delete()
         
-        self.container_widget = bui.containerwidget(
+        self.container_widget = ocw(
             parent=self.scroll_widget,
             size=(650, 0),
             background=False
@@ -2833,9 +3559,6 @@ class ProfileSearch:
             try:
                 # Always use the same search endpoint
                 url = f"{BASE_URL}/api/account?search={self.search_term}&max=all"
-                print(f"[ProfileSearch] Fetching URL: {url}")
-                print(f"[ProfileSearch] Using filter: {self.current_filter}")
-
                 req = urllib.request.Request(
                     url, 
                     headers={'User-Agent': 'BombSquad Mod'}
@@ -2844,18 +3567,18 @@ class ProfileSearch:
                 with urllib.request.urlopen(req, timeout=10) as response:
                     data = response.read().decode()
                     parsed_data = json.loads(data)
-                    print(f"[ProfileSearch] JSON parsed successfully")
+                    #print(f"[ProfileSearch] JSON parsed successfully")
 
-                # Check if we have results in the response
+                # Check if we have results
                 if "results" not in parsed_data or not parsed_data["results"]:
                     self.error = "No results found"
                     self.loading = False
-                    bui.pushcall(self._update_ui, from_other_thread=True)
+                    pushcall(self._update_ui, from_other_thread=True)
                     return
 
                 results = parsed_data["results"]
 
-                # Filter results according to the selected filter
+                # Filter results
                 if self.current_filter == "all":
                     self.results = results
                     self.total_results = parsed_data.get("totalResults", len(results))
@@ -2863,14 +3586,13 @@ class ProfileSearch:
                     self.total_pages = parsed_data.get("totalPages", 1)
                     self.loading = False
                     self.error = None
-                    print(f"[ProfileSearch] Found {len(self.results)} results")
 
                 elif self.current_filter == "v2":
                     exact_match = None
                     for result in results:
                         name = result.get('name')
                         if name:
-                            clean_name = name.replace('\ue063', '')
+                            clean_name = name.replace(V2_LOGO, '')
                             if clean_name.lower() == self.search_term.lower():
                                 exact_match = result
                                 break
@@ -2881,12 +3603,9 @@ class ProfileSearch:
                         self.page_size = 1
                         self.loading = False
                         self.error = None
-                        print(f"[ProfileSearch] Found exact match in first results")
                     else:
                         # Second search across all results
                         url_all = f"{BASE_URL}/api/account?search={self.search_term}&max=all"
-                        print(f"[ProfileSearch] Searching in all accounts: {url_all}")
-
                         req_all = urllib.request.Request(
                             url_all, 
                             headers={'User-Agent': 'BombSquad Mod'}
@@ -2895,7 +3614,7 @@ class ProfileSearch:
                         with urllib.request.urlopen(req_all, timeout=15) as response_all:
                             data_all = response_all.read().decode()
                             parsed_data_all = json.loads(data_all)
-                            print(f"[ProfileSearch] All accounts search completed")
+                            #print(f"[ProfileSearch] All accounts search completed")
 
                         # Search for an exact match across all results
                         exact_match_all = None
@@ -2903,7 +3622,7 @@ class ProfileSearch:
                             for result in parsed_data_all["results"]:
                                 name = result.get('name')
                                 if name:
-                                    clean_name = name.replace('\ue063', '')
+                                    clean_name = name.replace(V2_LOGO, '')
                                     if clean_name.lower() == self.search_term.lower():
                                         exact_match_all = result
                                         break
@@ -2914,11 +3633,11 @@ class ProfileSearch:
                             self.page_size = 1
                             self.loading = False
                             self.error = None
-                            print(f"[ProfileSearch] Found exact match in all results")
+                            #print(f"[ProfileSearch] Found exact match in all results")
                         else:
-                            self.error = f"No exact match found for '{self.search_term}'"
+                            self.error = f"{get_lang_text('ProfileSearch.Error.noExactMatch')} '{self.search_term}'"
                             self.loading = False
-                            print(f"[ProfileSearch] No exact match found")
+                            #print(f"[ProfileSearch] No exact match found")
 
                 elif self.current_filter == "id":
                     # Search by exact account_id
@@ -2935,13 +3654,13 @@ class ProfileSearch:
                         self.page_size = 1
                         self.loading = False
                         self.error = None
-                        print(f"[ProfileSearch] Found exact account_id match")
+                        #print(f"[ProfileSearch] Found exact account_id match")
                     else:
-                        self.error = f"No account found \nwith ID: {self.search_term}"
+                        self.error = f"{get_lang_text('ProfileSearch.Error.noAccountFoundWithId')} {self.search_term}"
                         self.loading = False
 
                 elif self.current_filter == "pb":
-                    # Search by exact account_pb
+                    # Search by account PB
                     exact_match = None
                     for result in results:
                         account_pb = result.get('account_pb')
@@ -2955,31 +3674,30 @@ class ProfileSearch:
                         self.page_size = 1
                         self.loading = False
                         self.error = None
-                        print(f"[ProfileSearch] Found exact account_pb match")
                     else:
-                        self.error = f"No account found with Public ID: {self.search_term}"
+                        self.error = f"{get_lang_text('ProfileSearch.Error.noAccountFound')} {self.search_term}"
                         self.loading = False
 
             except urllib.error.URLError as e:
-                self.error = "Network error. Please check your connection\n and try again."
+                self.error = get_lang_text('ProfileSearch.Error.network')
                 self.loading = False
             except urllib.error.HTTPError as e:
                 if e.code == 404:
-                    self.error = "Search service is currently unavailable.\nPlease try again later."
+                    self.error = get_lang_text('ProfileSearch.Error.serviceUnavailable')
                 else:
-                    self.error = "Oops, an error occurred while searching.\nPlease try again."
+                    self.error = get_lang_text('ProfileSearch.Error.searchFailed')
                 self.loading = False
             except json.JSONDecodeError as e:
-                self.error = "Invalid response from server.\nPlease try again."
+                self.error = get_lang_text('ProfileSearch.Error.invalidResponse')
                 self.loading = False
             except Exception as e:
-                self.error = "Oops, an unexpected error occurred.\nPlease try again."
+                self.error = get_lang_text('ProfileSearch.Error.unexpected')
                 self.loading = False
                 import traceback
-                print(f"[ProfileSearch] Traceback: {traceback.format_exc()}")
+                #print(f"[ProfileSearch] Traceback: {traceback.format_exc()}")
 
             # Update UI in main thread
-            bui.pushcall(self._update_ui, from_other_thread=True)
+            pushcall(self._update_ui, from_other_thread=True)
 
         thread = Thread(target=fetch_thread)
         thread.daemon = True
@@ -2995,32 +3713,29 @@ class ProfileSearch:
             self.loading_spinner.delete()
 
         if self.loading:
-            bui.textwidget(edit=self.status_widget, text=self.language.get_text('searching'))
+            tw(edit=self.status_widget, text=self.language.get_text('ProfileSearch.searching'))
             return
 
         if self.error:
-            # Display error with cuteSpaz icon
             self._display_error(self.error)
             return
 
-        # Clear any error display if we have results
+        # Clear any error display
         self._clear_error_display()
 
-        title_text = f"{self.language.get_text('search')}: {self.search_term} ({self.page_size} {self.language.get_text('results')})"
-        bui.textwidget(edit=self.title_widget, text=title_text)
+        title_text = f"{self.language.get_text('Global.search')}: {self.search_term} ({self.page_size} {self.language.get_text('Global.results')})"
+        tw(edit=self.title_widget, text=title_text)
 
         # If there are no results, show message
         if not self.results:
             self._display_error("No results found")
             return
 
-        # Calculate the total height required for the container
         card_height = 100
         spacing = 10
         total_height = len(self.results) * (card_height + spacing)
         
-        # Adjust the container height
-        bui.containerwidget(
+        ocw(
             edit=self.container_widget,
             size=(650, total_height)
         )
@@ -3028,7 +3743,7 @@ class ProfileSearch:
         # Calculate initial position
         current_y = total_height - card_height
 
-        # Show results using AccountCard
+        # Show results
         for i, result in enumerate(self.results):
             name = result.get('name', 'Unknown')
             accounts = result.get('accounts', [])
@@ -3053,13 +3768,16 @@ class ProfileSearch:
         # Clear any existing error display first
         self._clear_error_display()
 
+        wrapped_lines = wrap_text(error_message, 30)
+        display_text = '\n'.join(wrapped_lines)
+        
         # Create error display component
         try:
             self.error_display_widget = error_display(
                 parent=self.root,
                 size=(180, 200),
-                position=(260, 200),  # Position for your window
-                error_text=error_message,
+                position=(260, 200),
+                error_text=display_text,
                 text_color=self.theme.get_color('COLOR_PRIMARY'),
                 text_scale=1.2,
                 text_maxwidth=600,
@@ -3068,30 +3786,32 @@ class ProfileSearch:
                 visible=True
             )
         except Exception as e:
-            print(f"Error creating error display: {e}")
-            # Fallback to simple text
-            bui.textwidget(edit=self.status_widget, text=error_message)
+            tw(edit=self.status_widget, text=error_message)
     
     def _on_result_pressed(self, result):
-        """Handle result button press - open ProfileSearchWindow with account_pb."""
+        """
+            Handle result button press 
+                - open ProfileSearchWindow with 
+                account PB.
+        """
         account_pb = result.get('account_pb')
         name = result.get('name', 'Unknown')
         
         if account_pb:
-            print(f"[ProfileSearch] Opening profile for: {name} with PB: {account_pb}")
             ProfileSearchWindow(self.source_widget, pb=account_pb)
         else:
-            print(f"[ProfileSearch] No account_pb found for result: {result}")
             self._display_error("Error: No account PB found in the selected profile")
     
     def close(self):
         """Close the window."""
         if self.root.exists():
-            bui.containerwidget(edit=self.root, transition='out_scale')
+            ocw(edit=self.root, transition='out_scale')
 
+class FriendsWindow:
+    """Friends Panel."""
 
-class FriendsPanel:
-    """A self-contained panel for managing and displaying friends."""
+    # Class variable to store all active instances
+    _active_instances = []
 
     def __init__(self, parent_widget, theme, language, get_filtered_players_callback,
                  add_friend_callback, delete_friend_callback, connect_callback):
@@ -3107,6 +3827,7 @@ class FriendsPanel:
             delete_friend_callback: Callback to delete a friend
             connect_callback: Callback to connect to a server
         """
+        
         self.theme = theme
         self.language = language
         self._get_filtered_players = get_filtered_players_callback
@@ -3145,10 +3866,58 @@ class FriendsPanel:
         self._language_subscriptions = []
         self._color_subscriptions = []
         
+        # Register this instance
+        FriendsWindow._active_instances.append(self)
+        
         # Create the panel
         self._create_friends_panel(parent_widget)
         self._setup_language_subscriptions()
         self._setup_color_subscriptions()
+
+    @classmethod
+    def refresh_friends_lists(cls):
+        """
+        Load current friends from storage and update both UI lists.
+        This method can be called from anywhere to refresh the friends panel.
+        """
+        #print("[FriendsWindow] Refreshing friends lists")
+        
+        # Get all active instances
+        active_instances = []
+        for instance in cls._active_instances:
+            try:
+                if (hasattr(instance, 'friends_parent') and 
+                    instance.friends_parent and 
+                    instance.friends_parent.exists()):
+                    active_instances.append(instance)
+            except:
+                # Skip invalid instances
+                continue
+        
+        if not active_instances:
+            #print("[FriendsWindow] No active instances found")
+            return
+            
+        for instance in active_instances:
+            try:
+                # Load current friends from storage
+                current_friends = instance.get_all_friends()
+                #print(f"[FriendsWindow] Loaded {len(current_friends)} friends")
+                
+                # Update the all friends list
+                instance.refresh_best_friends_ui()
+                
+                try:
+                    players_list = [V2_LOGO + player.strip() for player, _ in instance._get_filtered_players()]
+                except Exception as e:
+                    print(f"[FriendsWindow] Could not get players list: {e}")
+                    players_list = []
+                    
+                instance.refresh_best_friends_connected_ui(players_list)
+                #print(f"[FriendsWindow] Successfully updated instance")
+                
+            except Exception as e:
+                print(f"[FriendsWindow] Error updating instance: {e}")
 
     def _create_friends_panel(self, parent_widget):
         """Create the friends panel window."""
@@ -3178,8 +3947,10 @@ class FriendsPanel:
 
         self.all_friends_text = tw(
             parent=self.friends_parent,
-            text=self.language.get_text('allFriends'),
+            text=self.language.get_text('FriendsWindow.allFriends'),
             color=self.theme.get_color('COLOR_PRIMARY'),
+            maxwidth = 250,
+            max_height=35,
             position=(540-450, 400)
         )
 
@@ -3203,7 +3974,8 @@ class FriendsPanel:
             parent=self.friends_parent,
             position=(640-450, 250),
             size=(120, 39),
-            label=self.language.get_text('addManually'),
+            text_scale=0.6,
+            label=self.language.get_text('FriendsWindow.addManually'),
             color=self.theme.get_color('COLOR_SECONDARY'),
             textcolor=self.theme.get_color('COLOR_PRIMARY'),
             oac=lambda: (
@@ -3226,14 +3998,17 @@ class FriendsPanel:
         )
 
         # Online friends header
+        online_friends_tr = self.language.get_text("Global.online") + "\ue019"
         self.online_friends_text = tw(
             parent=self.friends_parent,
-            text=f'{self.language.get_text("online")} \ue019',
+            text=online_friends_tr,
             color=self.theme.get_color('COLOR_PRIMARY'),
-            position=(465-450, 195)
+            position=(465-450, 195),
+            maxwidth = 180,
+            max_height=40,
         )
 
-        # Best friends list container
+        # Best friends list
         self._friends_scroll_container = sw(
             parent=self.friends_parent,
             position=(465-450, 240),
@@ -3245,7 +4020,7 @@ class FriendsPanel:
         self._friends_list_container = None
         self.refresh_best_friends_ui()
 
-        # Connected friends list container
+        # Connected friends list
         self._connected_friends_scroll_container = sw(
             parent=self.friends_parent,
             position=(465-450, 17),
@@ -3264,7 +4039,6 @@ class FriendsPanel:
             background=False
         )
 
-        # Create a background for the information area
         iw(
             parent=self.friends_parent,
             position=(160, 17),
@@ -3278,7 +4052,7 @@ class FriendsPanel:
             parent=self._friend_info_container,
             size=(165, 170),
             position=(0, 0),
-            text=self.language.get_text('selectFriendToView'),
+            text=self.language.get_text('FriendsWindow.selectFriendToView'),
             color=self.theme.get_color('COLOR_PRIMARY'),
             maxwidth=160,
             h_align='center',
@@ -3295,7 +4069,6 @@ class FriendsPanel:
 
         friends_list = self.get_all_friends()
 
-        # If no real friends, add the default "less" entry
         if not friends_list:
             # Create a small container
             container_height = 140
@@ -3305,16 +4078,18 @@ class FriendsPanel:
                 background=False
             )
 
-            # Show default "less" friend (non-selectable, non-interactive)
+            # Show default
             default_friend_widget = tw(
                 parent=self._friends_list_container,
                 size=(170, 30),
                 color=self.theme.get_color('COLOR_TERTIARY'),
-                text="less",
+                text=f"{V2_LOGO}less",
                 position=(0, container_height - 30),
                 maxwidth=160,
-                selectable=False,  # Make non-selectable
-                v_align='center'
+                selectable=True,
+                click_activate=True,
+                v_align='center',
+                on_activate_call=CallStrict(self._show_friend_popup, (200, 100), delete_user=False)
             )
 
             # Initialize or clear widget list
@@ -3323,12 +4098,12 @@ class FriendsPanel:
             else:
                 self._friend_text_widgets = []
 
-            # Store only the default widget (not interactive)
+            # Store only
             self._friend_text_widgets.append(default_friend_widget)
 
             return
 
-        # Continue with normal friends list (real friends exist)
+        # Continue with normal friends list
         container_height = max(len(friends_list) * 30, 140)
 
         self._friends_list_container = ocw(
@@ -3337,7 +4112,6 @@ class FriendsPanel:
             background=False
         )
 
-        # Initialize list to save friends' widgets
         if not hasattr(self, '_friend_text_widgets'):
             self._friend_text_widgets = []
         else:
@@ -3353,11 +4127,15 @@ class FriendsPanel:
                 color=self.theme.get_color('COLOR_TERTIARY'),
                 text=display_name,
                 position=(0, pos_y),
-                maxwidth=160,
+                maxwidth=100,
                 selectable=True,
                 click_activate=True,
                 v_align='center',
-                on_activate_call=CallStrict(self._show_friend_popup, friend, (200, 100))
+                on_activate_call=CallStrict(
+                    self._show_friend_popup,
+                    (200, 100),
+                    friend 
+                )
             )
 
             # Save widget reference
@@ -3384,27 +4162,27 @@ class FriendsPanel:
 
         # Get players list if not provided
         if players_list is None:
-            players_list = ["\ue063" + player.strip() for player, _ in self._get_filtered_players()]
+            players_list = [V2_LOGO + player.strip() for player, _ in self._get_filtered_players()]
 
-        # List of best friends online (using real friends list, excluding default "less")
+        # List of best friends online
         real_friends = self.get_all_friends()
         connected_friends = self._get_connected_best_friends(players_list)
         self.best_friends_connected = len(connected_friends)
 
-        # Display message if no real friends connected
-        if not connected_friends or not real_friends:  # Check if there are any real friends
+        # Display message
+        if not connected_friends or not real_friends:
             self.no_friends_online_text = tw(
                 parent=self.friends_parent,
                 position=(60, 90),
-                text=self.language.get_text('noFriendsOnline'),
+                text=self.language.get_text('FriendsWindow.noFriendsOnline'),
                 color=self.theme.get_color('COLOR_TERTIARY'),
                 maxwidth=120,
+                max_height=90,
                 h_align='center',
                 v_align='center'
             )
             return
 
-        # Create scroll container for connected friends
         self._connected_friends_list_container = sw(
             parent=self.friends_parent,
             position=(465-450, 17),
@@ -3414,14 +4192,13 @@ class FriendsPanel:
         )
 
         container_height = max(len(connected_friends) * 30, 170)
-
         self._connected_friends_inner_container = ocw(
             parent=self._connected_friends_list_container,
             size=(140, container_height),
             background=False
         )
 
-        # Fill UI with connected names (only real friends)
+        # Fill UI with connected names
         for i, friend in enumerate(connected_friends):
             display_name = friend if len(friend) <= 7 else friend[:7] + "..."
             pos_y = container_height - 30 - 30 * i
@@ -3432,7 +4209,7 @@ class FriendsPanel:
                 color=self.theme.get_color('COLOR_TERTIARY'),
                 text=display_name,
                 position=(5, pos_y),
-                maxwidth=130,
+                maxwidth=100,
                 selectable=True,
                 click_activate=True,
                 v_align='center',
@@ -3446,7 +4223,7 @@ class FriendsPanel:
         """Return the list of all real friend names from storage (excluding default 'less')."""
         try:
             friends = load_friends()
-            # Filter out the default "less" entry if it exists in storage
+            # Filter out the default
             return [friend["name"] for friend in friends if friend["name"] != "less"]
         except Exception as e:
             print(f"Error loading friends: {e}")
@@ -3469,8 +4246,8 @@ class FriendsPanel:
                 if player in best_friends_set:
                     connected_best_friends.append(player)
                     
-                # Also check without the \ue063 prefix
-                clean_player = player.lstrip("\ue063")
+                # Also check with prefix
+                clean_player = player.lstrip(V2_LOGO)
                 if clean_player in best_friends_set:
                     connected_best_friends.append(player)
 
@@ -3480,34 +4257,63 @@ class FriendsPanel:
             print(f"Error getting connected best friends: {e}")
             return []
 
-    def _show_friend_popup(self, friend: str, position: tuple[float, float]):
-        """Show popup menu for friend actions."""
-        delete = self.language.get_text('delete')
+    def _show_friend_popup(
+        self,
+        position: tuple[float, float],
+        friend: str | None = None,
+        delete_user: bool = True
+    ):
+        viewProfileText = self.language.get_text('FriendsWindow.viewProfile')
+        deleteText = self.language.get_text('FriendsWindow.deleteFriend')
+
+        choices = [viewProfileText]
+        if friend is not None and delete_user:
+            choices.append(deleteText)
+
         popup = PopupMenuWindow(
             position=position,
-            choices=[delete],
+            choices=choices,
             current_choice="",
             delegate=self,
             width=1,
         )
 
+        # View profile button
         bw(
             parent=popup.root_widget,
-            position=(0, 2),
+            position=(0, 60 if friend is not None and delete_user else 0),
             size=(140, 54),
-            label=delete,
+            label=viewProfileText,
             color=self.theme.get_color('COLOR_SECONDARY'),
             textcolor=self.theme.get_color('COLOR_PRIMARY'),
             oac=lambda: (
                 popup.root_widget.delete(),
-                self._delete_friend(friend),
-                self.refresh_best_friends_ui(),
-                self.refresh_best_friends_connected_ui(),
-                self._show_friend_info_tip()
+                ProfileSearchWindow(
+                    self.friends_parent,
+                    v2=friend.replace(V2_LOGO, '') if friend else None
+                )
             )
         )
-        self._popup_target = friend
 
+        # Delete friend button
+        if friend is not None and delete_user:
+            bw(
+                parent=popup.root_widget,
+                position=(0, 0),
+                size=(140, 54),
+                label=deleteText,
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=lambda: (
+                    popup.root_widget.delete(),
+                    self._delete_friend(friend),
+                    self.refresh_best_friends_ui(),
+                    self.refresh_best_friends_connected_ui(),
+                    self._show_friend_info_tip()
+                )
+            )
+
+        self._popup_target = friend
 
     def _show_friend_info_tip(self):
         """Show the friend info tip message."""
@@ -3520,7 +4326,7 @@ class FriendsPanel:
                 parent=self._friend_info_container,
                 size=(165, 170),
                 position=(0, 0),
-                text=self.language.get_text('selectFriendToView'),
+                text=self.language.get_text('FriendsWindow.selectFriendToView'),
                 color=self.theme.get_color('COLOR_PRIMARY'),
                 maxwidth=160,
                 h_align='center',
@@ -3533,7 +4339,7 @@ class FriendsPanel:
     def _display_best_friend_info(self, player_name):
         """Display information about a best friend."""
         # Clean the player name
-        clean_player_name = player_name.lstrip("\ue063")
+        clean_player_name = player_name.lstrip(V2_LOGO)
 
         # Clean UI
         [element.delete() for element in self.best_friends_elements]
@@ -3541,17 +4347,14 @@ class FriendsPanel:
         if self.friend_info_tip and self.friend_info_tip.exists():
             self.friend_info_tip.delete()
 
-        # Save the currently displayed friend
         self._current_displayed_best_friend = player_name
-
-        # Try to find server information for this friend
         server_info = None
         server_address = None
         server_port = None
 
         # Search in current server memory if available
         try:
-            cls = LessFinder
+            cls = FinderWindow
 
             for server in cls.SERVER_MEMORY:
                 for roster_entry in server.get('roster', []):
@@ -3576,7 +4379,7 @@ class FriendsPanel:
             h_align='left',
             v_align='center',
             maxwidth=90,
-            text=f"\ue063{clean_player_name}",
+            text=f"{V2_LOGO}{clean_player_name}",
             color=self.theme.get_color('COLOR_PRIMARY'),
             size=(155, 25),
             selectable=True,
@@ -3585,7 +4388,6 @@ class FriendsPanel:
             on_activate_call=CallStrict(self._copy_to_clipboard, clean_player_name)
         )
         self.best_friends_elements.append(friend_name_widget)
-
 
         more_info_account = obw(
             parent=self._friend_info_container,
@@ -3689,8 +4491,8 @@ class FriendsPanel:
             )
             self.best_friends_elements.append(na_widget)
 
-        connect_text = self.language.get_text('connect')
-        delete_text = self.language.get_text('deleteFriend')
+        connect_text = self.language.get_text('Global.connect')
+        delete_text = self.language.get_text('FriendsWindow.deleteFriend')
 
         # Divider
         button_divider = iw(
@@ -3703,7 +4505,7 @@ class FriendsPanel:
         self.best_friends_elements.append(button_divider)
 
         if server_info and server_address and server_port:
-            # Friend is online, show connect button
+            # Friend is online
             connect_button = bw(
                 parent=self._friend_info_container,
                 position=(10, 35),
@@ -3758,7 +4560,6 @@ class FriendsPanel:
             try:
                 return loads(spec_str)
             except:
-                import re
                 cleaned_spec = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', spec_str)
                 return loads(cleaned_spec)
         except Exception as e:
@@ -3768,7 +4569,7 @@ class FriendsPanel:
         """Copy text to clipboard and show confirmation."""
         try:
             COPY(text)
-            TIP('Copied to clipboard!')
+            TIP(get_lang_text('Global.copiedToClipboard'))
         except:
             pass
 
@@ -3797,12 +4598,12 @@ class FriendsPanel:
 
     def _setup_language_subscriptions(self):
         """Configure all language subscriptions."""
-        self._subscribe_language('online', self._update_online_friends_text)
-        self._subscribe_language('allFriends', self._update_all_friends_text)
-        self._subscribe_language('addManually', self._update_add_manual_button_text)
-        self._subscribe_language('selectFriendToView', self._update_friend_info_tip_text)
-        self._subscribe_language('noFriendsOnline', self._update_no_friends_online_text)
-        self._subscribe_language('noFriendsAdded', self._update_no_friends_added_text)
+        self._subscribe_language('Global.online', self._update_online_friends_text)
+        self._subscribe_language('FriendsWindow.allFriends', self._update_all_friends_text)
+        self._subscribe_language('FriendsWindow.addManually', self._update_add_manual_button_text)
+        self._subscribe_language('FriendsWindow.selectFriendToView', self._update_friend_info_tip_text)
+        self._subscribe_language('FriendsWindow.noFriendsOnline', self._update_no_friends_online_text)
+        self._subscribe_language('FriendsWindow.noFriendsAdded', self._update_no_friends_added_text)
 
     def _setup_color_subscriptions(self):
         """Configure all color subscriptions."""
@@ -3828,27 +4629,27 @@ class FriendsPanel:
     def _update_online_friends_text(self, new_text):
         """Update online friends text."""
         if hasattr(self, 'online_friends_text') and self.online_friends_text and self.online_friends_text.exists():
-            bui.textwidget(edit=self.online_friends_text, text=new_text)
+            tw(edit=self.online_friends_text, text=new_text + "\ue019")
 
     def _update_all_friends_text(self, new_text):
         """Update 'All Friends' text."""
         if hasattr(self, 'all_friends_text') and self.all_friends_text and self.all_friends_text.exists():
-            bui.textwidget(edit=self.all_friends_text, text=new_text)
+            tw(edit=self.all_friends_text, text=new_text)
 
     def _update_add_manual_button_text(self, new_text):
         """Update the text of the 'Add Manually' button."""
         if hasattr(self, 'add_manual_button') and self.add_manual_button and self.add_manual_button.exists():
-            bui.buttonwidget(edit=self.add_manual_button, label=new_text)
+            obw(edit=self.add_manual_button, label=new_text)
 
     def _update_friend_info_tip_text(self, new_text):
         """Update friend information tip text."""
         if hasattr(self, 'friend_info_tip') and self.friend_info_tip and self.friend_info_tip.exists():
-            bui.textwidget(edit=self.friend_info_tip, text=new_text)
+            tw(edit=self.friend_info_tip, text=new_text)
 
     def _update_no_friends_online_text(self, new_text):
         """Update 'No Friends Online' text."""
         if hasattr(self, 'no_friends_online_text') and self.no_friends_online_text and self.no_friends_online_text.exists():
-            bui.textwidget(edit=self.no_friends_online_text, text=new_text)
+            tw(edit=self.no_friends_online_text, text=new_text)
 
     def _update_no_friends_added_text(self, new_text):
         """Update 'No Friends Added' text."""
@@ -3861,87 +4662,87 @@ class FriendsPanel:
                 if hasattr(child, 'get_text'):
                     current_text = child.get_text()
                     if current_text and ('noFriends' in current_text or 'No friends' in current_text):
-                        bui.textwidget(edit=child, text=new_text)
+                        tw(edit=child, text=new_text)
 
     # Color update methods
     def _update_friends_background_color(self, new_color):
         """Update the background color of the Friends panel."""
         if hasattr(self, 'friends_background') and self.friends_background and self.friends_background.exists():
-            bui.imagewidget(edit=self.friends_background, color=new_color)
+            iw(edit=self.friends_background, color=new_color)
 
     def _update_friends_separator_color(self, new_color):
         """Update the color of the friends panel separator."""
         if hasattr(self, 'friends_separator') and self.friends_separator and self.friends_separator.exists():
-            bui.imagewidget(edit=self.friends_separator, color=new_color)
+            iw(edit=self.friends_separator, color=new_color)
 
     def _update_friends_separator2_color(self, new_color):
         """Update color of second separator."""
         if hasattr(self, 'friends_separator2') and self.friends_separator2 and self.friends_separator2.exists():
-            bui.imagewidget(edit=self.friends_separator2, color=new_color)
+            iw(edit=self.friends_separator2, color=new_color)
 
     def _update_all_friends_text_color(self, new_color):
         """Update the color of the 'All Friends' text."""
         if hasattr(self, 'all_friends_text') and self.all_friends_text and self.all_friends_text.exists():
-            bui.textwidget(edit=self.all_friends_text, color=new_color)
+            tw(edit=self.all_friends_text, color=new_color)
 
     def _update_friend_input_color(self, new_color):
         """Update the color of the friends input."""
         if hasattr(self, 'friend_input') and self.friend_input and self.friend_input.exists():
-            bui.textwidget(edit=self.friend_input, color=new_color)
+            tw(edit=self.friend_input, color=new_color)
 
     def _update_online_friends_color(self, new_color):
         """Update the color of the 'Online Friends' text."""
         if hasattr(self, 'online_friends_text') and self.online_friends_text and self.online_friends_text.exists():
-            bui.textwidget(edit=self.online_friends_text, color=new_color)
+            tw(edit=self.online_friends_text, color=new_color)
 
     def _update_add_manual_button_color(self, new_color):
         """Update color of 'Add Manually' button."""
         if hasattr(self, 'add_manual_button') and self.add_manual_button and self.add_manual_button.exists():
-            bui.buttonwidget(edit=self.add_manual_button, color=new_color)
+            obw(edit=self.add_manual_button, color=new_color)
 
     def _update_add_manual_button_textcolor(self, new_color):
         """Update the text color of the 'Add Manually' button."""
         if hasattr(self, 'add_manual_button') and self.add_manual_button and self.add_manual_button.exists():
-            bui.buttonwidget(edit=self.add_manual_button, textcolor=new_color)
+            obw(edit=self.add_manual_button, textcolor=new_color)
 
     def _update_friends_scroll_container_color(self, new_color):
         """Update the color of the friends scroll container."""
         if hasattr(self, '_friends_scroll_container') and self._friends_scroll_container and self._friends_scroll_container.exists():
-            bui.scrollwidget(edit=self._friends_scroll_container, color=new_color)
+            sw(edit=self._friends_scroll_container, color=new_color)
 
     def _update_connected_friends_scroll_color(self, new_color):
         """Update the color of the connected friends scroll container."""
         if hasattr(self, '_connected_friends_scroll_container') and self._connected_friends_scroll_container and self._connected_friends_scroll_container.exists():
-            bui.scrollwidget(edit=self._connected_friends_scroll_container, color=new_color)
+            sw(edit=self._connected_friends_scroll_container, color=new_color)
 
     def _update_friend_info_container_color(self, new_color):
         """Update the color of the friends info container."""
         if hasattr(self, '_friend_info_container') and self._friend_info_container and self._friend_info_container.exists():
-            bui.scrollwidget(edit=self._friend_info_container, color=new_color)
+            sw(edit=self._friend_info_container, color=new_color)
 
     def _update_friend_info_tip_color(self, new_color):
         """Update friend info tip color."""
         if hasattr(self, 'friend_info_tip') and self.friend_info_tip and self.friend_info_tip.exists():
-            bui.textwidget(edit=self.friend_info_tip, color=new_color)
+            tw(edit=self.friend_info_tip, color=new_color)
 
     def _update_no_friends_online_color(self, new_color):
         """Update the text color of 'No Friends Online'."""
         if hasattr(self, 'no_friends_online_text') and self.no_friends_online_text and self.no_friends_online_text.exists():
-            bui.textwidget(edit=self.no_friends_online_text, color=new_color)
+            tw(edit=self.no_friends_online_text, color=new_color)
 
     def _update_friend_text_widgets_color(self, new_color):
         """Update the text color in the friends list."""
         if hasattr(self, '_friend_text_widgets'):
             for widget in self._friend_text_widgets:
                 if widget and widget.exists():
-                    bui.textwidget(edit=widget, color=new_color)
+                    tw(edit=widget, color=new_color)
 
     def _update_connected_friend_text_widgets_color(self, new_color):
         """Update the color of the text in the online friends list."""
         if hasattr(self, '_connected_friend_text_widgets'):
             for widget in self._connected_friend_text_widgets:
                 if widget and widget.exists():
-                    bui.textwidget(edit=widget, color=new_color)
+                    tw(edit=widget, color=new_color)
 
     def _update_best_friends_info_color(self, new_color):
         """Update color of best friends info elements."""
@@ -3965,8 +4766,8 @@ class FriendsPanel:
             self.theme.unsubscribe(color_name, callback)
         self._color_subscriptions.clear()
 
-class LessFinder:
-    """Server Finder main interface class."""
+class FinderWindow:
+    """Less Finder."""
 
     language = ReactiveLanguage() 
     theme = ReactiveTheme()
@@ -3995,13 +4796,12 @@ class LessFinder:
 
     def __init__(self, source):
         """Initialize the Server Finder UI."""
+        
         self.theme.refresh_from_config()
         self._current_selected_player = None
         self._current_displayed_player = None 
         self._language_subscriptions = []
         self._color_subscriptions = [] 
-
-        # Initialize state variables
         self.scan_threads = []
         self.info_elements = []
         self.progress_trackers = []
@@ -4020,10 +4820,10 @@ class LessFinder:
             oac=self.close_interface,
         )[0]
 
-        self.footer = bui.buttonwidget(
+        self.footer = obw(
             parent=cls.root,
             size=window_size,
-            texture=bui.gettexture('empty'),
+            texture=gt('empty'),
             label='',
             enable_sound=False
         )
@@ -4053,7 +4853,7 @@ class LessFinder:
         )
 
         # Create friends panel
-        self.friends_panel = FriendsPanel(
+        self.friends_panel = FriendsWindow(
             parent_widget=cls.root,
             theme=self.theme,
             language=self.language,
@@ -4087,7 +4887,7 @@ class LessFinder:
             enable_sound=False
         )
 
-        # Friends connected count - get from friends panel
+        # Friends connected count
         connected_count = self.friends_panel.get_connected_count() if hasattr(self, 'friends_panel') else 0
         self.connected_users_count = tw(
             parent=cls.MainParent,
@@ -4104,9 +4904,11 @@ class LessFinder:
         # Search section header
         self.search_servers_text = tw(
             parent=cls.MainParent,
-            text=self.language.get_text('searchServers'),
+            text=self.language.get_text('FinderWindow.searchServers'),
             color=self.theme.get_color('COLOR_PRIMARY'),
-            position=(19, 359)
+            position=(19, 359),
+            maxwidth = 320,
+            max_height=28,
         )
 
         # Search button
@@ -4114,7 +4916,8 @@ class LessFinder:
             parent=cls.MainParent,
             position=(360, 343),
             size=(80, 39),
-            label=self.language.get_text('search'),
+            text_scale=0.7,
+            label=self.language.get_text('Global.search'),
             color=self.theme.get_color('COLOR_SECONDARY'),
             textcolor=self.theme.get_color('COLOR_PRIMARY'),
             oac=self.start_server_scan
@@ -4123,11 +4926,12 @@ class LessFinder:
         # Search description
         self.search_players_text = tw(
             parent=cls.MainParent,
-            text=self.language.get_text('searchPlayers'),
+            text=self.language.get_text('FinderWindow.searchPlayers'),
             color=self.theme.get_color('COLOR_TERTIARY'),
             scale=0.8,
             position=(15, 330),
-            maxwidth=320
+            maxwidth = 320,
+            max_height=28,
         )
         
         # Separator
@@ -4142,7 +4946,7 @@ class LessFinder:
         # Art display area
         cls.ART_DISPLAY_WIDGET = tw(
             parent=cls.MainParent,
-            text=self.language.get_text('pressSearch'),
+            text=self.language.get_text('FinderWindow.pressSearch'),
             maxwidth=430,
             max_height=125,
             h_align='center',
@@ -4171,14 +4975,16 @@ class LessFinder:
             allow_clear_button=False,
             v_align='center',
             color=self.theme.get_color('COLOR_PRIMARY'),
-            description='Raw search - Matches wildcard to all strings in server\'s JSON, including player names, and server name. Enter'
+            description=get_lang_text('FinderWindow.filterDescription')
         )
 
-        search = get_lang_text('search')
+        search = get_lang_text('Global.search')
         self.filter_placeholder = tw(
             parent=cls.MainParent,
             position=(26, 153),
             text=search,
+            maxwidth = 80,
+            max_height=25,
             color=self.theme.get_color('COLOR_TERTIARY')
         )
         
@@ -4200,9 +5006,10 @@ class LessFinder:
         self.players_tip = tw(
             parent=cls.MainParent,
             position=(90, 100),
-            text=self.language.get_text('searchServersForPlayers'),
+            text=self.language.get_text('FinderWindow.searchServersForPlayers'),
             color=self.theme.get_color('COLOR_PRIMARY'),
-            maxwidth=175,
+            maxwidth = 175,
+            max_height=100,
             h_align='center'
         )
 
@@ -4251,9 +5058,10 @@ class LessFinder:
         cls.TIP_WIDGET = tw(
             parent=cls.MainParent,
             position=(310, 98),
-            text=self.language.get_text('selectToViewInfo'),
+            text=self.language.get_text('FinderWindow.selectToViewInfo'),
             color=self.theme.get_color('COLOR_PRIMARY'),
             maxwidth=170,
+            max_height=100,
             h_align='center'
         )
 
@@ -4304,7 +5112,7 @@ class LessFinder:
             return
             
         current_text = tw(query=cls.FILTER_TEXT_WIDGET)
-        search = get_lang_text('search')
+        search = get_lang_text('Global.search')
         tw(self.filter_placeholder, text=[search,''][bool(current_text)])
         
         if current_text != self.FILTER_TEXT:
@@ -4321,7 +5129,7 @@ class LessFinder:
         for i, element in enumerate(cls.SERVER_LIST_ELEMENTS):
             if element and element.exists():
                 color = self.theme.get_color('COLOR_PRIMARY') if i == index else self.theme.get_color('COLOR_TERTIARY')
-                bui.textwidget(edit=element, color=color)
+                tw(edit=element, color=color)
 
         self._display_server_info(player_name)
 
@@ -4332,10 +5140,7 @@ class LessFinder:
         cls = self.__class__
         tw(cls.TIP_WIDGET, text='')
 
-        # Change status to "displaying server information"
         cls.SHOWING_SERVER_INFO = True
-
-        # Save the currently displayed player
         self._current_displayed_player = player_name
 
         server_info = None
@@ -4357,7 +5162,7 @@ class LessFinder:
             self._current_displayed_player = None
             return
 
-        # Display server information fields
+        # Display server info
         for i, key in enumerate(['n', 'a', 'p']):
             field_text = str(server_info[key])
             pos_x = [250, 245, 375][i]
@@ -4393,8 +5198,8 @@ class LessFinder:
         )
         self.info_elements.append(account_button)
 
-        connect = get_lang_text('connect')
-        if account_v2 and str(account_v2[0]).startswith("\ue063"):
+        connect = get_lang_text('Global.connect')
+        if account_v2 and str(account_v2[0]).startswith(V2_LOGO):
             # Show both buttons side by side for v2 accounts
             connect_button = bw(
                 parent=cls.MainParent,
@@ -4407,12 +5212,13 @@ class LessFinder:
             )
             self.info_elements.append(connect_button)
 
-            addFriend = get_lang_text('addFriend')
+            addFriend = get_lang_text('FriendsWindow.addFriend')
             add_friend_button = bw(
                 parent=cls.MainParent,
                 position=(340, 30),
                 size=(87, 30),
                 label=addFriend,
+                text_scale=0.5,
                 color=self.theme.get_color('COLOR_SECONDARY'),
                 textcolor=self.theme.get_color('COLOR_PRIMARY'),
                 oac=CallStrict(lambda: (
@@ -4436,33 +5242,32 @@ class LessFinder:
     def _update_friends_panel(self):
         """Update the friends panel after changes."""
         if hasattr(self, 'friends_panel'):
-            # Update BOTH lists: general friends and connected friends
             self.friends_panel.refresh_best_friends_ui()
-            players_list = ["\ue063" + player.strip() for player, _ in self._get_filtered_players()]
+            players_list = [V2_LOGO + player.strip() for player, _ in self._get_filtered_players()]
             self.friends_panel.refresh_best_friends_connected_ui(players_list)
-            # Update the connected count display
             self.friends_panel.update_connected_count_display(self.connected_users_count)
 
     def _show_options_popup(self, source_button):
         """Show options popup with profile search and color picker."""
-        searchProfiles = get_lang_text('searchProfiles')
-        changeColors = get_lang_text('changeColors')
-        changeLanguage = get_lang_text('changeLanguage')
+        searchProfiles = get_lang_text('FinderWindow.searchProfiles')
+        changeColors = get_lang_text('FinderWindow.changeColors')
+        changeLanguage = get_lang_text('FinderWindow.changeLanguage')
+        creditsText = get_lang_text('Global.credits')
         
         x = source_button.get_screen_space_center()[0]
         y = source_button.get_screen_space_center()[1] - 70
         popup = PopupMenuWindow(
             position=(x, y),
-            choices=[searchProfiles, changeColors, changeLanguage],
+            choices=[searchProfiles, changeColors, changeLanguage, creditsText],
             current_choice="",
             delegate=self,
-            width=1
+            width=1,
         )
 
         # Search profiles button
         bw(
             parent=popup.root_widget,
-            position=(-100, 55+20),
+            position=(-100, 55+50),
             size=(180, 50),
             label=searchProfiles,
             color=self.theme.get_color('COLOR_SECONDARY'),
@@ -4476,7 +5281,7 @@ class LessFinder:
         # Change colors button
         bw(
             parent=popup.root_widget,
-            position=(-100, 0+20),
+            position=(-100, 0+50),
             size=(180, 50),
             label=changeColors,
             color=self.theme.get_color('COLOR_SECONDARY'),
@@ -4494,7 +5299,7 @@ class LessFinder:
         # Change lang button
         bw(
             parent=popup.root_widget,
-            position=(-100, -55+20),
+            position=(-100, -55+50),
             size=(180, 50),
             label=changeLanguage,
             color=self.theme.get_color('COLOR_SECONDARY'),
@@ -4505,13 +5310,26 @@ class LessFinder:
             )
         )
 
+        bw(
+            parent=popup.root_widget,
+            position=(-100, -110+50),
+            size=(180, 50),
+            label=creditsText,
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=lambda: (
+                popup.root_widget.delete(),
+                self._credits()
+            )
+        )
+
         self._popup_target = "options"
 
     def _search_profiles(self):
         """Open the profile search window."""
         source_widget = self.__class__.root if hasattr(self.__class__, 'root') and self.__class__.root.exists() else zw('overlay_stack')
         ProfileSearch(source_widget)
-
+    
     def _translate_window(self):
         """Create language selection popup."""
         popup_size = (250, 300)
@@ -4522,7 +5340,7 @@ class LessFinder:
             transition='in_scale',
             on_outside_click_call=lambda: popup_window.delete()
         )
-
+    
         # Popup background
         iw(
             parent=popup_window,
@@ -4531,8 +5349,18 @@ class LessFinder:
             color=self.theme.get_color('COLOR_BACKGROUND'),
             opacity=0.95
         )
+    
+        languages_to_show = get_languages_for_current_platform()
+        if (APP.classic.platform != 'android'):
+            tw(
+                parent=popup_window,
+                text="",
+                position=(popup_size[0]/2, popup_size[1]-20),
+                h_align='center',
+                scale=0.6,
+                color=(0.7, 0.7, 0.7, 1)
+            )
 
-        # Scrollable container for languages
         scroll_container = sw(
             parent=popup_window,
             position=(25, 50),
@@ -4540,30 +5368,30 @@ class LessFinder:
             border_opacity=0.3,
             color=self.theme.get_color('COLOR_SECONDARY')
         )
-
+    
         languages_container = ocw(
             parent=scroll_container,
-            size=(180, len(DEFAULT_LANGUAGES_DICT) * 55),
+            size=(180, len(languages_to_show) * 55),
             background=False
         )
-
+    
         # Get current language from settings
         current_lang_id = get_app_lang_as_id()
-        current_lang_name = DEFAULT_LANGUAGES_DICT.get(current_lang_id, 'English')
-
-        # Color for current language - light green blue
-        CURRENT_LANG_COLOR = (0.4, 0.8, 1.0)
+        current_lang_name = get_language_name(current_lang_id)
+    
+        # Color for current language
+        CURRENT_LANG_COLOR = self.theme.get_color('COLOR_TERTIARY')
         NORMAL_LANG_COLOR = self.theme.get_color('COLOR_SECONDARY')
-
+    
         # Create buttons for each language
-        for i, (lang_id, lang_name) in enumerate(DEFAULT_LANGUAGES_DICT.items()):
-            y_position = (len(DEFAULT_LANGUAGES_DICT) - i - 1) * 55
-
+        for i, (lang_id, lang_name) in enumerate(languages_to_show.items()):
+            y_position = (len(languages_to_show) - i - 1) * 55
+    
             # Determine color based on whether it is the current language
             is_current = lang_id == current_lang_id
             button_color = CURRENT_LANG_COLOR if is_current else NORMAL_LANG_COLOR
             text_color = (0, 0, 0, 1) if is_current else self.theme.get_color('COLOR_PRIMARY')
-
+    
             # Language button
             lang_button = bw(
                 parent=languages_container,
@@ -4574,7 +5402,7 @@ class LessFinder:
                 textcolor=text_color,
                 oac=lambda lid=lang_id, lname=lang_name: self._select_language(lid, lname, popup_window)
             )
-
+    
             # Current language indicator
             if is_current:
                 tw(
@@ -4586,14 +5414,22 @@ class LessFinder:
                     color=(0, 0, 0, 1)
                 )
 
+            if (APP.classic.platform != 'android') and not DEFAULT_LANGUAGES_DICT[lang_id]["pc_compatible"]:
+                tw(
+                    parent=languages_container,
+                    text='⚠',
+                    position=(140, y_position + 25),
+                    h_align='center',
+                    scale=0.8,
+                    color=(1, 0.5, 0, 1)
+                )
+    
     def _select_language(self, lang_id: str, lang_name: str, popup_window):
-        """Handle language selection - without reloading the interface."""
-        # Save to settings
+        """Handle language selection."""
+
         update_finder_config(CFG_NAME_PREFFERED_LANG, lang_id)
-
-        # Update the reactive language system
         self.language.update_language(lang_id)
-
+    
         confirmation_texts = {
             'id': f'Bahasa diubah ke: {lang_name}',
             'en': f'Language changed to: {lang_name}',
@@ -4601,17 +5437,23 @@ class LessFinder:
             'es': f'Idioma cambiado a: {lang_name}',
             'ml': f'ഭാഷ മാറ്റി: {lang_name}'
         }
-
+    
         TIP(confirmation_texts.get(lang_id, confirmation_texts['en']))
         popup_window.delete()
 
-    def _reload_interface(self):
-        """Reload the interface to apply language changes."""
-        self.close_interface()
-        def reload():
-            load_finder_config()
-            teck(0.1, byLess.activate_button)
-        teck(0.2, reload)
+
+    def _credits(self):
+        """Open Creditr."""
+        source_widget = self.__class__.root if hasattr(self.__class__, 'root') and self.__class__.root.exists() else zw('overlay_stack')
+        CreditsWindow(source_widget)
+
+    #def _reload_interface(self):
+    #    """Reload the interface to apply language changes."""
+    #    self.close_interface()
+    #    def reload():
+    #        load_finder_config()
+    #        #teck(0.1, byLess.activate_button)
+    #    teck(0.2, reload)
 
     def _generate_theme_from_color(self, base_color):
         """Generate a color theme based on a base color."""
@@ -4694,7 +5536,7 @@ class LessFinder:
     def _copy_to_clipboard(self, text):
         """Copy text to clipboard and show confirmation."""
         self._play_ding_sound(1, 1)
-        TIP('Copied to clipboard!')
+        TIP(get_lang_text('Global.copiedToClipboard'))
         COPY(text)
 
     def _get_filtered_players(self):
@@ -4769,7 +5611,6 @@ class LessFinder:
             try:
                 return loads(spec_str)
             except JSONDecodeError:
-                import re
                 cleaned_spec = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', spec_str)
                 return loads(cleaned_spec)
         except Exception as e:
@@ -4817,7 +5658,7 @@ class LessFinder:
         """Start scanning for servers."""
         cls = self.__class__
         if cls.IS_SCANNING:
-            stillBusy = get_lang_text('stillBusy')
+            stillBusy = get_lang_text('FinderWindow.stillBusy')
             TIP(stillBusy)
             self._play_ding_sound(0, 0)
             return
@@ -4826,7 +5667,7 @@ class LessFinder:
         cls.SHOWING_SERVER_ART = False
         cls.SHOWING_SERVER_INFO = False 
 
-        scanningServers = get_lang_text('scanningServers')
+        scanningServers = get_lang_text('FinderWindow.scanningServers')
         TIP(scanningServers)
         cls.SCAN_START_TIME = time.time()
         self._play_ding_sound(1, 0)
@@ -4863,15 +5704,15 @@ class LessFinder:
         return connected_best_friends
 
     def _add_friend(self, friend: str):
-        """Add a friend to the best friends list (using new friends storage)."""
+        """Add a friend."""
 
         if not friend or friend.strip() == "":
-            fieldEmpty = get_lang_text('fieldEmpty')
+            fieldEmpty = get_lang_text('Global.fieldEmpty')
             push(fieldEmpty, (1, 0, 0))
             gs('error').play()
             return
 
-        prefixed_friend = f"\ue063{friend.strip()}"
+        prefixed_friend = f"{V2_LOGO}{friend.strip()}"
 
         # Load current friends
         friends = load_friends()
@@ -4879,7 +5720,7 @@ class LessFinder:
         # Check if already exists
         for f in friends:
             if f["name"] == prefixed_friend:
-                TIP(f"{prefixed_friend} already in list")
+                TIP(f"{prefixed_friend} {get_lang_text('Global.alreadyInList')}")
                 return
 
         # Generate new ID
@@ -4897,23 +5738,19 @@ class LessFinder:
 
         self._play_ding_sound(1, 0)
 
-        # Update BOTH panels: general friends list AND connected friends list
         if hasattr(self, 'friends_panel'):
-            # First update the general friends list
             self.friends_panel.refresh_best_friends_ui()
-            # Then update the connected friends list
-            players_list = ["\ue063" + player.strip() for player, _ in self._get_filtered_players()]
+            players_list = [V2_LOGO + player.strip() for player, _ in self._get_filtered_players()]
             self.friends_panel.refresh_best_friends_connected_ui(players_list)
-            # Update the connected count display
             self.friends_panel.update_connected_count_display(self.connected_users_count)
 
-        TIP(f"{prefixed_friend} added successfully")
+        TIP(f"{prefixed_friend} {get_lang_text('Global.addedSuccessfully')}")
 
     def _delete_friend(self, friend: str):
         """Delete a friend from the friends list (new system)."""
 
         if not friend or friend.strip() == "":
-            fieldEmpty = get_lang_text('fieldEmpty')
+            fieldEmpty = get_lang_text('Global.fieldEmpty')
             push(fieldEmpty, (1, 0, 0))
             gs('error').play()
             return
@@ -4936,7 +5773,7 @@ class LessFinder:
         remove_friend(target["id"])
 
         self._play_ding_sound(0, 1)
-        TIP(f"{prefixed_friend} deleted successfully")
+        TIP(f"{prefixed_friend} {get_lang_text('Global.deletedSuccessfully')}")
 
         # Update friends panel
         self._update_friends_panel()
@@ -4988,7 +5825,6 @@ class LessFinder:
         cls = self.__class__
         art_text = '\n'.join(''.join(cls.ART_DISPLAY[i:i+40]) for i in range(0, len(self.ART_DISPLAY), 40))
 
-        # Change status to "showing art"
         cls.SHOWING_SERVER_ART = True
 
         if hasattr(cls, 'ART_DISPLAY_WIDGET') and cls.ART_DISPLAY_WIDGET and cls.ART_DISPLAY_WIDGET.exists():
@@ -5051,14 +5887,14 @@ class LessFinder:
         scan_time = time.time() - cls.SCAN_START_TIME
         servers_scanned = len(self.SERVER_MEMORY)
         servers_per_second = int(servers_scanned / scan_time)
-        scan_finished = get_lang_text('scan.finished')
-        scan_scanned = get_lang_text('scan.scanned')
-        scan_servers = get_lang_text('scan.servers')
-        scan_in = get_lang_text('scan.in')
-        scan_seconds = get_lang_text('scan.seconds')
-        scan_approx = get_lang_text('scan.approximately')
-        scan_server = get_lang_text('scan.server')
-        scan_per_second = get_lang_text('scan.perSecond')
+        scan_finished = get_lang_text('Scan.finished')
+        scan_scanned = get_lang_text('Scan.scanned')
+        scan_servers = get_lang_text('Scan.servers')
+        scan_in = get_lang_text('Scan.in')
+        scan_seconds = get_lang_text('Scan.seconds')
+        scan_approx = get_lang_text('Scan.approximately')
+        scan_server = get_lang_text('Scan.server')
+        scan_per_second = get_lang_text('Scan.perSecond')
 
         TIP(
             f'{scan_finished}\n'
@@ -5074,46 +5910,46 @@ class LessFinder:
     # Language subscription methods
     def _setup_language_subscriptions(self):
         """Configure all language subscriptions."""
-        self._subscribe_language('search', self._update_search_button_text)
-        self._subscribe_language('searchServers', self._update_search_servers_header)
-        self._subscribe_language('searchPlayers', self._update_search_players_text)
-        self._subscribe_language('searchServersForPlayers', self._update_players_tip_text)
-        self._subscribe_language('pressSearch', self._update_art_display_text)
-        self._subscribe_language('selectToViewInfo', self._update_tip_widget_text)
+        self._subscribe_language('Global.search', self._update_search_button_text)
+        self._subscribe_language('FinderWindow.searchServers', self._update_search_servers_header)
+        self._subscribe_language('FinderWindow.searchPlayers', self._update_search_players_text)
+        self._subscribe_language('FinderWindow.searchServersForPlayers', self._update_players_tip_text)
+        self._subscribe_language('FinderWindow.pressSearch', self._update_art_display_text)
+        self._subscribe_language('FinderWindow.selectToViewInfo', self._update_tip_widget_text)
 
     def _update_search_button_text(self, new_text):
         """Update search button text."""
         if hasattr(self, 'search_button') and self.search_button and self.search_button.exists():
-            bui.buttonwidget(edit=self.search_button, label=new_text)
+            obw(edit=self.search_button, label=new_text)
 
     def _update_search_servers_header(self, new_text):
         """Update server search header text."""
         if hasattr(self, 'search_servers_text') and self.search_servers_text and self.search_servers_text.exists():
-            bui.textwidget(edit=self.search_servers_text, text=new_text)
+            tw(edit=self.search_servers_text, text=new_text)
 
     def _update_search_players_text(self, new_text):
         """Update search description text."""
         if hasattr(self, 'search_players_text') and self.search_players_text and self.search_players_text.exists():
-            bui.textwidget(edit=self.search_players_text, text=new_text)
+            tw(edit=self.search_players_text, text=new_text)
 
     def _update_players_tip_text(self, new_text):
         """Update player tip text."""
         if hasattr(self, 'players_tip') and self.players_tip and self.players_tip.exists():
-            bui.textwidget(edit=self.players_tip, text=new_text)
+            tw(edit=self.players_tip, text=new_text)
 
     def _update_art_display_text(self, new_text):
         """Update the display art text only if we are not displaying server-side art."""
         cls = self.__class__
         if not cls.SHOWING_SERVER_ART:
             if hasattr(cls, 'ART_DISPLAY_WIDGET') and cls.ART_DISPLAY_WIDGET and cls.ART_DISPLAY_WIDGET.exists():
-                bui.textwidget(edit=cls.ART_DISPLAY_WIDGET, text=new_text)
+                tw(edit=cls.ART_DISPLAY_WIDGET, text=new_text)
 
     def _update_tip_widget_text(self, new_text):
         """Update tip widget text only if we are not displaying server information."""
         cls = self.__class__
         if not cls.SHOWING_SERVER_INFO:
             if hasattr(cls, 'TIP_WIDGET') and cls.TIP_WIDGET and cls.TIP_WIDGET.exists():
-                bui.textwidget(edit=cls.TIP_WIDGET, text=new_text)
+                tw(edit=cls.TIP_WIDGET, text=new_text)
                 self.default_tip_text = new_text
 
     # Color subscription methods
@@ -5142,54 +5978,54 @@ class LessFinder:
         """Update filter text color."""
         cls = self.__class__
         if hasattr(cls, 'FILTER_TEXT_WIDGET') and cls.FILTER_TEXT_WIDGET and cls.FILTER_TEXT_WIDGET.exists():
-            bui.textwidget(edit=cls.FILTER_TEXT_WIDGET, color=new_color)
+            tw(edit=cls.FILTER_TEXT_WIDGET, color=new_color)
 
     def _update_search_description_color(self, new_color):
         """Update search description color."""
         if hasattr(self, 'search_players_text') and self.search_players_text and self.search_players_text.exists():
-            bui.textwidget(edit=self.search_players_text, color=new_color)
+            tw(edit=self.search_players_text, color=new_color)
 
     def _update_art_display_color(self, new_color):
         """Update the art display color."""
         cls = self.__class__
         if hasattr(cls, 'ART_DISPLAY_WIDGET') and cls.ART_DISPLAY_WIDGET and cls.ART_DISPLAY_WIDGET.exists():
-            bui.textwidget(edit=cls.ART_DISPLAY_WIDGET, color=new_color)
+            tw(edit=cls.ART_DISPLAY_WIDGET, color=new_color)
 
     def _update_search_servers_text_color(self, new_color):
         """Update the color of the 'Search Servers' text."""
         if hasattr(self, 'search_servers_text') and self.search_servers_text and self.search_servers_text.exists():
-            bui.textwidget(edit=self.search_servers_text, color=new_color)
+            tw(edit=self.search_servers_text, color=new_color)
 
     def _update_search_button_color(self, new_color):
         """Update search button color."""
         if hasattr(self, 'search_button') and self.search_button and self.search_button.exists():
-            bui.buttonwidget(edit=self.search_button, color=new_color)
+            obw(edit=self.search_button, color=new_color)
 
     def _update_search_button_textcolor(self, new_color):
         """Update the text color of the search button."""
         if hasattr(self, 'search_button') and self.search_button and self.search_button.exists():
-            bui.buttonwidget(edit=self.search_button, textcolor=new_color)
+            obw(edit=self.search_button, textcolor=new_color)
 
     def _update_filter_placeholder_color(self, new_color):
         """Update filter placeholder color."""
         if hasattr(self, 'filter_placeholder') and self.filter_placeholder and self.filter_placeholder.exists():
-            bui.textwidget(edit=self.filter_placeholder, color=new_color)
+            tw(edit=self.filter_placeholder, color=new_color)
     
     def _update_players_container_color(self, new_color):
         """Update player container color."""
         if hasattr(self, 'players_parent') and self.players_parent and self.players_parent.exists():
-            bui.scrollwidget(edit=self.players_parent, color=new_color)
+            sw(edit=self.players_parent, color=new_color)
     
     def _update_players_tip_color(self, new_color):
         """Update player tip color."""
         if hasattr(self, 'players_tip') and self.players_tip and self.players_tip.exists():
-            bui.textwidget(edit=self.players_tip, color=new_color)
+            tw(edit=self.players_tip, color=new_color)
     
     def _update_tip_widget_color(self, new_color):
         """Update tip widget color."""
         cls = self.__class__
         if hasattr(cls, 'TIP_WIDGET') and cls.TIP_WIDGET and cls.TIP_WIDGET.exists():
-            bui.textwidget(edit=cls.TIP_WIDGET, color=new_color)
+            tw(edit=cls.TIP_WIDGET, color=new_color)
 
     def _update_info_elements_color(self, new_color):
         """Update the color of dynamic information elements."""
@@ -5208,9 +6044,9 @@ class LessFinder:
             for element in cls.SERVER_LIST_ELEMENTS:
                 if element and element.exists():
                     # Only update unselected items
-                    current_text = bui.textwidget(query=element)
+                    current_text = tw(query=element)
                     if current_text != self._current_selected_player:
-                        bui.textwidget(edit=element, color=new_color)
+                        tw(edit=element, color=new_color)
 
     def _update_server_list_selected_color(self, new_color):
         """Update the color of the selected item in the server list."""
@@ -5218,30 +6054,29 @@ class LessFinder:
         if hasattr(cls, 'SERVER_LIST_ELEMENTS') and hasattr(self, '_current_selected_player'):
             for element in cls.SERVER_LIST_ELEMENTS:
                 if element and element.exists():
-                    current_text = bui.textwidget(query=element)
+                    current_text = tw(query=element)
                     if current_text == self._current_selected_player:
-                        bui.textwidget(edit=element, color=new_color)
+                        tw(edit=element, color=new_color)
 
     def _update_border_left_color(self, new_color):
         """Update left border color."""
         if hasattr(self, 'border_left') and self.border_left and self.border_left.exists():
-            bui.imagewidget(edit=self.border_left, color=new_color)
+            iw(edit=self.border_left, color=new_color)
 
     def _update_border_top_color(self, new_color):
         """Update top border color."""
         if hasattr(self, 'border_top') and self.border_top and self.border_top.exists():
-            bui.imagewidget(edit=self.border_top, color=new_color)
+            iw(edit=self.border_top, color=new_color)
 
     def _update_border_right_color(self, new_color):
         """Update right border color."""
         if hasattr(self, 'border_right') and self.border_right and self.border_right.exists():
-            bui.imagewidget(edit=self.border_right, color=new_color)
+            iw(edit=self.border_right, color=new_color)
 
     def _update_border_bottom_color(self, new_color):
         """Update bottom border color."""
         if hasattr(self, 'border_bottom') and self.border_bottom and self.border_bottom.exists():
-            bui.imagewidget(edit=self.border_bottom, color=new_color)
-
+            iw(edit=self.border_bottom, color=new_color)
 
 def ping_and_get_roster(
     address: str,
@@ -5304,8 +6139,8 @@ def ping_and_get_roster(
         server_handshake = f'{receive_packet(3)[1]:02x}'
         receive_packet(1024)  # Ack/Server-Info packet
 
-        send_packet(f'24 {server_handshake} 10 21 00', json_dumps(LessFinder.SPEC))
-        send_packet(f'24 {server_handshake} 11 f0 ff f0 ff 00 12', json_dumps(LessFinder.AUTH))
+        send_packet(f'24 {server_handshake} 10 21 00', json_dumps(FinderWindow.SPEC))
+        send_packet(f'24 {server_handshake} 11 f0 ff f0 ff 00 12', json_dumps(FinderWindow.AUTH))
         send_packet(f'24 {server_handshake} 11 f1 ff f0 ff 00 15', json_dumps({}))
         send_packet(f'24 {server_handshake} 11 f2 ff f0 ff 00 03')
 
@@ -5370,88 +6205,65 @@ def BTW(text):
     push(text, color=(1, 1, 0))
     gs('block').play()
 
-# ba_meta export babase.Plugin
-class byLess(Plugin):
-    """Plugin helper class for Server Finder integration."""
-    
-    BUTTON = None
-    
-    @classmethod
-    def activate_button(cls):
-        """Activate the server finder button if it exists."""
-        if cls.BUTTON and cls.BUTTON.exists():
-            theme = LessFinder.theme
-            color_bg = theme.get_color('COLOR_SECONDARY')
-            color_primary = theme.get_color('COLOR_PRIMARY')
-            
-            # Get current text in the current language
-            language = LessFinder.language
-            search_text = language.get_text('search')
-            
-            obw(edit=cls.BUTTON, color=color_bg, textcolor=color_primary, label=search_text)
-            cls.BUTTON.activate()
-    
-    def __init__(self):
-        """Initialize plugin and inject button into PartyWindow."""
-        from bauiv1lib import party
-        original_init = getattr(party.PartyWindow, '__init__')
-        
+def _get_popup_window_scale() -> float:
+    uiscale = bui.app.ui_v1.uiscale
+    return (2.3 if uiscale is babase.UIScale.SMALL else
+            1.65 if uiscale is babase.UIScale.MEDIUM else 1.23)
+
+def _creat_Lstr_list(string_list: list = []) -> list:
+    return ([babase.Lstr(resource="??Unknown??", fallback_value=item) for item in string_list])
+
+class LPartyWindow(party.PartyWindow):
+    def __init__(self, origin: Sequence[float] = (0, 0)):
+        super().__init__(origin)
         load_finder_config()
         load_friends()
-        
-        def new_init(party_instance, *args, **kwargs):
-            original_init(party_instance, *args, **kwargs)
-            self._add_finder_button(party_instance, LessFinder.theme)
-        
-        setattr(party.PartyWindow, '__init__', new_init)
-    
-    def _add_finder_button(self, party_window, theme):
-        """Add server finder button to PartyWindow."""
+
+        self._menu_button_original = self._menu_button
+        self._popup_party_member_client_id = None
+        self._popup_type = None
+        self._roster = None
         button_size = (80, 30)
+        x_position = -60 
+        y_position = self._height - 45
         borders = BorderWindow(button_size)
-        parent_widget = party_window._root_widget
-        x_position = -60
-        y_position = party_window._height - 45
+        theme = FinderWindow.theme
+        color_bg = theme.get_color('COLOR_SECONDARY')
+        color_primary = theme.get_color('COLOR_PRIMARY')
+        language = FinderWindow.language
+        search_text = language.get_text('Global.search')
         
         # Save reference to background widget
         self._button_background_widget = iw(
-            parent=parent_widget,
+            parent=self._root_widget,
             size=(button_size[0] * 1.34, button_size[1] * 1.4),
             position=(x_position - button_size[0] * 0.14, y_position - button_size[1] * 0.20),
             texture=gt('softRect'),
             opacity=0.2,
             color=theme.get_color('COLOR_BACKGROUND')
         )
-        
-        color_bg = theme.get_color('COLOR_SECONDARY')
-        color_primary = theme.get_color('COLOR_PRIMARY')
-        
-        # Get text in current language
-        language = LessFinder.language
-        search_text = language.get_text('search')
-        
-        self.__class__.BUTTON = bw(
-            parent=parent_widget,
+
+        self.finder_button = bw(
+            parent=self._root_widget,
             position=(x_position, y_position),
             label=search_text,
             color=color_bg,
             textcolor=color_primary,
             size=button_size,
-            oac=lambda: LessFinder(self.__class__.BUTTON)
+            oac=lambda: FinderWindow(self.finder_button)
         )
 
         # Create border widgets
         self.border_left = iw(
-            parent=parent_widget,
+            parent=self._root_widget,
             size=(borders.border_left.size[0]-1, borders.border_left.size[1]+4.5),
-            position=(x_position-3, y_position-2),
+            position=(x_position-5, y_position-2),
             texture=gt('white'),
             color=color_primary
         )
-        # AQUI
 
         self.border_top = iw(
-            parent=parent_widget,
+            parent=self._root_widget,
             size=(borders.border_top.size[0], borders.border_top.size[1]-1),
             position=(x_position-2, y_position+button_size[1]),
             texture=gt('white'),
@@ -5459,7 +6271,7 @@ class byLess(Plugin):
         )
 
         self.border_right = iw(
-            parent=parent_widget,
+            parent=self._root_widget,
             size=(borders.border_right.size[0]-1, borders.border_right.size[1]+4.5),
             position=(x_position+button_size[0]+2, y_position-2),
             texture=gt('white'),
@@ -5467,31 +6279,46 @@ class byLess(Plugin):
         )
 
         self.border_bottom = iw(
-            parent=parent_widget,
+            parent=self._root_widget,
             size=(borders.border_top.size[0]+1, borders.border_top.size[1]-1),
             position=(x_position-2, y_position-2),
             texture=gt('white'),
             color=color_primary
         )
-        
-        # Subscribe button to color changes using the same theme
+
         self._subscribe_to_theme_changes(theme)
-        
-        # Subscribe button to language changes
         self._subscribe_to_language_changes(language)
+
+    def _on_menu_button_press(self) -> None:
+        """Handle the menu button (three dots)."""
+        is_muted = babase.app.config.resolve('Chat Muted')
+        
+        choices = ['unmute' if is_muted else 'mute']
+        choices_display = [
+            babase.Lstr(resource='chatUnMuteText' if is_muted else 'chatMuteText')
+        ]
+        
+        server_info = bs.get_connection_to_host_info_2()
+        if server_info is not None and not server_info.name.startswith('Private Party '):
+            choices.append('add_to_favorites')
+            choices_display.append(babase.Lstr(resource='addToFavoritesText'))
+        
+        PopupMenuWindow(
+            position=self._menu_button.get_screen_space_center(),
+            scale=_get_popup_window_scale(),
+            choices=choices,
+            choices_display=choices_display,
+            current_choice='unmute' if is_muted else 'mute',
+            delegate=self,
+        )
+        self._popup_type = 'menu'
     
     def _subscribe_to_theme_changes(self, theme):
-        """Subscribe button to theme changes from LessFinder."""
-        # Subscribe button background to COLOR_SECONDARY
+        """Subscribe button to theme changes from FinderWindow."""
+        
         theme.subscribe('COLOR_SECONDARY', self._update_button_background_color)
-        
-        # Subscribe button text to COLOR_PRIMARY  
         theme.subscribe('COLOR_PRIMARY', self._update_button_text_color)
-        
-        # Subscribe background widget to COLOR_BACKGROUND
         theme.subscribe('COLOR_BACKGROUND', self._update_button_background_widget_color)
-        
-        # Subscribe borders to COLOR_PRIMARY
         theme.subscribe('COLOR_PRIMARY', self._update_border_left_color)
         theme.subscribe('COLOR_PRIMARY', self._update_border_top_color)
         theme.subscribe('COLOR_PRIMARY', self._update_border_right_color)
@@ -5510,55 +6337,54 @@ class byLess(Plugin):
         ]
     
     def _subscribe_to_language_changes(self, language):
-        """Subscribe button to language changes from LessFinder."""
-        # Subscribe button text to 'search' text changes
-        language.subscribe('search', self._update_button_text)
+        """Subscribe button to language changes from FinderWindow."""
+        language.subscribe('Global.search', self._update_button_text)
         
         # Save references for unsubscription
         self._language = language
         self._language_subscriptions = [
-            ('search', self._update_button_text)
+            ('Global.search', self._update_button_text)
         ]
     
     def _update_button_background_color(self, new_color):
         """Update button background color."""
-        if self.BUTTON and self.BUTTON.exists():
-            obw(edit=self.BUTTON, color=new_color)
+        if self.finder_button and self.finder_button.exists():
+            obw(edit=self.finder_button, color=new_color)
     
     def _update_button_text_color(self, new_color):
         """Update button text color."""
-        if self.BUTTON and self.BUTTON.exists():
-            obw(edit=self.BUTTON, textcolor=new_color)
+        if self.finder_button and self.finder_button.exists():
+            obw(edit=self.finder_button, textcolor=new_color)
     
     def _update_button_text(self, new_text):
         """Update button text when language changes."""
-        if self.BUTTON and self.BUTTON.exists():
-            obw(edit=self.BUTTON, label=new_text)
+        if self.finder_button and self.finder_button.exists():
+            obw(edit=self.finder_button, label=new_text)
     
     def _update_button_background_widget_color(self, new_color):
         """Update button background widget color."""
         if hasattr(self, '_button_background_widget') and self._button_background_widget and self._button_background_widget.exists():
-            bui.imagewidget(edit=self._button_background_widget, color=new_color)
+            iw(edit=self._button_background_widget, color=new_color)
     
     def _update_border_left_color(self, new_color):
         """Update left border color."""
         if hasattr(self, 'border_left') and self.border_left and self.border_left.exists():
-            bui.imagewidget(edit=self.border_left, color=new_color)
+            iw(edit=self.border_left, color=new_color)
     
     def _update_border_top_color(self, new_color):
         """Update top border color."""
         if hasattr(self, 'border_top') and self.border_top and self.border_top.exists():
-            bui.imagewidget(edit=self.border_top, color=new_color)
+            iw(edit=self.border_top, color=new_color)
     
     def _update_border_right_color(self, new_color):
         """Update right border color."""
         if hasattr(self, 'border_right') and self.border_right and self.border_right.exists():
-            bui.imagewidget(edit=self.border_right, color=new_color)
+            iw(edit=self.border_right, color=new_color)
     
     def _update_border_bottom_color(self, new_color):
         """Update bottom border color."""
         if hasattr(self, 'border_bottom') and self.border_bottom and self.border_bottom.exists():
-            bui.imagewidget(edit=self.border_bottom, color=new_color)
+            iw(edit=self.border_bottom, color=new_color)
     
     def _unsubscribe_theme_changes(self):
         """Unsubscribe all theme subscriptions."""
@@ -5578,3 +6404,235 @@ class byLess(Plugin):
         """Unsubscribe all theme and language subscriptions."""
         self._unsubscribe_theme_changes()
         self._unsubscribe_language_changes()
+        
+    def _on_party_member_press(self, client_id: int, is_host: bool,
+                               widget: bui.Widget) -> None:
+        
+        # Choices
+        choices = [
+            "kick",
+            "info",
+            "add_friend"
+        ]
+
+        voteToKickText = get_lang_text('PartyWindow.voteToKick')
+        viewAccountText = get_lang_text('PartyWindow.viewAccount')
+        addFriendText = get_lang_text('PartyWindow.addFriend')
+
+        choices_display = [
+            babase.Lstr(value=voteToKickText), 
+            babase.Lstr(value=viewAccountText),
+            babase.Lstr(value=addFriendText),
+        ]
+
+        PopupMenuWindow(
+            position=widget.get_screen_space_center(),
+            scale=_get_popup_window_scale(),
+            choices=choices,
+            choices_display=choices_display,
+            current_choice="mention",
+            delegate=self
+        )
+        
+        self._popup_party_member_client_id = client_id
+        self._popup_party_member_is_host = is_host
+        self._popup_type = "partyMemberPress"
+
+    def _getObjectByID(self, type="playerName", ID=None):
+        if ID is None:
+            ID = self._popup_party_member_client_id
+        type = type.lower()
+        output = []
+        for roster in self._roster:
+            if type.startswith("all"):
+                if type in ("roster", "fullrecord"):
+                    output += [roster]
+                elif type.find("player") != -1 and roster["players"] != []:
+                    if type.find("namefull") != -1:
+                        output += [(i["name_full"]) for i in roster["players"]]
+                    elif type.find("name") != -1:
+                        output += [(i["name"]) for i in roster["players"]]
+                    elif type.find("playerid") != -1:
+                        output += [i["id"] for i in roster["players"]]
+                elif type.lower() in ("account", "displaystring"):
+                    output += [(roster["display_string"])]
+            elif roster["client_id"] == ID and not type.startswith("all"):
+                try:
+                    if type in ("roster", "fullrecord"):
+                        return (roster)
+                    elif type.find("player") != -1 and roster["players"] != []:
+                        if len(roster["players"]) == 1 or type.find("singleplayer") != -1:
+                            if type.find("namefull") != -1:
+                                return ((roster["players"][0]["name_full"]))
+                            elif type.find("name") != -1:
+                                return ((roster["players"][0]["name"]))
+                            elif type.find("playerid") != -1:
+                                return (roster["players"][0]["id"])
+                        else:
+                            if type.find("namefull") != -1:
+                                return ([(i["name_full"]) for i in roster["players"]])
+                            elif type.find("name") != -1:
+                                return ([(i["name"]) for i in roster["players"]])
+                            elif type.find("playerid") != -1:
+                                return ([i["id"] for i in roster["players"]])
+                    elif type.lower() in ("account", "displaystring"):
+                        return ((roster["display_string"]))
+                except:
+                    babase.print_exception()
+
+        return (None if len(output) == 0 else output)
+
+    def popup_menu_selected_choice(self, popup_window: PopupMenuWindow,
+                                   choice: str) -> None:
+        """Handle popup menu selection."""
+
+        # Handle menu button press (mute/unmute, add to favorites)
+        if self._popup_type == "menu":
+            if choice in ('mute', 'unmute'):
+                cfg = babase.app.config
+                cfg['Chat Muted'] = (choice == 'mute')
+                cfg.apply_and_commit()
+
+                # Force chat refresh
+                if hasattr(self, '_display_old_msgs'):
+                    self._display_old_msgs = True
+                self._update()
+
+                # Show confirmation message
+                if choice == 'mute':
+                    bs.broadcastmessage("Chat muted", color=(1, 0, 0))
+                else:
+                    bs.broadcastmessage("Chat unmuted", color=(0, 1, 0))
+
+            elif choice == 'add_to_favorites':
+                # Delegate to parent class method
+                server_info = bs.get_connection_to_host_info_2()
+                if server_info is not None:
+                    super().popup_menu_selected_choice(popup_window, choice)
+                else:
+                    bui.getsound('error').play()
+                    bs.broadcastmessage(
+                        babase.Lstr(resource='errorText'),
+                        color=(1, 0, 0)
+                    )
+            return
+
+        # Handle ban time selection
+        elif self._popup_type == "banTimePress":
+            result = bs.disconnect_client(
+                self._popup_party_member_client_id, ban_time=int(choice))
+            if not result:
+                bui.getsound('error').play()
+                bs.broadcastmessage(
+                    babase.Lstr(resource='getTicketsWindow.unavailableText'),
+                    color=(1, 0, 0))
+            return
+
+        # Handle party member press
+        if self._popup_type == "partyMemberPress":
+            if choice == "kick":
+                areYouSureToKickText = get_lang_text('PartyWindow.areYouSureToKick')
+                ConfirmWindow(
+                    text=f"{areYouSureToKickText} {self._getObjectByID('account')}?",
+                    action=self._kick_selected_player, cancel_button=True, cancel_is_selected=True,
+                    color=(1, 1, 1), text_scale=1.0,
+                    origin_widget=self.get_root_widget()
+                )
+            elif choice == "info":
+                account = self._getObjectByID("account")
+                clean_name = account.replace(V2_LOGO, '')
+                ProfileSearchWindow(self.get_root_widget(), v2=clean_name)
+            elif choice == "add_friend":
+                account = self._getObjectByID("account")
+                clean_name = account.replace(V2_LOGO, '')
+                self._add_friend(clean_name)
+
+    def _add_friend(self, friend: str):
+        """Add a friend."""
+
+        if not friend or friend.strip() == "":
+            fieldEmpty = get_lang_text('Global.fieldEmpty')
+            push(fieldEmpty, (1, 0, 0))
+            gs('error').play()
+            return
+
+        prefixed_friend = f"{V2_LOGO}{friend.strip()}"
+
+        # Load current friends
+        friends = load_friends()
+
+        # Check if already exists
+        for f in friends:
+            if f["name"] == prefixed_friend:
+                TIP(f"{prefixed_friend} {get_lang_text('Global.alreadyInList')}")
+                return
+
+        # Generate new ID
+        existing_ids = [int(f["id"]) for f in friends if f["id"].isdigit()]
+        new_id = str(max(existing_ids) + 1 if existing_ids else 0).zfill(2)
+
+        # Add friend object
+        add_friend(
+            name=prefixed_friend,
+            friend_id=new_id,
+            accounts=[],
+            account_pb=None,
+            account_id=None
+        )
+
+        TIP(f"{prefixed_friend} {get_lang_text('Global.addedSuccessfully')}")
+
+    def _kick_selected_player(self):
+        if self._popup_party_member_client_id != -1:
+            if bs.get_foreground_host_session() is not None:
+                self._popup_type = "banTimePress"
+                choices = [0, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 99999999]
+                PopupMenuWindow(
+                    position=self.get_root_widget().get_screen_space_center(),
+                    scale=_get_popup_window_scale(),
+                    choices=[str(item) for item in choices],
+                    choices_display=_creat_Lstr_list(
+                        [f"Ban for {item} second(s)." for item in choices]),
+                    current_choice="Share_Server_Info",
+                    delegate=self
+                )
+            else:
+                info = bs.get_connection_to_host_info_2()
+                if bool(info) and (info.build_number < 14248):
+                    bui.getsound('error').play()
+                    bs.broadcastmessage(
+                        babase.Lstr(resource='getTicketsWindow.unavailableText'),
+                        color=(1, 0, 0))
+                else:
+                    result = bs.disconnect_client(
+                        self._popup_party_member_client_id, ban_time=5 * 60)
+                    if not result:
+                        bui.getsound('error').play()
+                        bs.broadcastmessage(
+                            babase.Lstr(resource='getTicketsWindow.unavailableText'),
+                            color=(1, 0, 0))
+        else:
+            bui.getsound('error').play()
+            bs.broadcastmessage(
+                babase.Lstr(resource='internal.cantKickHostError'),
+                color=(1, 0, 0))
+
+    def close(self) -> None:
+        if hasattr(self, '_update_timer') and self._update_timer is not None:
+            self._update_timer = None
+
+        self._unsubscribe_all_changes()
+
+        super().close()
+
+    def close_with_sound(self) -> None:
+        if hasattr(self, '_update_timer') and self._update_timer is not None:
+            self._update_timer = None
+
+        self._unsubscribe_all_changes()
+        super().close_with_sound()
+
+# ba_meta export babase.Plugin
+class byLess(Plugin):
+    def __init__(self):
+        party.PartyWindow = LPartyWindow
