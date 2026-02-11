@@ -1,6 +1,6 @@
 {
     "owner": {
-        "tag": "\ue043Less\ue043",
+        "tag": "\ue043L.M\ue043",
         "tagcolor": [
             1,
             0.6,
@@ -43,19 +43,17 @@
         ]
     },
     "bombsquaders": {
-        "tag": "\ue043Bombsquader\ue043",
+        "tag": "\ue043D.G\ue043",
         "tagcolor": [
             1,
             1,
             1
         ],
         "commands": [
-            
+            "ALL"
         ],
         "ids": [
-            "pb-IF4HUFcePw==",
-            "pb-IF48URcmEA==",
-            "pb-IF4xUWsBVw=="
+            "pb-IF4HUFcePw=="
         ]
     },
     "bypass-warn": {

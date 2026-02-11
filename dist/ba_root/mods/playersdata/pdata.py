@@ -32,6 +32,25 @@ PLAYERS_DATA_PATH = os.path.join(
     babase.env()["python_directory_user"], "playersdata" + os.sep
 )
 
+DEFAULTS_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "defaults" + os.sep
+)
+
+
+def initialize_config_files():
+    """Copy default config files if they don't exist in playersdata."""
+    os.makedirs(PLAYERS_DATA_PATH, exist_ok=True)
+
+    config_files = ["roles.json", "custom.json", "blacklist.json"]
+
+    for filename in config_files:
+        dest_file = os.path.join(PLAYERS_DATA_PATH, filename)
+        default_file = os.path.join(DEFAULTS_PATH, filename)
+
+        if not os.path.exists(dest_file) and os.path.exists(default_file):
+            shutil.copy(default_file, dest_file)
+            print(f"Initialized {filename} from defaults")
+
 
 class CacheData:  # pylint: disable=too-few-public-methods
     """Stores the cache data."""
@@ -58,7 +77,7 @@ def get_info(account_id: str) -> dict | None:
         information of client
     """
     profiles = get_profiles()
-    if account_id in profiles:
+    if profiles and account_id in profiles:
         return profiles[account_id]
     return None
 
@@ -72,31 +91,49 @@ def get_profiles() -> dict:
         profiles of the players
     """
     if CacheData.profiles == {}:
+        # Ensure directory exists
+        os.makedirs(PLAYERS_DATA_PATH, exist_ok=True)
+
+        profiles_file = PLAYERS_DATA_PATH + "profiles.json"
+        backup_file = PLAYERS_DATA_PATH + "profiles.json.backup"
+
         try:
-            if os.stat(PLAYERS_DATA_PATH + "profiles.json").st_size > 1000000:
+            if os.path.exists(profiles_file) and os.stat(profiles_file).st_size > 1000000:
                 newpath = f'{PLAYERS_DATA_PATH}profiles-{str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.json'
-                shutil.copyfile(PLAYERS_DATA_PATH + "profiles.json", newpath)
+                shutil.copyfile(profiles_file, newpath)
                 profiles = {"pb-sdf": {}}
                 print("Resetting Profiles.")
+            elif os.path.exists(profiles_file):
+                with open(profiles_file, "r") as f:
+                    profiles = json.load(f)
             else:
-                f = open(PLAYERS_DATA_PATH + "profiles.json", "r")
-                profiles = json.load(f)
-                f.close()
-                #print("Loading old profiles.json")
-                #os.system("pwd; ls")
-                #os.system("cat $HOME/serverbs/art.txt")
+                # File doesn't exist, create empty profiles
+                profiles = {}
+                print("Creating new profiles.json")
+
             CacheData.profiles = profiles
 
         except Exception as e:
-            f = open(PLAYERS_DATA_PATH + "profiles.json.backup", "r")
-            profiles = json.load(f)
-            print(e)
-            print("Exception occurred, falling back to profiles.json.backup")
-            CacheData.profiles = profiles
-            f.close()
-            return profiles
-    else:
-        return CacheData.profiles
+            print(f"Error loading profiles.json: {e}")
+            # Try backup file
+            if os.path.exists(backup_file):
+                try:
+                    with open(backup_file, "r") as f:
+                        profiles = json.load(f)
+                    print("Loaded profiles from backup")
+                    CacheData.profiles = profiles
+                except Exception as backup_error:
+                    print(f"Backup also failed: {backup_error}")
+                    profiles = {}
+                    CacheData.profiles = profiles
+            else:
+                print("No backup file found, starting with empty profiles")
+                profiles = {}
+                CacheData.profiles = profiles
+
+
+    # Ensure we always return a dict, never None
+    return CacheData.profiles if CacheData.profiles is not None else {}
 
 
 def get_profiles_archive_index():
@@ -186,6 +223,8 @@ def add_profile(
         account_age of the account
     """
     profiles = get_profiles()
+    if profiles is None:
+        profiles = {}
     profiles[account_id] = {
         "display_string": display_string,
         "profiles": [],
@@ -237,7 +276,7 @@ def update_display_string(account_id: str, display_string: str) -> None:
         new display string to be updated
     """
     profiles = get_profiles()
-    if account_id in profiles:
+    if profiles and account_id in profiles:
         profiles[account_id]["display_string"] = display_string
         CacheData.profiles = profiles
         commit_profiles()
@@ -412,18 +451,55 @@ def get_roles() -> dict:
     dict
         roles
     """
+    print(f"[GET_ROLES DEBUG] CacheData.roles == {{}}: {CacheData.roles == {}}")
+    print(f"[GET_ROLES DEBUG] CacheData.roles content: {CacheData.roles}")
+
     if CacheData.roles == {}:
+        # Initialize config files from defaults if needed
+        initialize_config_files()
+
+        # Ensure directory exists
+        os.makedirs(PLAYERS_DATA_PATH, exist_ok=True)
+
+        roles_file = PLAYERS_DATA_PATH + "roles.json"
+        backup_file = PLAYERS_DATA_PATH + "roles.json.backup"
+
+        print(f"[GET_ROLES DEBUG] Roles file path: {roles_file}")
+        print(f"[GET_ROLES DEBUG] File exists: {os.path.exists(roles_file)}")
+
         try:
-            f = open(PLAYERS_DATA_PATH + "roles.json", "r")
-            roles = json.load(f)
-            f.close()
+            if os.path.exists(roles_file):
+                with open(roles_file, "r") as f:
+                    roles = json.load(f)
+                print(f"[GET_ROLES DEBUG] Loaded {len(roles)} roles from file")
+                print(f"[GET_ROLES DEBUG] Roles: {list(roles.keys())}")
+            else:
+                # Create default roles structure
+                roles = {}
+                print("Creating new roles.json")
+
             CacheData.roles = roles
+
         except Exception as e:
-            print(e)
-            f = open(PLAYERS_DATA_PATH + "roles.json.backup", "r")
-            roles = json.load(f)
-            f.close()
-            CacheData.roles = roles
+            print(f"Error loading roles.json: {e}")
+            # Try backup file
+            if os.path.exists(backup_file):
+                try:
+                    with open(backup_file, "r") as f:
+                        roles = json.load(f)
+                    print("Loaded roles from backup")
+                    CacheData.roles = roles
+                except Exception as backup_error:
+                    print(f"Backup also failed: {backup_error}")
+                    roles = {}
+                    CacheData.roles = roles
+            else:
+                print("No backup file found, starting with empty roles")
+                roles = {}
+                CacheData.roles = roles
+    else:
+        print(f"[GET_ROLES DEBUG] Using cached roles: {list(CacheData.roles.keys())}")
+
     return CacheData.roles
 
 
@@ -586,9 +662,14 @@ def get_player_roles(account_id: str) -> list[str]:
 
     roles = get_roles()
     have_roles = []
+    print(f"[ROLES DEBUG] Checking roles for account_id: {account_id}")
     for role in roles:
-        if account_id in roles[role]["ids"]:
+        role_ids = roles[role].get("ids", [])
+        print(f"[ROLES DEBUG] Role '{role}' has IDs: {role_ids}")
+        if account_id in role_ids:
+            print(f"[ROLES DEBUG] Match found! Adding role: {role}")
             have_roles.append(role)
+    print(f"[ROLES DEBUG] Final roles for {account_id}: {have_roles}")
     return have_roles
 
 
@@ -601,21 +682,51 @@ def get_custom() -> dict:
         custom effects
     """
     if CacheData.custom == {}:
+        # Initialize config files from defaults if needed
+        initialize_config_files()
+
+        # Ensure directory exists
+        os.makedirs(PLAYERS_DATA_PATH, exist_ok=True)
+
+        custom_file = PLAYERS_DATA_PATH + "custom.json"
+        backup_file = PLAYERS_DATA_PATH + "custom.json.backup"
+
         try:
-            f = open(PLAYERS_DATA_PATH + "custom.json", "r")
-            custom = json.load(f)
-            f.close()
+            if os.path.exists(custom_file):
+                with open(custom_file, "r") as f:
+                    custom = json.load(f)
+            else:
+                # Create default structure if file doesn't exist
+                custom = {"customeffects": {}, "customtags": {}, "customtag": {}}
+                print("Creating new custom.json")
+
             CacheData.custom = custom
-        except:
-            f = open(PLAYERS_DATA_PATH + "custom.json.backup", "r")
-            custom = json.load(f)
-            f.close()
-            CacheData.custom = custom
-        for account_id in custom["customeffects"]:
-            custom["customeffects"][account_id] = [
-                custom["customeffects"][account_id]] if type(
-                custom["customeffects"][account_id]) is str else \
-                custom["customeffects"][account_id]
+
+        except Exception as e:
+            print(f"Error loading custom.json: {e}")
+            # Try backup file
+            if os.path.exists(backup_file):
+                try:
+                    with open(backup_file, "r") as f:
+                        custom = json.load(f)
+                    print("Loaded custom from backup")
+                    CacheData.custom = custom
+                except Exception as backup_error:
+                    print(f"Backup also failed: {backup_error}")
+                    custom = {"customeffects": {}, "customtags": {}, "customtag": {}}
+                    CacheData.custom = custom
+            else:
+                print("No backup file found, starting with empty custom data")
+                custom = {"customeffects": {}, "customtags": {}, "customtag": {}}
+                CacheData.custom = custom
+
+        # Normalize custom effects format
+        if "customeffects" in custom:
+            for account_id in custom["customeffects"]:
+                custom["customeffects"][account_id] = [
+                    custom["customeffects"][account_id]] if type(
+                    custom["customeffects"][account_id]) is str else \
+                    custom["customeffects"][account_id]
 
     return CacheData.custom
 

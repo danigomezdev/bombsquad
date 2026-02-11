@@ -1,0 +1,47 @@
+# Version control
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+.mypy_cache/
+cache/
+.pytest_cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build and environment
+.bsuuid
+.bsac2
+*.log
+*.log.*
+
+# Stats and data files (generated on server)
+dist/ba_root/mods/playersdata/*.json*
+dist/ba_root/mods/serverdata/*.log
+dist/ba_root/mods/serverdata/*.log*
+dist/ba_root/mods/serverdata/*.json
+dist/ba_root/mods/stats/*.json
+
+# Documentation
+B*G*.md
+D*T*.md
+C*E.md
+CLAUDE.md
+
+# Deployment
+deploy.sh
+.rsyncignore
+
+# GitHub workflows
+.github/

@@ -11,14 +11,22 @@ sett = setting.get_settings_data()
 def addtag(node, player):
     session_player = player.sessionplayer
     account_id = session_player.get_v1_account_id()
+
+    print(f"[TAG DEBUG] Player account_id: {account_id}")
+
     customtag_ = pdata.get_custom()
     customtag = customtag_['customtag']
     roles = pdata.get_roles()
     p_roles = pdata.get_player_roles(account_id)
+
+    print(f"[TAG DEBUG] Available roles: {list(roles.keys())}")
+    print(f"[TAG DEBUG] Player roles: {p_roles}")
+
     tag = None
     col = (0.5, 0.5, 1)  # default color for custom tags
     if account_id in customtag:
         tag = customtag[account_id]
+        print(f"[TAG DEBUG] Found custom tag: {tag}")
     elif p_roles != []:
         for role in roles:
             if role in p_roles:
@@ -26,9 +34,16 @@ def addtag(node, player):
                 col = (
                     0.7, 0.7, 0.7) if 'tagcolor' not in roles[role] else \
                     roles[role]['tagcolor']
+                print(f"[TAG DEBUG] Found role tag: {tag} with color: {col}")
                 break
+    else:
+        print(f"[TAG DEBUG] No roles found for player")
+
     if tag:
+        print(f"[TAG DEBUG] Applying tag: {tag}")
         Tag(node, tag, col)
+    else:
+        print(f"[TAG DEBUG] No tag to apply")
 
 
 def addrank(node, player):

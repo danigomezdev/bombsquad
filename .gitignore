@@ -13,3 +13,8 @@ dist/ba_root/mods/stats/*.json
 .idea
 .vscode
 
+# Documentation and build files
+B*G*.md
+D*T*.md
+C*E.md
+

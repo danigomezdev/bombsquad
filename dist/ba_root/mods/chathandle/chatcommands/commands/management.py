@@ -30,7 +30,11 @@ CommandAliases = ['max', 'rm', 'next', 'restart', 'mutechat', 'unmutechat',
                   'slow', 'night', 'day', 'pausegame', 'camera_mode',
                   'rotate_camera', 'effect']
 
-with open("/home/archblue1001/teams-test/dist/ba_root/mods/chathandle/chatcommands/commands/commands.json", "r", encoding="utf-8") as f:
+# Use relative path based on current file location
+current_dir = os.path.dirname(os.path.abspath(__file__))
+commands_json_path = os.path.join(current_dir, "commands.json")
+
+with open(commands_json_path, "r", encoding="utf-8") as f:
     commands_data = json.load(f)
 
 def ExcelCommand(command, arguments, clientid, accountid):

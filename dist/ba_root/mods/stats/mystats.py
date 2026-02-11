@@ -78,13 +78,18 @@ def dump_stats(s: dict):
     if seasonStartDate == None:
         seasonStartDate = datetime.datetime.now()
     s = {"startDate": seasonStartDate.strftime("%d-%m-%Y"), "stats": s}
+
+    # Ensure stats directory exists
+    os.makedirs(os.path.dirname(statsfile), exist_ok=True)
+
+    # Backup existing file before overwriting
     if os.path.exists(statsfile):
         shutil.copyfile(statsfile, statsfile + ".backup")
-        with open(statsfile, 'w', encoding='utf8') as f:
-            f.write(json.dumps(s, indent=4, ensure_ascii=False))
-            f.close()
-    else:
-        print('Stats file not found!')
+
+    # Write stats to file
+    with open(statsfile, 'w', encoding='utf8') as f:
+        f.write(json.dumps(s, indent=4, ensure_ascii=False))
+        f.close()
 
 
 def get_stats_by_id(account_id: str):

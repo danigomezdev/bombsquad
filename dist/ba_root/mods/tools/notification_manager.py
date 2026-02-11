@@ -119,22 +119,55 @@ def player_joined(pb_id):
 def loadCache():
     global subscriptions
     global subscribed_players
+
+    # Ensure directory exists
+    os.makedirs(PLAYERS_DATA_PATH, exist_ok=True)
+
+    # Load subscriptions
+    subscriptions_file = PLAYERS_DATA_PATH + "subscriptions.json"
+    subscriptions_backup = PLAYERS_DATA_PATH + "subscriptions.json.backup"
+
     try:
-        f = open(PLAYERS_DATA_PATH + "subscriptions.json", "r")
-        subscriptions = json.load(f)
-        f.close()
-    except:
-        f = open(PLAYERS_DATA_PATH + "subscriptions.json.backup", "r")
-        subscriptions = json.load(f)
-        f.close()
+        if os.path.exists(subscriptions_file):
+            with open(subscriptions_file, "r") as f:
+                subscriptions = json.load(f)
+        else:
+            subscriptions = {}
+            print("Creating new subscriptions.json")
+    except Exception as e:
+        print(f"Error loading subscriptions.json: {e}")
+        if os.path.exists(subscriptions_backup):
+            try:
+                with open(subscriptions_backup, "r") as f:
+                    subscriptions = json.load(f)
+                print("Loaded subscriptions from backup")
+            except:
+                subscriptions = {}
+        else:
+            subscriptions = {}
+
+    # Load subscribed players
+    subscribed_file = PLAYERS_DATA_PATH + "subscribed_players.json"
+    subscribed_backup = PLAYERS_DATA_PATH + "subscribed_players.json.backup"
+
     try:
-        f = open(PLAYERS_DATA_PATH + "subscribed_players.json", "r")
-        subscribed_players = json.load(f)
-        f.close()
-    except:
-        f = open(PLAYERS_DATA_PATH + "subscribed_players.json.backup", "r")
-        subscribed_players = json.load(f)
-        f.close()
+        if os.path.exists(subscribed_file):
+            with open(subscribed_file, "r") as f:
+                subscribed_players = json.load(f)
+        else:
+            subscribed_players = {}
+            print("Creating new subscribed_players.json")
+    except Exception as e:
+        print(f"Error loading subscribed_players.json: {e}")
+        if os.path.exists(subscribed_backup):
+            try:
+                with open(subscribed_backup, "r") as f:
+                    subscribed_players = json.load(f)
+                print("Loaded subscribed_players from backup")
+            except:
+                subscribed_players = {}
+        else:
+            subscribed_players = {}
 
 
 def dump_cache():
