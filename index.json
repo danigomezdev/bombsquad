@@ -4,7 +4,7 @@
         "description": "A mod that provides your character with ice abilities, special effects, and more",
         "description-es": "Un mod que otorga a tu personaje habilidades de hielo, efectos especiales y mucho más",
         "file_name": "IceMan.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/IceMan/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/IceMan/media/banner.webp",
         "createdAt": "2023-05-28T04:23:00.000Z",
         "lastActivityAt": "2025-11-11T16:19:00.000Z",
         "category": "minigame",
@@ -12,11 +12,11 @@
         "path": "IceMan/IceMan.py",
         "api_version": 9,
         "version": "1.1.2",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/IceMan/IceMan.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/IceMan/IceMan.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/IceMan/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/IceMan/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/IceMan/IceMan.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/IceMan/IceMan.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/IceMan/IceMan.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/IceMan/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/IceMan/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/IceMan/IceMan.json"
     }
 ,
     {
@@ -24,7 +24,7 @@
         "description": "A mod that creates a flashy star that floats around the map",
         "description-es": "Un mod que crea una estrella llamativa que flota por el mapa",
         "file_name": "EffectRushStar.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/EffectRushStar/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/EffectRushStar/media/banner.webp",
         "createdAt": "2025-11-03T05:31:00.000Z",
         "lastActivityAt": "2025-11-11T16:27:00.000Z",
         "category": "mod",
@@ -32,11 +32,11 @@
         "path": "EffectRushStar/EffectRushStar.py",
         "api_version": 9,
         "version": "1.1.2",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/EffectRushStar/EffectRushStar.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/EffectRushStar/EffectRushStar.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/EffectRushStar/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/EffectRushStar/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/EffectRushStar/EffectRushStar.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/EffectRushStar/EffectRushStar.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/EffectRushStar/EffectRushStar.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/EffectRushStar/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/EffectRushStar/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/EffectRushStar/EffectRushStar.json"
     }
 ,
     {
@@ -44,7 +44,7 @@
         "description": "A mod that allows you to create your own characters using parts of other characters in the game as a base",
         "description-es": "Un mod que te permite crear tus propios personajes usando partes de otros personajes del juego como base",
         "file_name": "CharacterMaker.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CharacterMaker/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CharacterMaker/media/banner.webp",
         "createdAt": "2023-05-11T13:28:00.000Z",
         "lastActivityAt": "2025-11-11T21:28:00.000Z",
         "category": "mod",
@@ -52,11 +52,11 @@
         "path": "CharacterMaker/CharacterMaker.py",
         "api_version": 9,
         "version": "2.1.5",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CharacterMaker/CharacterMaker.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CharacterMaker/CharacterMaker.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CharacterMaker/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CharacterMaker/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CharacterMaker/CharacterMaker.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/CharacterMaker/CharacterMaker.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/CharacterMaker/CharacterMaker.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/CharacterMaker/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/CharacterMaker/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CharacterMaker/CharacterMaker.json"
     }
 ,
     {
@@ -64,7 +64,7 @@
         "description": "A mod that allows you to update your gaming activity on Discord specifically for BombSquad",
         "description-es": "Un mod que te permite actualizar tu actividad de juego en Discord específicamente para BombSquad",
         "file_name": "DiscordRichPresence.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/DiscordRichPresence/media/banner.webp",
         "createdAt": "2024-12-11T22:36:00.000Z",
         "lastActivityAt": "2025-11-11T16:36:00.000Z",
         "category": "mod",
@@ -72,11 +72,11 @@
         "path": "DiscordRichPresence/DiscordRichPresence.py",
         "api_version": 9,
         "version": "1.1.4",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/DiscordRichPresence/DiscordRichPresence.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/DiscordRichPresence/DiscordRichPresence.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/DiscordRichPresence/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/DiscordRichPresence/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/DiscordRichPresence.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/DiscordRichPresence/DiscordRichPresence.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/DiscordRichPresence/DiscordRichPresence.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/DiscordRichPresence/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/DiscordRichPresence/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/DiscordRichPresence/DiscordRichPresence.json"
     }
 ,
     {
@@ -84,7 +84,7 @@
         "description": "A mod that allows you to create user interfaces in an easier way",
         "description-es": "Un mod que te permite crear interfaces de usuario de forma más sencilla",
         "file_name": "Polish.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/Polish/media/banner.webp",
         "createdAt": "2025-06-08T16:27:00.000Z",
         "lastActivityAt": "2025-11-11T15:59:00.000Z",
         "category": "mod",
@@ -92,11 +92,11 @@
         "path": "Polish/Polish.py",
         "api_version": 9,
         "version": "1.1.2",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Polish/Polish.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Polish/Polish.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/Polish/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/Polish/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/Polish/Polish.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/Polish/Polish.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/Polish/Polish.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/Polish/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/Polish/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/Polish/Polish.json"
     }
 ,
     {
@@ -104,7 +104,7 @@
         "description": "Real-time 3D Profile editor with live preview",
         "description-es": "Editor de perfiles con vista 3D en tiempo real",
         "file_name": "UltraReplay.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraReplay/media/banner.webp",
         "createdAt": "2025-07-23T18:29:00.000Z",
         "lastActivityAt": "2025-11-11T03:38:00.000Z",
         "category": "mod",
@@ -112,11 +112,11 @@
         "path": "UltraReplay/UltraReplay.py",
         "api_version": 9,
         "version": "3.2",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/UltraReplay.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/UltraReplay.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/UltraReplay.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/UltraReplay/UltraReplay.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/UltraReplay/UltraReplay.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/UltraReplay/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/UltraReplay/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraReplay/UltraReplay.json"
     }
 ,
     {
@@ -124,7 +124,7 @@
         "description": "A mod that shows reactions to real-time gameplay, for example when you hit a player multiple times",
         "description-es": "Un mod que muestra reacciones a la jugabilidad en tiempo real, por ejemplo, cuando golpeas a un jugador varias veces",
         "file_name": "CustomHits.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CustomHits/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CustomHits/media/banner.webp",
         "createdAt": "2022-11-12T00:44:00.000Z",
         "lastActivityAt": "2025-11-11T16:40:00.000Z",
         "category": "mod",
@@ -132,11 +132,11 @@
         "path": "CustomHits/CustomHits.py",
         "api_version": 9,
         "version": "1.1.8",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CustomHits/CustomHits.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CustomHits/CustomHits.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CustomHits/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CustomHits/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CustomHits/CustomHits.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/CustomHits/CustomHits.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/CustomHits/CustomHits.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/CustomHits/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/CustomHits/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CustomHits/CustomHits.json"
     }
 ,
     {
@@ -144,7 +144,7 @@
         "description": "A mod that allows you to deploy different entities so you can practice",
         "description-es": "Un mod que te permite desplegar diferentes entidades para que puedas practicar",
         "file_name": "PracticeTools.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/PracticeTools/media/banner.webp",
         "createdAt": "2022-11-03T19:49:00.000Z",
         "lastActivityAt": "2025-11-11T15:48:00.000Z",
         "category": "mod",
@@ -152,11 +152,11 @@
         "path": "PracticeTools/PracticeTools.py",
         "api_version": 9,
         "version": "3.1",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PracticeTools/PracticeTools.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/PracticeTools/PracticeTools.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/PracticeTools/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/PracticeTools/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/PracticeTools/PracticeTools.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/PracticeTools/PracticeTools.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/PracticeTools/PracticeTools.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/PracticeTools/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/PracticeTools/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/PracticeTools/PracticeTools.json"
     }
 ,
     {
@@ -164,7 +164,7 @@
         "description": "A mod that displays dynamic visual indicators showing the blast radius of all explosives in BombSquad with colorful animations",
         "description-es": "Un mod que muestra indicadores visuales dinámicos que indican el radio de explosión de todos los explosivos en BombSquad con animaciones coloridas",
         "file_name": "BombRadiusVisualizer.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BombRadiusVisualizer/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BombRadiusVisualizer/media/banner.webp",
         "createdAt": "2022-11-12T02:38:00.000Z",
         "lastActivityAt": "2025-11-11T21:32:00.000Z",
         "category": "mod",
@@ -172,11 +172,11 @@
         "path": "BombRadiusVisualizer/BombRadiusVisualizer.py",
         "api_version": 9,
         "version": "1.5",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BombRadiusVisualizer/BombRadiusVisualizer.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BombRadiusVisualizer/BombRadiusVisualizer.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BombRadiusVisualizer/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BombRadiusVisualizer/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BombRadiusVisualizer/BombRadiusVisualizer.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/BombRadiusVisualizer/BombRadiusVisualizer.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/BombRadiusVisualizer/BombRadiusVisualizer.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/BombRadiusVisualizer/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/BombRadiusVisualizer/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BombRadiusVisualizer/BombRadiusVisualizer.json"
     }
 ,
     {
@@ -184,7 +184,7 @@
         "description": "A mod that allows you to have automatic replies to specific messages",
         "description-es": "Un mod que permite configurar respuestas automáticas a mensajes específicos",
         "file_name": "AutoRespond.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/AutoRespond/media/banner.webp",
         "createdAt": "2024-06-12T02:41:00.000Z",
         "lastActivityAt": "2025-11-11T21:37:00.000Z",
         "category": "mod",
@@ -192,11 +192,11 @@
         "path": "AutoRespond/AutoRespond.py",
         "api_version": 9,
         "version": "2.8",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/AutoRespond/AutoRespond.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/AutoRespond/AutoRespond.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/AutoRespond/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/AutoRespond/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/AutoRespond/AutoRespond.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/AutoRespond/AutoRespond.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/AutoRespond/AutoRespond.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/AutoRespond/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/AutoRespond/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/AutoRespond/AutoRespond.json"
     }
 ,
     {
@@ -204,7 +204,7 @@
         "description": "A mod that allows you to buy special characters that are unlocked only in specific seasons of the year or exclusive",
         "description-es": "Un mod que te permite comprar personajes especiales que solo se desbloquean en determinadas épocas del año o de forma exclusiva",
         "file_name": "StoreEventSpecial.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/StoreEventSpecial/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/StoreEventSpecial/media/banner.webp",
         "createdAt": "2023-01-27T03:36:00.000Z",
         "lastActivityAt": "2025-11-11T15:32:00.000Z",
         "category": "mod",
@@ -212,11 +212,11 @@
         "path": "StoreEventSpecial/StoreEventSpecial.py",
         "api_version": 9,
         "version": "1.5",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/StoreEventSpecial/StoreEventSpecial.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/StoreEventSpecial/StoreEventSpecial.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/StoreEventSpecial/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/StoreEventSpecial/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/StoreEventSpecial/StoreEventSpecial.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/StoreEventSpecial/StoreEventSpecial.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/StoreEventSpecial/StoreEventSpecial.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/StoreEventSpecial/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/StoreEventSpecial/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/StoreEventSpecial/StoreEventSpecial.json"
     }
 ,
     {
@@ -224,7 +224,7 @@
         "description": "A mod that changes the background color of the Bombsquad MainMenu, using random dark colors",
         "description-es": "Un mod que cambia el color de fondo del menú principal de Bombsquad, usando colores oscuros aleatorios",
         "file_name": "CheapDisco.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CheapDisco/media/banner.gif",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CheapDisco/media/banner.gif",
         "createdAt": "2024-04-11T05:49:00.000Z",
         "lastActivityAt": "2025-11-11T16:48:00.000Z",
         "category": "mod",
@@ -232,11 +232,11 @@
         "path": "CheapDisco/CheapDisco.py",
         "api_version": 9,
         "version": "1.9",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CheapDisco/CheapDisco.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CheapDisco/CheapDisco.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CheapDisco/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CheapDisco/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CheapDisco/CheapDisco.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/CheapDisco/CheapDisco.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/CheapDisco/CheapDisco.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/CheapDisco/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/CheapDisco/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CheapDisco/CheapDisco.json"
     }
 ,
     {
@@ -244,7 +244,7 @@
         "description": "A mod that allows you to do a full search for players on all game servers",
         "description-es": "Un mod que te permite realizar una búsqueda completa de jugadores en todos los servidores del juego",
         "file_name": "UltraServerFinder.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraServerFinder/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraServerFinder/media/banner.webp",
         "createdAt": "2025-07-31T03:28:00.000Z",
         "lastActivityAt": "2025-11-11T03:28:00.000Z",
         "category": "mod",
@@ -252,11 +252,11 @@
         "path": "UltraServerFinder/UltraServerFinder.py",
         "api_version": 9,
         "version": "1.1.4",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraServerFinder/UltraServerFinder.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraServerFinder/UltraServerFinder.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraServerFinder/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraServerFinder/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraServerFinder/UltraServerFinder.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/UltraServerFinder/UltraServerFinder.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/UltraServerFinder/UltraServerFinder.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/UltraServerFinder/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/UltraServerFinder/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraServerFinder/UltraServerFinder.json"
     }
 ,
     {
@@ -264,7 +264,7 @@
         "description": "A mod that makes scaled modifications to the PartyWindow, giving multiple options for use in-game",
         "description-es": "Un mod que realiza modificaciones a escala en la PartyWindow, ofreciendo múltiples opciones de uso dentro del juego",
         "file_name": "LessPartyWindow.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/banner.webp",
         "createdAt": "2022-09-11T02:45:00.000Z",
         "lastActivityAt": "2025-04-08T04:18:49.835Z",
         "category": "mod",
@@ -272,11 +272,11 @@
         "path": "LessPartyWindow/LessPartyWindow.py",
         "api_version": 9,
         "version": "1.1.5",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/LessPartyWindow/LessPartyWindow.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/LessPartyWindow/LessPartyWindow.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/LessPartyWindow/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/LessPartyWindow/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow/LessPartyWindow.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/LessPartyWindow/LessPartyWindow.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/LessPartyWindow/LessPartyWindow.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessPartyWindow/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/LessPartyWindow/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/LessPartyWindow.json"
     }
 ,
     {
@@ -284,7 +284,7 @@
         "description": "Advanced viewer of your Bombsquad profiles, with a live character that updates based on your profile choices",
         "description-es": "Visor avanzado de tus perfiles de Bombsquad, con un personaje interactivo que se actualiza según las opciones de tu perfil",
         "file_name": "BetterProfileEditor.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/banner.webp",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BetterProfileEditor/media/banner.webp",
         "createdAt": "2025-04-29T21:29:00.000Z",
         "lastActivityAt": "2025-11-10T22:32:00.000Z",
         "category": "mod",
@@ -292,10 +292,10 @@
         "path": "BetterProfileEditor/BetterProfileEditor.py",
         "api_version": 9,
         "version": "1.5",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BetterProfileEditor/BetterProfileEditor.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BetterProfileEditor/BetterProfileEditor.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BetterProfileEditor/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BetterProfileEditor/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/BetterProfileEditor.json"
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/BetterProfileEditor/BetterProfileEditor.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/BetterProfileEditor/BetterProfileEditor.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/BetterProfileEditor/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/BetterProfileEditor/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BetterProfileEditor/BetterProfileEditor.json"
     }
 ]

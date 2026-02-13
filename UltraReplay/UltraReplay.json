@@ -18,18 +18,18 @@
       "game",
       "mainwindow"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/banner.webp",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraReplay/media/banner.webp",
     "media": [
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_02.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/image_03.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/video_01.mp4",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/UltraReplay/media/video_02.mp4"
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraReplay/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraReplay/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraReplay/media/image_03.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraReplay/media/video_01.mp4",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/UltraReplay/media/video_02.mp4"
     ],
-    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/UltraReplay.py",
-    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/UltraReplay.py",
-    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/UltraReplay/README.md",
-    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/UltraReplay/README.md"
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/UltraReplay/UltraReplay.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/UltraReplay/UltraReplay.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/UltraReplay/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/UltraReplay/README.md"
   },
   "content": "Mira tus partidas desde cualquier ángulo, a cualquier velocidad, con controles al estilo transmisión profesional que te ponen en el papel de director de tus propias producciones de BombSquad.\n\n## Features\n\n### Funciones principales\n\n* **Carga instantánea de repeticiones**: empieza a verlas sin esperar a que se analicen los archivos.\n* **Escaneo inteligente de duración**: calcula la duración mientras ves la repetición.\n* **Soporte para múltiples repeticiones**: explora y selecciona cualquiera de tus archivos de replay.\n\n### Controles de reproducción\n\n* **Velocidad variable**: ajusta la velocidad desde ultra lento hasta modo rápido.\n* **Búsqueda precisa**: salta a cualquier punto de la repetición con la barra de progreso o con tiempos específicos.\n* **Pausa/Reanudar**: control total de la reproducción con indicadores visuales.\n* **Reinicio rápido**: vuelve al inicio con un solo clic.\n\n### Sistema de cámara\n\n* **Movimiento libre**: mira en cualquier dirección arrastrando o usando el modo cine.\n* **Zoom manual**: ajusta el acercamiento con precisión.\n* **Seguimiento de jugadores**: sigue automáticamente a un jugador o define tus propios puntos de vista.\n* **Modo cine**: oculta la interfaz para una experiencia más cinematográfica.\n\n### Interfaz de usuario\n\n* **Diseño limpio**: barra de control discreta que puedes ocultar.\n* **Progreso en tiempo real**: barra visual con indicadores de tiempo.\n* **Buffer inteligente**: muestra cuánto de la repetición está cargado.\n* **Mensajes contextuales**: retroalimentación útil en cada acción.\n\n### Funciones avanzadas\n\n* **Gestión de archivos**: copia rutas o abre directamente la ubicación del archivo.\n* **Manejo de errores**: gestiona archivos dañados o incompletos sin crashear.\n* **Procesamiento en segundo plano**: las tareas pesadas no bloquean la interfaz.\n* **Eficiencia de memoria**: transmite los datos sin cargar el archivo completo."
 }

@@ -18,17 +18,17 @@
       "partys",
       "servers"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BombRadiusVisualizer/media/banner.webp",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BombRadiusVisualizer/media/banner.webp",
     "media": [
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BombRadiusVisualizer/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BombRadiusVisualizer/media/image_02.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BombRadiusVisualizer/media/image_03.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BombRadiusVisualizer/media/video_01.webm"
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BombRadiusVisualizer/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BombRadiusVisualizer/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BombRadiusVisualizer/media/image_03.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BombRadiusVisualizer/media/video_01.webm"
     ],
-    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BombRadiusVisualizer/BombRadiusVisualizer.py",
-    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BombRadiusVisualizer/BombRadiusVisualizer.py",
-    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BombRadiusVisualizer/README.md",
-    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BombRadiusVisualizer/README.md"
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/BombRadiusVisualizer/BombRadiusVisualizer.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/BombRadiusVisualizer/BombRadiusVisualizer.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/BombRadiusVisualizer/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/BombRadiusVisualizer/README.md"
   },
   "content": "Añade indicadores visuales animados y coloridos a todas las bombas y explosivos del juego. Esta versión mejorada no solo muestra el radio exacto de la explosión, sino que también incluye efectos de color dinámicos que cambian constantemente, ofreciendo una experiencia visual impresionante sin perder su valor estratégico.\n\n## Features\n\n* **Sistema de color dinámico**: los indicadores cambian de color aleatoriamente cada 0.5 segundos.\n* **Indicadores de radio animados**: animaciones suaves que muestran cómo crece el radio de la explosión.\n* **Sistema visual doble**:\n\n  * Círculo opaco que muestra el área de daño (comienza en azul).\n  * Círculo de contorno que marca el radio exacto de la explosión (comienza en blanco).\n* **Visualización en tiempo real**: los indicadores aparecen de inmediato cuando se crea una bomba.\n* **Eliminación automática**: los efectos desaparecen al explotar o destruir la bomba.\n* **Compatible con todos los explosivos**: funciona con bombas normales, pegajosas, minas y más.\n* **Efectos arcoíris**: los colores cambian continuamente, creando una apariencia dinámica y festiva."
 }

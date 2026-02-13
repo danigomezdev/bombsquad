@@ -19,14 +19,14 @@
       "partys",
       "servers"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CustomHits/media/banner.webp",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CustomHits/media/banner.webp",
     "media": [
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CustomHits/media/video_01.webm"
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CustomHits/media/video_01.webm"
     ],
-    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CustomHits/CustomHits.py",
-    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CustomHits/CustomHits.py",
-    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CustomHits/README.md",
-    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CustomHits/README.md"
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/CustomHits/CustomHits.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/CustomHits/CustomHits.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/CustomHits/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/CustomHits/README.md"
   },
   "content": "Mejora la sensación de combate mostrando mensajes personalizados y efectos de partículas cada vez que golpeas a otro jugador. Este mod ofrece reacciones visuales que aumentan según el daño causado, haciendo que cada golpe se sienta más satisfactorio y dinámico.\n\n## Features\n\n* **Reacciones según el daño**: distintos mensajes y efectos dependiendo de la cantidad de daño.\n* **Retroalimentación visual progresiva**: efectos más llamativos para golpes más fuertes.\n* **Texto flotante animado**: mensajes personalizados que aparecen sobre el punto del impacto.\n* **Efectos de partículas**: partículas únicas para cada nivel de daño.\n* **Respuesta en tiempo real**: efectos visuales instantáneos al golpear con éxito.\n* **Diseño no intrusivo**: mejora la experiencia sin interrumpir el juego.\n* **Seis niveles de daño**: sistema que va desde golpes ligeros hasta impactos devastadores."
 }

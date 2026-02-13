@@ -17,16 +17,16 @@
       "editor",
       "servers"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/IceMan/media/banner.webp",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/IceMan/media/banner.webp",
     "media": [
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/IceMan/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/IceMan/media/image_02.png\",",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/IceMan/media/video_01.webm"
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/IceMan/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/IceMan/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/IceMan/media/video_01.webm"
     ],
-    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/IceMan/IceMan.py",
-    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/IceMan/IceMan.py",
-    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/IceMan/README.md",
-    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/IceMan/README.md"
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/IceMan/IceMan.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/IceMan/IceMan.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/IceMan/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/IceMan/README.md"
   },
   "content": "Transforma a tu personaje en un verdadero maestro del hielo. Este mod agrega mecánicas de juego basadas en el poder del frío: podrás congelar enemigos, lanzar bombas de hielo, generar efectos visuales helados y ser completamente inmune a los ataques de congelación, todo mientras luces un estilo gélido único.\n\n## Features\n\n* **Golpes congelantes**: convierte tus puños normales en ataques de hielo que pueden congelar y romper a los enemigos al instante.\n* **Bombas de hielo**: reemplaza las bombas normales por explosivos que congelan.\n* **Efectos visuales criogénicos**: partículas heladas y brillo azul constante alrededor del personaje.\n* **Inmunidad al hielo**: protección total contra ataques o peligros que congelen.\n* **Opciones personalizables**: activa o desactiva funciones desde el menú de ajustes.\n* **Soporte multilenguaje**: interfaz automática en español, chino o inglés.\n* **Identidad visual**: coloración azulada con efectos especiales de hielo."
 }

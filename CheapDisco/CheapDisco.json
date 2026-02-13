@@ -17,15 +17,15 @@
       "game",
       "rainbow"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CheapDisco/media/banner.gif",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CheapDisco/media/banner.gif",
     "media": [
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CheapDisco/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CheapDisco/media/video_01.webm"
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CheapDisco/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CheapDisco/media/video_01.webm"
     ],
-    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CheapDisco/CheapDisco.py",
-    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CheapDisco/CheapDisco.py",
-    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/CheapDisco/README.md",
-    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/CheapDisco/README.md"
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/CheapDisco/CheapDisco.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/CheapDisco/CheapDisco.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/CheapDisco/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/CheapDisco/README.md"
   },
   "content": "Añade un sistema de colores vibrante y dinámico a el **MainWindow**, haciendo que el fondo cambie entre tonos oscuros de forma aleatoria. Puedes activarlo o no para que se muestre en tus partidas locales o solo en el **MainWindow**.\n\n## Features\n\n* **Ciclo dinámico de colores**: el fondo cambia automáticamente con intervalos personalizables.\n* **Paleta de colores oscuros**: usa tonos oscuros cuidadosamente elegidos (rango 0.0–0.5) para mantener buena visibilidad.\n* **Soporte en doble modo**: funciona tanto en el menú principal como dentro del juego.\n* **Tiempo ajustable**: modifica la frecuencia del cambio de color entre 0.1 y 60 segundos.\n* **Activación selectiva**: elige si quieres los efectos en el menú, en las partidas o en ambos.\n* **Configuración sencilla**: ventana de ajustes con casillas y deslizadores fáciles de usar.\n* **Soporte de idioma**: incluye un modo especial de idioma “Gibberish” con texto alternativo divertido.\n* **Diseño no intrusivo**: no afecta el rendimiento ni las mecánicas del juego."
 }

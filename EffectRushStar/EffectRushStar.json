@@ -18,15 +18,15 @@
       "party",
       "servers"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/EffectRushStar/media/banner.webp",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/EffectRushStar/media/banner.webp",
     "media": [
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/EffectRushStar/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/EffectRushStar/media/video_01.webm"
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/EffectRushStar/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/EffectRushStar/media/video_01.webm"
     ],
-    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/EffectRushStar/EffectRushStar.py",
-    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/EffectRushStar/EffectRushStar.py",
-    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/EffectRushStar/README.md",
-    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/EffectRushStar/README.md"
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/EffectRushStar/EffectRushStar.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/EffectRushStar/EffectRushStar.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/EffectRushStar/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/EffectRushStar/README.md"
   },
   "content": "Añade dos estrellas brillantes con partículas de colores y texto animado flotan suavemente por el mapa, creando una experiencia visual hipnotizante que mejora la ambientación sin afectar el gameplay.\n\n## Features\n\n* **Estrellas animadas duales**: dos estrellas independientes con movimientos únicos.\n* **Ciclo dinámico de colores**: transiciones continuas con efectos tipo arcoíris.\n* **Efectos de partículas**: destellos luminosos con efectos de escudo brillante.\n* **Texto animado**: texto flotante con animaciones de color sincronizadas.\n* **Movimientos fluidos**: trayectorias predefinidas que recorren todo el mapa.\n* **Diseño no intrusivo**: mejora visual pura sin interferir con el juego.\n* **Activación automática**: funciona en todos los modos de juego, excepto en el menú principal."
 }

@@ -16,17 +16,17 @@
       "characters",
       "editor"
     ],
-    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/banner.webp",
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BetterProfileEditor/media/banner.webp",
     "media": [
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_01.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_02.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/image_03.png",
-      "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/media/video_01.webm"
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BetterProfileEditor/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BetterProfileEditor/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BetterProfileEditor/media/image_03.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BetterProfileEditor/media/video_01.webm"
     ],
-    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BetterProfileEditor/BetterProfileEditor.py",
-    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BetterProfileEditor/BetterProfileEditor.py",
-    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/modmanager/BetterProfileEditor/README.md",
-    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/modmanager/BetterProfileEditor/README.md"
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/BetterProfileEditor/BetterProfileEditor.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/BetterProfileEditor/BetterProfileEditor.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/BetterProfileEditor/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/BetterProfileEditor/README.md"
   },
   "content": "Reemplaza el editor de perfiles estándar con una versión mejorada que incluye una vista previa en vivo del personaje. A medida que modificas el color, el personaje o los reflejos de tu perfil, podrás ver los cambios al instante dentro de un entorno 3D con iluminación y físicas realistas.  \n\n## Features\n\n- **Vista previa en vivo:** Observa los cambios del personaje en tiempo real.  \n- **Entorno 3D completo:** Iluminación y físicas mejoradas para una visualización más realista.  \n- **Retroalimentación instantánea:** Cada cambio se refleja al momento.  \n- **Compatibilidad total:** Mantiene todas las funciones originales del editor de perfiles.  \n- **Integración fluida:** Se combina perfectamente con el menú principal del juego.  \n- **Soporte completo:** Compatible con todos los tipos de personajes y personalizaciones."
 }

@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "name": "Less Finder",
+    "file_name": "LessFinder.py",
+    "description-es": "Un mod que te permite realizar busquedas de cuentas, agregar amigos e inspeccionar sus cuentas",
+    "description-en": "A mod that allows you to search for accounts, add friends, and inspect their accounts",
+    "createdAt": "2025-12-28T20:00:00.000Z",
+    "lastActivityAt": "2026-02-13T15:43:00.000Z",
+    "api": 9,
+    "version": "1.1.6",
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "lessfinder",
+      "finder",
+      "add friends",
+      "servers",
+      "pb-id",
+      "accounts"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessFinder/media/banner.webp",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessFinder/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessFinder/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessFinder/media/image_03.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessFinder/media/image_04.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessFinder/media/image_05.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessFinder/media/preview.mp4"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/LessFinder/LessFinder.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/LessFinder/LessFinder.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessFinder/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/LessFinder/README.md"
+  },
+  "content": "A mod that allows you to search for friends and player accounts, making it easy to check your opponents’ profiles before fighting them.\n\n## Features\n- Search for servers  \n- Add friends  \n- Inspect player profiles  \n- Search accounts by V2, ID, and PB  \n- Advanced search (works even with partial or unknown data (still, try to be specific, you will only be able to see a maximum of 200 accounts))\n- Preferences  \n  - Language Support: Spanish, English, Portuguese, Russian, Hindi, Malayalam, Indonesian  \n  - Color themes  \n- View friends who are online  \n  - *Note: You need to search for servers to see where your friends are playing, and whether there is available space on their server*  \n- View player accounts in-game through the party window  \n- Copy player information to the clipboard  \n\n## Acknowledgements and More\n\nThis is the first official mod I’ve released. I took code and feature references from other mods. I also credited the other mods I used as examples in the mod’s credits.\n\nI’m aware that it has several issues, mainly related to dynamically changing colors. I’m open to fixes and suggestions via DM. I hope you enjoy it—and by the way, thanks to <@1229289799857344588>  for making the video about this."
+}

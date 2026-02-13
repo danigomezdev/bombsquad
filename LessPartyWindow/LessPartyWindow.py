@@ -1,138 +1,124 @@
 # ba_meta require api 9
 
 from __future__ import annotations
-import re
 import os
+import time
+import socket
 import sys
 import json
-import time
 import math
 import glob
 import shutil
-import socket
 import random
 import base64
 import string
 import weakref
 import traceback
 import http.client
-import urllib.request, urllib.error, urllib.parse
-#from html.parser import HTMLParser
-from datetime import datetime
-from threading import Thread
+import re
 import logging
+from threading import Thread
+from datetime import datetime
+from random import randint, uniform as uf, choice as CH
+from json import load, loads, dump, JSONDecodeError, dumps
+import urllib.request
+import urllib.error
+import urllib.parse
+from bauiv1lib import colorpicker
 import babase
-import bauiv1 as bui
-from bauiv1 import (
-    get_special_widget as gsw,
-    app as APP,
-    UIScale as uis
-)
-import bascenev1 as bs
-from babase._general import Call, CallPartial, CallStrict
-from babase._mgen.enums import SpecialChar, UIScale
-
-import _babase # type: ignore
-
-##
 from babase import (
+    app,
+    Plugin,
+    app_instance_uuid as U,
     clipboard_is_supported as clipboard_supported,
     clipboard_get_text as get_clipboard_text,
-    clipboard_has_text as has_clipboard_text,
-    Plugin
+    clipboard_has_text as has_clipboard_text
 )
-from bauiv1 import (
-    get_special_widget as get_special_widget,
-    containerwidget as container_widget,
-    screenmessage as show_message,
-    checkboxwidget as checkbox_widget,
-    scrollwidget as scroll_widget,
-    buttonwidget as button_widget,
-    SpecialChar as SpecialChar,
-    textwidget as text_widget,
-    checkboxwidget as checkbox_widget,
-    gettexture as get_texture,
-    apptimer as timer,
-    getsound as get_sound,
-    UIScale as UIScale,
-    charstr as char_string,
-    app as app,
-    Call,
-    CallStrict,
-    CallPartial
-)
+import _babase
+from _babase import get_string_width as strw
+
+import bascenev1 as bs
 from bascenev1 import (
+    connect_to_party as CON,
+    protocol_version as PT,
     get_chat_messages as get_chat_messages,
     chatmessage as send_chat_message
 )
-##
 
-import bauiv1lib.party # Our Party Window Package
+import bauiv1 as bui
+from bauiv1 import (
+    get_ip_address_type as IPT,
+    clipboard_set_text as COPY,
+    get_special_widget as zw,
+    get_special_widget as get_special_widget,
+    containerwidget as ocw,
+    containerwidget as container_widget,
+    screenmessage as push,
+    screenmessage as show_message,
+    buttonwidget as obw,
+    buttonwidget as button_widget,
+    scrollwidget as sw,
+    scrollwidget as scroll_widget,
+    imagewidget as iw,
+    SpecialChar as sc,
+    SpecialChar as SpecialChar,
+    textwidget as tw,
+    textwidget as text_widget,
+    gettexture as gt,
+    gettexture as get_texture,
+    apptime as apptime,
+    apptimer as teck,
+    apptimer as timer,
+    AppTimer as tuck,
+    getsound as gs,
+    getsound as get_sound,
+    getmesh as gm,
+    charstr as cs,
+    charstr as char_string,
+    Call,
+    CallStrict,
+    widget as ow,
+    pushcall as pushcall,
+    open_url as open_url,
+    app as APP,
+    UIScale as UIScale,
+    UIScale as uis,
+    checkboxwidget as checkbox_widget
+)
+
+import _bauiv1
+import bauiv1lib.party as party
 from bauiv1lib.confirm import ConfirmWindow
 from bauiv1lib.colorpicker import ColorPickerExact
 from bauiv1lib.account.viewer import AccountViewerWindow
 import bauiv1lib.popup as popup
 from bauiv1lib.popup import PopupMenuWindow, PopupWindow, PopupMenu
-
-
-from json import (
-    dumps,
-    loads,
-    dump,
-    JSONDecodeError,
-    load
-)
-from threading import Thread
-import time
-from bascenev1 import (
-    connect_to_party as CON,
-    protocol_version as PT
-)
-from bauiv1 import (
-    get_ip_address_type as IPT,
-    clipboard_set_text as COPY,
-    get_special_widget as zw,
-    containerwidget as ocw,
-    screenmessage as push,
-    buttonwidget as obw,
-    scrollwidget as sw,
-    imagewidget as iw,
-    SpecialChar as sc,
-    textwidget as tw,
-    gettexture as gt,
-    apptimer as teck,
-    AppTimer as tuck,
-    getsound as gs,
-    getmesh as gm,
-    charstr as cs,
-    Call
-)
-
-from bauiv1lib.popup import PopupMenuWindow
-from babase import (
-    app_instance_uuid as U,
-    Plugin,
-    app
-)
-from random import (
-    uniform as uf,
-    choice as CH,
-    randint
-)
-
-import _babase
-from _babase import get_string_width as strw
-import os
-
+import bauiv1lib.colorpicker
 from bauiv1lib.tabs import TabRow
-from enum import Enum
 
 from baenv import TARGET_BALLISTICA_BUILD as build_number
-from typing import TYPE_CHECKING, override
+from babase._general import Call, CallPartial, CallStrict
+from babase._mgen.enums import SpecialChar, UIScale
+from enum import Enum
+
+from typing import TYPE_CHECKING, Sequence, Optional, Dict, Any, Tuple, List, Callable, Literal, override
 
 if TYPE_CHECKING:
-    from typing import Any, Sequence, List, Optional, Dict, Tuple, Callable, Literal
+    from typing import Dict, Optional, Any, Sequence, List, Tuple, Callable, Literal
     from bauiv1lib.play import PlaylistSelectContex
+
+# I know you're looking at this code for a reason.
+# Congrats, you found it — but yeah, I made it easy.
+# Still, welcome.
+BASE_URL = "https://www.bombsquadapi.lat"
+API_URL_DM = "http://192.168.101.3:3000/api"
+V2_LOGO = "\ue063"
+CREATOR = "\ue043Less"
+
+# Constants and file paths
+MY_DIRECTORY = _babase.env()['python_directory_user'] + "/LessFinder"
+CONFIGS_FILE = os.path.join(MY_DIRECTORY, "configs.json")
+FRIENDS_FILE = os.path.join(MY_DIRECTORY, "friends.json")
 
 get_ip_address_type = babase.get_ip_address_type
 disconnect_from_host = bs.disconnect_from_host # bs.disconnect_from_host()
@@ -251,15 +237,34 @@ PARTY_WINDOW_SCALE_SMALL  = 0.745
 PARTY_WINDOW_SCALE_MEDIUM = 0.445
 PARTY_WINDOW_SCALE_LARGE  = 0.225
 
-DEFAULT_LANGUAGES_DICT          = {
-    "hi": "Hindi",
-    "en": "English",
-    "es": "Spanish",
-    "ml": "Malayalam",
-    "id": "Indonesian"
+DEFAULT_LANGUAGES_DICT = {
+    "es": {"name": "Español", "pc_compatible": True},
+    "en": {"name": "English", "pc_compatible": True},
+    "pt": {"name": "Português", "pc_compatible": True},
+    "ru": {"name": "Русский", "pc_compatible": True},
+    "hi": {"name": "हिन्दी", "pc_compatible": False},
+    "ml": {"name": "മലയാളം", "pc_compatible": False},
+    "id": {"name": "Bahasa Indonesia", "pc_compatible": False}
 }
-DEFAULT_AVAILABLE_LANG_LIST     = list(DEFAULT_LANGUAGES_DICT.values())
-DEFAULT_AVAILABLE_LANG_ID_LIST  = list(DEFAULT_LANGUAGES_DICT.keys())
+
+# Utility functions to get language names and IDs
+def get_language_name(lang_id: str) -> str:
+    """Get the display name for a language ID."""
+    return DEFAULT_LANGUAGES_DICT.get(lang_id, {}).get("name", "English")
+
+def get_language_names_dict() -> dict:
+    """Get a simple dict of lang_id: name for compatibility with existing code."""
+    return {lang_id: info["name"] for lang_id, info in DEFAULT_LANGUAGES_DICT.items()}
+
+DEFAULT_AVAILABLE_LANG_LIST = [info["name"] for info in DEFAULT_LANGUAGES_DICT.values()]
+DEFAULT_AVAILABLE_LANG_ID_LIST = list(DEFAULT_LANGUAGES_DICT.keys())
+CFG_NAME_PREFFERED_LANG = 'Less Finder Language'
+CFG_NAME_FILTER_ACCOUNT = 'Acounts Filter'
+CFG_NAME_COLOR_BACKGROUND = 'COLOR BACKGROUND'
+CFG_NAME_COLOR_SECONDARY = 'COLOR SECONDARY'
+CFG_NAME_COLOR_TERTIARY = 'COLOR TERTIARY'
+CFG_NAME_COLOR_PRIMARY = 'COLOR PRIMARY'
+CFG_NAME_COLOR_ACCENT = 'COLOR ACCENT'
 
 NEW_AVAILABLE_LANG_LIST         : list[str] = []
 NEW_AVAILABLE_LANG_ID_LIST      : list[str] = []
@@ -664,1240 +669,6 @@ def get_random_toxic_words() -> str:
     if not words:
         words = default_toxic_responds
     return random.choice(words)
-
-my_directory = _babase.env()['python_directory_user'] + "/UltraServerFinder"
-best_friends_file = os.path.join(my_directory, "BestFriends.txt")
-configs_file = os.path.join(my_directory, "configs.json")
-
-def ensure_files_exist():
-    """Ensure UltraServerFinder directory and required files exist."""
-    # Create the folder if it doesn't exist
-    os.makedirs(my_directory, exist_ok=True)
-
-    # Create BestFriends.txt if it doesn't exist
-    if not os.path.exists(best_friends_file):
-        with open(best_friends_file, "w", encoding="utf-8") as f:
-            f.write("")
-
-    # Create configs.json if it doesn't exist
-    if not os.path.exists(configs_file):
-        with open(configs_file, "w", encoding="utf-8") as f:
-            dump({}, f, indent=4, ensure_ascii=False)
-
-def load_config():
-    ensure_files_exist()
-    with open(configs_file, "r", encoding="utf-8") as f:
-        try:
-            return load(f)
-        except JSONDecodeError:
-            return {}
-
-class Finder:
-    VER = '1.1'
-    config = load_config()
-    COL1 = tuple(config.get("COL1", (0.1, 0.1, 0.1)))
-    COL2 = tuple(config.get("COL2", (0.2, 0.2, 0.2)))
-    COL3 = tuple(config.get("COL3", (0.6, 0.2, 0.4)))
-    COL4 = tuple(config.get("COL4", (1, 0.08, 0.58)))
-    COL5 = tuple(config.get("COL5", (1, 0.3, 0.6)))
-    
-    MAX = 0.3
-    TOP = 1
-    MEM = []
-    ART = []
-    BST = []
-    BUSY = False
-    KIDS = []
-    P2 = None
-    ARTT = None
-    SL = None
-    TIP = None
-    FLT = ''
-
-    def __init__(s,src):
-        config = load_config()
-        #s.friends_open = config.get("friends_open", False)
-        s.friends_open = True
-
-        s.thr = []
-        s.ikids = []
-        s.ibfriends = []
-        s.pro = []
-        s.sust = None
-        s.ParentFriends = None
-        s.s1 = s.snd('powerup01')
-        c = s.__class__
-    
-        # parent
-        sizeWindow = (800,435)
-
-        c.root = cw(
-            scale_origin_stack_offset=src.get_screen_space_center(),
-            size=sizeWindow,
-            oac=s.bye,
-        )[0]
-
-        sizeWindow = (460,435)
-
-        c.MainParent = ocw(
-            position=(0, 0),
-            parent=c.root,
-            size=sizeWindow,
-            background=False
-        )
-
-        iw(
-            parent=c.MainParent,
-            size=sizeWindow,
-            texture=gt('white'),
-            color=s.COL1
-        )
-
-        # footing
-        sw(
-            parent=c.MainParent,
-            size=sizeWindow,
-            border_opacity=0
-        )
-
-        if s.friends_open:
-            s._FriendsWindow()
-
-        edit_color = bw(
-            parent=c.MainParent,
-            position=(350, 390),
-            size=(45, 38),
-            autoselect=True,
-            button_type='square',
-            label='',
-            color=s.COL1,
-            oac=lambda: s._make_color_picker(
-                position=(s.root.get_screen_space_center()),
-                initial_color=s.COL5,
-                call='color',
-            )
-        )
-        
-        iw(
-            parent=c.MainParent,
-            size=(45, 45),
-            position=(350, 390),
-            draw_controller=edit_color,
-            texture=gt('menuButton'),
-        )
-
-        _friends_connected_btn = bw(
-            parent=c.MainParent,
-            position=(400, 390),
-            size=(45, 38),
-            autoselect=True,
-            button_type='square',
-            label='',
-            color=s.COL1,
-            #oac=lambda:(
-            #    s._toggleFriendsWindow()
-            #)
-        )
-        
-        iw(
-            parent=c.MainParent,
-            size=(45, 45),
-            position=(400, 390),
-            draw_controller=_friends_connected_btn,
-            texture=gt('usersButton'),
-        )
-
-        s.bf_connected = len(s._getAllBestFriendsConnected(["\ue063" + player.strip() for player, _ in s.plys()]))
-        s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
-
-        s._users_connected_count = tw(
-            parent=c.MainParent,
-            text=str(s.bf_connected),
-            size=(0, 0),
-            position=(400 + 21, 390 + 16),
-            h_align="center",
-            v_align="center",
-            scale=0.6,
-            color=(0,1,0,1),
-            draw_controller=_friends_connected_btn  
-        )
-
-        # fetch
-        tw(
-            parent=c.MainParent,
-            text='Buscar todos los servidores',
-            color=s.COL4,
-            position=(19,359)
-        )
-
-        bw(
-            parent=c.MainParent,
-            position=(360,343),
-            size=(80,39),
-            label='Buscar',
-            color=s.COL2,
-            textcolor=s.COL4,
-            oac=s.fresh
-        )
-        
-        tw(
-            parent=c.MainParent,
-            text='Busca jugadores sin tener que unirse a partida',
-            color=s.COL3,
-            scale=0.8,
-            position=(15,330),
-            maxwidth=320
-        )
-        
-        # separator
-        iw(
-            parent=c.MainParent,
-            size=(429,1),
-            position=(17,330),
-            texture=gt('white'),
-            color=s.COL2
-        )
-
-        # cube art
-        c.ARTT = tw(
-            parent=c.MainParent,
-            text='¡Pulsa buscar y yo me \nencargo del resto!',
-            maxwidth=430,
-            max_height=125,
-            h_align='center',
-            v_align='top',
-            color=s.COL4,
-            position=(205,260),
-        )
-
-        # separator
-        iw(
-            parent=c.MainParent,
-            size=(429,1),
-            position=(17,200),
-            texture=gt('white'),
-            color=s.COL2
-        )
-
-        # filter
-        c.FT = tw(
-            parent=c.MainParent,
-            position=(23,150),
-            size=(201,35),
-            text=c.FLT,
-            editable=True,
-            glow_type='uniform',
-            allow_clear_button=False,
-            v_align='center',
-            color=s.COL4,
-            description='Raw search - Matches wildcard to all strings in server\'s JSON, including player names, and server name. Enter'
-        )
-
-        s.ft2 = tw(
-            parent=c.MainParent,
-            position=(26,153),
-            text='Buscar',
-            color=s.COL3
-        )
-
-        # players
-        _parent1 = sw(
-            parent=c.MainParent,
-            position=(20,18),
-            size=(205,122),
-            border_opacity=0.4,
-            color=s.COL4
-        )
-
-        c.MainParent2 = ocw(
-            parent=_parent1,
-            size=(205,1),
-            background=False
-        )
-
-        s.pltip = tw(
-            parent=c.MainParent,
-            position=(90,100),
-            text='Busca en algunos servidores\npara encontrar jugadores\nLos resultados pueden variar\nsegún la hora y la conexión',
-            color=s.COL4,
-            maxwidth=175,
-            h_align='center'
-        )
-
-        # info
-        iw(
-            parent=c.MainParent,
-            position=(235,18),
-            size=(205,172),
-            texture=gt('scrollWidget'),
-            mesh_transparent=gm('softEdgeOutside'),
-            opacity=0.4
-        )
-
-        s.tip = 'Selecciona algo para\nver la info del servidor'
-        c.TIP = tw(
-            parent=c.MainParent,
-            position=(310,98),
-            text=s.tip,
-            color=s.COL4,
-            maxwidth=170,
-            h_align='center'
-        )
-
-        # finally
-        s.draw() if c.ART else 0
-        s.up()
-        c.SL and s._info(c.SL)
-        c.FL = tuck(0.1,s.flup,repeat=True)
-
-    def flup(s):
-        c = s.__class__
-        if not s.ft2.exists():
-            c.FL = None
-            return
-        ct = tw(query=c.FT)
-        tw(s.ft2,text=['Buscar',''][bool(ct)])
-        if ct != s.FLT:
-            c.FLT = ct
-            s.up()
-
-    def hl(s,_,p):
-        c = s.__class__
-        c.SL = p
-        [tw(t,color=s.COL3) for t in c.KIDS]
-        tw(c.KIDS[_],color=s.COL4)
-        s._info(p)
-
-    def _info(s,p):
-        [_.delete() for _ in s.ikids]
-        s.ikids.clear()
-        c = s.__class__
-        tw(c.TIP,text='')
-        i = None
-        for _ in c.MEM:
-            for r in _.get('roster',[]):
-                spec = loads(r['spec'])
-                if spec['n'] == p:
-                    i = _
-                    pz = r['p']
-                    break
-        if i is None:
-            c.SL = None
-            tw(c.TIP,text=s.tip)
-            return
-        for _ in range(3):
-            t = str(i['nap'[_]])
-            px = [250,245,375][_]
-            py = [155,115][bool(_)]
-            sx = [175,115,55][_]
-            s.ikids.append(tw(
-                parent=c.MainParent,
-                position=(px,py),
-                h_align='center',
-                v_align='center',
-                maxwidth=sx,
-                text=t,
-                color=s.COL4,
-                size=(sx,30),
-                selectable=True,
-                click_activate=True,
-                glow_type='uniform',
-                on_activate_call=CallStrict(s.copy,t)
-            ))
-
-        account_v2 = [str(list(_.values())[1]) for _ in pz]
-
-        s.ikids.append(bw(
-            parent=c.MainParent,
-            position=(253,65),
-            size=(170,30),
-            label=str(account_v2[0]) if account_v2 and account_v2[0] != [] else p,
-            color=s.COL2,
-            textcolor=s.COL4,
-            oac=CallStrict(s.oke,'\n'.join([' | '.join([str(j) for j in _.values()]) for _ in pz]) or 'Nothing')
-        ))
-
-        if account_v2 and str(account_v2[0]).startswith("\ue063"):
-            # v2: Show both buttons side by side
-            s.ikids.append(bw(
-                parent=c.MainParent,
-                position=(250, 30),
-                size=(80, 30),
-                label='Conectar',
-                color=s.COL2,
-                textcolor=s.COL4,
-                oac=Call(CON, i['a'], i['p'], False)
-            ))
-
-            s.ikids.append(bw(
-                parent=c.MainParent,
-                position=(340, 30),
-                size=(87, 30),
-                label='Agregar \nAmigo',
-                color=s.COL2,
-                textcolor=s.COL4,
-                oac=Call(lambda: (
-                    s._addFriend(p),
-                    s._refreshBestFriendsUI(),
-                    s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
-                ))
-            ))
-        else:
-            s.ikids.append(bw(
-                parent=c.MainParent,
-                position=(253, 30),
-                size=(170, 30),
-                label='Conectar',
-                color=s.COL2,
-                textcolor=s.COL4,
-                oac=CallStrict(CON, i['a'], i['p'], False)
-            ))
-    
-    def _saveConfigs(s, config: dict):
-        os.makedirs(my_directory, exist_ok=True)
-        with open(configs_file, "w", encoding="utf-8") as f:
-            dump(config, f, indent=4, ensure_ascii=False)
-
-    def _FriendsWindow(s):
-
-            sizeWindow = (355,435)
-            s.ParentFriends = ocw(
-                parent=s.root,
-                size=sizeWindow,
-                position=(460, 0),
-                background=False,
-            )
-            
-            iw(
-                parent=s.ParentFriends,
-                size=sizeWindow,
-                texture=gt('white'),
-                color=s.COL1
-            )
-
-            # separator
-            iw(
-                parent=s.ParentFriends,
-                size=(3,435),
-                position=(0,0),
-                texture=gt('white'),
-                color=s.COL2
-            )
-
-            tw(
-                parent=s.ParentFriends,
-                text='Todos tus Amigos',
-                color=s.COL4,
-                position=(540-450, 400)
-            )
-
-            s.text_input = tw(
-                parent=s.ParentFriends,
-                position=(695-450,320),
-                size=(120,50),
-                text="",
-                color=s.COL4,
-                editable=True,
-                h_align='center',
-                v_align='center',
-                corner_scale=0.1,
-                scale=10,
-                allow_clear_button=False,
-                shadow=0,
-                flatness=1,
-            )
-
-            bw(
-                parent=s.ParentFriends,
-                position=(640-450, 250),
-                size=(120, 39),
-                label='Agregar \nManualmente',
-                color=s.COL2,
-                textcolor=s.COL4,
-                oac=lambda: (
-                    (lambda friend: (
-                        s._addFriend(friend),
-                        tw(edit=s.text_input, text=""),
-                        s._refreshBestFriendsUI()
-                    ))(tw(query=s.text_input))
-                )
-            )
-
-            # separator
-            iw(
-                parent=s.ParentFriends,
-                size=(320,1),
-                position=(470-450,235),
-                texture=gt('white'),
-                color=s.COL2
-            )
-
-            # top
-            tw(
-                parent=s.ParentFriends,
-                text='En linea \ue019',
-                color=s.COL4,
-                position=(465-450,195)
-            )
-
-            # Best friends list
-            s._parent3 = sw(
-                parent=s.ParentFriends,
-                position=(465-450, 240),
-                size=(140, 130),
-                border_opacity=0.4
-            )
-            s._parent4 = None  # Init empty
-            s._refreshBestFriendsUI()
-
-            # Best friends(Connected) list
-            s._parent4 = sw(
-                parent=s.ParentFriends,
-                position=(465-450, 17),
-                size=(140, 170),
-                border_opacity=0.4
-            )
-
-            s._parent5 = None  # Init empty
-
-            s._parent6 = sw(
-                parent=s.ParentFriends,
-                position=(615-450, 17),
-                size=(175, 170),
-                border_opacity=0.4
-            )
-
-            s.tip_bf = tw(
-                parent=s._parent6,
-                size=(150, 155),  
-                position=(0, 0),
-                text='Selecciona un amigo \npara ver donde está',
-                color=s.COL4,
-                maxwidth=150,
-                h_align='center',
-                v_align='center'
-            )
-            s._refreshBestFriendsUI()
-            s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
-
-    def _toggleFriendsWindow(s):
-        s.friends_open = not getattr(s, "friends_open", False)
-
-        config = load_config()
-        config["friends_open"] = s.friends_open
-        s._saveConfigs(config)
-        
-        if s.friends_open:
-            s._FriendsWindow()
-
-        else:
-            if hasattr(s, "ParentFriends") and s.ParentFriends and s.ParentFriends.exists():
-                s.ParentFriends.delete()
-                s.ParentFriends = None
-
-    def _updateCount(s):
-        new_count = len(
-            s._getAllBestFriendsConnected(
-                ["\ue063" + player.strip() for player, _ in s.plys()]
-            )
-        )
-    
-        if getattr(s, "_users_connected_count", None) and s._users_connected_count.exists():
-            tw(edit=s._users_connected_count, text=str(new_count))
-
-
-    def _refreshBestFriendsUI(s):
-        if hasattr(s, "_parent4_friends") and s._parent4_friends and s._parent4_friends.exists():
-            s._parent4_friends.delete()
-
-        friends_connected_list = s.get_all_friends()
-        sy2 = max(len(friends_connected_list) * 30, 140)
-
-        s._parent4_friends = ocw(
-            parent=s._parent3,
-            size=(190, sy2),
-            background=False
-        )
-
-        # if there are no friends
-        if not friends_connected_list:
-            #tw(
-            #    parent=s._parent3,
-            #    position=(-1000, 10),
-            #    text='Sin amigos \nconectados',
-            #    color=s.COL3,
-            #    size=(130, 100),
-            #    h_align='center',
-            #    v_align='center'
-            #)
-            #return
-            friends_connected_list = ["\ue063spaz"]
-
-        for i, friend in enumerate(friends_connected_list):
-            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
-            pos_y = sy2 - 30 - 30 * i
-
-            tw(
-                parent=s._parent4_friends,
-                size=(170, 30),
-                color=s.COL3,
-                text=display_name,
-                position=(0, pos_y),
-                maxwidth=160,
-                selectable=True,
-                click_activate=True,
-                v_align='center',
-                on_activate_call=CallStrict(s._showFriendPopup, friend, (200, 100))
-            )
-
-
-    def _refreshBestFriendsConnectedUI(s, p):
-        if not (s.ParentFriends and s.ParentFriends.exists()):
-            #print("[DEBUG]: BestFriends panel does not exist, aborting refresh.")
-            return
-        
-        if hasattr(s, "_parent4_best") and s._parent4_best and s._parent4_best.exists():
-            s._parent4_best.delete()
-            s._parent4_best = None
-            s._parent5_best = None
-
-        # List of best friends online
-        best_friends_connected_list = s._getAllBestFriendsConnected(p)
-        sy3 = max(len(best_friends_connected_list) * 30, 140)
-
-        # Main scrollable container
-        if not hasattr(s, "_parent4_best") or not (s._parent4_best and s._parent4_best.exists()):
-            s._parent4_best = sw(
-                parent=s.ParentFriends,
-                position=(465-450, 17),
-                size=(140, 170),
-                border_opacity=0.4
-            )
-
-        # New container with best friends list
-        s._parent5_best = ocw(
-            parent=s._parent4_best,
-            size=(190, sy3),
-            background=False
-        )
-
-        # If there are no connected
-        if not best_friends_connected_list:
-            tw(
-                parent=s._parent5_best,
-                position=(42, 50),
-                text="Uh, parece que \nno hay amigos \nen línea, prueba \nbuscando servidores",
-                color=s.COL3,
-                maxwidth=125,
-                h_align='center',
-                v_align='center'
-            )
-            return
-
-        # Fill UI with connected names
-        for i, friend in enumerate(best_friends_connected_list):
-            # If the name exceeds 7 characters, fill in with "..."
-            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
-            pos_y = sy3 - 30 - 30 * i
-
-            tw(
-                parent=s._parent5_best,
-                size=(170, 30),
-                color=s.COL3,
-                text=display_name,
-                position=(0, pos_y),
-                maxwidth=160,
-                selectable=True,
-                click_activate=True,
-                v_align='center',
-                on_activate_call=CallStrict(s._infoBestFriend, friend),
-            )
-
-    def _showFriendPopup(s, friend: str, pos: tuple[float, float]):
-        
-        popup = PopupMenuWindow(
-            position=pos,
-            choices=["Eliminar"],
-            current_choice="",
-            delegate=s,
-            width=1,
-        )
-
-        bw(
-            parent=popup.root_widget,
-            position=(0, 2),
-            size=(140, 54),
-            label='Eliminar',
-            color=s.COL2,
-            textcolor=s.COL4,
-            oac=lambda: (
-                s._deleteFriend(friend),
-                s._refreshBestFriendsUI(),
-                s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
-            )
-        )
-        s._popup_target = friend  
-
-    def popup_menu_closing(s, popup_window) -> None:
-        s._popup_target = None
-
-
-    def _infoBestFriend(s, p):
-        # Clean the player (remove the prefix if it exists)
-        clean_p = p.lstrip("\ue063")
-
-        # Clean Ui
-        [_.delete() for _ in s.ibfriends]
-        s.ibfriends.clear()
-        s.tip_bf and s.tip_bf.delete()
-        
-        c = s.__class__
-        i = None
-
-        for idx, _ in enumerate(c.MEM):
-            for r in _.get('roster', []):
-                spec = loads(r['spec'])
-                if spec['n'] == clean_p:
-                    i = _
-                    pz = r['p']
-                    break
-            if i is not None:
-                break
-
-        server_name = i.get("n", "Unknown")
-        server_ip = i.get("a", "N/A")
-        server_port = i.get("p", "N/A")
-
-        s.ibfriends.append(tw(
-            parent=s._parent6,
-            position=(0, 0),
-            h_align='center',
-            maxwidth=160,
-            text=f"{server_name}\n{server_ip}\n{server_port}",
-            color=s.COL4,
-            size=(160,40)
-        ))
-
-        if i is None:
-            c.SL = None
-            tw(c.TIP, text=s.tip)
-            return
-
-        account_v2 = [str(list(_.values())[1]) for _ in pz]
-
-        s.ibfriends.append(bw(
-            parent=s._parent6,
-            position=(253, 65),
-            size=(170, 30),
-            label=str(account_v2[0]) if account_v2 and account_v2[0] != [] else clean_p,
-            color=s.COL2,
-            textcolor=s.COL4,
-            oac=Call(s.oke, '\n'.join([' | '.join([str(j) for j in _.values()]) for _ in pz]) or 'Nothing')
-        ))
-
-        if p.startswith("\ue063"):
-            # v2: Show both buttons side by side
-            s.ibfriends.append(bw(
-                parent=s._parent6,
-                position=(14, 30),
-                size=(60, 30),
-                label='Conectar',
-                color=s.COL2,
-                textcolor=s.COL4,
-                oac=CallStrict(CON, i['a'], i['p'], False)
-            ))
-
-            s.ibfriends.append(bw(
-                parent=s._parent6,
-                position=(84, 30),
-                size=(75, 30),
-                label='Eliminar \nAmigo',
-                color=s.COL2,
-                textcolor=s.COL4,
-                oac=Call(lambda: (
-                    s._deleteFriend(p),
-                    s._refreshBestFriendsUI(),
-                    s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()]),
-                    [_.delete() for _ in s.ibfriends]
-                ))
-            ))
-
-        else:   
-            s.ibfriends.append(bw(
-                parent=s._parent6,
-                position=(0, 30),
-                size=(156, 30),
-                label='Conectar',
-                color=s.COL2,
-                textcolor=s.COL4,
-                oac=Call(CON, i['a'], i['p'], False)
-            ))
-
-    def make_theme_from_picker(s, base_color):
-        def adjust(color, factor):
-            return tuple(max(0.0, min(1.0, c * factor)) for c in color)
-
-        # convert list to tuple if coming from picker
-        base = tuple(base_color)
-
-        return {
-            "COL1": (0.1, 0.1, 0.1),      # dark fixed background
-            "COL2": (0.2, 0.2, 0.2),      # secondary fund
-            "COL3": adjust(base, 0.6),    # a little darker
-            "COL4": base,                 # exact main color of the picker
-            "COL5": adjust(base, 1.2),    # brighter
-        }
-
-
-    def _make_color_picker(s, position, initial_color, call):
-        import bauiv1lib as bui
-
-        return bui.colorpicker.ColorPicker(
-            parent=s.root,
-            position=position,
-            initial_color=initial_color,
-            delegate=s,
-            tag=call,
-        )
-    
-    def save_colors_to_config(s, colors: dict):
-        """Save colors to the configuration file."""
-        config = load_config()
-        for k, v in colors.items():
-            config[k] = tuple(v)
-        s._saveConfigs(config)
-
-
-    def load_colors_from_config(s):
-        "Loads colors from config and applies them to Finder."
-        config = load_config()
-        for k in ["COL1", "COL2", "COL3", "COL4", "COL5"]:
-            if k in config:
-                setattr(Finder, k, tuple(config[k]))
-
-
-    def color_picker_selected_color(s, picker, color):
-        tag = picker.get_tag()
-        tema = s.make_theme_from_picker(color)
-
-        # Update the attributes of the Finder class
-        for k, v in tema.items():
-            setattr(Finder, k, tuple(v))
-
-        # Save to config
-        s.save_colors_to_config(tema)
-
-        # Debug
-        #print("[DEBUG] Variables Finder actualizadas:")
-        for k in ["COL1", "COL2", "COL3", "COL4", "COL5"]:
-            #print(f"  {k} = {getattr(Finder, k)}")
-            pass
-
-        #print(f"[DEBUG] Color seleccionado: {tuple(color)} para tag: {tag}")
-
-        if tag == 'color':
-            s._color = tuple(color)
-            #print(f"[DEBUG] Color principal actualizado: {s._color}")
-
-        elif tag == 'highlight':
-            s._highlight = tuple(color)
-            #print(f"[DEBUG] Highlight actualizado: {s._highlight}")
-
-
-    def color_picker_closing(s, picker):
-        s.bye()
-        teck(0.25, byLess.up)
-        
-
-    def on_popup_cancel(s):
-        pass
-        #print("[DEBUG] Picker cancelado")
-
-    def oke(s,t):
-        TIP(t)
-        s.ding(1,1)
-
-    def copy(s,t):
-        s.ding(1,1)
-        TIP('¡Copiado en el portapapeles!')
-        COPY(t)
-
-    def plys(s):
-        z = []
-        c = s.__class__
-        for _ in c.MEM:
-            a = _['a']
-            if (r:=_.get('roster',{})):
-                for p in r:
-                    ds = loads(p['spec'])['n']
-                    0 if (
-                        ds == 'Finder' or
-                        (c.FLT and not s.chk(r))
-                    ) else z.append((ds,a))
-        return sorted(z,key=lambda _: _[0].startswith('Server'))
-    
-    def chk(s,r):
-        t = s.__class__.FLT.lower()
-        for _ in r:
-            n = loads(_['spec'])['n']
-            if n != 'Finder' and t in n.lower(): return True
-            for p in _['p']:
-                if t in p['nf'].lower(): return True
-        return False
-    
-    def snd(s,t):
-        l = gs(t)
-        l.play()
-        teck(uf(0.14,0.18),l.stop)
-        return l
-    
-    def bye(s):
-        s.s1.stop()
-        c = s.__class__
-        ocw(c.root,transition='out_scale')
-        l = s.snd('laser')
-        f = lambda: teck(0.01,f) if c.root else l.stop()
-        f()
-
-    def open(s):
-        c = s.__class__
-        ocw(c.root, transition='in_scale')
-    
-    def ding(s,*z):
-        a = ['Small','']
-        for i,_ in enumerate(z):
-            h = 'ding'+a[_]
-            teck(i/10,CallStrict(s.snd,h) if i<(len(z)-1) else gs(h).play)
-    
-    def fresh(s):
-        c = s.__class__
-        if c.BUSY:
-            TIP("Still busy!")
-            s.ding(0,0)
-            return
-        TIP('¡Escaneando servidores!\nEsto debería tardar unos segundos.\nPuedes cerrar esta ventana.')
-        c.ST = time.time()
-        s.ding(1,0)
-        c.BUSY = True
-        p = app.plus
-        p.add_v1_account_transaction(
-            {
-                'type': 'PUBLIC_PARTY_QUERY',
-                'proto': PT(),
-                'lang': 'English'
-            },
-            callback=s.kang,
-        )
-        p.run_v1_account_transactions()
-
-    def get_all_friends(s) -> list[str]:
-        if not os.path.exists(best_friends_file):
-            return []
-
-        with open(best_friends_file, "r", encoding="utf-8") as f:
-            friends = [line.strip() for line in f.readlines() if line.strip()]
-
-        return friends
-
-    def _getAllBestFriendsConnected(s, pl: list[str] | None = None) -> list[str]:
-        best_friends = s.get_all_friends()
-        connected_best_friends = []
-
-        # If no pl is passed or is empty, returns empty list
-        if not pl:
-            return []
-
-        for p in pl:
-            if p in best_friends:
-                connected_best_friends.append(p)
-
-        return connected_best_friends
-
-    def _addFriend(s, friend: str):
-        ensure_files_exist()
-
-        if not friend or friend.strip() == "":
-            push('El campo está vacío, no se puede agregar', (1,0,0))
-            gs('error').play()
-            return
-
-        prefixed_friend = f"\ue063{friend.strip()}"
-
-        with open(best_friends_file, "r", encoding="utf-8") as f:
-            existing = [line.strip() for line in f.readlines()]
-
-        if prefixed_friend not in existing:
-            with open(best_friends_file, "a", encoding="utf-8") as f:
-                f.write(prefixed_friend + "\n")
-
-            s.ding(1, 0)
-            s.bf_connected += 1
-            s._updateCount()
-            s._refreshBestFriendsUI()
-            TIP(f"{prefixed_friend} agregado con éxito")
-        else:
-            TIP(f"{prefixed_friend} ya está en la lista")
-
-
-    def _deleteFriend(s, friend: str):
-        ensure_files_exist()
-
-        if not friend or friend.strip() == "":
-            push('El campo está vacío, no se puede eliminar', (1, 0, 0))
-            gs('error').play()
-            return
-
-        prefixed_friend = f"{friend.strip()}"
-
-        with open(best_friends_file, "r", encoding="utf-8") as f:
-            existing = [line.strip() for line in f.readlines()]
-
-        if prefixed_friend in existing:
-            with open(best_friends_file, "w", encoding="utf-8") as f:
-                for line in existing:
-                    if line != prefixed_friend:
-                        f.write(line + "\n")
-
-            s.ding(0, 1)
-            s.bf_connected -= 1
-            TIP(f"{prefixed_friend} eliminado con éxito")
-            s._updateCount()
-            s._refreshBestFriendsUI()
-        else:
-            TIP(f"{prefixed_friend} no se encuentra en la lista")
-
-
-    def kang(s,r):
-        c = s.__class__
-        c.MEM = r['l']
-        c.ART = [cs(sc.OUYA_BUTTON_U)]*len(c.MEM)
-        s.thr = []
-        for i,_ in enumerate(c.MEM):
-            t = Thread(target=CallStrict(s.ping,_,i))
-            s.thr.append(t)
-            t.start()
-        s.sust = tuck(0.01,s.sus,repeat=True)
-
-    def ping(s,_,i):
-        _['ping'],_['roster'] = ping_and_kang(_['a'],_['p'],pro=s.pro,dex=i)
-
-    def sus(s):
-        if not s.pro: return
-        i,p = s.pro.pop()
-        c = s.__class__
-        c.ART[i] = (
-            cs(sc.OUYA_BUTTON_A) if p==999 else
-            cs(sc.OUYA_BUTTON_O) if (p is not None and p < 100) else
-            cs(sc.OUYA_BUTTON_Y)
-        )
-        s.draw() if c.ARTT.exists() else None
-        if cs(sc.OUYA_BUTTON_U) not in c.ART:
-            s.syst = None
-            s.done()
-
-    def draw(s):
-        c = s.__class__
-        tw(c.ARTT,text=('\n'.join(''.join(c.ART[i:i+40]) for i in range(0,len(s.ART),40))), position=(205,295))
-        s.up()
-
-    def up(s):
-        c = s.__class__
-        [_.delete() for _ in c.KIDS]
-        c.KIDS.clear()
-        pl = s.plys()
-        s.pltip.delete() if pl else 0
-        sy = max(len(pl)*30,90)
-        ocw(c.MainParent2,size=(205,sy))
-        dun = 0
-        for _,g in enumerate(pl):
-            p,a = g
-            tt = tw(
-                parent=c.MainParent2,
-                size=(200,30),
-                selectable=True,
-                click_activate=True,
-                glow_type='uniform',
-                color=[s.COL3,s.COL4][p==c.SL and not dun],
-                text=p,
-                position=(0,sy-30-30*_),
-                maxwidth=175,
-                on_activate_call=CallStrict(s.hl,_,p),
-                v_align='center'
-            )
-            if not dun and p == c.SL: ocw(c.MainParent2,visible_child=tt); dun = 1
-            c.KIDS.append(tt)
-
-    def done(s):
-        s.ding(0,1)
-        [_.join() for _ in s.thr]
-        s.thr.clear()
-        c = s.__class__
-        tt = time.time() - c.ST
-        ln = len(s.MEM)
-        ab = int(ln/tt)
-        TIP(f'¡Terminado!\nEscaneados {ln} servidores en {round(tt,2)} segundos!\nAproximadamente {ab} servidor{["es",""][ab<2]}/seg')
-        s.__class__.BUSY = False
-        s._refreshBestFriendsConnectedUI(["\ue063" + player.strip() for player, _ in s.plys()])
-        s._updateCount()
-
-# Kang
-SPEC = {"s":"{\"n\":\"Finder\",\"a\":\"\",\"sn\":\"\"}","d":"69"*20}
-AUTH = {'b': app.env.engine_build_number, 'tk': '', 'ph': ''}
-
-def ping_and_kang(
-    address: str,
-    port: int,
-    ping_wait: float = 0.3,
-    timeout: float = 3.5,
-    pro = [],
-    dex = None,
-):
-    """
-    Pings a server and then grabs its roster using a single connection.
-
-    Args:
-        address (str): The server's IP address.
-        port (int): The server's port.
-        ping_wait (float): Time to wait between ping retries.
-        timeout (float): Overall timeout for the entire operation.
-
-    Returns:
-        tuple[float | None, dict | None]: A tuple containing the ping in milliseconds
-                                           and the parsed roster dictionary.
-    """
-    ping_result = None
-    roster_result = None
-    sock = socket.socket(IPT(address),socket.SOCK_DGRAM)
-    sock.settimeout(timeout)
-
-    try:
-        ping_start_time = time.time()
-        ping_success = False
-        for _ in range(3):
-            try:
-                sock.sendto(b'\x0b', (address, port))
-                data, addr = sock.recvfrom(10)
-                # Ensure the response is correct and from the right server
-                if data == b'\x0c' and addr[0] == address:
-                    ping_success = True
-                    break
-            except: break
-            time.sleep(ping_wait)
-        if ping_success:
-            ping_result = (time.time() - ping_start_time) * 1000
-        else:
-            pro.append((dex,999))
-            return (999,[])
-
-        j = lambda h: dumps(h).encode('utf-8')
-        q = bytes.fromhex
-        p = lambda h, e=b'': sock.sendto(q(h.replace(' ','')) + e, (address, port))
-        g = lambda b: sock.recvfrom(b)[0]
-        # --- Start Handshake ---
-        my_handshake = f'{(71 + randint(0, 150)):02x}'
-        p(f'18 21 00 {my_handshake}', U().encode())
-        # The server's response contains its handshake byte at index 1
-        server_handshake = f'{g(3)[1]:02x}'
-        g(1024)  # Ack/Server-Info packet
-
-        p(f'24 {server_handshake} 10 21 00', j(SPEC))
-        p(f'24 {server_handshake} 11 f0 ff f0 ff 00 12', j(AUTH))
-        p(f'24 {server_handshake} 11 f1 ff f0 ff 00 15', j({}))
-        p(f'24 {server_handshake} 11 f2 ff f0 ff 00 03')
-
-        g(1024)  # Ack
-        g(9)     # Ack
-        # --- End Handshake ---
-
-        # --- Roster Grabbing Loop ---
-        # Message type IDs
-        SERVER_RELIABLE_MESSAGE = 0x25
-        BA_SCENEPACKET_MESSAGE = 0x11
-        BA_MESSAGE_MULTIPART = 0x0d
-        BA_MESSAGE_MULTIPART_END = 0x0e
-        BA_MESSAGE_PARTY_ROSTER = 0x09
-        roster_parts = bytearray()
-        collecting_roster = False
-        roster_listen_start_time = time.time()
-        while time.time() - roster_listen_start_time < (timeout / 2): # Use part of the total timeout
-            packet = g(2048) # Increased buffer size for safety
-
-            if not packet or len(packet) < 9: continue
-
-            if packet[0] == SERVER_RELIABLE_MESSAGE and packet[2] == BA_SCENEPACKET_MESSAGE:
-                payload_type = packet[8]
-                payload_data = packet[9:]
-
-                if payload_type == BA_MESSAGE_PARTY_ROSTER:
-                    json_string = payload_data.rstrip(b'\x00').decode('utf-8')
-                    roster_result = loads(json_string)
-                    break
-
-                elif payload_type == BA_MESSAGE_MULTIPART:
-                    if payload_data and payload_data[0] == BA_MESSAGE_PARTY_ROSTER:
-                        collecting_roster = True
-                        roster_parts.clear()
-                        roster_parts.extend(payload_data[1:])
-                    elif collecting_roster:
-                        roster_parts.extend(payload_data)
-
-                elif payload_type == BA_MESSAGE_MULTIPART_END and collecting_roster:
-                    roster_parts.extend(payload_data)
-                    json_string = roster_parts.rstrip(b'\x00').decode('utf-8')
-                    roster_result = loads(json_string)
-                    break
-        # --- Send Disconnect ---
-        p(f'20 {server_handshake}')
-
-    except: pass
-    finally: sock.close()
-    pro.append((dex,ping_result))
-    return (ping_result, roster_result or [])
-
-# Patches
-bw = lambda *,oac=None,**k: obw(
-    texture=gt('white'),
-    on_activate_call=oac,
-    enable_sound=False,
-    **k
-)
-cw = lambda *,size=None,oac=None,**k: (p:=ocw(
-    parent=zw('overlay_stack'),
-    background=False,
-    transition='in_scale',
-    size=size,
-    on_outside_click_call=oac,
-    **k
-)) and (p,iw(
-    parent=p,
-    texture=gt('softRect'),
-    size=(size[0]*1.2,size[1]*1.2),
-    position=(-size[0]*0.1,-size[1]*0.1),
-    opacity=0.55,
-    color=(0,0,0)
-),iw(
-    parent=p,
-    size=size
-))
-
-
-#cw = lambda *,size=None,oac=None,**k: (p:=ocw(
-#    parent=zw('overlay_stack'),
-#    background=False,
-#    transition='in_scale',
-#    size=size,
-#    on_outside_click_call=oac,
-#    **k
-#)) and (p,iw(
-#    parent=p,
-#    size=size
-#))
-
-# Global
-BTW = lambda t: (push(t,color=(1,1,0)),gs('block').play())
-TIP = lambda t: push(t,Finder.COL3)
-
-
 
 # Auto Respond #
 
@@ -2533,2190 +1304,3555 @@ class ButtonDelayHandler:
         return False
 
 Translate_Texts: Dict[str, dict[str, str]] = {
-'opsiBisu': { # >> menuOption
-    'id': 'Opsi Bisu Pesan',
-    'en': 'Mute Chats Option',
-    'hi': 'Chat Bisu Vikalp',
-    'es': 'Opción de Silenciar Chats',
-    'ml': 'Chats Mute Vikalp'
-},
-'modifWarnaParty': {
-    'id': 'Ubah Warna PartyWindow',
-    'en': 'Modify PartyWindow Color',
-    'hi': 'PartyWindow Rang Badlo',
-    'es': 'Modificar Color de PartyWindow',
-    'ml': 'PartyWindow Color Modify Cheyyuka'
-},
-'tambahResponCepat': {
-    'id': 'Tambah Respon Cepat',
-    'en': 'Add A Quick Respond',
-    'hi': 'Ek Tez Pratikriya Jodo',
-    'es': 'Agregar una Respuesta Rápida',
-    'ml': 'Oru Quick Respond Add Cheyyuka'
-},
-'tambahResponCepatTutorial': {
-    'id': 'Isi TextBar Dengan Teks Respon Cepat Kamu\nUntuk Menambah Respon Cepat',
-    'en': 'Fill The TextBar With Your Quick Respond Texts\nTo Add A Quick Respond',
-    'hi': 'Apne Tez Pratikriya Lekh TextBar Mein Bharein\nEk Tez Pratikriya Jodne Ke Liye',
-    'es': 'Llena la Barra de Texto con tus Textos de Respuesta Rápida\nPara Agregar una Respuesta Rápida',
-    'ml': 'Ningalude Quick Respond Texts TextBaril Nirakkuka\nOru Quick Respond Add Cheyyan'
-},
-'hapusResponCepat': {
-    'id': 'Hapus Respon Cepat',
-    'en': 'Remove A Quick Respond',
-    'hi': 'Ek Tez Pratikriya Hatayein',
-    'es': 'Eliminar una Respuesta Rápida',
-    'ml': 'Oru Quick Respond Remove Cheyyuka'
-},
-'muteInGameOnly': { # >> Mute Type
-    'id': 'Nonaktifkan Dalam Game Saja',
-    'en': 'Mute In Game Messages Only',
-    'hi': 'Keval Khel Mein Sandesh Bisu Karein',
-    'es': 'Silenciar Solo Mensajes en el Juego',
-    'ml': 'Game Messages Matram Mute Cheyyuka'
-},
-'mutePartyWindowOnly': {
-    'id': 'Nonaktifkan Pesan PartyWindow Saja',
-    'en': 'Mute Party Window Messages Only',
-    'hi': 'Keval PartyWindow Sandesh Bisu Karein',
-    'es': 'Silenciar Solo Mensajes de PartyWindow',
-    'ml': 'PartyWindow Messages Matram Mute Cheyyuka'
-},
-'muteAll': {
-    'id': 'Nonaktifkan Semua',
-    'en': 'Mute all',
-    'hi': 'Sab Bisu Karein',
-    'es': 'Silenciar Todo',
-    'ml': 'Ellam Mute Cheyyuka'
-},
-'unmuteAll': {
-    'id': 'Aktifkan Semua',
-    'en': 'Unmute All',
-    'hi': 'Sab Ko Unmute Karein',
-    'es': 'Desactivar Silencio de Todo',
-    'ml': 'Ellam Unmute Cheyyuka'
-},
-'hapusResponCepatPilihText': { # >> Quick Respond
-    'id': 'Telah Dihapus Dari Respon Cepat',
-    'en': 'Removed From Quick Respond',
-    'hi': 'Tez Pratikriya Se Hataya Gaya',
-    'es': 'Eliminado de Respuesta Rápida',
-    'ml': 'Quick Respondil Ninnum Remove Cheythu'
-},
-'editResponCepat': {
-    'id': 'Kustomisasi Respon Cepat',
-    'en': 'Edit Quick Respond',
-    'hi': 'Tez Pratikriya Ko Edit Karein',
-    'es': 'Editar Respuesta Rápida',
-    'ml': 'Quick Respond Edit Cheyyuka'
-},
-'saveLastGameReplay': {
-    'id': 'Simpan Game Replay Terakhir',
-    'en': 'Save Last Game Replay',
-    'hi': 'Aakhri Khel Replay Ko Save Karein',
-    'es': 'Guardar Repetición del Último Juego',
-    'ml': 'Last Game Replay Save Cheyyuka'
-},
-'sortQuickRespond': {
-    'id': 'SORTIR URUTAN',
-    'en': 'EDIT ORDER',
-    'hi': 'KRAM SANSODHAN',
-    'es': 'EDITAR ORDEN',
-    'ml': 'ORDER EDIT CHEYYUKA'
-},
-'voteKickConfirm': { # >> Kicking
-    'id': 'Voting Untuk Menendang Pemain Ini?',
-    'en': 'Vote Kick This Player?',
-    'hi': 'Is Khiladi Ko Vote Kick Karein?',
-    'es': '¿Votar para Expulsar a Este Jugador?',
-    'ml': 'Ee Playerine Vote Kick Cheyyuka?'
-},
-'cantKickHost': {
-    'id': 'Kamu Tidak Bisa Menendang Tuan Rumah',
-    'en': 'You Can\'t Kick The Host',
-    'hi': 'Aap Mezabaan Ko Laat Nhi Maar Sakate',
-    'es': 'No Puedes Expulsar al Anfitrión',
-    'ml': 'Nee Hostine Kick Cheyyan Kazhiyilla'
-},
-'cantKickMaster': {
-    'id': 'Kamu Tidak Bisa Menendang Diri Sendiri',
-    'en': 'You Can\'t Kick Yourself',
-    'hi': 'Aap Khud Ko Kick Nahi Kar Sakte',
-    'es': 'No Puedes Expulsarte A Ti Mismo',
-    'ml': 'Nee Thanneye Kick Cheyyan Kazhiyilla'
-},
-'votekick': { # >> Party Member Press
-    'id': 'Voting Keluar',
-    'en': 'Vote Kick',
-    'hi': 'Vote Kick',
-    'es': 'Votar Expulsión',
-    'ml': 'Vote Kick'
-},
-'mention': {
-    'id': 'Tag Pemain Ini',
-    'en': 'Mention This Player',
-    'hi': 'Is Khiladi Ko Mention Karein',
-    'es': 'Mencionar a Este Jugador',
-    'ml': 'Ee Playerine Mention Cheyyuka'
-},
-'warnInfo': {
-    'id': 'Peringatan: {}',
-    'en': 'Warns: {}',
-    'hi': 'Chitavani: {}',
-    'es': 'Advertencias: {}',
-    'ml': 'Warning: {}'
-},
-'partyPressWarnAdd': {
-    'id': 'Beri Peringatan',
-    'en': 'Give Warn',
-    'hi': 'Chitavani De',
-    'es': 'Dar Advertencia',
-    'ml': 'Warning Kodukkuka'
-},
-'partyPressWarnDecrease': {
-    'id': 'Kurangi Peringatan',
-    'en': 'Decrease Warn',
-    'hi': 'Chitavani Kam Karein',
-    'es': 'Disminuir Advertencia',
-    'ml': 'Warning Kurakkuka'
-},
-'addNewLangNoSplitter': {
-    'id': 'Masukkan \"{}\" diantara id-bahasa dan Bahasa',
-    'en': 'Put \"{}\" between lang-id and Lang',
-    'hi': 'lang-id aur Lang ke beech \"{}\" rakhein',
-    'es': 'Ponga \"{}\" entre lang-id y Lang',
-    'ml': 'Lang-idum Langum itayil \"{}\" vechuka'
-},
-'addNewLangInvalid': {
-    'id': 'Itu bukan format yang valid',
-    'en': 'That is not a valid format',
-    'hi': 'Yeh ek valid format nahi hai',
-    'es': 'Ese no es un formato válido',
-    'ml': 'Atu oru valid format alla'
-},
-'addNewLangExist': {
-    'id': 'Bahasa itu sudah ada di kamus',
-    'en': 'That language already exist in the dictionaries',
-    'hi': 'Woh bhasha pehle se hi dictionaries mein maujood hai',
-    'es': 'Ese idioma ya existe en los diccionarios',
-    'ml': 'Aa bhasha dictionariesil itayil undu'
-},
-'playerInfo': {
-    'id': 'Info Pemain',
-    'en': 'Player Info',
-    'hi': 'Khiladi Ki Jankari',
-    'es': 'Información del Jugador',
-    'ml': 'Player Info'
-},
-'playerInfoNotFound': {
-    'id': 'Tidak Dapat Menemukan Info Pemain Ini',
-    'en': 'Can\'t Find This Player Info',
-    'hi': 'Is kheladi ki jankari nahi mili',
-    'es': 'No se puede encontrar la información de este jugador',
-    'ml': 'Ee playernte info kandilla'
-},
-'adminkick': {
-    'id': 'ID Tendang: {0}',
-    'en': 'Kick ID: {0}',
-    'hi': 'Kick ID: {0}',
-    'es': 'Expulsar ID: {0}',
-    'ml': 'Kick ID: {0}'
-},
-'adminKickConfirm': {
-    'id': 'Tendang Player Ini',
-    'en': 'Kick This Player',
-    'hi': 'Is Khiladi Ko Kick Karein',
-    'es': '¿Expulsar a Este Jugador',
-    'ml': 'Ee Playerine Kick Cheyyuka'
-},
-'adminremove': {
-    'id': 'Singkirkan: {0}',
-    'en': 'Remove: {0}',
-    'hi': 'Hatayein: {0}',
-    'es': 'Eliminar: {0}',
-    'ml': 'Remove: {0}'
-},
-'adminRemoveConfirm': {
-    'id': 'Singkirkan Player Ini',
-    'en': 'Remove This Player',
-    'hi': 'Is Khiladi Ko Hatayein',
-    'es': '¿Eliminar a Este Jugador',
-    'ml': 'Ee Playerine Remove Cheyyuka'
-},
-'addNewChoiceCmd': {
-    'id': 'PERINTAH BARU',
-    'en': 'NEW CMD',
-    'hi': 'NAYA CMD',
-    'es': 'NUEVO CMD',
-    'ml': 'PUTHIYA CMD'
-},
-'sortChoiceCmd': {
-    'id': 'SORTIR PERINTAH',
-    'en': 'SORT CMD',
-    'hi': 'CMD KO SORT KAREIN',
-    'es': 'ORDENAR CMD',
-    'ml': 'CMD SORT CHEYYUKA'
-},
-'customCommands': {
-    'id': 'Perintah Kustom',
-    'en': 'Custom Command',
-    'hi': 'Custom Command',
-    'es': 'Comando Personalizado',
-    'ml': 'Custom Command'
-},
-'editCustomCommands': {
-    'id': 'Kustomisasi Perintah Kustom',
-    'en': 'Edit Custom Commands',
-    'hi': 'Custom Commands Ko Edit Karein',
-    'es': 'Editar Comandos Personalizados',
-    'ml': 'Custom Commands Edit Cheyyuka'
-},
-'addCustomCommands': {
-    'id': 'Tambah Perintah Kustom',
-    'en': 'Add Custom Commands',
-    'hi': 'Custom Commands Jodein',
-    'es': 'Agregar Comandos Personalizados',
-    'ml': 'Custom Commands Add Cheyyuka'
-},
-'customCommandsNoCmdPrefix': {
-    'id': 'Gunakan Setidaknya Salah Satu Dari Ini: {0}',
-    'en': 'Atleast Use One Of These: {0}',
-    'hi': 'Kam Se Kam Inme Se Ek Ka Upyog Karein: {0}',
-    'es': 'Al Menos Usa Uno de Estos: {0}',
-    'ml': 'Ithil Oru Upayogikkuka: {0}'
-},
-'translateTextLabel': {
-    'id': 'Kamus Teks Terjemahan',
-    'en': 'Translated Text Dictionaries',
-    'hi': 'Anudit Path Shabdakosh',
-    'es': 'Diccionarios de Textos Traducidos',
-    'ml': 'Translated Text Dictionaries'
-},
-'confirmNewLangID': {
-    'id': 'Lanjutkan \"{}\" seabagai id bahasa yang tepat?',
-    'en': 'Continue \"{}\" as a correct language id?',
-    'hi': '\"{}\" Ko Sahi Bhasha ID Ke Roop Mein Jari Rakhein?',
-    'es': '¿Continuar \"{}\" como un ID de idioma correcto?',
-    'ml': '\"{}\" Sariyaya Bhasha ID Aayi Thudarunnu?'
-},
-'saveLangIsInPreview': {
-    'id': 'Kamu tidak dapat menyimpan saat dalam mode pratinjau',
-    'en': 'You can\'t saving while in preview mode',
-    'hi': 'Aap Preview Mode Mein Hote Hue Save Nahi Kar Sakte',
-    'es': 'No Puedes Guardar Mientras Estás en Modo Vista Previa',
-    'ml': 'Nee Preview Modeil Save Cheyyan Kazhiyilla'
-},
-'addWarnBetraying': { # >> Add Betray Warn Type
-    'id': 'Berkhianat',
-    'en': 'Betraying',
-    'hi': 'Dhokha Dena',
-    'es': 'Traicionar',
-    'ml': 'Betraying'
-},
-'addWarnAbusing': {
-    'id': 'Bicara Kasar',
-    'en': 'Abusing',
-    'hi': 'Gali Dena',
-    'es': 'Abusar',
-    'ml': 'Abusing'
-},
-'addWarnUnnecessaryVotes': {
-    'id': 'Voting Tidak Perlu',
-    'en': 'Unnecessary Votes',
-    'hi': 'Avashyak Vote',
-    'es': 'Votos Innecesarios',
-    'ml': 'Avashyamaya Votes'
-},
-'addWarnTeaming': {
-    'id': 'Kerjasama',
-    'en': 'Teaming',
-    'hi': 'Mil Kar Khelna',
-    'es': 'Formar Equipo',
-    'ml': 'Teaming'
-},
-'addWarnIsMaster': {
-    'id': 'Kamu tidak bisa memberikan peringatan pada dirimu sendiri',
-    'en': 'You can\'t warn yourself',
-    'hi': 'Aap apne aap ko warn nahi kar sakte',
-    'es': 'No puedes advertirte a ti mismo',
-    'ml': 'Nee tanne warn cheyyan kazhiyilla'
-},
-'addWarnNotInGame': {
-    'id': 'Peringatan ditambah (Tidak dalam permainan)',
-    'en': 'Warn increased (Not in-game)',
-    'hi': 'Warn Badhaya (Khel Mein Nahi)',
-    'es': 'Advertencia aumentada (No en el juego)',
-    'ml': 'Warn Kooduthal (Gameil Illa)'
-},
-'popupPlayerListWindowOpened': {
-    'id': 'Jendela daftar pemain dibuka',
-    'en': 'Player List Window Opened',
-    'hi': 'Khiladi Suchi Ki Khidki Khuli',
-    'es': 'Ventana de Lista de Jugadores Abierta',
-    'ml': 'Player List Window Thurannu'
-},
-'popupPlayerListWindowOpenedSearching': {
-    'id': 'Jendela daftar pemain dibuka, (+Pencarian)...',
-    'en': 'Player List Window Opened, (+Searching)...',
-    'hi': 'Khiladi Suchi Ki Khidki Khuli, (+Khoj)...',
-    'es': 'Ventana de Lista de Jugadores Abierta, (+Buscando)...',
-    'ml': 'Player List Window Thurannu, (+Searching)...'
-},
-'popupPlayerListWindowSearchingNotFound': {
-    'id': 'Tidak ada kecocokan yang ditemukan untuk \"{}\"',
-    'en': 'No Match Found For \"{}\"',
-    'hi': '\"{}\" Ke Liye Koi Milaan Nahi Mila',
-    'es': 'No se Encontró Coincidencia para \"{}\"',
-    'ml': '\"{}\" Kku Match Kittiyilla'
-},
-'partyWindow.emptyText': {
-    'id': 'Acaramu Kosong',
-    'en': 'Your Party Is Empty',
-    'hi': 'Aapki Party Khali Hai',
-    'es': 'Tu Fiesta Está Vacía',
-    'ml': 'Ninte Party Khali Aan'
-},
-'partyWindow.chatMutedText': {
-    'id': 'Pesan Dibisukan',
-    'en': 'Chat Muted',
-    'hi': 'Chat Bisu',
-    'es': 'Chat Silenciado',
-    'ml': 'Chat Mute Cheythu'
-},
-'partyWindow.titleText': {
-    'id': 'Pwesta Kamw',
-    'en': 'Your Pawri',
-    'hi': 'Aapki Pawri',
-    'es': 'Tu Fiesta',
-    'ml': 'Ninte Pawri'
-},
-'partyWindow.hostText': {
-    'id': 'Tuan',
-    'en': 'Host',
-    'hi': 'Mezabaan',
-    'es': 'Anfitrión',
-    'ml': 'Host'
-},
-'cantMatchInPlayerData': {
-    'id': 'Tidak dapat menyocokkan \"{}\" di data pemain',
-    'en': 'Can\'t match \"{}\" in player data',
-    'hi': 'Khiladi Data Mein \"{}\" Ka Milaan Nahi Kar Sakte',
-    'es': 'No se Puede Coincidir \"{}\" en los Datos del Jugador',
-    'ml': 'Player Datail \"{}\" Match Cheyyan Kazhiyilla'
-},
-'cantFindInPlayerData': {
-    'id': 'Tidak dapat mencari \"{}\" di data pemain',
-    'en': 'Can\'t find \"{}\" in player data',
-    'hi': 'Khiladi Data Mein \"{}\" Nahi Mil Sakte',
-    'es': 'No se Puede Encontrar \"{}\" en los Datos del Jugador',
-    'ml': 'Player Datail \"{}\" Kittiyilla'
-},
-'addSuccess': {
-    'id': 'Berhasil Ditambah',
-    'en': 'Succesfully Added',
-    'hi': 'Safalta Se Joda Gaya',
-    'es': 'Agregado Exitosamente',
-    'ml': 'Vijayapoorvam Add Cheythu'
-},
-'editSuccess': {
-    'id': 'Teks Berhasil Diedit',
-    'en': 'Text Succesfully Edited',
-    'hi': 'Path Safalta Se Edit Kiya Gaya',
-    'es': 'Texto Editado Exitosamente',
-    'ml': 'Text Vijayapoorvam Edit Cheythu'
-},
-'editExist': {
-    'id': 'Teks Editan Sudah Ada',
-    'en': 'Text Edited Already Exist',
-    'hi': 'Path Edit Kiya Hua Pehle Se Maujood Hai',
-    'es': 'El Texto Editado Ya Existe',
-    'ml': 'Edit Cheytha Text Already Exist'
-},
-'removeSuccess': {
-    'id': 'Teks Berhasil Dihapus',
-    'en': 'Text Succesfully Removed',
-    'hi': 'Path Safalta Se Hataya Gaya',
-    'es': 'Texto Eliminado Exitosamente',
-    'ml': 'Text Vijayapoorvam Remove Cheythu'
-},
-'save': {
-    'id': 'Simpan',
-    'en': 'Save',
-    'hi': 'Save Karein',
-    'es': 'Guardar',
-    'ml': 'Save Cheyyuka'
-},
-'use': {
-    'id': 'Gunakan',
-    'en': 'Use',
-    'hi': 'Upyog Karein',
-    'es': 'Usar',
-    'ml': 'Upayogikkuka'
-},
-'copy': {
-    'id': 'Salin',
-    'en': 'Copy',
-    'hi': 'Copy Karein',
-    'es': 'Copiar',
-    'ml': 'Copy Cheyyuka'
-},
-'textCopied': {
-    'id': '\"{}\" Disalin',
-    'en': '\"{}\" Copied',
-    'hi': '\"{}\" Copy Kiya Gaya',
-    'es': '\"{}\" Copiado',
-    'ml': '\"{}\" Copy Cheythu'
-},
-'get': {
-    'id': 'Dapatkan',
-    'en': 'Get',
-    'hi': 'Prapt Karein',
-    'es': 'Obtener',
-    'ml': 'Kittuka'
-},
-'enabled': {
-    'id': 'Dinyalakan',
-    'en': 'Enabled',
-    'hi': 'Sakriya',
-    'es': 'Habilitado',
-    'ml': 'Enabled'
-},
-'disabled': {
-    'id': 'Dimatikan',
-    'en': 'Disabled',
-    'hi': 'Nishkriya',
-    'es': 'Deshabilitado',
-    'ml': 'Disabled'
-},
-'confirmCopy': {
-    'id': 'Salin Teks Ini',
-    'en': 'Copy This Text', 
-    'hi': 'Is Path Ko Copy Karein',
-    'es': 'Copiar Este Texto',
-    'ml': 'Itha Text Copy Cheyyuka'
-},
-'chatViewProfile': {
-    'id': 'Profil Pemain Lengkap',
-    'en': 'Players Full Profile',
-    'hi': 'Players ka Pura Profile',
-    'es': 'Perfil Completo del Jugador',
-    'ml': 'Playersinte Purna Profile'
-},
-'chatViewAccount': {
-    'id': 'Nama Akun Pemain',
-    'en': 'Players Account Name',
-    'hi': 'Players ka Account Naam',
-    'es': 'Nombre de Cuenta del Jugador',
-    'ml': 'Playersinte Account Peru'
-},
-'chatViewMulti': {
-    'id': 'Akun & Profil Pemain',
-    'en': 'Players Account & Profile',
-    'hi': 'Players ka Account aur Profile',
-    'es': 'Cuenta y Perfil del Jugador',
-    'ml': 'Playersinte Accountum Profileum'
-},
-'chatViewMultiV2': {
-    'id': 'Akun & Profil Pemain V.2',
-    'en': 'Players Account & Profile V.2',
-    'hi': 'Players ka Account aur Profile V.2',
-    'es': 'Cuenta y Perfil del Jugador V.2',
-    'ml': 'Playersinte Accountum Profileum V.2'
-},
-'chatShowCid': {
-    'id': 'Tampilkan ClientID Pemain',
-    'en': 'View Players\' ClientID',
-    'hi': 'Players ka ClientID Dekhein',
-    'es': 'Ver ClientID del Jugador',
-    'ml': 'Playersinte ClientID Kaanuka'
-},
-'chatHideCid': {
-    'id': 'Sembunyikan ClientID Pemain',
-    'en': 'Hide Players\' ClientID',
-    'hi': 'Players ka ClientID Chhupao',
-    'es': 'Ocultar ClientID del Jugador',
-    'ml': 'Playersinte ClientID Marachuka'
-},
-'chatViewOff': {
-    'id': 'Matikan Penampil Nama Chat',
-    'en': 'Turn Off Chat Name Viewer',
-    'hi': 'Chat Name Viewer Band Karo',
-    'es': 'Apagar Visor de Nombres del Chat',
-    'ml': 'Chat Name Viewer Off Akkuka'
-},
-'backupAllNamesStart': { ####
-    'id': 'Memulai pencadangan semua data nama',
-    'en': 'Backing up all names data',
-    'hi': 'Saare naam ke data ka backup liya ja raha hai',
-    'es': 'Haciendo copia de seguridad de todos los datos de nombres',
-    'ml': 'Ella perukalude data backup edukkunnu'
-},
-'backupAllNamesSuccess': {
-    'id': 'Semua data nama berhasil dicadangkan',
-    'en': 'All names data backed up successfully',
-    'hi': 'Saare naam ke data ka backup safal hua',
-    'es': 'Todos los datos de nombres respaldados exitosamente',
-    'ml': 'Ella perukalude data vijayathode backup cheythu'
-},
-'backupAllNamesFailed': {
-    'id': 'Gagal mencadangkan semua data nama',
-    'en': 'Error backing up all names data',
-    'hi': 'saare naam ke data ka backup mein galti hui',
-    'es': 'Error al hacer copia de seguridad de todos los datos de nombres',
-    'ml': 'Ella perukalude data backup cheyyumbol thappu undayi'
-},
-'copyText': { ##################################################################
-    'id': 'Salin teks',
-    'en': 'Copy text',
-    'hi': 'Text copy karein',
-    'es': 'Copiar texto',
-    'ml': 'Text copy cheyyu'
-},
-'translateText': {
-    'id': 'Terjemahkan teks',
-    'en': 'Translate text',
-    'hi': 'Text translate karein',
-    'es': 'Traducir texto',
-    'ml': 'Text translate cheyyu'
-},
-'insertText': {
-    'id': 'Masukkan teks',
-    'en': 'Insert text',
-    'hi': 'Text insert karein',
-    'es': 'Insertar texto',
-    'ml': 'Text insert cheyyu'
-},
-'playerMenuOptionFromText': {
-    'id': 'Opsi player',
-    'en': 'Player option',
-    'hi': 'Player option',
-    'es': 'Opción de jugador',
-    'ml': 'Player option'
-},
-'editablePopUpInvalidDataType': {
-    'id': 'Tipe data tidak valid',
-    'en': 'Data type is not valid',
-    'hi': 'Data ka prakar valid nahi hai',
-    'es': 'El tipo de datos no es válido',
-    'ml': 'Data type valid alla'
-},
-'editablePopUpInvalidSaveFuncList': { # >>
-    'id': 'Oops, Fungsi Penyimpan List Tidak Valid',
-    'en': 'Uh Oh, Invalid List Saving Function',
-    'hi': 'Oops, List save function valid nahi hai',
-    'es': 'Ups, Función de guardado de lista no válida',
-    'ml': 'Oops, List save function valid alla'
-},
-'editablePopUpInvalidSaveFuncDict': {
-    'id': 'Oops, Fungsi Penyimpan Dict Tidak Valid',
-    'en': 'Uh Oh, Invalid Dict Saving Function',
-    'hi': 'Oops, Dict save function valid nahi hai',
-    'es': 'Ups, Función de guardado de diccionario no válida',
-    'ml': 'Oops, Dict save function valid alla'
-},
-'bcsObtainedAccountIdentity': {
-    'id': 'Identitas',
-    'en': 'Identity',
-    'hi': 'Identity',
-    'es': 'Identidad',
-    'ml': 'Identity'
-},
-'bcsObtainedOtherAcc': {
-    'id': 'Akun Lain',
-    'en': 'Other Accounts',
-    'hi': 'Other Accounts',
-    'es': 'Otras cuentas',
-    'ml': 'Other Accounts'
-},
-'bcsObtainedUpgradedName': {
-    'id': 'Nama Terupgrade',
-    'en': 'Upgraded Name',
-    'hi': 'Upgraded Name',
-    'es': 'Nombre mejorado',
-    'ml': 'Upgraded Name'
-},
-'bcsObtainedOtherUpgradedName': {
-    'id': 'Nama Terupgrade Lain',
-    'en': 'Other Upgraded Names',
-    'hi': 'Other Upgraded Names',
-    'es': 'Otros nombres mejorados',
-    'ml': 'Other Upgraded Names'
-},
-'bcsObtainedAccountDatesKEY': {
-    'id': 'Akun Dibuat Pada',
-    'en': 'Account Dates',
-    'hi': 'Account Dates',
-    'es': 'Fechas de la cuenta',
-    'ml': 'Account Dates'
-},
-'bcsObtainedCretedOn': {
-    'id': 'Dibuat Pada',
-    'en': 'Created On',
-    'hi': 'Created On',
-    'es': 'Creado el',
-    'ml': 'Created On'
-},
-'bcsObtainedUpdatedOn': {
-    'id': 'Diperbaharui Pada',
-    'en': 'Updated On',
-    'hi': 'Updated On',
-    'es': 'Actualizado el',
-    'ml': 'Updated On'
-},
-'bcsObtainedConnectedDiscordKEY': {
-    'id': 'Akun Discord Terkoneksi Pada Pemain',
-    'en': 'Player\'s Connected Discord',
-    'hi': 'Player\'s Connected Discord',
-    'es': 'Discord conectado del jugador',
-    'ml': 'Player\'s Connected Discord'
-},
-'bcsObtainedConnectedDiscordId': { # Unused
-    'id': 'ID-DC',
-    'en': 'DC-ID',
-    'hi': 'DC-ID',
-    'es': 'ID-DC',
-    'ml': 'DC-ID'
-},
-'bcsObtainedConnectedDiscordUsername': {
-    'id': 'Nama pengguna',
-    'en': 'Username',
-    'hi': 'Yuzar naam',
-    'es': 'Nombre de usuario',
-    'ml': 'Yuzar peru'
-},
-'bcsObtainedConnectedDiscordUniqueId': {
-    'id': 'ID Unik',
-    'en': 'Unique ID',
-    'hi': 'Anokha ID',
-    'es': 'ID único',
-    'ml': 'Vyakti ID'
-},
-'bcsObtainedSpaz': {
-    'id': 'Spaz-nya Si Pemain',
-    'en': 'Player\'s Spaz',
-    'hi': 'Kheladi ka Spaz',
-    'es': 'Spaz del jugador',
-    'ml': 'Khelaadiyude Spaz'
-},
-'bcsObtainedMutualServer': {
-    'id': 'Ketemuan Di Server',
-    'en': 'Mutual Servers',
-    'hi': 'Sajha server',
-    'es': 'Servidores mutuos',
-    'ml': 'Sahadharmi server'
-},
-'errorAfterGetDataFromBCS': {
-    'id': 'Error \"Setelah\" Mendapatkan Data Pemain Dari BCS',
-    'en': 'Error \"After\" Obtaining Player Data From BCS',
-    'hi': 'BCS se kheladi data prapt karne ke baad error',
-    'es': 'Error \"Después\" de obtener datos del jugador de BCS',
-    'ml': 'BCS-il ninnu khelaadi data kittiyappol error'
-},
-'confirmChangesFromBCS': {
-    'id': 'Apakah Anda Ingin Menyimpan Perubahan Untuk Pemain Ini?',
-    'en': 'Do You Want To Save Changes For Player',
-    'hi': 'Kya aap kheladi ke liye parivartan save karna chahte hain?',
-    'es': '¿Quieres guardar los cambios para el jugador?',
-    'ml': 'Khelaadiyude maatpravarttanangal save cheyyaamo?'
-},
-'errorWhileGetDataFromBCS': {
-    'id': 'Error Saat Mendapatkan Data Pemain',
-    'en': 'Error On Getting Player Data',
-    'hi': 'Kheladi data prapt karne mein error',
-    'es': 'Error al obtener datos del jugador',
-    'ml': 'Khelaadi data kittiyappol error'
-},
-'bcsGettingPlayerData': { # >> Get Data From BCS
-    'id': 'Mendapatkan Data Pemain {0} Dari BCS',
-    'en': 'Getting Player {0}\'s Data From BCS',
-    'hi': 'BCS se kheladi {0} ka data prapt kiya ja raha hai',
-    'es': 'Obteniendo datos del jugador {0} de BCS',
-    'ml': 'BCS-il ninnu khelaadi {0}\'nte data kittunnu'
-},
-'bcsFetchError': {
-    'id': 'Error Mendapatkan Data {0} Dari Server BCS',
-    'en': 'Error Getting {0}\'s Data From BCS Server',
-    'hi': 'BCS server se {0} ka data prapt karne mein error',
-    'es': 'Error al obtener datos de {0} del servidor BCS',
-    'ml': 'BCS server-il ninnu {0}\'nte data kittiyappol error'
-},
-'bcsFetchStillFetching': {
-    'id': 'Data pemain {0} sedang dicari, tunggu sebentar',
-    'en': 'Player {0}\'s Data still searched, please wait',
-    'hi': 'Kheladi {0} ka data abhi bhi khoja ja raha hai, kripya prateeksha karein',
-    'es': 'Los datos del jugador {0} aún se están buscando, por favor espere',
-    'ml': 'Khelaadi {0}\'nte data ippozhum shodhikkunnu, kshamikkuka'
-},
-'bcsFetchFailedConnect': {
-    'id': 'Tidak Dapat Terhubung Ke Server BCS Untuk Pemain {0}',
-    'en': 'Can\'t Connect To BCS Server For Player {0}',
-    'hi': 'Kheladi {0} ke liye BCS server se jod nahi ho paya',
-    'es': 'No se puede conectar al servidor BCS para el jugador {0}',
-    'ml': 'Khelaadi {0}\'nte BCS server-ilekku connect cheyyan kazhiyunnilla'
-},
-'bcsFetchNotFound': {
-    'id': 'Tidak Dapat Menemukan Data {0} Dari Server BCS',
-    'en': 'Can\'t Find {0}\'s Data From BCS Server',
-    'hi': 'BCS server se {0} ka data nahi mila',
-    'es': 'No se pueden encontrar los datos de {0} del servidor BCS',
-    'ml': 'BCS server-il ninnu {0}\'nte data kandilla'
-},
-'bcsOnSearchTryEmpty': {
-    'id': 'PB-ID Tidak Tersedia...\nAmbil Data {} Dari BCS?\n(Mungkin Butuh Waktu)',
-    'en': 'PB-ID Is Not Available...\nGet {}\'s Data From BCS?\n(Might Take A While)',
-    'hi': 'PB-ID uplabdh nahi hai...\nBCS se {} ka data prapt karein?\n(samay lagega)',
-    'es': 'PB-ID no está disponible...\n¿Obtener datos de {} de BCS?\n(Podría tomar un tiempo)',
-    'ml': 'PB-ID kittunilla...\nBCS-il ninnu {}\'nte data edukkamo?\n(samayam edukkum)'
-},
-'bcsOnSearchTryOnlyPb': {
-    'id': 'PB-ID Tersedia Dari Sumber Lain\nAmbil Data Lain {} Dari BCS?\n(Mungkin Butuh Waktu)',
-    'en': 'PB-ID Is Available From Other Source\nGet {}\'s Other Data From BCS?\n(Might Take A While)',
-    'hi': 'PB-ID anya srot se uplabdh hai\nBCS se {} ka anya data prapt karein?\n(samay lagega)',
-    'es': 'PB-ID está disponible desde otra fuente\n¿Obtener otros datos de {} de BCS?\n(Podría tomar un tiempo)',
-    'ml': 'PB-ID vere oru sthaanatthil ninnu kittiyirikkunnu\nBCS-il ninnu {}\'nte vere data edukkamo?\n(samayam edukkum)'
-},
-'bcsOnSearchTryNoPbNoBcs': {
-    'id': 'PB-ID Tidak Tersedia...\nDan Data {} Tidak Ditemukan Di BCS\nApakah Anda Ingin Mencari Data Lagi?',
-    'en': 'PB-ID Is Not Available...\nAnd {}\'s Data Not Found In BCS\nDo You Wanna Research The Data?',
-    'hi': 'PB-ID uplabdh nahi hai...\nAur {} ka data BCS mein nahi mila\nkya aap data phir se khojna chahte hain?',
-    'es': 'PB-ID no está disponible...\nY los datos de {} no se encontraron en BCS\n¿Quieres investigar los datos de nuevo?',
-    'ml': 'PB-ID kittunilla...\nBCS-il {}\'nte data kandilla\ndata mattoru pravisham shodhikkamo?'
-},
-'bcsOnSearchTryNoBcs': {
-    'id': 'PB-ID Tersedia: {pb_id}\nTapi Data {name} Tidak Ditemukan Di BCS\nApakah Anda Ingin Mencari Data Lagi?',
-    'en': 'PB-ID Available: {pb_id}\nBut {name}\'s Data Not Found In BCS\nDo You Wanna Research The Data',
-    'hi': 'PB-ID uplabdh: {pb_id}\nLekin {name} ka data BCS mein nahi mila\nkya aap data phir se khojna chahte hain?',
-    'es': 'PB-ID disponible: {pb_id}\nPero los datos de {name} no se encontraron en BCS\n¿Quieres investigar los datos de nuevo?',
-    'ml': 'PB-ID kittiyirikkunnu: {pb_id}\nPakshe BCS-il {name}\'nte data kandilla\ndata mattoru pravisham shodhikkamo?'
-},
-'bcsOnSearchTryFull': {
-    'id': 'PB-ID Dan Data Dari BCS Sudah Diperoleh:\nPB-ID Sekarang: {pb_id}\nAmbil Data {name} Dari BCS Lagi',
-    'en': 'PB-ID And Data From BCS Already Obtained:\nCurrent PB-ID: {pb_id}\nGet {name}\'s Data From BCS Again',
-    'hi': 'PB-ID aur BCS se data pehle hi prapt ho chuka hai:\nvartamaan PB-ID: {pb_id}\nBCS se {name} ka data phir se prapt karein',
-    'es': 'PB-ID y datos de BCS ya obtenidos:\nPB-ID actual: {pb_id}\nObtener datos de {name} de BCS nuevamente',
-    'ml': 'PB-IDum BCS-il ninnulla datayum kitti:\nCurrent PB-ID: {pb_id}\nBCS-il ninnu {name}\'nte data mattoru pravisham edukkuka'
-},
-'bcsOnSearchTryUnknown': {
-    'id': 'Format Teks Tidak Dikenal Untuk Data {name}\nStatus PB-ID: {pb_id}\nStatus Pencarian: {other}',
-    'en': 'Unknown Text Format For {name}\'s Data\nPB-ID Status: {pb_id}\nSearched Status: {other}',
-    'hi': '{name} ke data ke liye anjaan text format\nPB-ID status: {pb_id}\nSearch status: {other}',
-    'es': 'Formato de texto desconocido para los datos de {name}\nEstado de PB-ID: {pb_id}\nEstado de búsqueda: {other}',
-    'ml': '{name}\'nte datayude anjaan text format\nPB-ID status: {pb_id}\nSearch status: {other}'
-},
-'bcsPbPriority': {
-    'id': 'Prioritaskan PB-ID BCS',
-    'en': 'Prioritize BCS PB-ID',
-    'hi': 'BCS PB-ID ko prathamikta do',
-    'es': 'Priorizar PB-ID de BCS',
-    'ml': 'BCS PB-IDkk priority kodukkuka'
-},
-'settingsWindow.accountText': {
-    'id': 'Akun',
-    'en': 'Account',
-    'hi': 'Khaata',
-    'es': 'Cuenta',
-    'ml': 'Account'
-},
-'saveReplayTitle': {
-    'id': 'Simpan Rekaman Permainan Terakhir',
-    'en': 'Save Last Game Replay',
-    'hi': 'Pichhla game replay save karo',
-    'es': 'Guardar la última repetición del juego',
-    'ml': 'Kazhinja game replay save cheyyuka'
-},
-'saveReplayConfirmReplaceWithDefault': {
-    'id': 'Yakin menggunakan nama rekaman default',
-    'en': 'Confirm to use default replay name',
-    'hi': 'Default replay naam istemal karne ki pusti karein',
-    'es': 'Confirmar usar el nombre de repetición predeterminado',
-    'ml': 'Default replay peru upayogikkunnathinu sthirappikkuka'
-},
-'saveReplayEnter': {
-    'id': 'Simpan Rekaman Game',
-    'en': 'Save Game Replay',
-    'hi': 'Game replay save karo',
-    'es': 'Guardar repetición del juego',
-    'ml': 'Game replay save cheyyuka'
-},
-'saveReplayEmptyName': {
-    'id': 'Nama rekaman permainan tidak bisa kosong',
-    'en': 'Game replay name can\'t be empty',
-    'hi': 'Game replay ka naam khali nahi ho sakta',
-    'es': 'El nombre de la repetición del juego no puede estar vacío',
-    'ml': 'Game replaynte peru khaliyakkam pattilla'
-},
-'saveReplayNoLastReplay': {
-    'id': 'Rekaman permainan terkahir tidak ditemukan',
-    'en': 'Last game replay file not found',
-    'hi': 'Pichhla game replay file nahi mili',
-    'es': 'Archivo de la última repetición del juego no encontrado',
-    'ml': 'Kazhinja game replay file kandilla'
-},
-'saveReplaySaved': {
-    'id': 'Rekaman game \"{}\" berhasil disimpan',
-    'en': 'Game replay \"{}\" succesfully saved',
-    'hi': 'Game replay \"{}\\" safalta se save ho gaya',
-    'es': 'Repetición del juego \"{}\" guardada con éxito',
-    'ml': 'Game replay \"{}\" vijayathode save cheythu'
-},
-'saveReplayError': {
-    'id': 'Gagal menyimpan rekaman permainan',
-    'en': 'Failed to save game replay',
-    'hi': 'Game replay save karne mein asafal',
-    'es': 'Error al guardar la repetición del juego',
-    'ml': 'Game replay save cheyyan kazhiyilla'
-},
-'saveReplayInfoDate': {
-    'id': '{} = Tanggal sekarang',
-    'en': '{} = Current date',
-    'hi': '{} = Vartamaan taareekh',
-    'es': '{} = Fecha actual',
-    'ml': '{} = Current date'
-},
-'saveReplayInfoTime': {
-    'id': '{} = Waktu sekarang',
-    'en': '{} = Current time',
-    'hi': '{} = Vartamaan samay',
-    'es': '{} = Hora actual',
-    'ml': '{} = Current time'
-},
-'saveReplayOverwriteConfirm': {
-    'id': 'Rekaman dengan nama ini sudah ada, timpa?',
-    'en': 'The replay with this name already exist, overwrite?',
-    'hi': 'Is naam ka replay pehle se maujood hai, overwrite karein?',
-    'es': 'La repetición con este nombre ya existe, ¿sobrescribir?',
-    'ml': 'Itha perulla replay munp undu, overwrite cheyyamo?'
-},
-'saveReplayConfirmExit': {
-    'id': 'Yakin keluar tanpa menyimpan?',
-    'en': 'Are you sure exit without saving?',
-    'hi': 'Kya aap save kiye bina bahar jaane ke liye pakka hain?',
-    'es': '¿Estás seguro de salir sin guardar?',
-    'ml': 'Save cheyyathe purathu pokan nishchayikkunnundo?'
-},
-'savePlayerDataHappyMsg1': {
-    'id': 'Wow, Kamu Telah Mengumpulkan {} Nama Pemain! Teruskan xD',
-    'en': 'Wow, You Have Collected {} Player Names! Keep it Up xD',
-    'hi': 'Wow, aapne {} player ke naam ikatthe kiye hain! Jaari rakho xD',
-    'es': '¡Guau, has recopilado {} nombres de jugadores! Sigue así xD',
-    'ml': 'Wow, ningal {} playernte perukal collect cheythu! Thudarum xD'
-},
-'savePlayerDataHappyMsg2': {
-    'id': 'Daymm, Kamu Mengumpulkan {} Nama Pemain! Less Senang xD',
-    'en': 'Daymm, You Collected {} Player Names! Less is Happy xD',
-    'hi': 'Daymm, aapne {} player ke naam ikatthe kiye hain! Less khush hai xD',
-    'es': '¡Vaya, has recopilado {} nombres de jugadores! Less está feliz xD',
-    'ml': 'Daymm, ningal {} playernte perukal collect cheythu! Less santhoshappettu xD'
-},
-'savePlayerDataHappyMsg3': {
-    'id': 'Kamu Mengumpulkan {} Nama Pemain, Luar Biasa! Kamu Pasti OG🙀',
-    'en': 'You Collected {} Player Names, Amazing! You Sure An OG🙀',
-    'hi': 'Aapne {} player ke naam ikatthe kiye, shandaar! Aap pakka OG hain🙀',
-    'es': '¡Has recopilado {} nombres de jugadores, increíble! Definitivamente eres un OG🙀',
-    'ml': 'Ningal {} playernte perukal collect cheythu, adbhutam! Ningal sure an OG🙀'
-},
-'savePlayerDataHappyMsg4': {
-    'id': '{} Nama Pemain? Sentuh Rumput Bruh😭',
-    'en': '{} Player Names? Touch Some Grass Bruh😭',
-    'hi': '{} Player ke naam? Thoda ghaas chho lo bhai😭',
-    'es': '¿{} Nombres de jugadores? Toca un poco de hierba, hermano😭',
-    'ml': '{} Playernte perukal? Kurachu pul thodukku da😭'
-},
-'translateFailed': {
-    'id': 'Tidak Dapat Terhubung Ke Google Translate / Tidak Ada Koneksi Internet',
-    'en': 'Can\'t Connect To Google Translate / No Internet Connection',
-    'hi': 'Google Translate se jod nahi ho paya / Internet connection nahi hai',
-    'es': 'No se puede conectar a Google Translate / Sin conexión a Internet',
-    'ml': 'Google Translate-ilekku connect cheyyan kazhiyilla / Internet connection illa'
-},
-'serverDisconnected': {
-    'id': 'Ujung jarak jauh menutup koneksi tanpa respons',
-    'en': 'Remote end closed connection without response',
-    'hi': 'Door ka anty bina jawab ke jod tod diya',
-    'es': 'El extremo remoto cerró la conexión sin respuesta',
-    'ml': 'Dooravarti mukham bina uttaram bandham murichu'
-},
-'translateSameSrcDest': {
-    'id': 'Sumber ({}) dan Tujuan ({}) Bahasa Sama',
-    'en': 'Same Source ({}) And Destination ({}) Lang',
-    'hi': 'Sam strot ({}) aur lakshya ({}) bhasha',
-    'es': 'Mismo Origen ({}) y Destino ({}) Idioma',
-    'ml': 'Samam sthaanam ({}) athra lakshyam ({}) bhasha'
-},
-'translateEmptyText': {
-    'id': 'Ngga ada teks buat diterjemah',
-    'en': 'Nothing to translate',
-    'hi': 'Anuvad ke liye kuch nahi',
-    'es': 'Nada que traducir',
-    'ml': 'Anuvadakkaayi onnumilla'
-},
-'translateSameResult': {
-    'id': 'Hasil terjemahan sama',
-    'en': 'Translation results are the same',
-    'hi': 'Anuvad ke nateeje saman hain',
-    'es': 'Los resultados de la traducción son iguales',
-    'ml': 'Anuvadattinte parinamam samanamanu'
-},
-'noResponderData': {
-    'id': 'Tidak Ada Data Untuk Diambil Saat Ini',
-    'en': 'No Data To Get Right Now',
-    'hi': 'Abhi lene ke liye koi data nahi',
-    'es': 'No hay datos para obtener ahora mismo',
-    'ml': 'Ippol edukkaan data illa'
-},
-'findPlayerCmdShortArgument': {
-    'id': 'Berikan setidaknya {} karakter untuk mencari',
-    'en': 'Please provide at least {} characters to search',
-    'hi': 'Khojne ke liye kam se kam {} akshar dijiye',
-    'es': 'Por favor proporcione al menos {} caracteres para buscar',
-    'ml': 'Thediyaan kurachu {} aksharam kodukku'
-},
-'findPlayerCmdFailed': {
-    'id': 'Gagal Mencari',
-    'en': 'Failed Finding',
-    'hi': 'Khojne mein asaphal',
-    'es': 'Búsqueda fallida',
-    'ml': 'Thediyaan thottilla'
-},
-'findPlayerCmdNotFound': {
-    'id': 'Tidak Ada Kecocokan Untuk \"{}\"',
-    'en': 'No Match Found For \"{}\"',
-    'hi': '\"{}\" ke liye koi mil nahi',
-    'es': 'No se encontró coincidencia para \"{}\"',
-    'ml': '\"{}\" inu ottum kittiyilla'
-},
-'findPlayerIncludeProfileEnable': {
-    'id': 'Sertakan Pencocokan Dengan Profil Diaktifkan',
-    'en': 'Include Matching With Profile Enabled',
-    'hi': 'sakriya profile ke saath milan shamil karein',
-    'es': 'Incluir coincidencia con perfil habilitado',
-    'ml': 'Nakriya profile-umayi ottu cherkkuka'
-},
-'findPlayerIncludeProfileDisable': {
-    'id': 'Sertakan Pencocokan Dengan Profil Dinonaktifkan',
-    'en': 'Include Matching With Profile Disabled',
-    'hi': 'Nishkriya profile ke saath milan shamil karein',
-    'es': 'Incluir coincidencia con perfil deshabilitado',
-    'ml': 'Nishkriya profile-umayi ottu cherkkuka'
-},
-'nickAlreadyExist': {
-    'id': 'Nickname Sudah Ada',
-    'en': 'Nick already exists',
-    'hi': 'Nick pehle se maujood hai',
-    'es': 'El apodo ya existe',
-    'ml': 'Nick munpu undayirunnu'
-},
-'nickAdded': {
-    'id': 'Nickname Ditambahkan',
-    'en': 'Nick added',
-    'hi': 'Nick jod diya gaya',
-    'es': 'Apodo añadido',
-    'ml': 'Nick cherthu'
-},
-'nickRemoved': {
-    'id': 'Nickname Dihapus',
-    'en': 'Nick removed',
-    'hi': 'Nick hata diya gaya',
-    'es': 'Apodo eliminado',
-    'ml': 'Nick maatti'
-},
-'nickNotFound': {
-    'id': 'Nickname Tidak Ditemukan',
-    'en': 'Nick not found',
-    'hi': 'Nick nahi mila',
-    'es': 'Apodo no encontrado',
-    'ml': 'Nick kittiyilla'
-},
-'responderBlacklistInvalidName': {
-    'id': 'Nama Blacklist Tidak Valid',
-    'en': 'Invalid Blacklist Names',
-    'hi': 'Amany blacklist naam',
-    'es': 'Nombres de lista negra no válidos',
-    'ml': 'Amanya blacklist perukal'
-},
-'responderBlacklistAdded': {
-    'id': 'Akun Ditambahkan Ke Blacklist',
-    'en': 'Acc(s) added to the blacklist',
-    'hi': 'Khaate blacklist mein jod diye gaye',
-    'es': 'Cuenta(s) añadida(s) a la lista negra',
-    'ml': 'Blacklist-il account(s) cherthu'
-},
-'responderMutedInvalidName': {
-    'id': 'Nama Mute Tidak Valid',
-    'en': 'Invalid Muted Names',
-    'hi': 'Amany mute naam',
-    'es': 'Nombres silenciados no válidos',
-    'ml': 'Amanya mute perukal'
-},
-'responderMutedAdded': {
-    'id': 'Akun Ditambahkan Ke Daftar Mute',
-    'en': 'Acc(s) added to the muted list',
-    'hi': 'Khaate mute list mein jod diye gaye',
-    'es': 'Cuenta(s) añadida(s) a la lista de silenciados',
-    'ml': 'Mute list-il account(s) cherthu'
-},
-'quickRespondButton': {
-    'id': 'Cepat',
-    'en': 'Quick',
-    'hi': 'Tez',
-    'es': 'Rápido',
-    'ml': 'Vegam'
-},
-'psNewUserOpenTranslatedDict': {
-    'id': 'Plugin masih baru! Tunggu {} hari lagi untuk membuka ini',
-    'en': 'Plugin is still new! Wait {} more day(s) to open this',
-    'hi': 'Plugin abhi naya hai! ise kholne ke liye {} aur din intezar karein',
-    'es': '¡El plugin aún es nuevo! Espera {} día(s) más para abrir esto',
-    'ml': 'Plugin innum putiya aanu! ith thurakkan {} divasam koodi kathirikkuka'
-},
-'psNewUserOpenTranslatedDictInvalidDate': {
-    'id': 'Format tanggal terakhir penggunaan tidak valid',
-    'en': 'Last usage date format is invalid',
-    'hi': 'Antim upyog ki tarikh ka format amanya hai',
-    'es': 'El formato de la fecha del último uso no es válido',
-    'ml': 'Kadha upayogicha divasamaya format amanya aanu'
-},
-'psMainLanguage': {
-    'id': 'Bahasa Utama {}',
-    'en': '{} Main Language',
-    'hi': '{} mukhya bhasha',
-    'es': '{} Idioma Principal',
-    'ml': '{} mukhya bhasha'
-},
-'psMainLanguageChanged': {
-    'id': 'Bahasa utama JendelaParty sekarang adalah {}',
-    'en': 'Current PartyWindow main Language is now {}',
-    'hi': 'PartyWindow ki mukhya Bhasha ab {} hai',
-    'es': 'El idioma principal de PartyWindow ahora es {}',
-    'ml': 'PartyWindow-in mukhya Bhasha ippol {} aanu'
-},
-'psMessageNotificationPosKey': {
-    'id': 'Posisi Notifikasi Pesan',
-    'en': 'Message Notification Position',
-    'hi': 'Sandesh suchna sthaan',
-    'es': 'Posición de Notificación de Mensaje',
-    'ml': 'Sandhesha aavishkaar sthaanam'
-},
-'psMessageNotificationPosTOP': {
-    'id': 'Atas',
-    'en': 'Top',
-    'hi': 'Upar',
-    'es': 'Arriba',
-    'ml': 'Mel'
-},
-'psMessageNotificationPosBOTTOM': {
-    'id': 'Bawah',
-    'en': 'Bottom',
-    'hi': 'Neeche',
-    'es': 'Abajo',
-    'ml': 'Keezh'
-},
-'psBsUiScaleKey': {
-    'id': 'Skala UI BombSquad',
-    'en': 'BombSquad UI Scale',
-    'hi': 'BombSquad UI praman',
-    'es': 'Escala de UI de BombSquad',
-    'ml': 'BombSquad UI pramaanam'
-},
-'psBsUiScaleSMALL': {
-    'id': 'Kecil',
-    'en': 'Small',
-    'hi': 'Chhota',
-    'es': 'Pequeño',
-    'ml': 'Cheriya'
-},
-'psBsUiScaleMEDIUM': {
-    'id': 'Sedang',
-    'en': 'Medium',
-    'hi': 'Madhyam',
-    'es': 'Mediano',
-    'ml': 'Madhyamam'
-},
-'psBsUiScaleLARGE': {
-    'id': 'Besar',
-    'en': 'Large',
-    'hi': 'Bada',
-    'es': 'Grande',
-    'ml': 'Valiya'
-},
-'qnaRemoved': { # >> Server Questions
-    'id': 'Pertanyaan dihapus',
-    'en': 'Question removed',
-    'hi': 'Sawal hata diya gaya',
-    'es': 'Pregunta eliminada',
-    'ml': 'Prashnam maatti'
-},
-'qnaNotFound': {
-    'id': '\"{}\" tidak ada di data pertanyaan',
-    'en': '\"{}\" not in questions list',
-    'hi': '\"{}\" sawal ke list mein nahi hai',
-    'es': '\"{}\" no está en la lista de preguntas',
-    'ml': '\"{}\" prashna list-il illa'
-},
-'question': {
-    'id': 'Pertanyaan',
-    'en': 'Question',
-    'hi': 'Sawal',
-    'es': 'Pregunta',
-    'ml': 'Prashnam'
-},
-'answer': {
-    'id': 'Jawaban',
-    'en': 'Answer',
-    'hi': 'Uttar',
-    'es': 'Respuesta',
-    'ml': 'Uttaram'
-},
-'crAdded': { # >> Custom Replies
-    'id': 'Trigger: [{}] Balasan: [{}] ditambahkan',
-    'en': 'Trigger: [{}] Reply: [{}] added',
-    'hi': 'Trigger: [{}] uttar: [{}] joda gaya',
-    'es': 'Disparador: [{}] Respuesta: [{}] añadido',
-    'ml': 'Trigger: [{}] uttaram: [{}] cherthu'
-},
-'crRemoved': {
-    'id': 'Trigger dihapus',
-    'en': 'Trigger removed',
-    'hi': 'Trigger hata diya gaya',
-    'es': 'Disparador eliminado',
-    'ml': 'Trigger maatti'
-},
-'crNotFound': {
-    'id': 'Trigger: \"{}\" tidak ditemukan di balasan kustom',
-    'en': 'Trigger: \"{}\" not found in custom replies',
-    'hi': 'Trigger: \"{}\" custom jawab mein nahi mila',
-    'es': 'Disparador: \"{}\" no encontrado en respuestas personalizadas',
-    'ml': 'Trigger: \"{}\" custom uttaram-il kandilla'
-},
-'invalidMaxMsgLen': {
-    'id': 'MAX_MSG_LENGTH Tidak Valid: [{val}] | [{type}] >> Maks: 99 (integer)',
-    'en': 'Invalid MAX_MSG_LENGTH: [{val}] | [{type}] >> Max: 99 (integer)',
-    'hi': 'Galat MAX_MSG_LENGTH: [{val}] | [{type}] >> adhik se adhik: 99 (integer)',
-    'es': 'MAX_MSG_LENGTH no válido: [{val}] | [{type}] >> Máx: 99 (entero)',
-    'ml': 'Thavana MAX_MSG_LENGTH: [{val}] | [{type}] >> kooduthal: 99 (integer)'
-},
-'cfgBlockNaCmd': { # Config Text
-    'id': '[{}] Tidak Ada Dalam Perintah',
-    'en': '[{}] Is An Unknown Command Prefix',
-    'hi': '[{}] anjaan command prefix hai',
-    'es': '[{}] es un prefijo de comando desconocido',
-    'ml': '[{}] anjaan command prefix aanu'
-},
-'playerOptionRemoveData': { # >> Player Info Option
-    'id': 'Hapus Data {}',
-    'en': 'Remove {} Data',
-    'hi': '{} ka data hatao',
-    'es': 'Eliminar datos de {}',
-    'ml': '{}\'nte data maatti'
-},
-'playerOptionRemoveDataConfirm': {
-    'id': 'Yakin hapus data {}',
-    'en': 'Are you sure to delete {} Data',
-    'hi': 'Kya aap {} ka data delete karna chahte hain',
-    'es': '¿Estás seguro de eliminar los datos de {}?',
-    'ml': '{}\'nte data maattan nishchayikkunnundo?'
-},
-'playerOptionRemoveDataInMasterList': {
-    'id': 'Kamu tidak bisa menghapus data diri sendiri',
-    'en': 'You can\'t delete your own data',
-    'hi': 'Aap apna data delete nahi kar sakte',
-    'es': 'No puedes eliminar tus propios datos',
-    'ml': 'Ningalude data ningal maattan pattilla'
-},
-'playerOptionRemoveDataNotExist': {
-    'id': 'Data pemain {} tidak ditemukan',
-    'en': 'Player {} data not found',
-    'hi': 'Kheladi {} ka data nahi mila',
-    'es': 'Datos del jugador {} no encontrados',
-    'ml': 'Khelaadi {}\'nte data kandilla'
-},
-'playerOptionRemoveFriend': {
-    'id': 'Berhenti Berteman',
-    'en': 'UnFriend',
-    'hi': 'Dosti todna',
-    'es': 'Dejar de ser amigos',
-    'ml': 'Snehitam maatti'
-},
-'playerOptionRemoveFriendSuccess': {
-    'id': 'Kalian Bukan Teman Lagi',
-    'en': 'You Both Are No Longer Friends',
-    'hi': 'Aap dono ab doston mein nahi hain',
-    'es': 'Ya no son amigos',
-    'ml': 'Ningal randu perum snehitamalla'
-},
-'playerOptionRemoveFriendInMasterList': {
-    'id': 'Kamu Tidak Bisa Memutus Pertemanan Dengan Tuanku',
-    'en': 'You Can\'t UnFriend My Master',
-    'hi': 'Aap mere master se dosti nahi tod sakte',
-    'es': 'No puedes dejar de ser amigo de mi maestro',
-    'ml': 'Ningal enre master-ine snehitam maattan pattilla'
-},
-'playerOptionRemoveFriendNotExist': {
-    'id': 'Teman Tidak Ada Di Data',
-    'en': 'Friend Does Not Exist In Data',
-    'hi': 'Dost data mein nahi hai',
-    'es': 'El amigo no existe en los datos',
-    'ml': 'Snehitan data-il illa'
-},
-'playerOptionAddFriend': { # >> playerOptionAddFriend
-    'id': 'Berteman Dengan Pemain Ini',
-    'en': 'BeFriend With This Player',
-    'hi': 'Is kheladi se dosti karo',
-    'es': 'Hazte amigo de este jugador',
-    'ml': 'Ee khelaadiyude snehitam aakuka'
-},
-'playerOptionAddFriendSuccess': {
-    'id': 'Kamu Berhasil Berteman Dengan Pemain Ini',
-    'en': 'You Have Successfully Befriended This Player',
-    'hi': 'Aapne is kheladi se safalta se dosti kar li',
-    'es': 'Te has hecho amigo de este jugador con éxito',
-    'ml': 'Ningal ee khelaadiyude snehitam vijayathode aakki'
-},
-'playerOptionAddFriendAlreadyExists': {
-    'id': 'Pemain Ini Sudah Menjadi Teman Anda',
-    'en': 'This Player Is Already Your Friend',
-    'hi': 'Ye kheladi pehle se hi aapka dost hai',
-    'es': 'Este jugador ya es tu amigo',
-    'ml': 'Ee khelaadi ningalude snehitan thanne aanu'
-},
-'playerOptionRemoveBlacklist': { # >> playerOptionRemoveBlacklist
-    'id': 'Hapus Pemain Ini Dari Daftar Hitam',
-    'en': 'Remove This Player From Blacklist',
-    'hi': 'Is kheladi ko blacklist se hatao',
-    'es': 'Elimina a este jugador de la lista negra',
-    'ml': 'Ee khelaadiye blacklist-il ninnu maatti'
-},
-'playerOptionRemoveBlacklistSuccess': {
-    'id': 'Pemain Berhasil Dihapus Dari Daftar Hitam',
-    'en': 'Player Successfully Removed From Blacklist',
-    'hi': 'Kheladi ko safalta se blacklist se hata diya gaya',
-    'es': 'Jugador eliminado con éxito de la lista negra',
-    'ml': 'Khelaadi blacklist-il ninnu vijayathode maatti'
-},
-'playerOptionRemoveBlacklistNotExist': {
-    'id': 'Pemain Ini Tidak Masuk Di Daftar Hitam',
-    'en': 'This Player Is Not Blacklisted',
-    'hi': 'Ye kheladi blacklist mein nahi hai',
-    'es': 'Este jugador no está en la lista negra',
-    'ml': 'Ee khelaadi blacklist-il illa'
-},
-'playerOptionAddBlacklist': { # >> playerOptionAddBlacklist
-    'id': 'Masukkan Pemain Ini Di Daftar Hitam',
-    'en': 'Blacklist This Player',
-    'hi': 'Is kheladi ko blacklist mein daalo',
-    'es': 'Pon a este jugador en la lista negra',
-    'ml': 'Ee khelaadiye blacklist-il koottuka'
-},
-'playerOptionAddBlacklistSuccess': {
-    'id': 'Pemain Berhasil Ditambahkan Ke Daftar Hitam',
-    'en': 'Player Successfully Added To Blacklist',
-    'hi': 'Kheladi ko safalta se blacklist mein joda gaya',
-    'es': 'Jugador añadido con éxito a la lista negra',
-    'ml': 'Khelaadi blacklist-il vijayathode kootti'
-},
-'playerOptionAddBlacklistInMasterList': {
-    'id': 'Kamu Tidak Bisa Menambahkan Tuanku Ke Daftar Hitam',
-    'en': 'You Can\'t Blacklist My Master',
-    'hi': 'Aap mere master ko blacklist mein nahi daal sakte',
-    'es': 'No puedes poner a mi maestro en la lista negra',
-    'ml': 'Ningal enre master-ine blacklist-il koottan pattilla'
-},
-'playerOptionAddBlacklistAlreadyExists': {
-    'id': 'Pemain Ini Sudah Ada Masuk Daftar Hitam',
-    'en': 'This Player Already Blacklisted',
-    'hi': 'Ye kheladi pehle se hi blacklist mein hai',
-    'es': 'Este jugador ya está en la lista negra',
-    'ml': 'Ee khelaadi blacklist-il mungam thanne aanu'
-},
-'playerOptionRemoveMuted': { # >> playerOptionRemoveMuted
-    'id': 'Jangan Bisukan Pemain Ini',
-    'en': 'Unmute This Player',
-    'hi': 'Is kheladi ko unmute karo',
-    'es': 'Desilencia a este jugador',
-    'ml': 'Ee khelaadiye unmute cheyyuka'
-},
-'playerOptionRemoveMutedSuccess': {
-    'id': 'Pemain Berhasil Dihapus Dari Daftar Bisu',
-    'en': 'Player Successfully Removed From Muted List',
-    'hi': 'Kheladi ko safalta se muted list se hata diya gaya',
-    'es': 'Jugador eliminado con éxito de la lista de silenciados',
-    'ml': 'Khelaadi muted list-il ninnu vijayathode maatti'
-},
-'playerOptionRemoveMutedNotExist': {
-    'id': 'Pemain Ini Tidak diBisukan',
-    'en': 'This Player Is Not Muted',
-    'hi': 'Ye kheladi muted nahi hai',
-    'es': 'Este jugador no está silenciado',
-    'ml': 'Ee khelaadi mute cheythittilla'
-},
-'playerOptionAddMuted': { # >> playerOptionAddMuted
-    'id': 'Bisukan Pemain Ini',
-    'en': 'Mute This Player',
-    'hi': 'Is kheladi ko mute karo',
-    'es': 'Silencia a este jugador',
-    'ml': 'Ee khelaadiye mute cheyyuka'
-},
-'playerOptionAddMutedSuccess': {
-    'id': 'Pemain Berhasil Dibisukan',
-    'en': 'Player Successfully Muted',
-    'hi': 'Kheladi ko safalta se muted list mein joda gaya',
-    'es': 'Jugador añadido con éxito a la lista de silenciados',
-    'ml': 'Khelaadi muted list-il vijayathode kootti'
-},
-'playerOptionAddMutedInMasterList': {
-    'id': 'Kamu Tidak Bisa Menambahkan Tuanku Ke Daftar Bisu',
-    'en': 'You Can\'t Mute My Master',
-    'hi': 'Aap mere master ko mute nahi kar sakte',
-    'es': 'No puedes silenciar a mi maestro',
-    'ml': 'Ningal enre master-ine mute cheyyan pattilla'
-},
-'playerOptionAddMutedAlreadyExists': {
-    'id': 'Pemain Ini Sudah diBisukan',
-    'en': 'This Player Already Muted',
-    'hi': 'Ye kheladi pehle se hi mute hai',
-    'es': 'Este jugador ya está silenciado',
-    'ml': 'Ee khelaadi mute cheythittilla'
-},
-'dataPopupSelectedIndex': {
-    'id': 'Indeks Terpilih:\n[{0}]',
-    'en': 'Selected Index:\n[{0}]',
-    'hi': 'Chuna gaya index:\n[{0}]',
-    'es': 'Índice Seleccionado:\n[{0}]',
-    'ml': 'Thazhe pattiya index:\n[{0}]'
-},
-'cantMatchInPlayerData': {
-    'id': 'Tidak Dapat Mencocokkan \"{}\" di Data Pemain',
-    'en': 'Can\'t match \"{}\" in player data',
-    'hi': 'Kheladi data mein \"{}\" se match nahi kar sakte',
-    'es': 'No se puede coincidir \"{}\" en los datos del jugador',
-    'ml': 'Khelaadi data-yil \"{}\" match cheyyan pattilla'
-},
-'cantFindInPlayerData': {
-    'id': 'Tidak Dapat Menemukan \"{}\" di Data Pemain',
-    'en': 'Can\'t find \"{}\" in player data',
-    'hi': 'Kheladi data mein \"{}\" nahi mila',
-    'es': 'No se puede encontrar \"{}\" en los datos del jugador',
-    'ml': 'Khelaadi data-yil \"{}\" kandilla'
-},
-'addSuccess': {
-    'id': 'Berhasil Ditambah',
-    'en': 'Succesfully Added',
-    'hi': 'Safalta se joda gaya',
-    'es': 'Añadido Exitosamente',
-    'ml': 'Vijayathode kootti'
-},
-'editSuccess': {
-    'id': 'Teks Berhasil Diedit',
-    'en': 'Text Succesfully Edited',
-    'hi': 'Text safalta se edit kiya gaya',
-    'es': 'Texto Editado Exitosamente',
-    'ml': 'Text vijayathode edit cheythu'
-},
-'editExist': {
-    'id': 'Teks Editan Sudah Ada',
-    'en': 'Text Edited Already Exist',
-    'hi': 'Edited text pehle se hi maujood hai',
-    'es': 'El Texto Editado Ya Existe',
-    'ml': 'Edited text munpu thanne undu'
-},
-'removeSuccess': {
-    'id': 'Teks Berhasil Dihapus',
-    'en': 'Text Succesfully Removed',
-    'hi': 'Text safalta se hata diya gaya',
-    'es': 'Texto Eliminado Exitosamente',
-    'ml': 'Text vijayathode maatti'
-},
-'playerInfo': {
-    'id': 'Info Pemain',
-    'en': 'Player Info',
-    'hi': 'Kheladi ki jankari',
-    'es': 'Información del Jugador',
-    'ml': 'Khelaadi vivaram'
-},
-'save': {
-    'id': 'Simpan',
-    'en': 'Save',
-    'hi': 'Save karo',
-    'es': 'Guardar',
-    'ml': 'Save cheyyu'
-},
-'use': {
-    'id': 'Gunakan',
-    'en': 'Use',
-    'hi': 'Upayog karo',
-    'es': 'Usar',
-    'ml': 'Upayogikkuka'
-},
-'copy': {
-    'id': 'Salin',
-    'en': 'Copy',
-    'hi': 'Copy karo',
-    'es': 'Copiar',
-    'ml': 'Copy cheyyu'
-},
-'textCopied': {
-    'id': '\"{}\" Disalin',
-    'en': '\"{}\" Copied',
-    'hi': '\"{}\" Copy kiya gaya',
-    'es': '\"{}\" Copiado',
-    'ml': '\"{}\" Copy cheythu'
-},
-'get': {
-    'id': 'Dapatkan',
-    'en': 'Get',
-    'hi': 'Prapth karo',
-    'es': 'Obtener',
-    'ml': 'Edukkan'
-},
-'enabled': {
-    'id': 'Dinyalakan',
-    'en': 'Enabled',
-    'hi': 'Enable kiya gaya',
-    'es': 'Habilitado',
-    'ml': 'Enable cheythu'
-},
-'disabled': {
-    'id': 'Dimatikan',
-    'en': 'Disabled',
-    'hi': 'Disable kiya gaya',
-    'es': 'Deshabilitado',
-    'ml': 'Disable cheythu'
-},
-'confirmCopy': {
-    'id': 'Salin Teks Ini',
-    'en': 'Copy This Text',
-    'hi': 'Is text ko copy karo',
-    'es': 'Copiar Este Texto',
-    'ml': 'Ee text copy cheyyu'
-},
-'translating': {
-    'id': 'Menerjemahkan',
-    'en': 'Translating',
-    'hi': 'Anuvad kar rahe hain',
-    'es': 'Traduciendo',
-    'ml': 'Anuvadikkunnu'
-},
-'page': {
-    'id': 'Halaman',
-    'en': 'Page',
-    'hi': 'Panna',
-    'es': 'Página',
-    'ml': 'Padippu'
-},
-'yes': {
-    'id': 'Ya',
-    'en': 'Yes',
-    'hi': 'Haan',
-    'es': 'Sí',
-    'ml': 'Sheri'
-},
-'sorry': {
-    'id': 'Maaf',
-    'en': 'Sorry',
-    'hi': 'Sorry',
-    'es': 'Sorry',
-    'ml': 'Sorry'
-},
-'search': {
-    'id': 'Cari', 
-    'en': 'Finder',      
-    'hi': 'खोजें',     
-    'es': 'Buscar',    
-    'ml': 'തിരയുക'       
-},
-'auto_respond': {
-    "id": "Penjawab Otomatis",
-    "en": "Auto",
-    "hi": "स्वचालित उत्तरदाता",
-    "es": "Auto",
-    "ml": "സ്വയമേവ പ്രതികരിക്കുക"
-},
-'toxic': {
-    "id": "Beracun",
-    "en": "Hate",
-    "hi": "ज़हरीला व्यवहार",
-    "es": "Hate",
-    "ml": "വിഷമുള്ള പെരുമാറ്റം"
-},
-'thanks': {
-    'id': 'Makasih',
-    'en': 'Thanks',
-    'hi': 'Thanks',
-    'es': 'Gracias',
-    'ml': 'Nandi'
-},
-'cancel': {
-    'id': 'Batal',
-    'en': 'Cancel',
-    'hi': 'Radd karo',
-    'es': 'Cancelar',
-    'ml': 'Mattu'
-},
-'delete': {
-    'id': 'Hapus',
-    'en': 'Delete',
-    'hi': 'Mitao',
-    'es': 'Eliminar',
-    'ml': 'Nashippikkuka'
-},
-'pasteNotSupported': {
-    'id': 'Menempel teks dari clipboard tidak didukung',
-    'en': 'Pasting text from clipboard not supported',
-    'hi': 'Clipboard se text paste karne ka samarthan nahi hai',
-    'es': 'Pegar texto del portapapeles no es compatible',
-    'ml': 'Clipboard-il ninnum text paste cheyyan pattunilla'
-},
-'pasteEmpty': {
-    'id': 'Tidak ada teks untuk ditempel',
-    'en': 'No text to paste',
-    'hi': 'Paste karne ke liye koi text nahi hai',
-    'es': 'No hay texto para pegar',
-    'ml': 'Paste cheyyan text illa'
-},
-'pasteConfirm': {
-    'id': 'Tempel teks dari clipboard',
-    'en': 'Paste text from clipboard',
-    'hi': 'Clipboard se text paste kare',
-    'es': 'Pegar texto del portapapeles',
-    'ml': 'Clipboard-il ninnum text paste cheyyu'
-},
-'copyEmpty': {
-    'id': 'Ngga Ada Teks Untuk Di Salin',
-    'en': 'No Text To Copy',
-    'hi': 'Copy karne ke liye koi text nahi',
-    'es': 'No hay texto para copiar',
-    'ml': 'Copy cheyyan text illa'
-},
-'editAttributeAddEmpty': {
-    'id': 'Ngga ada teks untuk ditambah',
-    'en': 'No text to add',
-    'hi': 'Jodne ke liye koi text nahi',
-    'es': 'No hay texto para agregar',
-    'ml': 'Kooduthal text illa'
-},
-'editAttributeEmpty': {
-    'id': 'Ngga ada teks untuk di edit',
-    'en': 'No text to edit',
-    'hi': 'Sanshodhan ke liye koi text nahi',
-    'es': 'No hay texto para editar',
-    'ml': 'Sanshodhikkunna text illa'
-},
-'editAttributeExist': {
-    'id': 'Teks sudah ada di attribut',
-    'en': 'Text already exist in the attribute',
-    'hi': 'Text pehle se hi attribute mein maujood hai',
-    'es': 'El texto ya existe en el atributo',
-    'ml': 'Text attribute-il mungam undu'
-},
-'editAttributeSame': {
-    'id': 'Teks yang di edit sama',
-    'en': 'The edited text is the same',
-    'hi': 'Sanshodhit text vahi hai',
-    'es': 'El texto editado es el mismo',
-    'ml': 'Sanshodhicha text adheham thanne'
-},
-'editAttributeDeleteEmpty': {
-    'id': 'Tidak ada teks untuk di hapus',
-    'en': 'No text to delete',
-    'hi': 'Mitane ke liye koi text nahi',
-    'es': 'No hay texto para eliminar',
-    'ml': 'Nashippikkunna text illa'
-},
-'addAttributePlayerNotInData': {
-    'id': 'Pemain \"{}\" tidak ada di data',
-    'en': 'Player \"{}\" not in data',
-    'hi': 'Kheladi \"{}\" data mein nahi hai',
-    'es': 'Jugador \"{}\" no está en los datos',
-    'ml': 'Kalikaaran \"{}\" data-yil illa'
-},
-'addAttribteNoSplitter': {
-    'id': 'Gunakan \"{}\" untuk memisahkan kunci dan nilai',
-    'en': 'Use \"{}\" for separating key and value',
-    'hi': 'Key aur value alag karne ke liye \"{}\" ka upyog karein',
-    'es': 'Usa \"{}\" para separar clave y valor',
-    'ml': 'Keyum valueum verupatthikkunna \"{}\" upayogikkuka'
-},
-'translatePopupWarning': {
-    'id': 'Fitur ini tidak dilanjutkan/diuji oleh Less\nDapat menyebabkan error yang tak terduga\nGunakan dengan resiko mu sendiri',
-    'en': 'This feature is not continued/tested by Less\nMay cause unexpected errors\nUse at your own risk',
-    'hi': 'Ye feature Less dwara na to jari hai na hi test kiya gaya hai\nAnapekshit errors ka karan ban sakta hai\nApne risk par upyog karein',
-    'es': 'Esta característica no es continuada/probada por Less\nPuede causar errores inesperados\nÚsalo bajo tu propio riesgo',
-    'ml': 'Ee feature Less kooduthal test cheyyappetta onnumalla\nEttavum pratheekshikkatha errors undaakum\nSwantam riskil upayogikkuka'
-},
-'pswTitle': {
-    'id': 'Pengaturan Kustom',
-    'en': 'Custom Settings',
-    'hi': 'Custom Settings',
-    'es': 'Configuraciones Personalizadas',
-    'ml': 'Custom Settings'
-},
-'pswButtonTranslatedTextsDict': {
-    'id': 'Kamus Teks Terjemahan',
-    'en': 'Translated Texts Dictionaries',
-    'hi': 'Anuvadit texts dictionaries',
-    'es': 'Diccionarios de Textos Traducidos',
-    'ml': 'Anuvadithamaya texts dictionaries'
-},
-'pswButtonTranslateWindowSettings': {
-    'id': 'Pengaturan Terjemahan',
-    'en': 'Translate Settings',
-    'hi': 'Anuvad Settings',
-    'es': 'Configuraciones de Traducción',
-    'ml': 'Anuvad Settings'
-},
-'pswButtonTranslateWindowSettingsTutorial': {
-    'id': 'Ketuk dua kali tombol terjemahan untuk membuka Jendela Pengaturan Terjemahan',
-    'en': 'Double-tap translate button to open Translate Settings Window',
-    'hi': 'Translate settings window kholne ke liye translate button par do baar tap karein',
-    'es': 'Toca dos veces el botón de traducción para abrir la Ventana de Configuración de Traducción',
-    'ml': 'Translate settings window thurakkan translate button-il randu thavana thattuka'
-},
-'pswCheckboxAccuratePing': {
-    'id': 'Ping Server Akurat',
-    'en': 'Accurate Server Ping',
-    'hi': 'Sahi Server Ping',
-    'es': 'Ping Preciso del Servidor',
-    'ml': 'Sariyaya Server Ping'
-},
-'pswCheckboxPing': {
-    'id': 'Tombol Ping',
-    'en': 'Ping Button',
-    'hi': 'Ping ka button',
-    'es': 'Botón de Ping',
-    'ml': 'Ping button'
-},
-'pswCheckboxIP': {
-    'id': 'Tombol IP',
-    'en': 'IP Button',
-    'hi': 'IP ka Button',
-    'es': 'Botón de IP',
-    'ml': 'IP Button'
-},
-'pswCheckboxCopyPaste': {
-    'id': 'Tombol Salin & Tempel',
-    'en': 'CoPas Button',
-    'hi': 'Copy Aur Paste Ka Button',
-    'es': 'Botón de Copiar y Pegar',
-    'ml': 'Copyum Pasteum Cheyyunna Button'
-},
-'pswCheckboxQuickRespond': {
-    'id': 'Respon Cepat di Tombol Kirim',
-    'en': 'Quick Respond In Send Button',
-    'hi': 'Send Button Mein Turant Jawab Dena',
-    'es': 'Respuesta Rápida en Botón de Enviar',
-    'ml': 'Send Button-il Vegathil Prathikarikkuka'
-},
-'pswCheckboxAutoGreet': {
-    'id': 'Sapa Teman Secara Otomatis (Jika Belum)',
-    'en': 'Auto Greet My Friends (If Haven\'t)',
-    'hi': 'Mere Doston Ko Apne Aap Salaam Karna (Agar Nahi Kiya Hai To)',
-    'es': 'Saludo Automático a Mis Amigos (Si No Lo He Hecho)',
-    'ml': 'Ente Snehithare Swayam Sambodhikkuka (Cheythittillenkil)'
-},
-'pswCheckboxAutoGreetMaster': {
-    'id': 'Sapa Otomatis Hanya Jika Master Bergabung',
-    'en': 'Auto Greet Only If Master Joined',
-    'hi': 'Sirf Tabhi Apne Aap Salaam Karna Jab Master Shamil Ho',
-    'es': 'Saludo Automático Solo Si El Maestro Se Une',
-    'ml': 'Master Koodiyal Mathrame Swayam Sambodhikkuka'
-},
-'pswCheckboxAutoGreetFriends': {
-    'id': 'Sapa Otomatis Hanya Jika Teman Bergabung',
-    'en': 'Auto Greet Only If My Friends Joined',
-    'hi': 'Sirf Tabhi Apne Aap Salaam Karna Jab Mere Dost Shamil Hon',
-    'es': 'Saludo Automático Solo Si Mis Amigos Se Unen',
-    'ml': 'Ente Snehithar Koodiyal Mathrame Swayam Sambodhikkuka'
-},
-'pswCheckboxDirectCustomCmd': {
-    'id': 'Kirim Langsung Perintah Kustom',
-    'en': 'Directly Send Custom Commands',
-    'hi': 'Custom Commands Seedhe Bhejna',
-    'es': 'Enviar Comandos Personalizados Directamente',
-    'ml': 'Custom Commands Nere Ayachu Thannuka'
-},
-'pswCheckboxBlockNACommand': {
-    'id': 'Blokir Perintah Internal yang Salah/Tidak Dikenal',
-    'en': 'Block Incorrect/Unknown Internal Commands',
-    'hi': 'Galat/Anjana Antarik Commands Ko Block Karna',
-    'es': 'Bloquear Comandos Internos Incorrectos/Desconocidos',
-    'ml': 'Thappu/Ariyatha Internal Commands Block Cheyyuka'
-},
-'pswCheckboxAskGameReplayName': {
-    'id': 'Minta Nama Untuk Menyimpan Replay Terakhir',
-    'en': 'Ask Naming For Saving Last Replay',
-    'hi': 'Akhri Replay Save Karne Ke Liye Naam Poochna',
-    'es': 'Preguntar Nombre Para Guardar El Último Replay',
-    'ml': 'Kadha Replay Save Cheyyan Peru Chodhikkuka'
-},
-'pswCheckboxColorfulChats': {
-    'id': 'Obrolan Berwarna-warni',
-    'en': 'Colorful Chats',
-    'hi': 'Rang-birange Chats',
-    'es': 'Chats Coloridos',
-    'ml': 'Varnamaya Samvadangal'
-},
-'pswCheckboxFocusToLastMsg': {
-    'id': 'Otomatis Fokus ke Pesan Terakhir yang Dikirim',
-    'en': 'Auto Focus To Last Message Sent',
-    'hi': 'Bheje Gaye Akhri Sandesh Par Swayam Focus Karna',
-    'es': 'Enfocar Automáticamente El Último Mensaje Enviado',
-    'ml': 'Ayachu Thanna Kadha Sandeshattil Swayam Focus Cheyyuka'
-},
-'pswCheckboxHighlightChosenText': {
-    'id': 'Sorot Teks Obrolan yang Dipilih',
-    'en': 'Highlight Chosen Chat Text',
-    'hi': 'Chune Gaye Chat Text Ko Highlight Karna',
-    'es': 'Resaltar El Texto Del Chat Seleccionado',
-    'ml': 'Ethirtha Chat Text Highlight Cheyyuka'
-},
-'pswCheckboxIncludePnameOnChosenText': {
-    'id': 'Sertakan Nama Pemain pada Teks Obrolan yang Dipilih',
-    'en': 'Include Player Name On Chosen Chat Text',
-    'hi': 'Chune Gaye Chat Text Mein Kheladi Ka Naam Shamil Karna',
-    'es': 'Incluir El Nombre Del Jugador En El Texto Del Chat Seleccionado',
-    'ml': 'Ethirtha Chat Text-il Playernte Peru Kooduthal'
-},
-'pswCheckboxIncludeCidInQcNameChanger': {
-    'id': 'Sertakan ClientID pada Pengubah Nama Cepat',
-    'en': 'Include ClientID in Quick Name Changer',
-    'hi': 'Quick Name Changer Mein ClientID Shamil Karna',
-    'es': 'Incluir ClientID en el Cambiador Rápido de Nombres',
-    'ml': 'Quick Name Changer-il ClientID Kooduthal'
-},
-'pswCheckboxSaveLastTypedMsg': {
-    'id': 'Simpan Pesan Terakhir yang Diketik di Kolom Teks',
-    'en': 'Save Last Message Typed In Text Field',
-    'hi': 'Text Field Mein Type Kiye Gaye Akhri Sandesh Ko Save Karna',
-    'es': 'Guardar El Último Mensaje Escrito En El Campo De Texto',
-    'ml': 'Text Field-il Type Cheytha Kadha Sandesham Save Cheyyuka'
-},
-'pswCheckboxCustomScreenmessage': {
-    'id': 'Modifikasi Pesan Layar Chat',
-    'en': 'Modified Chat Screenmessage',
-    'hi': 'Badla hua Chat Screenmessage',
-    'es': 'Mensaje de Pantalla de Chat Modificado',
-    'ml': 'Maattappetta Chat Screenmessage'
-},
-'pswCheckboxColorfulScreenmessage': {
-    'id': 'Pesan Layar Bewarna-warni',
-    'en': 'Colorful Screenmessage',
-    'hi': 'Rang-birange Screenmessage',
-    'es': 'Mensaje de Pantalla Colorido',
-    'ml': 'Varnamaya Screenmessage'
-},
-'pswCheckboxChatNameViewerInScrmsg': {
-    'id': 'Penampil-nama Chat di Screenmessage',
-    'en': 'Chat Name Viewer in Screenmessage',
-    'hi': 'Screenmessage Mein Chat Naam Dikhana',
-    'es': 'Visor de Nombre de Chat en Mensaje de Pantalla',
-    'ml': 'Screenmessage-il Chat Peru Kanikkuka'
-},
-'pswGlobalVarMaxPartywindowChats': {
-    'id': 'Maksimal Obrolan di Jendela Party',
-    'en': 'Party Window Max Chats',
-    'hi': 'Party Window Ke Maksimam Chats',
-    'es': 'Máximo de Chats en la Ventana de Party',
-    'ml': 'Party Windowile Chatukalude Ettavum Kooduthal'
-},
-'pswGlobalVarPingMessage': {
-    'id': 'Pesan Ping',
-    'en': 'Ping Messages',
-    'hi': 'Ping Sandesh',
-    'es': 'Mensaje de Ping',
-    'ml': 'Ping Sandesham'
-},
-'pswGlobalVarMaxWarns': {
-    'id': 'Peringatan Maksimal Pemain',
-    'en': 'Max Player Warns',
-    'hi': 'Kheladi ke Maksimam Chetavani',
-    'es': 'Máximas Advertencias Para Jugadores',
-    'ml': 'Kheladikalkku Etavum Kooduthal Chetavani'
-},
-'pswGlobalVarPartyScale': {
-    'id': 'Skala Party Window (S, M, L)',
-    'en': 'Party Window Scale (S, M, L)',
-    'hi': 'Party Window Ka Scale (S, M, L)',
-    'es': 'Escala de la Ventana de Party (S, M, L)',
-    'ml': 'Party Window-nte Scale (S, M, L)'
-},
-'pswGlobalVarInvalidInput': {
-    'id': 'Input tidak valid untuk variabel global: {}',
-    'en': 'Invalid input for global variables: {}',
-    'hi': 'Global variables ke liye galat input: {}',
-    'es': 'Entrada no válida para variables globales: {}',
-    'ml': 'Global variables-inte thettaya input: {}'
-},
-'partyChatMutedWarn': {
-    'id': 'Kamu sedang membisukan obrolan PartyWindow',
-    'en': 'You\'re currently muting PartyWindow chats',
-    'hi': 'Aap abhi partywindow chats ko mute kar rahe hain',
-    'es': 'Actualmente estás silenciando los chats de PartyWindow',
-    'ml': 'Ningal ippol partywindow chatukal mute cheyyunnu'
-},
-'rswTitle': {
-    'id': 'Pengaturan Responder Chat',
-    'en': 'Chat Responder Settings',
-    'hi': 'Chat Responder Settings',
-    'es': 'Configuración del Respondedor de Chat',
-    'ml': 'Chat Responder Settings'
-},
-'rswEnable': {
-    'id': 'Nyalakan Auto Responder Pesan',
-    'en': 'Turn On Chat Auto Responder Engine',
-    'hi': 'Chat Auto Responder Chalu Karein',
-    'es': 'Activar el Respondedor Automático de Chat',
-    'ml': 'Chat auto responder on aakku'
-},
-'rswSoal': {
-    'id': 'Jawab Otomatis Pertanyaan Server',
-    'en': 'Auto Answer Server Questions',
-    'hi': 'Server ke sawalo ka automatic jawab',
-    'es': 'Respuesta Automática a Preguntas del Servidor',
-    'ml': 'Server chodhyangalkku automatic aayi uttaram'
-},
-'rswAmongUs': {
-    'id': 'Among Us',
-    'en': 'Among Us',
-    'hi': 'Among Us',
-    'es': 'Among Us',
-    'ml': 'Among Us'
-},
-'rswNoNoobWord': {
-    'id': 'Anti Kata Noob',
-    'en': 'No Noob Word',
-    'hi': 'Noob Shabd Nhi',
-    'es': 'Sin Palabra Noob',
-    'ml': 'Noob Shabdam Illa'
-},
-'rswCustomReplies': {
-    'id': 'Balasan Otomatis Kustom',
-    'en': 'Custom Replies',
-    'hi': 'Custom Uttar',
-    'es': 'Respuestas Personalizadas',
-    'ml': 'Custom Uttarangal'
-},
-'rswAutoGreet': {
-    'id': 'Sapa Otomatis',
-    'en': 'Auto Greet',
-    'hi': 'Automatic abhinandan',
-    'es': 'Saludo Automático',
-    'ml': 'Automatic abhinandanam'
-},
-'rswBruhIfAmazing': {
-    'id': 'Bruh Jika Luar Biasa',
-    'en': 'Bruh If Amazing',
-    'hi': 'Bruh agar amazing ho',
-    'es': 'Bruh Si Es Increíble',
-    'ml': 'Bruh amazing aayal'
-},
-'rswCurrentSessionListLog': {
-    'id': 'Log Daftar Sesi Saat Ini',
-    'en': 'Current Session List Log',
-    'hi': 'Current session ki list ka log',
-    'es': 'Registro de Lista de Sesión Actual',
-    'ml': 'Current session listinte log'
-},
-'rswAllNamesListLog': {
-    'id': 'Log Daftar Semua Nama',
-    'en': 'All Names List Log',
-    'hi': 'Sabhi namon ki list ka log',
-    'es': 'Registro de Lista de Todos los Nombres',
-    'ml': 'Ellaa perukalude listinte log'
-},
-'rswCmdLogForPC': {
-    'id': 'Log CMD Untuk PC',
-    'en': 'CMD Log For PC',
-    'hi': 'PC ke liye CMD log',
-    'es': 'Registro CMD Para PC',
-    'ml': 'PC-ykk CMD log'
-},
-'rswAntiAbuseAutoWarn': {
-    'id': 'Anti Kata Kasar (Peringatan Otomatis)',
-    'en': 'Anti Abuse (Auto Warn)',
-    'hi': 'Anti abuse (automatic chetavani)',
-    'es': 'Anti Abuso (Advertencia Automática)',
-    'ml': 'Anti abuse (automatic chetavani)'
-},
-'rswIncludeChillAbuse': {
-    'id': 'Sertakan Kata Kasar Kasual',
-    'en': 'Include Casual Abuse',
-    'hi': 'Saamanya apashabda shaamil karen',
-    'es': 'Incluir Abuso Casual',
-    'ml': 'Saadhaarana apashabdam kooduthal'
-},
-'rswAutoKickOnMaxWarns': {
-    'id': 'Tendang Otomatis Saat Peringatan Maksimal',
-    'en': 'Auto Kick On Max Warns',
-    'hi': 'Maksimam chetavani par automatic kick',
-    'es': 'Expulsión Automática en Máximas Advertencias',
-    'ml': 'Etavum kooduthal chetavaniyil automatic kick'
-},
-'rswRefreshPlayersProfile': {
-    'id': 'Segarkan Profil Pemain',
-    'en': 'Refresh Player\'s Profile',
-    'hi': 'Kheladi ke profile ko refresh karen',
-    'es': 'Actualizar Perfil del Jugador',
-    'ml': 'Kheladinte profile refresh cheyyuka'
-},
-'rswOnlyUpdateAvailablePData': {
-    'id': 'Hanya Perbarui P-Data yang Tersedia',
-    'en': 'Only Update Available P-Data',
-    'hi': 'Sirf uplabdh P-data ko update karen',
-    'es': 'Solo Actualizar P-Datos Disponibles',
-    'ml': 'Ullathil P-data matrame update cheyyuka'
-},
-'rswChatLogging': {
-    'id': 'Pencatatan Obrolan',
-    'en': 'Chat Logging',
-    'hi': 'Chat log karna',
-    'es': 'Registro de Chats',
-    'ml': 'Chat log cheyyuka'
-},
-'rswAddDatesAsSeparatorOnChatDataFiles': {
-    'id': 'Tambahkan Tanggal Sebagai Pemisah di File Data Obrolan',
-    'en': 'Add Dates As Separator On Chat Data Files',
-    'hi': 'Chat data files par dates ko separator ke roop mein jodhen',
-    'es': 'Agregar Fechas Como Separador en Archivos de Datos de Chat',
-    'ml': 'Chat data files-il dates separator aayi kooduthal'
-},
-'rswTranslateMachine': {
-    'id': 'Mesin Terjemahan',
-    'en': 'Translate Machine',
-    'hi': 'Anuvad machine',
-    'es': 'Máquina de Traducción',
-    'ml': 'Anuvadana yanthram'
-},
-'rswResetPlayerWarnsEachBoot': {
-    'id': 'Setel Ulang Peringatan Pemain Setiap Booting',
-    'en': 'Reset Player Warns Each Boot',
-    'hi': 'Har boot par kheladi ke chetavani ko reset karen',
-    'es': 'Reiniciar Advertencias de Jugador en Cada Arranque',
-    'ml': 'Ore bootilum kheladinte chetavani reset cheyyuka'
-},
-'rswPartialMatchAbuses': {
-    'id': 'Pencocokan Sebagian Kata Kasar',
-    'en': 'Partial Match Abuses',
-    'hi': 'Partial match abuses',
-    'es': 'Abusos de Coincidencia Parcial',
-    'ml': 'Partial match abuses'
-},
-'rswBypassAutoAnswerBlocker': {
-    'id': 'Terobos Pemblokir Jawaban Otomatis',
-    'en': 'Bypass Auto Answer Blocker',
-    'hi': 'Automatic jawab blocker ko bypass karen',
-    'es': 'Evitar Bloqueador de Respuesta Automática',
-    'ml': 'Automatic uttar blocker bypass cheyyuka'
-},
-'rswAddYourProfileToMainName': {
-    'id': 'Tambahkan Profil Anda ke Nama Utama',
-    'en': 'Add Your Profile To Main Name',
-    'hi': 'Apna profile main name mein jodhen',
-    'es': 'Agregar Tu Perfil al Nombre Principal',
-    'ml': 'Ninre profile main name-il kooduthal'
-},
-'rswUseScreenmessageCmdPrompts': {
-    'id': 'Gunakan Prompt CMD Screenmessage',
-    'en': 'Use Screenmessage CMD Prompts',
-    'hi': 'Screenmessage CMD prompts ka upyog karen',
-    'es': 'Usar Indicaciones CMD de Mensaje en Pantalla',
-    'ml': 'Screenmessage CMD prompts upayogikkuka'
-},
-'rswPrioritizePbIdFromBcs': {
-    'id': 'Prioritaskan PB-ID dari BCS',
-    'en': 'Prioritize PB-ID From BCS',
-    'hi': 'BCS se PB-ID ko prathamikta den',
-    'es': 'Priorizar PB-ID de BCS',
-    'ml': 'BCS-il ninnum PB-ID-ykk prathamikta kodukkuka'
-},
-'rswSendMyPingIfPing': {
-    'id': 'Kirim Ping Saya Jika Ping',
-    'en': 'Send My Ping If Ping',
-    'hi': 'Ping karen to mera ping bhejen',
-    'es': 'Enviar Mi Ping Si Hay Ping',
-    'ml': 'Ping cheyyumpol ente ping ayakkuka'
-},
-'rswKickVoterAnalyzer': {
-    'id': 'Analisis Penendang',
-    'en': 'Kick Voter Analyzer',
-    'hi': 'Kick voter analyzer',
-    'es': 'Analizador de Votantes de Expulsión',
-    'ml': 'Kick voter analyzer'
-},
-'errorPopupTitle': {
-    'id': 'Catatan Kesalahan Internal',
-    'en': 'Internal Error Log',
-    'hi': 'Antarik truti log',
-    'es': 'Registro de Errores Internos',
-    'ml': 'Aathya thappu log'
-},
-'errorPopupConfirmCopyError': {
-    'id': 'Salin Kesalahan ke Clipboard',
-    'en': 'Copy Error To Clipboard',
-    'hi': 'Truti ko clipboard mein copy karen',
-    'es': 'Copiar Error al Portapapeles',
-    'ml': 'Thappu clipboard-il copy cheyyuka'
-},
-'errorPopupErrorCopied': {
-    'id': 'Error Disalin',
-    'en': 'Error Copied',
-    'hi': 'Truti copy ho gaya',
-    'es': 'Error Copiado',
-    'ml': 'Thappu copy cheythu'
-},
-'errorPopupNoError': {
-    'id': 'Tidak Ada Kesalahan Tercatat',
-    'en': 'No Errors Logged',
-    'hi': 'Koi truti log nahi hua',
-    'es': 'No Hay Errores Registrados',
-    'ml': 'Thappukal log cheythittilla'
-},
-'v1.4ServerTitle': {
-    'id': 'Server Versi V1.4',
-    'en': 'Server Is V1.4',
-    'hi': 'Server V1.4 Hai',
-    'es': 'El Servidor Es V1.4',
-    'ml': 'Server V1.4 Aanu'
-},
-'v1.4ServerMsg': {
-    'id': 'Anda Bermain Di Server V1.4',
-    'en': 'You\'re Playing In V1.4 Server',
-    'hi': 'Aap V1.4 Server Mein Khel Rahe Hain',
-    'es': 'Estás Jugando En Un Servidor V1.4',
-    'ml': 'Nee V1.4 Server-il Kalikkunnu'
-},
-'gatherWindowStillOpen': {
-    'id': 'Jendela Gather masih terbuka',
-    'en': 'Gather window still opened',
-    'hi': 'Gather window abhi bhi khula hai',
-    'es': 'La ventana de reunión sigue abierta',
-    'ml': 'Gather window ini open aayi nilkkunnu'
-},
-'partyConfigLoadRemoveKey': {
-    'id': 'Menghapus konfigurasi PartyWindow yang kedaluwarsa atau tidak valid',
-    'en': 'Removing outdated or invalid partywindow config',
-    'hi': 'Purana ya amanya partywindow config hata rahe hain',
-    'es': 'Eliminando configuración obsoleta o inválida de PartyWindow',
-    'ml': 'Kazhinja athava amanya partywindow config remove cheyyunnu'
-},
-'partyConfigLoadAddKey': {
-    'id': 'Menambahkan konfigurasi default PartyWindow yang hilang',
-    'en': 'Adding missing default partywindow config',
-    'hi': 'Gumshuda default partywindow config jod rahe hain',
-    'es': 'Agregando configuración predeterminada faltante de PartyWindow',
-    'ml': 'Kazhiya default partywindow config kooduthal'
-},
-'partyConfigLoadError': {
-    'id': 'Error Saat Memuat Konfigurasi Utama Party',
-    'en': 'Error On Main Party Config Load',
-    'hi': 'Main party config load mein truti',
-    'es': 'Error al Cargar la Configuración Principal de Party',
-    'ml': 'Main party config load-il thappu'
-},
-'responderConfigLoadRemoveKey': {
-    'id': 'Menghapus konfigurasi Responder yang kedaluwarsa atau tidak valid',
-    'en': 'Removing outdated or invalid responder config',
-    'hi': 'Purana ya amanya responder config hata rahe hain',
-    'es': 'Eliminando configuración obsoleta o inválida de Responder',
-    'ml': 'Kazhinja athava amanya responder config remove cheyyunnu'
-},
-'responderConfigLoadAddKey': {
-    'id': 'Menambahkan konfigurasi default Responder yang hilang',
-    'en': 'Adding missing default responder config',
-    'hi': 'Gumshuda default responder config jod rahe hain',
-    'es': 'Agregando configuración predeterminada faltante de Responder',
-    'ml': 'Kazhiya default responder config kooduthal'
-},
-'responderConfigLoadError': {
-    'id': 'Error Saat Memuat Konfigurasi Utama Responder',
-    'en': 'Error On Main Responder Config Load',
-    'hi': 'Main responder config load mein truti',
-    'es': 'Error al Cargar la Configuración Principal de Responder',
-    'ml': 'Main responder config load-il thappu'
-},
-'translateSettingsTitle': {
-    'id': 'Pengaturan Terjemahan',
-    'en': 'Translation Settings',
-    'hi': 'Anuvaad Settings',
-    'es': 'Configuración de Traducción',
-    'ml': 'Mozhi Mattal Settings'
-},
-'translateSettingsTextfield': {
-    'id': 'Kolom Teks',
-    'en': 'TextField Texts',
-    'hi': 'TextField Texts',
-    'es': 'Textos de Campo de Texto',
-    'ml': 'TextField Texts'
-},
-'translateSettingsOther': {
-    'id': 'Teks Lainnya',
-    'en': 'Other Texts',
-    'hi': 'Anya Texts',
-    'es': 'Otros Textos',
-    'ml': 'Mattulla Texts'
-},
-'translateMethod': {
-    'id': 'Metode Penerjemahan',
-    'en': 'Translate Method',
-    'hi': 'Anuvaad Prakriya',
-    'es': 'Método de Traducción',
-    'ml': 'Mozhi Mattal Padhathi'
-},
-'translateMethodLINK': {
-    'id': 'Tautan',
-    'en': 'Link',
-    'hi': 'Link',
-    'es': 'Enlace',
-    'ml': 'Link'
-},
-'translateMethodAPI': {
-    'id': 'API',
-    'en': 'API',
-    'hi': 'API',
-    'es': 'API',
-    'ml': 'API'
-},
-'pingInvalidIPandPORT': {
-    'id': 'IP dan PORT Tidak Valid',
-    'en': 'Not A Valid IP And PORT',
-    'hi': 'Sahi IP Aur PORT Nahin',
-    'es': 'No Es Una IP Y Puerto Válidos',
-    'ml': 'Sariyaya IP Um Port Illa'
-},
-'pingNotAvailable': {
-    'id': 'Tidak Dapat Melakukan Ping Saat Ini',
-    'en': 'Can\'t Do Ping Right Now',
-    'hi': 'Abhi Ping Nahi Kar Sakte',
-    'es': 'No Se Puede Hacer Ping Ahora',
-    'ml': 'Ippol Ping Cheyyan Kazhiyilla'
-},
-'isPingingServer': {
-    'id': 'Masih melakukan ping server',
-    'en': 'Still pinging server',
-    'hi': 'Abhi bhi server ping ho raha hai',
-    'es': 'Todavía haciendo ping al servidor',
-    'ml': 'Ippozhum server ping cheyyunnu'
-},
-'credit&help': {
-    'id': 'Kredit dan Bantuan',
-    'en': 'Credit and Help', 
-    'hi': 'Shrey aur Sahayata',
-    'es': 'Crédito y Ayuda',
-    'ml': 'Kreeditum Sahayavum'
-},
-'': {
-    'id': '',
-    'en': '',
-    'hi': '',
-    'es': '',
-    'ml': ''
-},
-'': {
-    'id': '',
-    'en': '',
-    'hi': '',
-    'es': '',
-    'ml': ''
-}}
+    'opsiBisu': {
+        'en': 'Mute Chats Option',
+        'es': 'Opción de Silenciar Chats',
+        'pt': 'Opção de Silenciar Chats',
+        'ru': 'Опция отключения чатов',
+        'hi': 'Chat Bisu Vikalp',
+        'ml': 'Chats Mute Vikalp',
+        'id': 'Opsi Bisu Pesan'
+    },
+    'modifWarnaParty': {
+        'en': 'Modify PartyWindow Color',
+        'es': 'Modificar Color de PartyWindow',
+        'pt': 'Modificar Cor da PartyWindow',
+        'ru': 'Изменить цвет окна группы',
+        'hi': 'PartyWindow Rang Badlo',
+        'ml': 'PartyWindow Color Modify Cheyyuka',
+        'id': 'Ubah Warna PartyWindow'
+    },
+    'tambahResponCepat': {
+        'en': 'Add A Quick Respond',
+        'es': 'Agregar una Respuesta Rápida',
+        'pt': 'Adicionar uma Resposta Rápida',
+        'ru': 'Добавить быстрый ответ',
+        'hi': 'Ek Tez Pratikriya Jodo',
+        'ml': 'Oru Quick Respond Add Cheyyuka',
+        'id': 'Tambah Respon Cepat'
+    },
+    'tambahResponCepatTutorial': {
+        'en': 'Fill The TextBar With Your Quick Respond Texts\nTo Add A Quick Respond',
+        'es': 'Llena la Barra de Texto con tus Textos de Respuesta Rápida\nPara Agregar una Respuesta Rápida',
+        'pt': 'Preencha a Barra de Texto com seus Textos de Resposta Rápida\nPara Adicionar uma Resposta Rápida',
+        'ru': 'Заполните панель текста вашими быстрыми ответами\nЧтобы добавить быстрый ответ',
+        'hi': 'Apne Tez Pratikriya Lekh TextBar Mein Bharein\nEk Tez Pratikriya Jodne Ke Liye',
+        'ml': 'Ningalude Quick Respond Texts TextBaril Nirakkuka\nOru Quick Respond Add Cheyyan',
+        'id': 'Isi TextBar Dengan Teks Respon Cepat Kamu\nUntuk Menambah Respon Cepat'
+    },
+    'hapusResponCepat': {
+        'en': 'Remove A Quick Respond',
+        'es': 'Eliminar una Respuesta Rápida',
+        'pt': 'Remover uma Resposta Rápida',
+        'ru': 'Удалить быстрый ответ',
+        'hi': 'Ek Tez Pratikriya Hatayein',
+        'ml': 'Oru Quick Respond Remove Cheyyuka',
+        'id': 'Hapus Respon Cepat'
+    },
+    'muteInGameOnly': {
+        'en': 'Mute In Game Messages Only',
+        'es': 'Silenciar Solo Mensajes en el Juego',
+        'pt': 'Silenciar Apenas Mensagens no Jogo',
+        'ru': 'Отключить только внутриигровые сообщения',
+        'hi': 'Keval Khel Mein Sandesh Bisu Karein',
+        'ml': 'Game Messages Matram Mute Cheyyuka',
+        'id': 'Nonaktifkan Dalam Game Saja'
+    },
+    'mutePartyWindowOnly': {
+        'en': 'Mute Party Window Messages Only',
+        'es': 'Silenciar Solo Mensajes de PartyWindow',
+        'pt': 'Silenciar Apenas Mensagens da Janela do Grupo',
+        'ru': 'Отключить только сообщения окна группы',
+        'hi': 'Keval PartyWindow Sandesh Bisu Karein',
+        'ml': 'PartyWindow Messages Matram Mute Cheyyuka',
+        'id': 'Nonaktifkan Pesan PartyWindow Saja'
+    },
+    'muteAll': {
+        'en': 'Mute all',
+        'es': 'Silenciar Todo',
+        'pt': 'Silenciar Tudo',
+        'ru': 'Отключить всё',
+        'hi': 'Sab Bisu Karein',
+        'ml': 'Ellam Mute Cheyyuka',
+        'id': 'Nonaktifkan Semua'
+    },
+    'unmuteAll': {
+        'en': 'Unmute All',
+        'es': 'Desactivar Silencio de Todo',
+        'pt': 'Reativar Som de Tudo',
+        'ru': 'Включить всё',
+        'hi': 'Sab Ko Unmute Karein',
+        'ml': 'Ellam Unmute Cheyyuka',
+        'id': 'Aktifkan Semua'
+    },
+    'hapusResponCepatPilihText': {
+        'en': 'Removed From Quick Respond',
+        'es': 'Eliminado de Respuesta Rápida',
+        'pt': 'Removido da Resposta Rápida',
+        'ru': 'Удалено из быстрых ответов',
+        'hi': 'Tez Pratikriya Se Hataya Gaya',
+        'ml': 'Quick Respondil Ninnum Remove Cheythu',
+        'id': 'Telah Dihapus Dari Respon Cepat'
+    },
+    'editResponCepat': {
+        'en': 'Edit Quick Respond',
+        'es': 'Editar Respuesta Rápida',
+        'pt': 'Editar Resposta Rápida',
+        'ru': 'Редактировать быстрый ответ',
+        'hi': 'Tez Pratikriya Ko Edit Karein',
+        'ml': 'Quick Respond Edit Cheyyuka',
+        'id': 'Kustomisasi Respon Cepat'
+    },
+    'saveLastGameReplay': {
+        'en': 'Save Last Game Replay',
+        'es': 'Guardar Repetición del Último Juego',
+        'pt': 'Salvar Replay do Último Jogo',
+        'ru': 'Сохранить повтор последней игры',
+        'hi': 'Aakhri Khel Replay Ko Save Karein',
+        'ml': 'Last Game Replay Save Cheyyuka',
+        'id': 'Simpan Game Replay Terakhir'
+    },
+    'sortQuickRespond': {
+        'en': 'EDIT ORDER',
+        'es': 'EDITAR ORDEN',
+        'pt': 'EDITAR ORDEM',
+        'ru': 'ИЗМЕНИТЬ ПОРЯДОК',
+        'hi': 'KRAM SANSODHAN',
+        'ml': 'ORDER EDIT CHEYYUKA',
+        'id': 'SORTIR URUTAN'
+    },
+    'voteKickConfirm': {
+        'en': 'Vote Kick This Player?',
+        'es': '¿Votar para Expulsar a Este Jugador?',
+        'pt': 'Votar para Expulsar Este Jogador?',
+        'ru': 'Голосовать за кик этого игрока?',
+        'hi': 'Is Khiladi Ko Vote Kick Karein?',
+        'ml': 'Ee Playerine Vote Kick Cheyyuka?',
+        'id': 'Voting Untuk Menendang Pemain Ini?'
+    },
+    'cantKickHost': {
+        'en': 'You Can\'t Kick The Host',
+        'es': 'No Puedes Expulsar al Anfitrión',
+        'pt': 'Você Não Pode Expulsar o Anfitrião',
+        'ru': 'Вы не можете кикнуть хоста',
+        'hi': 'Aap Mezabaan Ko Laat Nhi Maar Sakate',
+        'ml': 'Nee Hostine Kick Cheyyan Kazhiyilla',
+        'id': 'Kamu Tidak Bisa Menendang Tuan Rumah'
+    },
+    'cantKickMaster': {
+        'en': 'You Can\'t Kick Yourself',
+        'es': 'No Puedes Expulsarte A Ti Mismo',
+        'pt': 'Você Não Pode Expulsar a Si Mesmo',
+        'ru': 'Вы не можете кикнуть себя',
+        'hi': 'Aap Khud Ko Kick Nahi Kar Sakte',
+        'ml': 'Nee Thanneye Kick Cheyyan Kazhiyilla',
+        'id': 'Kamu Tidak Bisa Menendang Diri Sendiri'
+    },
+    'votekick': {
+        'en': 'Vote Kick',
+        'es': 'Votar Expulsión',
+        'pt': 'Votar Expulsão',
+        'ru': 'Голосовать за кик',
+        'hi': 'Vote Kick',
+        'ml': 'Vote Kick',
+        'id': 'Voting Keluar'
+    },
+    'mention': {
+        'en': 'Mention This Player',
+        'es': 'Mencionar a Este Jugador',
+        'pt': 'Mencionar Este Jogador',
+        'ru': 'Упомянуть этого игрока',
+        'hi': 'Is Khiladi Ko Mention Karein',
+        'ml': 'Ee Playerine Mention Cheyyuka',
+        'id': 'Tag Pemain Ini'
+    },
+    'warnInfo': {
+        'en': 'Warns: {}',
+        'es': 'Advertencias: {}',
+        'pt': 'Advertências: {}',
+        'ru': 'Предупреждения: {}',
+        'hi': 'Chitavani: {}',
+        'ml': 'Warning: {}',
+        'id': 'Peringatan: {}'
+    },
+    'partyPressWarnAdd': {
+        'en': 'Give Warn',
+        'es': 'Dar Advertencia',
+        'pt': 'Dar Advertência',
+        'ru': 'Выдать предупреждение',
+        'hi': 'Chitavani De',
+        'ml': 'Warning Kodukkuka',
+        'id': 'Beri Peringatan'
+    },
+    'partyPressWarnDecrease': {
+        'en': 'Decrease Warn',
+        'es': 'Disminuir Advertencia',
+        'pt': 'Diminuir Advertência',
+        'ru': 'Уменьшить предупреждение',
+        'hi': 'Chitavani Kam Karein',
+        'ml': 'Warning Kurakkuka',
+        'id': 'Kurangi Peringatan'
+    },
+    'addNewLangNoSplitter': {
+        'en': 'Put \"{}\" between lang-id and Lang',
+        'es': 'Ponga \"{}\" entre lang-id y Lang',
+        'pt': 'Coloque \"{}\" entre lang-id e Lang',
+        'ru': 'Поместите \"{}\" между lang-id и Lang',
+        'hi': 'lang-id aur Lang ke beech \"{}\" rakhein',
+        'ml': 'Lang-idum Langum itayil \"{}\" vechuka',
+        'id': 'Masukkan \"{}\" diantara id-bahasa dan Bahasa'
+    },
+    'addNewLangInvalid': {
+        'en': 'That is not a valid format',
+        'es': 'Ese no es un formato válido',
+        'pt': 'Isso não é um formato válido',
+        'ru': 'Это недопустимый формат',
+        'hi': 'Yeh ek valid format nahi hai',
+        'ml': 'Atu oru valid format alla',
+        'id': 'Itu bukan format yang valid'
+    },
+    'addNewLangExist': {
+        'en': 'That language already exist in the dictionaries',
+        'es': 'Ese idioma ya existe en los diccionarios',
+        'pt': 'Esse idioma já existe nos dicionários',
+        'ru': 'Этот язык уже есть в словарях',
+        'hi': 'Woh bhasha pehle se hi dictionaries mein maujood hai',
+        'ml': 'Aa bhasha dictionariesil itayil undu',
+        'id': 'Bahasa itu sudah ada di kamus'
+    },
+    'playerInfo': {
+        'en': 'Player Info',
+        'es': 'Información del Jugador',
+        'pt': 'Informação do Jogador',
+        'ru': 'Информация об игроке',
+        'hi': 'Khiladi Ki Jankari',
+        'ml': 'Player Info',
+        'id': 'Info Pemain'
+    },
+    'playerInfoNotFound': {
+        'en': 'Can\'t Find This Player Info',
+        'es': 'No se puede encontrar la información de este jugador',
+        'pt': 'Não foi possível encontrar as informações deste jogador',
+        'ru': 'Не удается найти информацию об этом игроке',
+        'hi': 'Is kheladi ki jankari nahi mili',
+        'ml': 'Ee playernte info kandilla',
+        'id': 'Tidak Dapat Menemukan Info Pemain Ini'
+    },
+    'adminkick': {
+        'en': 'Kick ID: {0}',
+        'es': 'Expulsar ID: {0}',
+        'pt': 'Expulsar ID: {0}',
+        'ru': 'Кик ID: {0}',
+        'hi': 'Kick ID: {0}',
+        'ml': 'Kick ID: {0}',
+        'id': 'ID Tendang: {0}'
+    },
+    'adminKickConfirm': {
+        'en': 'Kick This Player',
+        'es': '¿Expulsar a Este Jugador',
+        'pt': 'Expulsar Este Jogador',
+        'ru': 'Кикнуть этого игрока',
+        'hi': 'Is Khiladi Ko Kick Karein',
+        'ml': 'Ee Playerine Kick Cheyyuka',
+        'id': 'Tendang Player Ini'
+    },
+    'adminremove': {
+        'en': 'Remove: {0}',
+        'es': 'Eliminar: {0}',
+        'pt': 'Remover: {0}',
+        'ru': 'Удалить: {0}',
+        'hi': 'Hatayein: {0}',
+        'ml': 'Remove: {0}',
+        'id': 'Singkirkan: {0}'
+    },
+    'adminRemoveConfirm': {
+        'en': 'Remove This Player',
+        'es': '¿Eliminar a Este Jugador',
+        'pt': 'Remover Este Jogador',
+        'ru': 'Удалить этого игрока',
+        'hi': 'Is Khiladi Ko Hatayein',
+        'ml': 'Ee Playerine Remove Cheyyuka',
+        'id': 'Singkirkan Player Ini'
+    },
+    'addNewChoiceCmd': {
+        'en': 'NEW CMD',
+        'es': 'NUEVO CMD',
+        'pt': 'NOVO CMD',
+        'ru': 'НОВАЯ КОМАНДА',
+        'hi': 'NAYA CMD',
+        'ml': 'PUTHIYA CMD',
+        'id': 'PERINTAH BARU'
+    },
+    'sortChoiceCmd': {
+        'en': 'SORT CMD',
+        'es': 'ORDENAR CMD',
+        'pt': 'ORDENAR CMD',
+        'ru': 'СОРТИРОВАТЬ КОМАНДЫ',
+        'hi': 'CMD KO SORT KAREIN',
+        'ml': 'CMD SORT CHEYYUKA',
+        'id': 'SORTIR PERINTAH'
+    },
+    'customCommands': {
+        'en': 'Custom Command',
+        'es': 'Comando Personalizado',
+        'pt': 'Comando Personalizado',
+        'ru': 'Пользовательская команда',
+        'hi': 'Custom Command',
+        'ml': 'Custom Command',
+        'id': 'Perintah Kustom'
+    },
+    'editCustomCommands': {
+        'en': 'Edit Custom Commands',
+        'es': 'Editar Comandos Personalizados',
+        'pt': 'Editar Comandos Personalizados',
+        'ru': 'Редактировать пользовательские команды',
+        'hi': 'Custom Commands Ko Edit Karein',
+        'ml': 'Custom Commands Edit Cheyyuka',
+        'id': 'Kustomisasi Perintah Kustom'
+    },
+    'addCustomCommands': {
+        'en': 'Add Custom Commands',
+        'es': 'Agregar Comandos Personalizados',
+        'pt': 'Adicionar Comandos Personalizados',
+        'ru': 'Добавить пользовательские команды',
+        'hi': 'Custom Commands Jodein',
+        'ml': 'Custom Commands Add Cheyyuka',
+        'id': 'Tambah Perintah Kustom'
+    },
+    'customCommandsNoCmdPrefix': {
+        'en': 'Atleast Use One Of These: {0}',
+        'es': 'Al Menos Usa Uno de Estos: {0}',
+        'pt': 'Use Pelo Menos Um Destes: {0}',
+        'ru': 'Используйте хотя бы один из этих: {0}',
+        'hi': 'Kam Se Kam Inme Se Ek Ka Upyog Karein: {0}',
+        'ml': 'Ithil Oru Upayogikkuka: {0}',
+        'id': 'Gunakan Setidaknya Salah Satu Dari Ini: {0}'
+    },
+    'translateTextLabel': {
+        'en': 'Translated Text Dictionaries',
+        'es': 'Diccionarios de Textos Traducidos',
+        'pt': 'Dicionários de Textos Traduzidos',
+        'ru': 'Словари переведенных текстов',
+        'hi': 'Anudit Path Shabdakosh',
+        'ml': 'Translated Text Dictionaries',
+        'id': 'Kamus Teks Terjemahan'
+    },
+    'confirmNewLangID': {
+        'en': 'Continue \"{}\" as a correct language id?',
+        'es': '¿Continuar \"{}\" como un ID de idioma correcto?',
+        'pt': 'Continuar \"{}\" como um ID de idioma correto?',
+        'ru': 'Продолжить \"{}\" как правильный идентификатор языка?',
+        'hi': '\"{}\" Ko Sahi Bhasha ID Ke Roop Mein Jari Rakhein?',
+        'ml': '\"{}\" Sariyaya Bhasha ID Aayi Thudarunnu?',
+        'id': 'Lanjutkan \"{}\" seabagai id bahasa yang tepat?'
+    },
+    'saveLangIsInPreview': {
+        'en': 'You can\'t saving while in preview mode',
+        'es': 'No Puedes Guardar Mientras Estás en Modo Vista Previa',
+        'pt': 'Você não pode salvar enquanto está no modo de visualização',
+        'ru': 'Вы не можете сохранять в режиме предварительного просмотра',
+        'hi': 'Aap Preview Mode Mein Hote Hue Save Nahi Kar Sakte',
+        'ml': 'Nee Preview Modeil Save Cheyyan Kazhiyilla',
+        'id': 'Kamu tidak dapat menyimpan saat dalam mode pratinjau'
+    },
+    'addWarnBetraying': {
+        'en': 'Betraying',
+        'es': 'Traicionar',
+        'pt': 'Traição',
+        'ru': 'Предательство',
+        'hi': 'Dhokha Dena',
+        'ml': 'Betraying',
+        'id': 'Berkhianat'
+    },
+    'addWarnAbusing': {
+        'en': 'Abusing',
+        'es': 'Abusar',
+        'pt': 'Abuso',
+        'ru': 'Оскорбления',
+        'hi': 'Gali Dena',
+        'ml': 'Abusing',
+        'id': 'Bicara Kasar'
+    },
+    'addWarnUnnecessaryVotes': {
+        'en': 'Unnecessary Votes',
+        'es': 'Votos Innecesarios',
+        'pt': 'Votos Desnecessários',
+        'ru': 'Лишние голоса',
+        'hi': 'Avashyak Vote',
+        'ml': 'Avashyamaya Votes',
+        'id': 'Voting Tidak Perlu'
+    },
+    'addWarnTeaming': {
+        'en': 'Teaming',
+        'es': 'Formar Equipo',
+        'pt': 'Formar Equipe',
+        'ru': 'Командная игра (тимминг)',
+        'hi': 'Mil Kar Khelna',
+        'ml': 'Teaming',
+        'id': 'Kerjasama'
+    },
+    'addWarnIsMaster': {
+        'en': 'You can\'t warn yourself',
+        'es': 'No puedes advertirte a ti mismo',
+        'pt': 'Você não pode se advertir',
+        'ru': 'Вы не можете выдать предупреждение себе',
+        'hi': 'Aap apne aap ko warn nahi kar sakte',
+        'ml': 'Nee tanne warn cheyyan kazhiyilla',
+        'id': 'Kamu tidak bisa memberikan peringatan pada dirimu sendiri'
+    },
+    'addWarnNotInGame': {
+        'en': 'Warn increased (Not in-game)',
+        'es': 'Advertencia aumentada (No en el juego)',
+        'pt': 'Advertência aumentada (Não está no jogo)',
+        'ru': 'Предупреждение увеличено (Не в игре)',
+        'hi': 'Warn Badhaya (Khel Mein Nahi)',
+        'ml': 'Warn Kooduthal (Gameil Illa)',
+        'id': 'Peringatan ditambah (Tidak dalam permainan)'
+    },
+    'popupPlayerListWindowOpened': {
+        'en': 'Player List Window Opened',
+        'es': 'Ventana de Lista de Jugadores Abierta',
+        'pt': 'Janela da Lista de Jogadores Aberta',
+        'ru': 'Окно списка игроков открыто',
+        'hi': 'Khiladi Suchi Ki Khidki Khuli',
+        'ml': 'Player List Window Thurannu',
+        'id': 'Jendela daftar pemain dibuka'
+    },
+    'popupPlayerListWindowOpenedSearching': {
+        'en': 'Player List Window Opened, (+Searching)...',
+        'es': 'Ventana de Lista de Jugadores Abierta, (+Buscando)...',
+        'pt': 'Janela da Lista de Jogadores Aberta, (+Procurando)...',
+        'ru': 'Окно списка игроков открыто, (+Поиск)...',
+        'hi': 'Khiladi Suchi Ki Khidki Khuli, (+Khoj)...',
+        'ml': 'Player List Window Thurannu, (+Searching)...',
+        'id': 'Jendela daftar pemain dibuka, (+Pencarian)...'
+    },
+    'popupPlayerListWindowSearchingNotFound': {
+        'en': 'No Match Found For \"{}\"',
+        'es': 'No se Encontró Coincidencia para \"{}\"',
+        'pt': 'Nenhuma Correspondência Encontrada para \"{}\"',
+        'ru': 'Совпадений для \"{}\" не найдено',
+        'hi': '\"{}\" Ke Liye Koi Milaan Nahi Mila',
+        'ml': '\"{}\" Kku Match Kittiyilla',
+        'id': 'Tidak ada kecocokan yang ditemukan untuk \"{}\"'
+    },
+    'partyWindow.emptyText': {
+        'en': 'Your Party Is Empty',
+        'es': 'Tu Fiesta Está Vacía',
+        'pt': 'Sua Festa Está Vazia',
+        'ru': 'Ваша группа пуста',
+        'hi': 'Aapki Party Khali Hai',
+        'ml': 'Ninte Party Khali Aan',
+        'id': 'Acaramu Kosong'
+    },
+    'partyWindow.chatMutedText': {
+        'en': 'Chat Muted',
+        'es': 'Chat Silenciado',
+        'pt': 'Chat Silenciado',
+        'ru': 'Чат отключён',
+        'hi': 'Chat Bisu',
+        'ml': 'Chat Mute Cheythu',
+        'id': 'Pesan Dibisukan'
+    },
+    'partyWindow.titleText': {
+        'en': 'Your Pawri',
+        'es': 'Tu Fiesta',
+        'pt': 'Sua Festa',
+        'ru': 'Ваша тусовка',
+        'hi': 'Aapki Pawri',
+        'ml': 'Ninte Pawri',
+        'id': 'Pwesta Kamw'
+    },
+    'partyWindow.hostText': {
+        'en': 'Host',
+        'es': 'Anfitrión',
+        'pt': 'Anfitrião',
+        'ru': 'Хост',
+        'hi': 'Mezabaan',
+        'ml': 'Host',
+        'id': 'Tuan'
+    },
+    'cantMatchInPlayerData': {
+        'en': 'Can\'t match \"{}\" in player data',
+        'es': 'No se Puede Coincidir \"{}\" en los Datos del Jugador',
+        'pt': 'Não foi possível combinar \"{}\" nos dados do jogador',
+        'ru': 'Не удается сопоставить \"{}\" в данных игрока',
+        'hi': 'Khiladi Data Mein \"{}\" Ka Milaan Nahi Kar Sakte',
+        'ml': 'Player Datail \"{}\" Match Cheyyan Kazhiyilla',
+        'id': 'Tidak dapat menyocokkan \"{}\" di data pemain'
+    },
+    'cantFindInPlayerData': {
+        'en': 'Can\'t find \"{}\" in player data',
+        'es': 'No se Puede Encontrar \"{}\" en los Datos del Jugador',
+        'pt': 'Não foi possível encontrar \"{}\" nos dados do jogador',
+        'ru': 'Не удается найти \"{}\" в данных игрока',
+        'hi': 'Khiladi Data Mein \"{}\" Nahi Mil Sakte',
+        'ml': 'Player Datail \"{}\" Kittiyilla',
+        'id': 'Tidak dapat mencari \"{}\" di data pemain'
+    },
+    'addSuccess': {
+        'en': 'Succesfully Added',
+        'es': 'Agregado Exitosamente',
+        'pt': 'Adicionado com Sucesso',
+        'ru': 'Успешно добавлено',
+        'hi': 'Safalta Se Joda Gaya',
+        'ml': 'Vijayapoorvam Add Cheythu',
+        'id': 'Berhasil Ditambah'
+    },
+    'editSuccess': {
+        'en': 'Text Succesfully Edited',
+        'es': 'Texto Editado Exitosamente',
+        'pt': 'Texto Editado com Sucesso',
+        'ru': 'Текст успешно отредактирован',
+        'hi': 'Path Safalta Se Edit Kiya Gaya',
+        'ml': 'Text Vijayapoorvam Edit Cheythu',
+        'id': 'Teks Berhasil Diedit'
+    },
+    'editExist': {
+        'en': 'Text Edited Already Exist',
+        'es': 'El Texto Editado Ya Existe',
+        'pt': 'Texto Editado Já Existe',
+        'ru': 'Отредактированный текст уже существует',
+        'hi': 'Path Edit Kiya Hua Pehle Se Maujood Hai',
+        'ml': 'Edit Cheytha Text Already Exist',
+        'id': 'Teks Editan Sudah Ada'
+    },
+    'removeSuccess': {
+        'en': 'Text Succesfully Removed',
+        'es': 'Texto Eliminado Exitosamente',
+        'pt': 'Texto Removido com Sucesso',
+        'ru': 'Текст успешно удалён',
+        'hi': 'Path Safalta Se Hataya Gaya',
+        'ml': 'Text Vijayapoorvam Remove Cheythu',
+        'id': 'Teks Berhasil Dihapus'
+    },
+    'save': {
+        'en': 'Save',
+        'es': 'Guardar',
+        'pt': 'Salvar',
+        'ru': 'Сохранить',
+        'hi': 'Save Karein',
+        'ml': 'Save Cheyyuka',
+        'id': 'Simpan'
+    },
+    'use': {
+        'en': 'Use',
+        'es': 'Usar',
+        'pt': 'Usar',
+        'ru': 'Использовать',
+        'hi': 'Upyog Karein',
+        'ml': 'Upayogikkuka',
+        'id': 'Gunakan'
+    },
+    'copy': {
+        'en': 'Copy',
+        'es': 'Copiar',
+        'pt': 'Copiar',
+        'ru': 'Копировать',
+        'hi': 'Copy Karein',
+        'ml': 'Copy Cheyyuka',
+        'id': 'Salin'
+    },
+    'textCopied': {
+        'en': '\"{}\" Copied',
+        'es': '\"{}\" Copiado',
+        'pt': '\"{}\" Copiado',
+        'ru': '\"{}\" Скопировано',
+        'hi': '\"{}\" Copy Kiya Gaya',
+        'ml': '\"{}\" Copy Cheythu',
+        'id': '\"{}\" Disalin'
+    },
+    'get': {
+        'en': 'Get',
+        'es': 'Obtener',
+        'pt': 'Obter',
+        'ru': 'Получить',
+        'hi': 'Prapt Karein',
+        'ml': 'Kittuka',
+        'id': 'Dapatkan'
+    },
+    'enabled': {
+        'en': 'Enabled',
+        'es': 'Habilitado',
+        'pt': 'Habilitado',
+        'ru': 'Включено',
+        'hi': 'Sakriya',
+        'ml': 'Enabled',
+        'id': 'Dinyalakan'
+    },
+    'disabled': {
+        'en': 'Disabled',
+        'es': 'Deshabilitado',
+        'pt': 'Desabilitado',
+        'ru': 'Отключено',
+        'hi': 'Nishkriya',
+        'ml': 'Disabled',
+        'id': 'Dimatikan'
+    },
+    'confirmCopy': {
+        'en': 'Copy This Text',
+        'es': 'Copiar Este Texto',
+        'pt': 'Copiar Este Texto',
+        'ru': 'Скопировать этот текст',
+        'hi': 'Is Path Ko Copy Karein',
+        'ml': 'Itha Text Copy Cheyyuka',
+        'id': 'Salin Teks Ini'
+    },
+    'chatViewProfile': {
+        'en': 'Players Full Profile',
+        'es': 'Perfil Completo del Jugador',
+        'pt': 'Perfil Completo do Jogador',
+        'ru': 'Полный профиль игрока',
+        'hi': 'Players ka Pura Profile',
+        'ml': 'Playersinte Purna Profile',
+        'id': 'Profil Pemain Lengkap'
+    },
+    'chatViewAccount': {
+        'en': 'Players Account Name',
+        'es': 'Nombre de Cuenta del Jugador',
+        'pt': 'Nome da Conta do Jogador',
+        'ru': 'Имя аккаунта игрока',
+        'hi': 'Players ka Account Naam',
+        'ml': 'Playersinte Account Peru',
+        'id': 'Nama Akun Pemain'
+    },
+    'chatViewMulti': {
+        'en': 'Players Account & Profile',
+        'es': 'Cuenta y Perfil del Jugador',
+        'pt': 'Conta e Perfil do Jogador',
+        'ru': 'Аккаунт и профиль игрока',
+        'hi': 'Players ka Account aur Profile',
+        'ml': 'Playersinte Accountum Profileum',
+        'id': 'Akun & Profil Pemain'
+    },
+    'chatViewMultiV2': {
+        'en': 'Players Account & Profile V.2',
+        'es': 'Cuenta y Perfil del Jugador V.2',
+        'pt': 'Conta e Perfil do Jogador V.2',
+        'ru': 'Аккаунт и профиль игрока V.2',
+        'hi': 'Players ka Account aur Profile V.2',
+        'ml': 'Playersinte Accountum Profileum V.2',
+        'id': 'Akun & Profil Pemain V.2'
+    },
+    'chatShowCid': {
+        'en': 'View Players\' ClientID',
+        'es': 'Ver ClientID del Jugador',
+        'pt': 'Ver ClientID do Jogador',
+        'ru': 'Просмотреть ClientID игрока',
+        'hi': 'Players ka ClientID Dekhein',
+        'ml': 'Playersinte ClientID Kaanuka',
+        'id': 'Tampilkan ClientID Pemain'
+    },
+    'chatHideCid': {
+        'en': 'Hide Players\' ClientID',
+        'es': 'Ocultar ClientID del Jugador',
+        'pt': 'Ocultar ClientID do Jogador',
+        'ru': 'Скрыть ClientID игрока',
+        'hi': 'Players ka ClientID Chhupao',
+        'ml': 'Playersinte ClientID Marachuka',
+        'id': 'Sembunyikan ClientID Pemain'
+    },
+    'chatViewOff': {
+        'en': 'Turn Off Chat Name Viewer',
+        'es': 'Apagar Visor de Nombres del Chat',
+        'pt': 'Desligar Visualizador de Nomes do Chat',
+        'ru': 'Выключить просмотр имен в чате',
+        'hi': 'Chat Name Viewer Band Karo',
+        'ml': 'Chat Name Viewer Off Akkuka',
+        'id': 'Matikan Penampil Nama Chat'
+    },
+    'backupAllNamesStart': {
+        'en': 'Backing up all names data',
+        'es': 'Haciendo copia de seguridad de todos los datos de nombres',
+        'pt': 'Fazendo backup de todos os dados de nomes',
+        'ru': 'Резервное копирование всех данных имен',
+        'hi': 'Saare naam ke data ka backup liya ja raha hai',
+        'ml': 'Ella perukalude data backup edukkunnu',
+        'id': 'Memulai pencadangan semua data nama'
+    },
+    'backupAllNamesSuccess': {
+        'en': 'All names data backed up successfully',
+        'es': 'Todos los datos de nombres respaldados exitosamente',
+        'pt': 'Todos os dados de nomes copiados com sucesso',
+        'ru': 'Все данные имен успешно скопированы',
+        'hi': 'Saare naam ke data ka backup safal hua',
+        'ml': 'Ella perukalude data vijayathode backup cheythu',
+        'id': 'Semua data nama berhasil dicadangkan'
+    },
+    'backupAllNamesFailed': {
+        'en': 'Error backing up all names data',
+        'es': 'Error al hacer copia de seguridad de todos los datos de nombres',
+        'pt': 'Erro ao fazer backup de todos os dados de nomes',
+        'ru': 'Ошибка при резервном копировании всех данных имен',
+        'hi': 'saare naam ke data ka backup mein galti hui',
+        'ml': 'Ella perukalude data backup cheyyumbol thappu undayi',
+        'id': 'Gagal mencadangkan semua data nama'
+    },
+    'copyText': {
+        'en': 'Copy text',
+        'es': 'Copiar texto',
+        'pt': 'Copiar texto',
+        'ru': 'Копировать текст',
+        'hi': 'Text copy karein',
+        'ml': 'Text copy cheyyu',
+        'id': 'Salin teks'
+    },
+    'translateText': {
+        'en': 'Translate text',
+        'es': 'Traducir texto',
+        'pt': 'Traduzir texto',
+        'ru': 'Перевести текст',
+        'hi': 'Text translate karein',
+        'ml': 'Text translate cheyyu',
+        'id': 'Terjemahkan teks'
+    },
+    'insertText': {
+        'en': 'Insert text',
+        'es': 'Insertar texto',
+        'pt': 'Inserir texto',
+        'ru': 'Вставить текст',
+        'hi': 'Text insert karein',
+        'ml': 'Text insert cheyyu',
+        'id': 'Masukkan teks'
+    },
+    'playerMenuOptionFromText': {
+        'en': 'Player option',
+        'es': 'Opción de jugador',
+        'pt': 'Opção do jogador',
+        'ru': 'Опция игрока',
+        'hi': 'Player option',
+        'ml': 'Player option',
+        'id': 'Opsi player'
+    },
+    'editablePopUpInvalidDataType': {
+        'en': 'Data type is not valid',
+        'es': 'El tipo de datos no es válido',
+        'pt': 'Tipo de dados não é válido',
+        'ru': 'Тип данных недействителен',
+        'hi': 'Data ka prakar valid nahi hai',
+        'ml': 'Data type valid alla',
+        'id': 'Tipe data tidak valid'
+    },
+    'editablePopUpInvalidSaveFuncList': {
+        'en': 'Uh Oh, Invalid List Saving Function',
+        'es': 'Ups, Función de guardado de lista no válida',
+        'pt': 'Ops, Função de salvamento de lista inválida',
+        'ru': 'Ой, Неверная функция сохранения списка',
+        'hi': 'Oops, List save function valid nahi hai',
+        'ml': 'Oops, List save function valid alla',
+        'id': 'Oops, Fungsi Penyimpan List Tidak Valid'
+    },
+    'editablePopUpInvalidSaveFuncDict': {
+        'en': 'Uh Oh, Invalid Dict Saving Function',
+        'es': 'Ups, Función de guardado de diccionario no válida',
+        'pt': 'Ops, Função de salvamento de dicionário inválida',
+        'ru': 'Ой, Неверная функция сохранения словаря',
+        'hi': 'Oops, Dict save function valid nahi hai',
+        'ml': 'Oops, Dict save function valid alla',
+        'id': 'Oops, Fungsi Penyimpan Dict Tidak Valid'
+    },
+    'bcsObtainedAccountIdentity': {
+        'en': 'Identity',
+        'es': 'Identidad',
+        'pt': 'Identidade',
+        'ru': 'Идентичность',
+        'hi': 'Identity',
+        'ml': 'Identity',
+        'id': 'Identitas'
+    },
+    'bcsObtainedOtherAcc': {
+        'en': 'Other Accounts',
+        'es': 'Otras cuentas',
+        'pt': 'Outras contas',
+        'ru': 'Другие аккаунты',
+        'hi': 'Other Accounts',
+        'ml': 'Other Accounts',
+        'id': 'Akun Lain'
+    },
+    'bcsObtainedUpgradedName': {
+        'en': 'Upgraded Name',
+        'es': 'Nombre mejorado',
+        'pt': 'Nome atualizado',
+        'ru': 'Улучшенное имя',
+        'hi': 'Upgraded Name',
+        'ml': 'Upgraded Name',
+        'id': 'Nama Terupgrade'
+    },
+    'bcsObtainedOtherUpgradedName': {
+        'en': 'Other Upgraded Names',
+        'es': 'Otros nombres mejorados',
+        'pt': 'Outros nomes atualizados',
+        'ru': 'Другие улучшенные имена',
+        'hi': 'Other Upgraded Names',
+        'ml': 'Other Upgraded Names',
+        'id': 'Nama Terupgrade Lain'
+    },
+    'bcsObtainedAccountDatesKEY': {
+        'en': 'Account Dates',
+        'es': 'Fechas de la cuenta',
+        'pt': 'Datas da conta',
+        'ru': 'Даты аккаунта',
+        'hi': 'Account Dates',
+        'ml': 'Account Dates',
+        'id': 'Akun Dibuat Pada'
+    },
+    'bcsObtainedCretedOn': {
+        'en': 'Created On',
+        'es': 'Creado el',
+        'pt': 'Criado em',
+        'ru': 'Создан',
+        'hi': 'Created On',
+        'ml': 'Created On',
+        'id': 'Dibuat Pada'
+    },
+    'bcsObtainedUpdatedOn': {
+        'en': 'Updated On',
+        'es': 'Actualizado el',
+        'pt': 'Atualizado em',
+        'ru': 'Обновлено',
+        'hi': 'Updated On',
+        'ml': 'Updated On',
+        'id': 'Diperbaharui Pada'
+    },
+    'bcsObtainedConnectedDiscordKEY': {
+        'en': 'Player\'s Connected Discord',
+        'es': 'Discord conectado del jugador',
+        'pt': 'Discord conectado do jogador',
+        'ru': 'Подключенный Discord игрока',
+        'hi': 'Player\'s Connected Discord',
+        'ml': 'Player\'s Connected Discord',
+        'id': 'Akun Discord Terkoneksi Pada Pemain'
+    },
+    'bcsObtainedConnectedDiscordId': {
+        'en': 'DC-ID',
+        'es': 'ID-DC',
+        'pt': 'ID-DC',
+        'ru': 'DC-ID',
+        'hi': 'DC-ID',
+        'ml': 'DC-ID',
+        'id': 'ID-DC'
+    },
+    'bcsObtainedConnectedDiscordUsername': {
+        'en': 'Username',
+        'es': 'Nombre de usuario',
+        'pt': 'Nome de usuário',
+        'ru': 'Имя пользователя',
+        'hi': 'Yuzar naam',
+        'ml': 'Yuzar peru',
+        'id': 'Nama pengguna'
+    },
+    'bcsObtainedConnectedDiscordUniqueId': {
+        'en': 'Unique ID',
+        'es': 'ID único',
+        'pt': 'ID único',
+        'ru': 'Уникальный ID',
+        'hi': 'Anokha ID',
+        'ml': 'Vyakti ID',
+        'id': 'ID Unik'
+    },
+    'bcsObtainedSpaz': {
+        'en': 'Player\'s Spaz',
+        'es': 'Spaz del jugador',
+        'pt': 'Spaz do jogador',
+        'ru': 'Spaz игрока',
+        'hi': 'Kheladi ka Spaz',
+        'ml': 'Khelaadiyude Spaz',
+        'id': 'Spaz-nya Si Pemain'
+    },
+    'bcsObtainedMutualServer': {
+        'en': 'Mutual Servers',
+        'es': 'Servidores mutuos',
+        'pt': 'Servidores mútuos',
+        'ru': 'Общие серверы',
+        'hi': 'Sajha server',
+        'ml': 'Sahadharmi server',
+        'id': 'Ketemuan Di Server'
+    },
+    'errorAfterGetDataFromBCS': {
+        'en': 'Error \"After\" Obtaining Player Data From BCS',
+        'es': 'Error \"Después\" de obtener datos del jugador de BCS',
+        'pt': 'Erro \"Após\" obter dados do jogador do BCS',
+        'ru': 'Ошибка \"После\" получения данных игрока из BCS',
+        'hi': 'BCS se kheladi data prapt karne ke baad error',
+        'ml': 'BCS-il ninnu khelaadi data kittiyappol error',
+        'id': 'Error \"Setelah\" Mendapatkan Data Pemain Dari BCS'
+    },
+    'confirmChangesFromBCS': {
+        'en': 'Do You Want To Save Changes For Player',
+        'es': '¿Quieres guardar los cambios para el jugador?',
+        'pt': 'Você quer salvar as alterações para o jogador?',
+        'ru': 'Вы хотите сохранить изменения для игрока?',
+        'hi': 'Kya aap kheladi ke liye parivartan save karna chahte hain?',
+        'ml': 'Khelaadiyude maatpravarttanangal save cheyyaamo?',
+        'id': 'Apakah Anda Ingin Menyimpan Perubahan Untuk Pemain Ini?'
+    },
+    'errorWhileGetDataFromBCS': {
+        'en': 'Error On Getting Player Data',
+        'es': 'Error al obtener datos del jugador',
+        'pt': 'Erro ao obter dados do jogador',
+        'ru': 'Ошибка при получении данных игрока',
+        'hi': 'Kheladi data prapt karne mein error',
+        'ml': 'Khelaadi data kittiyappol error',
+        'id': 'Error Saat Mendapatkan Data Pemain'
+    },
+    'bcsGettingPlayerData': {
+        'en': 'Getting Player {0}\'s Data From BCS',
+        'es': 'Obteniendo datos del jugador {0} de BCS',
+        'pt': 'Obtendo dados do jogador {0} do BCS',
+        'ru': 'Получение данных игрока {0} из BCS',
+        'hi': 'BCS se kheladi {0} ka data prapt kiya ja raha hai',
+        'ml': 'BCS-il ninnu khelaadi {0}\'nte data kittunnu',
+        'id': 'Mendapatkan Data Pemain {0} Dari BCS'
+    },
+    'bcsFetchError': {
+        'en': 'Error Getting {0}\'s Data From BCS Server',
+        'es': 'Error al obtener datos de {0} del servidor BCS',
+        'pt': 'Erro ao obter dados de {0} do servidor BCS',
+        'ru': 'Ошибка получения данных {0} с сервера BCS',
+        'hi': 'BCS server se {0} ka data prapt karne mein error',
+        'ml': 'BCS server-il ninnu {0}\'nte data kittiyappol error',
+        'id': 'Error Mendapatkan Data {0} Dari Server BCS'
+    },
+    'bcsFetchStillFetching': {
+        'en': 'Player {0}\'s Data still searched, please wait',
+        'es': 'Los datos del jugador {0} aún se están buscando, por favor espere',
+        'pt': 'Dados do jogador {0} ainda sendo pesquisados, por favor aguarde',
+        'ru': 'Данные игрока {0} все еще ищутся, пожалуйста, подождите',
+        'hi': 'Kheladi {0} ka data abhi bhi khoja ja raha hai, kripya prateeksha karein',
+        'ml': 'Khelaadi {0}\'nte data ippozhum shodhikkunnu, kshamikkuka',
+        'id': 'Data pemain {0} sedang dicari, tunggu sebentar'
+    },
+    'bcsFetchFailedConnect': {
+        'en': 'Can\'t Connect To BCS Server For Player {0}',
+        'es': 'No se puede conectar al servidor BCS para el jugador {0}',
+        'pt': 'Não é possível conectar ao servidor BCS para o jogador {0}',
+        'ru': 'Не удается подключиться к серверу BCS для игрока {0}',
+        'hi': 'Kheladi {0} ke liye BCS server se jod nahi ho paya',
+        'ml': 'Khelaadi {0}\'nte BCS server-ilekku connect cheyyan kazhiyunnilla',
+        'id': 'Tidak Dapat Terhubung Ke Server BCS Untuk Pemain {0}'
+    },
+    'bcsFetchNotFound': {
+        'en': 'Can\'t Find {0}\'s Data From BCS Server',
+        'es': 'No se pueden encontrar los datos de {0} del servidor BCS',
+        'pt': 'Não é possível encontrar dados de {0} do servidor BCS',
+        'ru': 'Не удается найти данные {0} на сервере BCS',
+        'hi': 'BCS server se {0} ka data nahi mila',
+        'ml': 'BCS server-il ninnu {0}\'nte data kandilla',
+        'id': 'Tidak Dapat Menemukan Data {0} Dari Server BCS'
+    },
+    'bcsOnSearchTryEmpty': {
+        'en': 'PB-ID Is Not Available...\nGet {}\'s Data From BCS?\n(Might Take A While)',
+        'es': 'PB-ID no está disponible...\n¿Obtener datos de {} de BCS?\n(Podría tomar un tiempo)',
+        'pt': 'PB-ID não está disponível...\nObter dados de {} do BCS?\n(Pode demorar um pouco)',
+        'ru': 'PB-ID недоступен...\nПолучить данные {} из BCS?\n(Может занять некоторое время)',
+        'hi': 'PB-ID uplabdh nahi hai...\nBCS se {} ka data prapt karein?\n(samay lagega)',
+        'ml': 'PB-ID kittunilla...\nBCS-il ninnu {}\'nte data edukkamo?\n(samayam edukkum)',
+        'id': 'PB-ID Tidak Tersedia...\nAmbil Data {} Dari BCS?\n(Mungkin Butuh Waktu)'
+    },
+    'bcsOnSearchTryOnlyPb': {
+        'en': 'PB-ID Is Available From Other Source\nGet {}\'s Other Data From BCS?\n(Might Take A While)',
+        'es': 'PB-ID está disponible desde otra fuente\n¿Obtener otros datos de {} de BCS?\n(Podría tomar un tiempo)',
+        'pt': 'PB-ID está disponível de outra fonte\nObter outros dados de {} do BCS?\n(Pode demorar um pouco)',
+        'ru': 'PB-ID доступен из другого источника\nПолучить другие данные {} из BCS?\n(Может занять некоторое время)',
+        'hi': 'PB-ID anya srot se uplabdh hai\nBCS se {} ka anya data prapt karein?\n(samay lagega)',
+        'ml': 'PB-ID vere oru sthaanatthil ninnu kittiyirikkunnu\nBCS-il ninnu {}\'nte vere data edukkamo?\n(samayam edukkum)',
+        'id': 'PB-ID Tersedia Dari Sumber Lain\nAmbil Data Lain {} Dari BCS?\n(Mungkin Butuh Waktu)'
+    },
+    'bcsOnSearchTryNoPbNoBcs': {
+        'en': 'PB-ID Is Not Available...\nAnd {}\'s Data Not Found In BCS\nDo You Wanna Research The Data?',
+        'es': 'PB-ID no está disponible...\nY los datos de {} no se encontraron en BCS\n¿Quieres investigar los datos de nuevo?',
+        'pt': 'PB-ID não está disponível...\nE dados de {} não encontrados no BCS\nVocê quer pesquisar os dados novamente?',
+        'ru': 'PB-ID недоступен...\nИ данные {} не найдены в BCS\nВы хотите снова исследовать данные?',
+        'hi': 'PB-ID uplabdh nahi hai...\nAur {} ka data BCS mein nahi mila\nkya aap data phir se khojna chahte hain?',
+        'ml': 'PB-ID kittunilla...\nBCS-il {}\'nte data kandilla\ndata mattoru pravisham shodhikkamo?',
+        'id': 'PB-ID Tidak Tersedia...\nDan Data {} Tidak Ditemukan Di BCS\nApakah Anda Ingin Mencari Data Lagi?'
+    },
+    'bcsOnSearchTryNoBcs': {
+        'en': 'PB-ID Available: {pb_id}\nBut {name}\'s Data Not Found In BCS\nDo You Wanna Research The Data',
+        'es': 'PB-ID disponible: {pb_id}\nPero los datos de {name} no se encontraron en BCS\n¿Quieres investigar los datos de nuevo?',
+        'pt': 'PB-ID disponível: {pb_id}\nMas dados de {name} não encontrados no BCS\nVocê quer pesquisar os dados novamente?',
+        'ru': 'PB-ID доступен: {pb_id}\nНо данные {name} не найдены в BCS\nВы хотите снова исследовать данные?',
+        'hi': 'PB-ID uplabdh: {pb_id}\nLekin {name} ka data BCS mein nahi mila\nkya aap data phir se khojna chahte hain?',
+        'ml': 'PB-ID kittiyirikkunnu: {pb_id}\nPakshe BCS-il {name}\'nte data kandilla\ndata mattoru pravisham shodhikkamo?',
+        'id': 'PB-ID Tersedia: {pb_id}\nTapi Data {name} Tidak Ditemukan Di BCS\nApakah Anda Ingin Mencari Data Lagi?'
+    },
+    'bcsOnSearchTryFull': {
+        'en': 'PB-ID And Data From BCS Already Obtained:\nCurrent PB-ID: {pb_id}\nGet {name}\'s Data From BCS Again',
+        'es': 'PB-ID y datos de BCS ya obtenidos:\nPB-ID actual: {pb_id}\nObtener datos de {name} de BCS nuevamente',
+        'pt': 'PB-ID e dados do BCS já obtidos:\nPB-ID atual: {pb_id}\nObter dados de {name} do BCS novamente',
+        'ru': 'PB-ID и данные из BCS уже получены:\nТекущий PB-ID: {pb_id}\nПолучить данные {name} из BCS снова',
+        'hi': 'PB-ID aur BCS se data pehle hi prapt ho chuka hai:\nvartamaan PB-ID: {pb_id}\nBCS se {name} ka data phir se prapt karein',
+        'ml': 'PB-IDum BCS-il ninnulla datayum kitti:\nCurrent PB-ID: {pb_id}\nBCS-il ninnu {name}\'nte data mattoru pravisham edukkuka',
+        'id': 'PB-ID Dan Data Dari BCS Sudah Diperoleh:\nPB-ID Sekarang: {pb_id}\nAmbil Data {name} Dari BCS Lagi'
+    },
+    'bcsOnSearchTryUnknown': {
+        'en': 'Unknown Text Format For {name}\'s Data\nPB-ID Status: {pb_id}\nSearched Status: {other}',
+        'es': 'Formato de texto desconocido para los datos de {name}\nEstado de PB-ID: {pb_id}\nEstado de búsqueda: {other}',
+        'pt': 'Formato de texto desconhecido para dados de {name}\nStatus do PB-ID: {pb_id}\nStatus pesquisado: {other}',
+        'ru': 'Неизвестный текстовый формат для данных {name}\nСтатус PB-ID: {pb_id}\nСтатус поиска: {other}',
+        'hi': '{name} ke data ke liye anjaan text format\nPB-ID status: {pb_id}\nSearch status: {other}',
+        'ml': '{name}\'nte datayude anjaan text format\nPB-ID status: {pb_id}\nSearch status: {other}',
+        'id': 'Format Teks Tidak Dikenal Untuk Data {name}\nStatus PB-ID: {pb_id}\nStatus Pencarian: {other}'
+    },
+    'bcsPbPriority': {
+        'en': 'Prioritize BCS PB-ID',
+        'es': 'Priorizar PB-ID de BCS',
+        'pt': 'Priorizar PB-ID do BCS',
+        'ru': 'Приоритет PB-ID из BCS',
+        'hi': 'BCS PB-ID ko prathamikta do',
+        'ml': 'BCS PB-IDkk priority kodukkuka',
+        'id': 'Prioritaskan PB-ID BCS'
+    },
+    'settingsWindow.accountText': {
+        'en': 'Account',
+        'es': 'Cuenta',
+        'pt': 'Conta',
+        'ru': 'Аккаунт',
+        'hi': 'Khaata',
+        'ml': 'Account',
+        'id': 'Akun'
+    },
+    'saveReplayTitle': {
+        'en': 'Save Last Game Replay',
+        'es': 'Guardar la última repetición del juego',
+        'pt': 'Salvar última repetição do jogo',
+        'ru': 'Сохранить последний повтор игры',
+        'hi': 'Pichhla game replay save karo',
+        'ml': 'Kazhinja game replay save cheyyuka',
+        'id': 'Simpan Rekaman Permainan Terakhir'
+    },
+    'saveReplayConfirmReplaceWithDefault': {
+        'en': 'Confirm to use default replay name',
+        'es': 'Confirmar usar el nombre de repetición predeterminado',
+        'pt': 'Confirmar usar nome padrão de repetição',
+        'ru': 'Подтвердить использование имени повторения по умолчанию',
+        'hi': 'Default replay naam istemal karne ki pusti karein',
+        'ml': 'Default replay peru upayogikkunnathinu sthirappikkuka',
+        'id': 'Yakin menggunakan nama rekaman default'
+    },
+    'saveReplayEnter': {
+        'en': 'Save Game Replay',
+        'es': 'Guardar repetición del juego',
+        'pt': 'Salvar repetição do jogo',
+        'ru': 'Сохранить повтор игры',
+        'hi': 'Game replay save karo',
+        'ml': 'Game replay save cheyyuka',
+        'id': 'Simpan Rekaman Game'
+    },
+    'saveReplayEmptyName': {
+        'en': 'Game replay name can\'t be empty',
+        'es': 'El nombre de la repetición del juego no puede estar vacío',
+        'pt': 'Nome da repetição do jogo não pode estar vazio',
+        'ru': 'Имя повторения игры не может быть пустым',
+        'hi': 'Game replay ka naam khali nahi ho sakta',
+        'ml': 'Game replaynte peru khaliyakkam pattilla',
+        'id': 'Nama rekaman permainan tidak bisa kosong'
+    },
+    'saveReplayNoLastReplay': {
+        'en': 'Last game replay file not found',
+        'es': 'Archivo de la última repetición del juego no encontrado',
+        'pt': 'Arquivo da última repetição do jogo não encontrado',
+        'ru': 'Файл последнего повторения игры не найден',
+        'hi': 'Pichhla game replay file nahi mili',
+        'ml': 'Kazhinja game replay file kandilla',
+        'id': 'Rekaman permainan terkahir tidak ditemukan'
+    },
+    'saveReplaySaved': {
+        'en': 'Game replay \"{}\" succesfully saved',
+        'es': 'Repetición del juego \"{}\" guardada con éxito',
+        'pt': 'Repetição do jogo \"{}\" salva com sucesso',
+        'ru': 'Повтор игры \"{}\" успешно сохранен',
+        'hi': 'Game replay \"{}\" safalta se save ho gaya',
+        'ml': 'Game replay \"{}\" vijayathode save cheythu',
+        'id': 'Rekaman game \"{}\" berhasil disimpan'
+    },
+    'saveReplayError': {
+        'en': 'Failed to save game replay',
+        'es': 'Error al guardar la repetición del juego',
+        'pt': 'Falha ao salvar repetição do jogo',
+        'ru': 'Не удалось сохранить повтор игры',
+        'hi': 'Game replay save karne mein asafal',
+        'ml': 'Game replay save cheyyan kazhiyilla',
+        'id': 'Gagal menyimpan rekaman permainan'
+    },
+    'saveReplayInfoDate': {
+        'en': '{} = Current date',
+        'es': '{} = Fecha actual',
+        'pt': '{} = Data atual',
+        'ru': '{} = Текущая дата',
+        'hi': '{} = Vartamaan taareekh',
+        'ml': '{} = Current date',
+        'id': '{} = Tanggal sekarang'
+    },
+    'saveReplayInfoTime': {
+        'en': '{} = Current time',
+        'es': '{} = Hora actual',
+        'pt': '{} = Hora atual',
+        'ru': '{} = Текущее время',
+        'hi': '{} = Vartamaan samay',
+        'ml': '{} = Current time',
+        'id': '{} = Waktu sekarang'
+    },
+    'saveReplayOverwriteConfirm': {
+        'en': 'The replay with this name already exist, overwrite?',
+        'es': 'La repetición con este nombre ya existe, ¿sobrescribir?',
+        'pt': 'A repetição com este nome já existe, sobrescrever?',
+        'ru': 'Повтор с этим именем уже существует, перезаписать?',
+        'hi': 'Is naam ka replay pehle se maujood hai, overwrite karein?',
+        'ml': 'Itha perulla replay munp undu, overwrite cheyyamo?',
+        'id': 'Rekaman dengan nama ini sudah ada, timpa?'
+    },
+    'saveReplayConfirmExit': {
+        'en': 'Are you sure exit without saving?',
+        'es': '¿Estás seguro de salir sin guardar?',
+        'pt': 'Tem certeza que quer sair sem salvar?',
+        'ru': 'Вы уверены, что хотите выйти без сохранения?',
+        'hi': 'Kya aap save kiye bina bahar jaane ke liye pakka hain?',
+        'ml': 'Save cheyyathe purathu pokan nishchayikkunnundo?',
+        'id': 'Yakin keluar tanpa menyimpan?'
+    },
+    'savePlayerDataHappyMsg1': {
+        'en': 'Wow, You Have Collected {} Player Names! Keep it Up xD',
+        'es': '¡Guau, has recopilado {} nombres de jugadores! Sigue así xD',
+        'pt': 'Uau, você coletou {} nomes de jogadores! Continue assim xD',
+        'ru': 'Вау, вы собрали {} имен игроков! Продолжайте в том же духе xD',
+        'hi': 'Wow, aapne {} player ke naam ikatthe kiye hain! Jaari rakho xD',
+        'ml': 'Wow, ningal {} playernte perukal collect cheythu! Thudarum xD',
+        'id': 'Wow, Kamu Telah Mengumpulkan {} Nama Pemain! Teruskan xD'
+    },
+    'savePlayerDataHappyMsg2': {
+        'en': 'Daymm, You Collected {} Player Names! Less is Happy xD',
+        'es': '¡Vaya, has recopilado {} nombres de jugadores! Less está feliz xD',
+        'pt': 'Caramba, você coletou {} nomes de jogadores! Less está feliz xD',
+        'ru': 'Боже, вы собрали {} имен игроков! Less счастлив xD',
+        'hi': 'Daymm, aapne {} player ke naam ikatthe kiye hain! Less khush hai xD',
+        'ml': 'Daymm, ningal {} playernte perukal collect cheythu! Less santhoshappettu xD',
+        'id': 'Daymm, Kamu Mengumpulkan {} Nama Pemain! Less Senang xD'
+    },
+    'savePlayerDataHappyMsg3': {
+        'en': 'You Collected {} Player Names, Amazing! You Sure An OG🙀',
+        'es': '¡Has recopilado {} nombres de jugadores, increíble! Definitivamente eres un OG🙀',
+        'pt': 'Você coletou {} nomes de jogadores, incrível! Você é um OG🙀',
+        'ru': 'Вы собрали {} имен игроков, удивительно! Вы точно OG🙀',
+        'hi': 'Aapne {} player ke naam ikatthe kiye, shandaar! Aap pakka OG hain🙀',
+        'ml': 'Ningal {} playernte perukal collect cheythu, adbhutam! Ningal sure an OG🙀',
+        'id': 'Kamu Mengumpulkan {} Nama Pemain, Luar Biasa! Kamu Pasti OG🙀'
+    },
+    'savePlayerDataHappyMsg4': {
+        'en': '{} Player Names? Touch Some Grass Bruh😭',
+        'es': '¿{} Nombres de jugadores? Toca un poco de hierba, hermano😭',
+        'pt': '{} Nomes de jogadores? Toque um pouco de grama, mano😭',
+        'ru': '{} имен игроков? Потрогай травку, братан😭',
+        'hi': '{} Player ke naam? Thoda ghaas chho lo bhai😭',
+        'ml': '{} Playernte perukal? Kurachu pul thodukku da😭',
+        'id': '{} Nama Pemain? Sentuh Rumput Bruh😭'
+    },
+    'translateFailed': {
+        'en': 'Can\'t Connect To Google Translate / No Internet Connection',
+        'es': 'No se puede conectar a Google Translate / Sin conexión a Internet',
+        'pt': 'Não é possível conectar ao Google Translate / Sem conexão com a Internet',
+        'ru': 'Не удается подключиться к Google Translate / Нет подключения к Интернету',
+        'hi': 'Google Translate se jod nahi ho paya / Internet connection nahi hai',
+        'ml': 'Google Translate-ilekku connect cheyyan kazhiyilla / Internet connection illa',
+        'id': 'Tidak Dapat Terhubung Ke Google Translate / Tidak Ada Koneksi Internet'
+    },
+    'serverDisconnected': {
+        'en': 'Remote end closed connection without response',
+        'es': 'El extremo remoto cerró la conexión sin respuesta',
+        'pt': 'O extremo remoto fechou a conexão sem resposta',
+        'ru': 'Удаленная сторона закрыла соединение без ответа',
+        'hi': 'Door ka anty bina jawab ke jod tod diya',
+        'ml': 'Dooravarti mukham bina uttaram bandham murichu',
+        'id': 'Ujung jarak jauh menutup koneksi tanpa respons'
+    },
+    'translateSameSrcDest': {
+        'en': 'Same Source ({}) And Destination ({}) Lang',
+        'es': 'Mismo Origen ({}) y Destino ({}) Idioma',
+        'pt': 'Mesma Origem ({}) e Destino ({}) Idioma',
+        'ru': 'Тот же источник ({}) и назначение ({}) язык',
+        'hi': 'Sam strot ({}) aur lakshya ({}) bhasha',
+        'ml': 'Samam sthaanam ({}) athra lakshyam ({}) bhasha',
+        'id': 'Sumber ({}) dan Tujuan ({}) Bahasa Sama'
+    },
+    'translateEmptyText': {
+        'en': 'Nothing to translate',
+        'es': 'Nada que traducir',
+        'pt': 'Nada para traduzir',
+        'ru': 'Нечего переводить',
+        'hi': 'Anuvad ke liye kuch nahi',
+        'ml': 'Anuvadakkaayi onnumilla',
+        'id': 'Ngga ada teks buat diterjemah'
+    },
+    'translateSameResult': {
+        'en': 'Translation results are the same',
+        'es': 'Los resultados de la traducción son iguales',
+        'pt': 'Os resultados da tradução são os mesmos',
+        'ru': 'Результаты перевода одинаковы',
+        'hi': 'Anuvad ke nateeje saman hain',
+        'ml': 'Anuvadattinte parinamam samanamanu',
+        'id': 'Hasil terjemahan sama'
+    },
+    'noResponderData': {
+        'en': 'No Data To Get Right Now',
+        'es': 'No hay datos para obtener ahora mismo',
+        'pt': 'Nenhum dado para obter agora',
+        'ru': 'Нет данных для получения прямо сейчас',
+        'hi': 'Abhi lene ke liye koi data nahi',
+        'ml': 'Ippol edukkaan data illa',
+        'id': 'Tidak Ada Data Untuk Diambil Saat Ini'
+    },
+    'findPlayerCmdShortArgument': {
+        'en': 'Please provide at least {} characters to search',
+        'es': 'Por favor proporcione al menos {} caracteres para buscar',
+        'pt': 'Por favor, forneça pelo menos {} caracteres para pesquisar',
+        'ru': 'Пожалуйста, предоставьте хотя бы {} символов для поиска',
+        'hi': 'Khojne ke liye kam se kam {} akshar dijiye',
+        'ml': 'Thediyaan kurachu {} aksharam kodukku',
+        'id': 'Berikan setidaknya {} karakter untuk mencari'
+    },
+    'findPlayerCmdFailed': {
+        'en': 'Failed Finding',
+        'es': 'Búsqueda fallida',
+        'pt': 'Falha ao encontrar',
+        'ru': 'Не удалось найти',
+        'hi': 'Khojne mein asaphal',
+        'ml': 'Thediyaan thottilla',
+        'id': 'Gagal Mencari'
+    },
+    'findPlayerCmdNotFound': {
+        'en': 'No Match Found For \"{}\"',
+        'es': 'No se encontró coincidencia para \"{}\"',
+        'pt': 'Nenhuma correspondência encontrada para \"{}\"',
+        'ru': 'Совпадений для \"{}\" не найдено',
+        'hi': '\"{}\" ke liye koi mil nahi',
+        'ml': '\"{}\" inu ottum kittiyilla',
+        'id': 'Tidak Ada Kecocokan Untuk \"{}\"'
+    },
+    'findPlayerIncludeProfileEnable': {
+        'en': 'Include Matching With Profile Enabled',
+        'es': 'Incluir coincidencia con perfil habilitado',
+        'pt': 'Incluir correspondência com perfil habilitado',
+        'ru': 'Включить сопоставление с включенным профилем',
+        'hi': 'sakriya profile ke saath milan shamil karein',
+        'ml': 'Nakriya profile-umayi ottu cherkkuka',
+        'id': 'Sertakan Pencocokan Dengan Profil Diaktifkan'
+    },
+    'findPlayerIncludeProfileDisable': {
+        'en': 'Include Matching With Profile Disabled',
+        'es': 'Incluir coincidencia con perfil deshabilitado',
+        'pt': 'Incluir correspondência com perfil desativado',
+        'ru': 'Включить совпадение с отключенным профилем',
+        'hi': 'Nishkriya profile ke saath milan shamil karein',
+        'ml': 'Nishkriya profile-umayi ottu cherkkuka',
+        'id': 'Sertakan Pencocokan Dengan Profil Dinonaktifkan'
+    },
+    'nickAlreadyExist': {
+        'en': 'Nick already exists',
+        'es': 'El apodo ya existe',
+        'pt': 'Apelido já existe',
+        'ru': 'Никнейм уже существует',
+        'hi': 'Nick pehle se maujood hai',
+        'ml': 'Nick munpu undayirunnu',
+        'id': 'Nickname Sudah Ada'
+    },
+    'nickAdded': {
+        'en': 'Nick added',
+        'es': 'Apodo añadido',
+        'pt': 'Apelido adicionado',
+        'ru': 'Никнейм добавлен',
+        'hi': 'Nick jod diya gaya',
+        'ml': 'Nick cherthu',
+        'id': 'Nickname Ditambahkan'
+    },
+    'nickRemoved': {
+        'en': 'Nick removed',
+        'es': 'Apodo eliminado',
+        'pt': 'Apelido removido',
+        'ru': 'Никнейм удален',
+        'hi': 'Nick hata diya gaya',
+        'ml': 'Nick maatti',
+        'id': 'Nickname Dihapus'
+    },
+    'nickNotFound': {
+        'en': 'Nick not found',
+        'es': 'Apodo no encontrado',
+        'pt': 'Apelido não encontrado',
+        'ru': 'Никнейм не найден',
+        'hi': 'Nick nahi mila',
+        'ml': 'Nick kittiyilla',
+        'id': 'Nickname Tidak Ditemukan'
+    },
+    'responderBlacklistInvalidName': {
+        'en': 'Invalid Blacklist Names',
+        'es': 'Nombres de lista negra no válidos',
+        'pt': 'Nomes de lista negra inválidos',
+        'ru': 'Неверные имена в черном списке',
+        'hi': 'Amany blacklist naam',
+        'ml': 'Amanya blacklist perukal',
+        'id': 'Nama Blacklist Tidak Valid'
+    },
+    'responderBlacklistAdded': {
+        'en': 'Acc(s) added to the blacklist',
+        'es': 'Cuenta(s) añadida(s) a la lista negra',
+        'pt': 'Conta(s) adicionada(s) à lista negra',
+        'ru': 'Аккаунт(ы) добавлен(ы) в черный список',
+        'hi': 'Khaate blacklist mein jod diye gaye',
+        'ml': 'Blacklist-il account(s) cherthu',
+        'id': 'Akun Ditambahkan Ke Blacklist'
+    },
+    'responderMutedInvalidName': {
+        'en': 'Invalid Muted Names',
+        'es': 'Nombres silenciados no válidos',
+        'pt': 'Nomes de silenciados inválidos',
+        'ru': 'Неверные имена в списке заглушенных',
+        'hi': 'Amany mute naam',
+        'ml': 'Amanya mute perukal',
+        'id': 'Nama Mute Tidak Valid'
+    },
+    'responderMutedAdded': {
+        'en': 'Acc(s) added to the muted list',
+        'es': 'Cuenta(s) añadida(s) a la lista de silenciados',
+        'pt': 'Conta(s) adicionada(s) à lista de silenciados',
+        'ru': 'Аккаунт(ы) добавлен(ы) в список заглушенных',
+        'hi': 'Khaate mute list mein jod diye gaye',
+        'ml': 'Mute list-il account(s) cherthu',
+        'id': 'Akun Ditambahkan Ke Daftar Mute'
+    },
+    'quickRespondButton': {
+        'en': 'Quick',
+        'es': 'Rápido',
+        'pt': 'Rápido',
+        'ru': 'Быстрый',
+        'hi': 'Tez',
+        'ml': 'Vegam',
+        'id': 'Cepat'
+    },
+    'psNewUserOpenTranslatedDict': {
+        'en': 'Plugin is still new! Wait {} more day(s) to open this',
+        'es': '¡El plugin aún es nuevo! Espera {} día(s) más para abrir esto',
+        'pt': 'O plugin ainda é novo! Aguarde mais {} dia(s) para abrir isto',
+        'ru': 'Плагин еще новый! Подождите еще {} день(дней), чтобы открыть это',
+        'hi': 'Plugin abhi naya hai! ise kholne ke liye {} aur din intezar karein',
+        'ml': 'Plugin innum putiya aanu! ith thurakkan {} divasam koodi kathirikkuka',
+        'id': 'Plugin masih baru! Tunggu {} hari lagi untuk membuka ini'
+    },
+    'psNewUserOpenTranslatedDictInvalidDate': {
+        'en': 'Last usage date format is invalid',
+        'es': 'El formato de la fecha del último uso no es válido',
+        'pt': 'O formato da data do último uso é inválido',
+        'ru': 'Формат даты последнего использования недействителен',
+        'hi': 'Antim upyog ki tarikh ka format amanya hai',
+        'ml': 'Kadha upayogicha divasamaya format amanya aanu',
+        'id': 'Format tanggal terakhir penggunaan tidak valid'
+    },
+    'psMainLanguage': {
+        'en': '{} Main Language',
+        'es': '{} Idioma Principal',
+        'pt': '{} Idioma Principal',
+        'ru': '{} Основной язык',
+        'hi': '{} mukhya bhasha',
+        'ml': '{} mukhya bhasha',
+        'id': 'Bahasa Utama {}'
+    },
+    'psMainLanguageChanged': {
+        'en': 'Current PartyWindow main Language is now {}',
+        'es': 'El idioma principal de PartyWindow ahora es {}',
+        'pt': 'O idioma principal da PartyWindow agora é {}',
+        'ru': 'Текущий основной язык PartyWindow теперь {}',
+        'hi': 'PartyWindow ki mukhya Bhasha ab {} hai',
+        'ml': 'PartyWindow-in mukhya Bhasha ippol {} aanu',
+        'id': 'Bahasa utama JendelaParty sekarang adalah {}'
+    },
+    'psMessageNotificationPosKey': {
+        'en': 'Message Notification Position',
+        'es': 'Posición de Notificación de Mensaje',
+        'pt': 'Posição da Notificação de Mensagem',
+        'ru': 'Позиция уведомления о сообщении',
+        'hi': 'Sandesh suchna sthaan',
+        'ml': 'Sandhesha aavishkaar sthaanam',
+        'id': 'Posisi Notifikasi Pesan'
+    },
+    'psMessageNotificationPosTOP': {
+        'en': 'Top',
+        'es': 'Arriba',
+        'pt': 'Topo',
+        'ru': 'Вверху',
+        'hi': 'Upar',
+        'ml': 'Mel',
+        'id': 'Atas'
+    },
+    'psMessageNotificationPosBOTTOM': {
+        'en': 'Bottom',
+        'es': 'Abajo',
+        'pt': 'Fundo',
+        'ru': 'Внизу',
+        'hi': 'Neeche',
+        'ml': 'Keezh',
+        'id': 'Bawah'
+    },
+    'psBsUiScaleKey': {
+        'en': 'BombSquad UI Scale',
+        'es': 'Escala de UI de BombSquad',
+        'pt': 'Escala da UI do BombSquad',
+        'ru': 'Масштаб интерфейса BombSquad',
+        'hi': 'BombSquad UI praman',
+        'ml': 'BombSquad UI pramaanam',
+        'id': 'Skala UI BombSquad'
+    },
+    'psBsUiScaleSMALL': {
+        'en': 'Small',
+        'es': 'Pequeño',
+        'pt': 'Pequeno',
+        'ru': 'Маленький',
+        'hi': 'Chhota',
+        'ml': 'Cheriya',
+        'id': 'Kecil'
+    },
+    'psBsUiScaleMEDIUM': {
+        'en': 'Medium',
+        'es': 'Mediano',
+        'pt': 'Médio',
+        'ru': 'Средний',
+        'hi': 'Madhyam',
+        'ml': 'Madhyamam',
+        'id': 'Sedang'
+    },
+    'psBsUiScaleLARGE': {
+        'en': 'Large',
+        'es': 'Grande',
+        'pt': 'Grande',
+        'ru': 'Большой',
+        'hi': 'Bada',
+        'ml': 'Valiya',
+        'id': 'Besar'
+    },
+    'qnaRemoved': {
+        'en': 'Question removed',
+        'es': 'Pregunta eliminada',
+        'pt': 'Pergunta removida',
+        'ru': 'Вопрос удален',
+        'hi': 'Sawal hata diya gaya',
+        'ml': 'Prashnam maatti',
+        'id': 'Pertanyaan dihapus'
+    },
+    'qnaNotFound': {
+        'en': '\"{}\" not in questions list',
+        'es': '\"{}\" no está en la lista de preguntas',
+        'pt': '\"{}\" não está na lista de perguntas',
+        'ru': '«{}» нет в списке вопросов',
+        'hi': '\"{}\" sawal ke list mein nahi hai',
+        'ml': '\"{}\" prashna list-il illa',
+        'id': '\"{}\" tidak ada di data pertanyaan'
+    },
+    'question': {
+        'en': 'Question',
+        'es': 'Pregunta',
+        'pt': 'Pergunta',
+        'ru': 'Вопрос',
+        'hi': 'Sawal',
+        'ml': 'Prashnam',
+        'id': 'Pertanyaan'
+    },
+    'answer': {
+        'en': 'Answer',
+        'es': 'Respuesta',
+        'pt': 'Resposta',
+        'ru': 'Ответ',
+        'hi': 'Uttar',
+        'ml': 'Uttaram',
+        'id': 'Jawaban'
+    },
+    'crAdded': {
+        'en': 'Trigger: [{}] Reply: [{}] added',
+        'es': 'Disparador: [{}] Respuesta: [{}] añadido',
+        'pt': 'Gatilho: [{}] Resposta: [{}] adicionado',
+        'ru': 'Триггер: [{}] Ответ: [{}] добавлен',
+        'hi': 'Trigger: [{}] uttar: [{}] joda gaya',
+        'ml': 'Trigger: [{}] uttaram: [{}] cherthu',
+        'id': 'Trigger: [{}] Balasan: [{}] ditambahkan'
+    },
+    'crRemoved': {
+        'en': 'Trigger removed',
+        'es': 'Disparador eliminado',
+        'pt': 'Gatilho removido',
+        'ru': 'Триггер удален',
+        'hi': 'Trigger hata diya gaya',
+        'ml': 'Trigger maatti',
+        'id': 'Trigger dihapus'
+    },
+    'crNotFound': {
+        'en': 'Trigger: \"{}\" not found in custom replies',
+        'es': 'Disparador: \"{}\" no encontrado en respuestas personalizadas',
+        'pt': 'Gatilho: \"{}\" não encontrado em respostas personalizadas',
+        'ru': 'Триггер: «{}» не найден в пользовательских ответах',
+        'hi': 'Trigger: \"{}\" custom jawab mein nahi mila',
+        'ml': 'Trigger: \"{}\" custom uttaram-il kandilla',
+        'id': 'Trigger: \"{}\" tidak ditemukan di balasan kustom'
+    },
+    'invalidMaxMsgLen': {
+        'en': 'Invalid MAX_MSG_LENGTH: [{val}] | [{type}] >> Max: 99 (integer)',
+        'es': 'MAX_MSG_LENGTH no válido: [{val}] | [{type}] >> Máx: 99 (entero)',
+        'pt': 'MAX_MSG_LENGTH inválido: [{val}] | [{type}] >> Máx: 99 (inteiro)',
+        'ru': 'Неверный MAX_MSG_LENGTH: [{val}] | [{type}] >> Макс: 99 (целое число)',
+        'hi': 'Galat MAX_MSG_LENGTH: [{val}] | [{type}] >> adhik se adhik: 99 (integer)',
+        'ml': 'Thavana MAX_MSG_LENGTH: [{val}] | [{type}] >> kooduthal: 99 (integer)',
+        'id': 'MAX_MSG_LENGTH Tidak Valid: [{val}] | [{type}] >> Maks: 99 (integer)'
+    },
+    'cfgBlockNaCmd': {
+        'en': '[{}] Is An Unknown Command Prefix',
+        'es': '[{}] es un prefijo de comando desconocido',
+        'pt': '[{}] é um prefixo de comando desconhecido',
+        'ru': '[{}] — неизвестный префикс команды',
+        'hi': '[{}] anjaan command prefix hai',
+        'ml': '[{}] anjaan command prefix aanu',
+        'id': '[{}] Tidak Ada Dalam Perintah'
+    },
+    'playerOptionRemoveData': {
+        'en': 'Remove {} Data',
+        'es': 'Eliminar datos de {}',
+        'pt': 'Remover dados de {}',
+        'ru': 'Удалить данные {}',
+        'hi': '{} ka data hatao',
+        'ml': '{}\'nte data maatti',
+        'id': 'Hapus Data {}'
+    },
+    'playerOptionRemoveDataConfirm': {
+        'en': 'Are you sure to delete {} Data',
+        'es': '¿Estás seguro de eliminar los datos de {}?',
+        'pt': 'Tem certeza de que deseja excluir os dados de {}?',
+        'ru': 'Вы уверены, что хотите удалить данные {}?',
+        'hi': 'Kya aap {} ka data delete karna chahte hain',
+        'ml': '{}\'nte data maattan nishchayikkunnundo?',
+        'id': 'Yakin hapus data {}'
+    },
+    'playerOptionRemoveDataInMasterList': {
+        'en': 'You can\'t delete your own data',
+        'es': 'No puedes eliminar tus propios datos',
+        'pt': 'Você não pode excluir seus próprios dados',
+        'ru': 'Вы не можете удалить свои собственные данные',
+        'hi': 'Aap apna data delete nahi kar sakte',
+        'ml': 'Ningalude data ningal maattan pattilla',
+        'id': 'Kamu tidak bisa menghapus data diri sendiri'
+    },
+    'playerOptionRemoveDataNotExist': {
+        'en': 'Player {} data not found',
+        'es': 'Datos del jugador {} no encontrados',
+        'pt': 'Dados do jogador {} não encontrados',
+        'ru': 'Данные игрока {} не найдены',
+        'hi': 'Kheladi {} ka data nahi mila',
+        'ml': 'Khelaadi {}\'nte data kandilla',
+        'id': 'Data pemain {} tidak ditemukan'
+    },
+    'playerOptionRemoveFriend': {
+        'en': 'UnFriend',
+        'es': 'Dejar de ser amigos',
+        'pt': 'Desfazer amizade',
+        'ru': 'Удалить из друзей',
+        'hi': 'Dosti todna',
+        'ml': 'Snehitam maatti',
+        'id': 'Berhenti Berteman'
+    },
+    'playerOptionRemoveFriendSuccess': {
+        'en': 'You Both Are No Longer Friends',
+        'es': 'Ya no son amigos',
+        'pt': 'Vocês dois não são mais amigos',
+        'ru': 'Вы больше не друзья',
+        'hi': 'Aap dono ab doston mein nahi hain',
+        'ml': 'Ningal randu perum snehitamalla',
+        'id': 'Kalian Bukan Teman Lagi'
+    },
+    'playerOptionRemoveFriendInMasterList': {
+        'en': 'You Can\'t UnFriend My Master',
+        'es': 'No puedes dejar de ser amigo de mi maestro',
+        'pt': 'Você não pode desfazer amizade com meu mestre',
+        'ru': 'Вы не можете удалить моего мастера из друзей',
+        'hi': 'Aap mere master se dosti nahi tod sakte',
+        'ml': 'Ningal enre master-ine snehitam maattan pattilla',
+        'id': 'Kamu Tidak Bisa Memutus Pertemanan Dengan Tuanku'
+    },
+    'playerOptionRemoveFriendNotExist': {
+        'en': 'Friend Does Not Exist In Data',
+        'es': 'El amigo no existe en los datos',
+        'pt': 'O amigo não existe nos dados',
+        'ru': 'Друг не существует в данных',
+        'hi': 'Dost data mein nahi hai',
+        'ml': 'Snehitan data-il illa',
+        'id': 'Teman Tidak Ada Di Data'
+    },
+    'playerOptionAddFriend': {
+        'en': 'BeFriend With This Player',
+        'es': 'Hazte amigo de este jugador',
+        'pt': 'Fazer amizade com este jogador',
+        'ru': 'Подружиться с этим игроком',
+        'hi': 'Is kheladi se dosti karo',
+        'ml': 'Ee khelaadiyude snehitam aakuka',
+        'id': 'Berteman Dengan Pemain Ini'
+    },
+    'playerOptionAddFriendSuccess': {
+        'en': 'You Have Successfully Befriended This Player',
+        'es': 'Te has hecho amigo de este jugador con éxito',
+        'pt': 'Você fez amizade com este jogador com sucesso',
+        'ru': 'Вы успешно подружились с этим игроком',
+        'hi': 'Aapne is kheladi se safalta se dosti kar li',
+        'ml': 'Ningal ee khelaadiyude snehitam vijayathode aakki',
+        'id': 'Kamu Berhasil Berteman Dengan Pemain Ini'
+    },
+    'playerOptionAddFriendAlreadyExists': {
+        'en': 'This Player Is Already Your Friend',
+        'es': 'Este jugador ya es tu amigo',
+        'pt': 'Este jogador já é seu amigo',
+        'ru': 'Этот игрок уже ваш друг',
+        'hi': 'Ye kheladi pehle se hi aapka dost hai',
+        'ml': 'Ee khelaadi ningalude snehitan thanne aanu',
+        'id': 'Pemain Ini Sudah Menjadi Teman Anda'
+    },
+    'playerOptionRemoveBlacklist': {
+        'en': 'Remove This Player From Blacklist',
+        'es': 'Elimina a este jugador de la lista negra',
+        'pt': 'Remover este jogador da lista negra',
+        'ru': 'Удалить этого игрока из черного списка',
+        'hi': 'Is kheladi ko blacklist se hatao',
+        'ml': 'Ee khelaadiye blacklist-il ninnu maatti',
+        'id': 'Hapus Pemain Ini Dari Daftar Hitam'
+    },
+    'playerOptionRemoveBlacklistSuccess': {
+        'en': 'Player Successfully Removed From Blacklist',
+        'es': 'Jugador eliminado con éxito de la lista negra',
+        'pt': 'Jogador removido com sucesso da lista negra',
+        'ru': 'Игрок успешно удален из черного списка',
+        'hi': 'Kheladi ko safalta se blacklist se hata diya gaya',
+        'ml': 'Khelaadi blacklist-il ninnu vijayathode maatti',
+        'id': 'Pemain Berhasil Dihapus Dari Daftar Hitam'
+    },
+    'playerOptionRemoveBlacklistNotExist': {
+        'en': 'This Player Is Not Blacklisted',
+        'es': 'Este jugador no está en la lista negra',
+        'pt': 'Este jogador não está na lista negra',
+        'ru': 'Этот игрок не в черном списке',
+        'hi': 'Ye kheladi blacklist mein nahi hai',
+        'ml': 'Ee khelaadi blacklist-il illa',
+        'id': 'Pemain Ini Tidak Masuk Di Daftar Hitam'
+    },
+    'playerOptionAddBlacklist': {
+        'en': 'Blacklist This Player',
+        'es': 'Pon a este jugador en la lista negra',
+        'pt': 'Colocar este jogador na lista negra',
+        'ru': 'Добавить этого игрока в черный список',
+        'hi': 'Is kheladi ko blacklist mein daalo',
+        'ml': 'Ee khelaadiye blacklist-il koottuka',
+        'id': 'Masukkan Pemain Ini Di Daftar Hitam'
+    },
+    'playerOptionAddBlacklistSuccess': {
+        'en': 'Player Successfully Added To Blacklist',
+        'es': 'Jugador añadido con éxito a la lista negra',
+        'pt': 'Jogador adicionado com sucesso à lista negra',
+        'ru': 'Игрок успешно добавлен в черный список',
+        'hi': 'Kheladi ko safalta se blacklist mein joda gaya',
+        'ml': 'Khelaadi blacklist-il vijayathode kootti',
+        'id': 'Pemain Berhasil Ditambahkan Ke Daftar Hitam'
+    },
+    'playerOptionAddBlacklistInMasterList': {
+        'en': 'You Can\'t Blacklist My Master',
+        'es': 'No puedes poner a mi maestro en la lista negra',
+        'pt': 'Você não pode colocar meu mestre na lista negra',
+        'ru': 'Вы не можете добавить моего мастера в черный список',
+        'hi': 'Aap mere master ko blacklist mein nahi daal sakte',
+        'ml': 'Ningal enre master-ine blacklist-il koottan pattilla',
+        'id': 'Kamu Tidak Bisa Menambahkan Tuanku Ke Daftar Hitam'
+    },
+    'playerOptionAddBlacklistAlreadyExists': {
+        'en': 'This Player Already Blacklisted',
+        'es': 'Este jugador ya está en la lista negra',
+        'pt': 'Este jogador já está na lista negra',
+        'ru': 'Этот игрок уже в черном списке',
+        'hi': 'Ye kheladi pehle se hi blacklist mein hai',
+        'ml': 'Ee khelaadi blacklist-il mungam thanne aanu',
+        'id': 'Pemain Ini Sudah Ada Masuk Daftar Hitam'
+    },
+    'playerOptionRemoveMuted': {
+        'en': 'Unmute This Player',
+        'es': 'Desilencia a este jugador',
+        'pt': 'Remover silêncio deste jogador',
+        'ru': 'Разглушить этого игрока',
+        'hi': 'Is kheladi ko unmute karo',
+        'ml': 'Ee khelaadiye unmute cheyyuka',
+        'id': 'Jangan Bisukan Pemain Ini'
+    },
+    'playerOptionRemoveMutedSuccess': {
+        'en': 'Player Successfully Removed From Muted List',
+        'es': 'Jugador eliminado con éxito de la lista de silenciados',
+        'pt': 'Jogador removido com sucesso da lista de silenciados',
+        'ru': 'Игрок успешно удален из списка заглушенных',
+        'hi': 'Kheladi ko safalta se muted list se hata diya gaya',
+        'ml': 'Khelaadi muted list-il ninnu vijayathode maatti',
+        'id': 'Pemain Berhasil Dihapus Dari Daftar Bisu'
+    },
+    'playerOptionRemoveMutedNotExist': {
+        'en': 'This Player Is Not Muted',
+        'es': 'Este jugador no está silenciado',
+        'pt': 'Este jogador não está silenciado',
+        'ru': 'Этот игрок не заглушен',
+        'hi': 'Ye kheladi muted nahi hai',
+        'ml': 'Ee khelaadi mute cheythittilla',
+        'id': 'Pemain Ini Tidak diBisukan'
+    },
+    'playerOptionAddMuted': {
+        'en': 'Mute This Player',
+        'es': 'Silencia a este jugador',
+        'pt': 'Silenciar este jogador',
+        'ru': 'Заглушить этого игрока',
+        'hi': 'Is kheladi ko mute karo',
+        'ml': 'Ee khelaadiye mute cheyyuka',
+        'id': 'Bisukan Pemain Ini'
+    },
+    'playerOptionAddMutedSuccess': {
+        'en': 'Player Successfully Muted',
+        'es': 'Jugador añadido con éxito a la lista de silenciados',
+        'pt': 'Jogador silenciado com sucesso',
+        'ru': 'Игрок успешно заглушен',
+        'hi': 'Kheladi ko safalta se muted list mein joda gaya',
+        'ml': 'Khelaadi muted list-il vijayathode kootti',
+        'id': 'Pemain Berhasil Dibisukan'
+    },
+    'playerOptionAddMutedInMasterList': {
+        'en': 'You Can\'t Mute My Master',
+        'es': 'No puedes silenciar a mi maestro',
+        'pt': 'Você não pode silenciar meu mestre',
+        'ru': 'Вы не можете заглушить моего мастера',
+        'hi': 'Aap mere master ko mute nahi kar sakte',
+        'ml': 'Ningal enre master-ine mute cheyyan pattilla',
+        'id': 'Kamu Tidak Bisa Menambahkan Tuanku Ke Daftar Bisu'
+    },
+    'playerOptionAddMutedAlreadyExists': {
+        'en': 'This Player Already Muted',
+        'es': 'Este jugador ya está silenciado',
+        'pt': 'Este jogador já está silenciado',
+        'ru': 'Этот игрок уже заглушен',
+        'hi': 'Ye kheladi pehle se hi mute hai',
+        'ml': 'Ee khelaadi mute cheythittilla',
+        'id': 'Pemain Ini Sudah diBisukan'
+    },
+    'dataPopupSelectedIndex': {
+        'en': 'Selected Index:\n[{0}]',
+        'es': 'Índice Seleccionado:\n[{0}]',
+        'pt': 'Índice Selecionado:\n[{0}]',
+        'ru': 'Выбранный индекс:\n[{0}]',
+        'hi': 'Chuna gaya index:\n[{0}]',
+        'ml': 'Thazhe pattiya index:\n[{0}]',
+        'id': 'Indeks Terpilih:\n[{0}]'
+    },
+    'cantMatchInPlayerData': {
+        'en': 'Can\'t match \"{}\" in player data',
+        'es': 'No se puede coincidir \"{}\" en los datos del jugador',
+        'pt': 'Não é possível corresponder \"{}\" nos dados do jogador',
+        'ru': 'Не могу найти совпадение для «{}» в данных игрока',
+        'hi': 'Kheladi data mein \"{}\" se match nahi kar sakte',
+        'ml': 'Khelaadi data-yil \"{}\" match cheyyan pattilla',
+        'id': 'Tidak Dapat Mencocokkan \"{}\" di Data Pemain'
+    },
+    'cantFindInPlayerData': {
+        'en': 'Can\'t find \"{}\" in player data',
+        'es': 'No se puede encontrar \"{}\" en los datos del jugador',
+        'pt': 'Não é possível encontrar \"{}\" nos dados do jogador',
+        'ru': 'Не могу найти «{}» в данных игрока',
+        'hi': 'Kheladi data mein \"{}\" nahi mila',
+        'ml': 'Khelaadi data-yil \"{}\" kandilla',
+        'id': 'Tidak Dapat Menemukan \"{}\" di Data Pemain'
+    },
+    'addSuccess': {
+        'en': 'Succesfully Added',
+        'es': 'Añadido Exitosamente',
+        'pt': 'Adicionado com Sucesso',
+        'ru': 'Успешно добавлено',
+        'hi': 'Safalta se joda gaya',
+        'ml': 'Vijayathode kootti',
+        'id': 'Berhasil Ditambah'
+    },
+    'editSuccess': {
+        'en': 'Text Succesfully Edited',
+        'es': 'Texto Editado Exitosamente',
+        'pt': 'Texto Editado com Sucesso',
+        'ru': 'Текст успешно отредактирован',
+        'hi': 'Text safalta se edit kiya gaya',
+        'ml': 'Text vijayathode edit cheythu',
+        'id': 'Teks Berhasil Diedit'
+    },
+    'editExist': {
+        'en': 'Text Edited Already Exist',
+        'es': 'El Texto Editado Ya Existe',
+        'pt': 'O Texto Editado Já Existe',
+        'ru': 'Отредактированный текст уже существует',
+        'hi': 'Edited text pehle se hi maujood hai',
+        'ml': 'Edited text munpu thanne undu',
+        'id': 'Teks Editan Sudah Ada'
+    },
+    'removeSuccess': {
+        'en': 'Text Succesfully Removed',
+        'es': 'Texto Eliminado Exitosamente',
+        'pt': 'Texto Removido com Sucesso',
+        'ru': 'Текст успешно удален',
+        'hi': 'Text safalta se hata diya gaya',
+        'ml': 'Text vijayathode maatti',
+        'id': 'Teks Berhasil Dihapus'
+    },
+    'playerInfo': {
+        'en': 'Player Info',
+        'es': 'Información del Jugador',
+        'pt': 'Informação do Jogador',
+        'ru': 'Информация об игроке',
+        'hi': 'Kheladi ki jankari',
+        'ml': 'Khelaadi vivaram',
+        'id': 'Info Pemain'
+    },
+    'save': {
+        'en': 'Save',
+        'es': 'Guardar',
+        'pt': 'Salvar',
+        'ru': 'Сохранить',
+        'hi': 'Save karo',
+        'ml': 'Save cheyyu',
+        'id': 'Simpan'
+    },
+    'use': {
+        'en': 'Use',
+        'es': 'Usar',
+        'pt': 'Usar',
+        'ru': 'Использовать',
+        'hi': 'Upayog karo',
+        'ml': 'Upayogikkuka',
+        'id': 'Gunakan'
+    },
+    'copy': {
+        'en': 'Copy',
+        'es': 'Copiar',
+        'pt': 'Copiar',
+        'ru': 'Копировать',
+        'hi': 'Copy karo',
+        'ml': 'Copy cheyyu',
+        'id': 'Salin'
+    },
+    'textCopied': {
+        'en': '\"{}\" Copied',
+        'es': '\"{}\" Copiado',
+        'pt': '\"{}\" Copiado',
+        'ru': '«{}» скопировано',
+        'hi': '\"{}\" Copy kiya gaya',
+        'ml': '\"{}\" Copy cheythu',
+        'id': '\"{}\" Disalin'
+    },
+    'get': {
+        'en': 'Get',
+        'es': 'Obtener',
+        'pt': 'Obter',
+        'ru': 'Получить',
+        'hi': 'Prapth karo',
+        'ml': 'Edukkan',
+        'id': 'Dapatkan'
+    },
+    'enabled': {
+        'en': 'Enabled',
+        'es': 'Habilitado',
+        'pt': 'Habilitado',
+        'ru': 'Включено',
+        'hi': 'Enable kiya gaya',
+        'ml': 'Enable cheythu',
+        'id': 'Dinyalakan'
+    },
+    'disabled': {
+        'en': 'Disabled',
+        'es': 'Deshabilitado',
+        'pt': 'Desabilitado',
+        'ru': 'Отключено',
+        'hi': 'Disable kiya gaya',
+        'ml': 'Disable cheythu',
+        'id': 'Dimatikan'
+    },
+    'confirmCopy': {
+        'en': 'Copy This Text',
+        'es': 'Copiar Este Texto',
+        'pt': 'Copiar Este Texto',
+        'ru': 'Скопировать этот текст',
+        'hi': 'Is text ko copy karo',
+        'ml': 'Ee text copy cheyyu',
+        'id': 'Salin Teks Ini'
+    },
+    'translating': {
+        'en': 'Translating',
+        'es': 'Traduciendo',
+        'pt': 'Traduzindo',
+        'ru': 'Перевод',
+        'hi': 'Anuvad kar rahe hain',
+        'ml': 'Anuvadikkunnu',
+        'id': 'Menerjemahkan'
+    },
+    'page': {
+        'en': 'Page',
+        'es': 'Página',
+        'pt': 'Página',
+        'ru': 'Страница',
+        'hi': 'Panna',
+        'ml': 'Padippu',
+        'id': 'Halaman'
+    },
+    'yes': {
+        'en': 'Yes',
+        'es': 'Sí',
+        'pt': 'Sim',
+        'ru': 'Да',
+        'hi': 'Haan',
+        'ml': 'Sheri',
+        'id': 'Ya'
+    },
+    'sorry': {
+        'en': 'Sorry',
+        'es': 'Lo siento',
+        'pt': 'Desculpe',
+        'ru': 'Извините',
+        'hi': 'Maaf kijiye',
+        'ml': 'Kshamikkuka',
+        'id': 'Maaf'
+    },
+    'search': {
+        'en': 'Finder',
+        'es': 'Buscar',
+        'pt': 'Procurar',
+        'ru': 'Поиск',
+        'hi': 'खोजें',
+        'ml': 'തിരയുക',
+        'id': 'Cari'
+    },
+    'DirectMessages': {
+        'en': 'Direct Messages',
+        'es': 'Mensajes directos',
+        'pt': 'Mensagens diretas',
+        'ru': 'Личные сообщения',
+        'hi': 'प्रत्यक्ष संदेश',
+        'ml': 'നേരിട്ടുള്ള സന്ദേശങ്ങൾ',
+        'id': 'Pesan langsung'
+    },
+    'auto_respond': {
+        'en': 'Auto',
+        'es': 'Auto',
+        'pt': 'Auto',
+        'ru': 'Авто',
+        'hi': 'स्वचालित उत्तरदाता',
+        'ml': 'സ്വയമേവ പ്രതികരിക്കുക',
+        'id': 'Penjawab Otomatis'
+    },
+    'toxic': {
+        'en': 'Hate',
+        'es': 'Odio',
+        'pt': 'Ódio',
+        'ru': 'Ненависть',
+        'hi': 'ज़हरीला व्यवहार',
+        'ml': 'വിഷമുള്ള പെരുമാറ്റം',
+        'id': 'Beracun'
+    },
+    'thanks': {
+        'en': 'Thanks',
+        'es': 'Gracias',
+        'pt': 'Obrigado',
+        'ru': 'Спасибо',
+        'hi': 'Dhanyavad',
+        'ml': 'Nandi',
+        'id': 'Makasih'
+    },
+    'cancel': {
+        'en': 'Cancel',
+        'es': 'Cancelar',
+        'pt': 'Cancelar',
+        'ru': 'Отмена',
+        'hi': 'Radd karo',
+        'ml': 'Mattu',
+        'id': 'Batal'
+    },
+    'delete': {
+        'en': 'Delete',
+        'es': 'Eliminar',
+        'pt': 'Excluir',
+        'ru': 'Удалить',
+        'hi': 'Mitao',
+        'ml': 'Nashippikkuka',
+        'id': 'Hapus'
+    },
+    'pasteNotSupported': {
+        'en': 'Pasting text from clipboard not supported',
+        'es': 'Pegar texto del portapapeles no es compatible',
+        'pt': 'Colar texto da área de transferência não é suportado',
+        'ru': 'Вставка текста из буфера обмена не поддерживается',
+        'hi': 'Clipboard se text paste karne ka samarthan nahi hai',
+        'ml': 'Clipboard-il ninnum text paste cheyyan pattunilla',
+        'id': 'Menempel teks dari clipboard tidak didukung'
+    },
+    'pasteEmpty': {
+        'en': 'No text to paste',
+        'es': 'No hay texto para pegar',
+        'pt': 'Nenhum texto para colar',
+        'ru': 'Нет текста для вставки',
+        'hi': 'Paste karne ke liye koi text nahi hai',
+        'ml': 'Paste cheyyan text illa',
+        'id': 'Tidak ada teks untuk ditempel'
+    },
+    'pasteConfirm': {
+        'en': 'Paste text from clipboard',
+        'es': 'Pegar texto del portapapeles',
+        'pt': 'Colar texto da área de transferência',
+        'ru': 'Вставить текст из буфера обмена',
+        'hi': 'Clipboard se text paste kare',
+        'ml': 'Clipboard-il ninnum text paste cheyyu',
+        'id': 'Tempel teks dari clipboard'
+    },
+    'copyEmpty': {
+        'en': 'No Text To Copy',
+        'es': 'No hay texto para copiar',
+        'pt': 'Nenhum texto para copiar',
+        'ru': 'Нет текста для копирования',
+        'hi': 'Copy karne ke liye koi text nahi',
+        'ml': 'Copy cheyyan text illa',
+        'id': 'Ngga Ada Teks Untuk Di Salin'
+    },
+    'editAttributeAddEmpty': {
+        'en': 'No text to add',
+        'es': 'No hay texto para agregar',
+        'pt': 'Nenhum texto para adicionar',
+        'ru': 'Нет текста для добавления',
+        'hi': 'Jodne ke liye koi text nahi',
+        'ml': 'Kooduthal text illa',
+        'id': 'Ngga ada teks untuk ditambah'
+    },
+    'editAttributeEmpty': {
+        'en': 'No text to edit',
+        'es': 'No hay texto para editar',
+        'pt': 'Nenhum texto para editar',
+        'ru': 'Нет текста для редактирования',
+        'hi': 'Sanshodhan ke liye koi text nahi',
+        'ml': 'Sanshodhikkunna text illa',
+        'id': 'Ngga ada teks untuk di edit'
+    },
+    'editAttributeExist': {
+        'en': 'Text already exist in the attribute',
+        'es': 'El texto ya existe en el atributo',
+        'pt': 'O texto já existe no atributo',
+        'ru': 'Текст уже существует в атрибуте',
+        'hi': 'Text pehle se hi attribute mein maujood hai',
+        'ml': 'Text attribute-il mungam undu',
+        'id': 'Teks sudah ada di attribut'
+    },
+    'editAttributeSame': {
+        'en': 'The edited text is the same',
+        'es': 'El texto editado es el mismo',
+        'pt': 'O texto editado é o mesmo',
+        'ru': 'Отредактированный текст тот же',
+        'hi': 'Sanshodhit text vahi hai',
+        'ml': 'Sanshodhicha text adheham thanne',
+        'id': 'Teks yang di edit sama'
+    },
+    'editAttributeDeleteEmpty': {
+        'en': 'No text to delete',
+        'es': 'No hay texto para eliminar',
+        'pt': 'Nenhum texto para excluir',
+        'ru': 'Нет текста для удаления',
+        'hi': 'Mitane ke liye koi text nahi',
+        'ml': 'Nashippikkunna text illa',
+        'id': 'Tidak ada teks untuk di hapus'
+    },
+    'addAttributePlayerNotInData': {
+        'en': 'Player \"{}\" not in data',
+        'es': 'Jugador \"{}\" no está en los datos',
+        'pt': 'Jogador \"{}\" não está nos dados',
+        'ru': 'Игрок \"{}\" не в данных',
+        'hi': 'Kheladi \"{}\" data mein nahi hai',
+        'ml': 'Kalikaaran \"{}\" data-yil illa',
+        'id': 'Pemain \"{}\" tidak ada di data'
+    },
+    'addAttribteNoSplitter': {
+        'en': 'Use \"{}\" for separating key and value',
+        'es': 'Usa \"{}\" para separar clave y valor',
+        'pt': 'Use \"{}\" para separar chave e valor',
+        'ru': 'Используйте \"{}\" для разделения ключа и значения',
+        'hi': 'Key aur value alag karne ke liye \"{}\" ka upyog karein',
+        'ml': 'Keyum valueum verupatthikkunna \"{}\" upayogikkuka',
+        'id': 'Gunakan \"{}\" untuk memisahkan kunci dan nilai'
+    },
+    'translatePopupWarning': {
+        'en': 'This feature is not continued/tested by Less\nMay cause unexpected errors\nUse at your own risk',
+        'es': 'Esta característica no es continuada/probada por Less\nPuede causar errores inesperados\nÚsalo bajo tu propio riesgo',
+        'pt': 'Este recurso não é continuado/testado por Less\nPode causar erros inesperados\nUse por sua conta e risco',
+        'ru': 'Эта функция не продолжена/протестирована Less\nМожет вызвать неожиданные ошибки\nИспользуйте на свой страх и риск',
+        'hi': 'Ye feature Less dwara na to jari hai na hi test kiya gaya hai\nAnapekshit errors ka karan ban sakta hai\nApne risk par upyog karein',
+        'ml': 'Ee feature Less kooduthal test cheyyappetta onnumalla\nEttavum pratheekshikkatha errors undaakum\nSwantam riskil upayogikkuka',
+        'id': 'Fitur ini tidak dilanjutkan/diuji oleh Less\nDapat menyebabkan error yang tak terduga\nGunakan dengan resiko mu sendiri'
+    },
+    'pswTitle': {
+        'en': 'Custom Settings',
+        'es': 'Configuraciones Personalizadas',
+        'pt': 'Configurações Personalizadas',
+        'ru': 'Пользовательские настройки',
+        'hi': 'Custom Settings',
+        'ml': 'Custom Settings',
+        'id': 'Pengaturan Kustom'
+    },
+    'pswButtonTranslatedTextsDict': {
+        'en': 'Translated Texts Dictionaries',
+        'es': 'Diccionarios de Textos Traducidos',
+        'pt': 'Dicionários de Textos Traduzidos',
+        'ru': 'Словари переведенных текстов',
+        'hi': 'Anuvadit texts dictionaries',
+        'ml': 'Anuvadithamaya texts dictionaries',
+        'id': 'Kamus Teks Terjemahan'
+    },
+    'pswButtonTranslateWindowSettings': {
+        'en': 'Translate Settings',
+        'es': 'Configuraciones de Traducción',
+        'pt': 'Configurações de Tradução',
+        'ru': 'Настройки перевода',
+        'hi': 'Anuvad Settings',
+        'ml': 'Anuvad Settings',
+        'id': 'Pengaturan Terjemahan'
+    },
+    'pswButtonTranslateWindowSettingsTutorial': {
+        'en': 'Double-tap translate button to open Translate Settings Window',
+        'es': 'Toca dos veces el botón de traducción para abrir la Ventana de Configuración de Traducción',
+        'pt': 'Toque duas vezes no botão de tradução para abrir a Janela de Configurações de Tradução',
+        'ru': 'Дважды нажмите кнопку перевода, чтобы открыть окно настроек перевода',
+        'hi': 'Translate settings window kholne ke liye translate button par do baar tap karein',
+        'ml': 'Translate settings window thurakkan translate button-il randu thavana thattuka',
+        'id': 'Ketuk dua kali tombol terjemahan untuk membuka Jendela Pengaturan Terjemahan'
+    },
+    'pswCheckboxAccuratePing': {
+        'en': 'Accurate Server Ping',
+        'es': 'Ping Preciso del Servidor',
+        'pt': 'Ping Preciso do Servidor',
+        'ru': 'Точный пинг сервера',
+        'hi': 'Sahi Server Ping',
+        'ml': 'Sariyaya Server Ping',
+        'id': 'Ping Server Akurat'
+    },
+    'pswCheckboxPing': {
+        'en': 'Ping Button',
+        'es': 'Botón de Ping',
+        'pt': 'Botão de Ping',
+        'ru': 'Кнопка Ping',
+        'hi': 'Ping ka button',
+        'ml': 'Ping button',
+        'id': 'Tombol Ping'
+    },
+    'pswCheckboxIP': {
+        'en': 'IP Button',
+        'es': 'Botón de IP',
+        'pt': 'Botão de IP',
+        'ru': 'Кнопка IP',
+        'hi': 'IP ka Button',
+        'ml': 'IP Button',
+        'id': 'Tombol IP'
+    },
+    'pswCheckboxCopyPaste': {
+        'en': 'CoPas Button',
+        'es': 'Botón de Copiar y Pegar',
+        'pt': 'Botão Copiar e Colar',
+        'ru': 'Кнопка копирования и вставки',
+        'hi': 'Copy Aur Paste Ka Button',
+        'ml': 'Copyum Pasteum Cheyyunna Button',
+        'id': 'Tombol Salin & Tempel'
+    },
+    'pswCheckboxQuickRespond': {
+        'en': 'Quick Respond In Send Button',
+        'es': 'Respuesta Rápida en Botón de Enviar',
+        'pt': 'Resposta Rápida no Botão Enviar',
+        'ru': 'Быстрый ответ в кнопке отправки',
+        'hi': 'Send Button Mein Turant Jawab Dena',
+        'ml': 'Send Button-il Vegathil Prathikarikkuka',
+        'id': 'Respon Cepat di Tombol Kirim'
+    },
+    'pswCheckboxAutoGreet': {
+        'en': 'Auto Greet My Friends (If Haven\'t)',
+        'es': 'Saludo Automático a Mis Amigos (Si No Lo He Hecho)',
+        'pt': 'Saudar Automaticamente Meus Amigos (Se Não O Fez)',
+        'ru': 'Автоматически приветствовать моих друзей (если еще не сделал)',
+        'hi': 'Mere Doston Ko Apne Aap Salaam Karna (Agar Nahi Kiya Hai To)',
+        'ml': 'Ente Snehithare Swayam Sambodhikkuka (Cheythittillenkil)',
+        'id': 'Sapa Teman Secara Otomatis (Jika Belum)'
+    },
+    'pswCheckboxAutoGreetMaster': {
+        'en': 'Auto Greet Only If Master Joined',
+        'es': 'Saludo Automático Solo Si El Maestro Se Une',
+        'pt': 'Saudar Automaticamente Apenas Se o Mestre Entrar',
+        'ru': 'Автоматически приветствовать, только если присоединился мастер',
+        'hi': 'Sirf Tabhi Apne Aap Salaam Karna Jab Master Shamil Ho',
+        'ml': 'Master Koodiyal Mathrame Swayam Sambodhikkuka',
+        'id': 'Sapa Otomatis Hanya Jika Master Bergabung'
+    },
+    'pswCheckboxAutoGreetFriends': {
+        'en': 'Auto Greet Only If My Friends Joined',
+        'es': 'Saludo Automático Solo Si Mis Amigos Se Unen',
+        'pt': 'Saudar Automaticamente Apenas Se Meus Amigos Entrarem',
+        'ru': 'Автоматически приветствовать, только если присоединились мои друзья',
+        'hi': 'Sirf Tabhi Apne Aap Salaam Karna Jab Mere Dost Shamil Hon',
+        'ml': 'Ente Snehithar Koodiyal Mathrame Swayam Sambodhikkuka',
+        'id': 'Sapa Otomatis Hanya Jika Teman Bergabung'
+    },
+    'pswCheckboxDirectCustomCmd': {
+        'en': 'Directly Send Custom Commands',
+        'es': 'Enviar Comandos Personalizados Directamente',
+        'pt': 'Enviar Comandos Personalizados Diretamente',
+        'ru': 'Прямо отправлять пользовательские команды',
+        'hi': 'Custom Commands Seedhe Bhejna',
+        'ml': 'Custom Commands Nere Ayachu Thannuka',
+        'id': 'Kirim Langsung Perintah Kustom'
+    },
+    'pswCheckboxBlockNACommand': {
+        'en': 'Block Incorrect/Unknown Internal Commands',
+        'es': 'Bloquear Comandos Internos Incorrectos/Desconocidos',
+        'pt': 'Bloquear Comandos Internos Incorretos/Desconhecidos',
+        'ru': 'Блокировать некорректные/неизвестные внутренние команды',
+        'hi': 'Galat/Anjana Antarik Commands Ko Block Karna',
+        'ml': 'Thappu/Ariyatha Internal Commands Block Cheyyuka',
+        'id': 'Blokir Perintah Internal yang Salah/Tidak Dikenal'
+    },
+    'pswCheckboxAskGameReplayName': {
+        'en': 'Ask Naming For Saving Last Replay',
+        'es': 'Preguntar Nombre Para Guardar El Último Replay',
+        'pt': 'Perguntar Nome Para Salvar o Último Replay',
+        'ru': 'Спросить имя для сохранения последнего повтора',
+        'hi': 'Akhri Replay Save Karne Ke Liye Naam Poochna',
+        'ml': 'Kadha Replay Save Cheyyan Peru Chodhikkuka',
+        'id': 'Minta Nama Untuk Menyimpan Replay Terakhir'
+    },
+    'pswCheckboxColorfulChats': {
+        'en': 'Colorful Chats',
+        'es': 'Chats Coloridos',
+        'pt': 'Chats Coloridos',
+        'ru': 'Разноцветные чаты',
+        'hi': 'Rang-birange Chats',
+        'ml': 'Varnamaya Samvadangal',
+        'id': 'Obrolan Berwarna-warni'
+    },
+    'pswCheckboxFocusToLastMsg': {
+        'en': 'Auto Focus To Last Message Sent',
+        'es': 'Enfocar Automáticamente El Último Mensaje Enviado',
+        'pt': 'Focar Automaticamente na Última Mensagem Enviada',
+        'ru': 'Автоматически фокусироваться на последнем отправленном сообщении',
+        'hi': 'Bheje Gaye Akhri Sandesh Par Swayam Focus Karna',
+        'ml': 'Ayachu Thanna Kadha Sandeshattil Swayam Focus Cheyyuka',
+        'id': 'Otomatis Fokus ke Pesan Terakhir yang Dikirim'
+    },
+    'pswCheckboxHighlightChosenText': {
+        'en': 'Highlight Chosen Chat Text',
+        'es': 'Resaltar El Texto Del Chat Seleccionado',
+        'pt': 'Destacar Texto do Chat Escolhido',
+        'ru': 'Выделить выбранный текст чата',
+        'hi': 'Chune Gaye Chat Text Ko Highlight Karna',
+        'ml': 'Ethirtha Chat Text Highlight Cheyyuka',
+        'id': 'Sorot Teks Obrolan yang Dipilih'
+    },
+    'pswCheckboxIncludePnameOnChosenText': {
+        'en': 'Include Player Name On Chosen Chat Text',
+        'es': 'Incluir El Nombre Del Jugador En El Texto Del Chat Seleccionado',
+        'pt': 'Incluir Nome do Jogador no Texto do Chat Escolhido',
+        'ru': 'Включить имя игрока в выбранный текст чата',
+        'hi': 'Chune Gaye Chat Text Mein Kheladi Ka Naam Shamil Karna',
+        'ml': 'Ethirtha Chat Text-il Playernte Peru Kooduthal',
+        'id': 'Sertakan Nama Pemain pada Teks Obrolan yang Dipilih'
+    },
+    'pswCheckboxIncludeCidInQcNameChanger': {
+        'en': 'Include ClientID in Quick Name Changer',
+        'es': 'Incluir ClientID en el Cambiador Rápido de Nombres',
+        'pt': 'Incluir ClientID no Alterador Rápido de Nomes',
+        'ru': 'Включить ClientID в быстрый сменщик имен',
+        'hi': 'Quick Name Changer Mein ClientID Shamil Karna',
+        'ml': 'Quick Name Changer-il ClientID Kooduthal',
+        'id': 'Sertakan ClientID pada Pengubah Nama Cepat'
+    },
+    'pswCheckboxSaveLastTypedMsg': {
+        'en': 'Save Last Message Typed In Text Field',
+        'es': 'Guardar El Último Mensaje Escrito En El Campo De Texto',
+        'pt': 'Salvar Última Mensagem Digitada no Campo de Texto',
+        'ru': 'Сохранить последнее сообщение, введенное в текстовое поле',
+        'hi': 'Text Field Mein Type Kiye Gaye Akhri Sandesh Ko Save Karna',
+        'ml': 'Text Field-il Type Cheytha Kadha Sandesham Save Cheyyuka',
+        'id': 'Simpan Pesan Terakhir yang Diketik di Kolom Teks'
+    },
+    'pswCheckboxCustomScreenmessage': {
+        'en': 'Modified Chat Screenmessage',
+        'es': 'Mensaje de Pantalla de Chat Modificado',
+        'pt': 'Mensagem de Tela de Chat Modificada',
+        'ru': 'Измененное сообщение экрана чата',
+        'hi': 'Badla hua Chat Screenmessage',
+        'ml': 'Maattappetta Chat Screenmessage',
+        'id': 'Modifikasi Pesan Layar Chat'
+    },
+    'pswCheckboxColorfulScreenmessage': {
+        'en': 'Colorful Screenmessage',
+        'es': 'Mensaje de Pantalla Colorido',
+        'pt': 'Mensagem de Tela Colorida',
+        'ru': 'Разноцветное сообщение экрана',
+        'hi': 'Rang-birange Screenmessage',
+        'ml': 'Varnamaya Screenmessage',
+        'id': 'Pesan Layar Bewarna-warni'
+    },
+    'pswCheckboxChatNameViewerInScrmsg': {
+        'en': 'Chat Name Viewer in Screenmessage',
+        'es': 'Visor de Nombre de Chat en Mensaje de Pantalla',
+        'pt': 'Visualizador de Nome do Chat na Mensagem de Tela',
+        'ru': 'Просмотр имени чата в сообщении экрана',
+        'hi': 'Screenmessage Mein Chat Naam Dikhana',
+        'ml': 'Screenmessage-il Chat Peru Kanikkuka',
+        'id': 'Penampil-nama Chat di Screenmessage'
+    },
+    'pswGlobalVarMaxPartywindowChats': {
+        'en': 'Party Window Max Chats',
+        'es': 'Máximo de Chats en la Ventana de Party',
+        'pt': 'Máximo de Chats na Janela de Party',
+        'ru': 'Максимум чатов в окне группы',
+        'hi': 'Party Window Ke Maksimam Chats',
+        'ml': 'Party Windowile Chatukalude Ettavum Kooduthal',
+        'id': 'Maksimal Obrolan di Jendela Party'
+    },
+    'pswGlobalVarPingMessage': {
+        'en': 'Ping Messages',
+        'es': 'Mensaje de Ping',
+        'pt': 'Mensagens de Ping',
+        'ru': 'Сообщения Ping',
+        'hi': 'Ping Sandesh',
+        'ml': 'Ping Sandesham',
+        'id': 'Pesan Ping'
+    },
+    'pswGlobalVarMaxWarns': {
+        'en': 'Max Player Warns',
+        'es': 'Máximas Advertencias Para Jugadores',
+        'pt': 'Máximo de Advertências para Jogadores',
+        'ru': 'Максимум предупреждений игрока',
+        'hi': 'Kheladi ke Maksimam Chetavani',
+        'ml': 'Kheladikalkku Etavum Kooduthal Chetavani',
+        'id': 'Peringatan Maksimal Pemain'
+    },
+    'pswGlobalVarPartyScale': {
+        'en': 'Party Window Scale (S, M, L)',
+        'es': 'Escala de la Ventana de Party (S, M, L)',
+        'pt': 'Escala da Janela de Party (S, M, L)',
+        'ru': 'Масштаб окна группы (S, M, L)',
+        'hi': 'Party Window Ka Scale (S, M, L)',
+        'ml': 'Party Window-nte Scale (S, M, L)',
+        'id': 'Skala Party Window (S, M, L)'
+    },
+    'pswGlobalVarInvalidInput': {
+        'en': 'Invalid input for global variables: {}',
+        'es': 'Entrada no válida para variables globales: {}',
+        'pt': 'Entrada inválida para variáveis globais: {}',
+        'ru': 'Неверный ввод для глобальных переменных: {}',
+        'hi': 'Global variables ke liye galat input: {}',
+        'ml': 'Global variables-inte thettaya input: {}',
+        'id': 'Input tidak valid untuk variabel global: {}'
+    },
+    'partyChatMutedWarn': {
+        'en': 'You\'re currently muting PartyWindow chats',
+        'es': 'Actualmente estás silenciando los chats de PartyWindow',
+        'pt': 'Você está atualmente silenciando os chats da PartyWindow',
+        'ru': 'В настоящее время вы заглушаете чаты PartyWindow',
+        'hi': 'Aap abhi partywindow chats ko mute kar rahe hain',
+        'ml': 'Ningal ippol partywindow chatukal mute cheyyunnu',
+        'id': 'Kamu sedang membisukan obrolan PartyWindow'
+    },
+    'rswTitle': {
+        'en': 'Chat Responder Settings',
+        'es': 'Configuración del Respondedor de Chat',
+        'pt': 'Configurações do Respondedor de Chat',
+        'ru': 'Настройки ответчика чата',
+        'hi': 'Chat Responder Settings',
+        'ml': 'Chat Responder Settings',
+        'id': 'Pengaturan Responder Chat'
+    },
+    'rswEnable': {
+        'en': 'Turn On Chat Auto Responder Engine',
+        'es': 'Activar el Respondedor Automático de Chat',
+        'pt': 'Ativar o Motor de Resposta Automática de Chat',
+        'ru': 'Включить движок автоматического ответа чата',
+        'hi': 'Chat Auto Responder Chalu Karein',
+        'ml': 'Chat auto responder on aakku',
+        'id': 'Nyalakan Auto Responder Pesan'
+    },
+    'rswSoal': {
+        'en': 'Auto Answer Server Questions',
+        'es': 'Respuesta Automática a Preguntas del Servidor',
+        'pt': 'Resposta Automática a Perguntas do Servidor',
+        'ru': 'Автоматический ответ на вопросы сервера',
+        'hi': 'Server ke sawalo ka automatic jawab',
+        'ml': 'Server chodhyangalkku automatic aayi uttaram',
+        'id': 'Jawab Otomatis Pertanyaan Server'
+    },
+    'rswAmongUs': {
+        'en': 'Among Us',
+        'es': 'Among Us',
+        'pt': 'Among Us',
+        'ru': 'Among Us',
+        'hi': 'Among Us',
+        'ml': 'Among Us',
+        'id': 'Among Us'
+    },
+    'rswNoNoobWord': {
+        'en': 'No Noob Word',
+        'es': 'Sin Palabra Noob',
+        'pt': 'Sem Palavra Noob',
+        'ru': 'Без слова Noob',
+        'hi': 'Noob Shabd Nhi',
+        'ml': 'Noob Shabdam Illa',
+        'id': 'Anti Kata Noob'
+    },
+    'rswCustomReplies': {
+        'en': 'Custom Replies',
+        'es': 'Respuestas Personalizadas',
+        'pt': 'Respostas Personalizadas',
+        'ru': 'Пользовательские ответы',
+        'hi': 'Custom Uttar',
+        'ml': 'Custom Uttarangal',
+        'id': 'Balasan Otomatis Kustom'
+    },
+    'rswAutoGreet': {
+        'en': 'Auto Greet',
+        'es': 'Saludo Automático',
+        'pt': 'Saudação Automática',
+        'ru': 'Автоматическое приветствие',
+        'hi': 'Automatic abhinandan',
+        'ml': 'Automatic abhinandanam',
+        'id': 'Sapa Otomatis'
+    },
+    'rswBruhIfAmazing': {
+        'en': 'Bruh If Amazing',
+        'es': 'Bruh Si Es Increíble',
+        'pt': 'Bruh Se For Incrível',
+        'ru': 'Bruh, если потрясающе',
+        'hi': 'Bruh agar amazing ho',
+        'ml': 'Bruh amazing aayal',
+        'id': 'Bruh Jika Luar Biasa'
+    },
+    'rswCurrentSessionListLog': {
+        'en': 'Current Session List Log',
+        'es': 'Registro de Lista de Sesión Actual',
+        'pt': 'Registro da Lista de Sessão Atual',
+        'ru': 'Лог списка текущей сессии',
+        'hi': 'Current session ki list ka log',
+        'ml': 'Current session listinte log',
+        'id': 'Log Daftar Sesi Saat Ini'
+    },
+    'rswAllNamesListLog': {
+        'en': 'All Names List Log',
+        'es': 'Registro de Lista de Todos los Nombres',
+        'pt': 'Registro da Lista de Todos os Nomes',
+        'ru': 'Лог списка всех имен',
+        'hi': 'Sabhi namon ki list ka log',
+        'ml': 'Ellaa perukalude listinte log',
+        'id': 'Log Daftar Semua Nama'
+    },
+    'rswCmdLogForPC': {
+        'en': 'CMD Log For PC',
+        'es': 'Registro CMD Para PC',
+        'pt': 'Registro CMD para PC',
+        'ru': 'Лог CMD для ПК',
+        'hi': 'PC ke liye CMD log',
+        'ml': 'PC-ykk CMD log',
+        'id': 'Log CMD Untuk PC'
+    },
+    'rswAntiAbuseAutoWarn': {
+        'en': 'Anti Abuse (Auto Warn)',
+        'es': 'Anti Abuso (Advertencia Automática)',
+        'pt': 'Anti Abuso (Advertência Automática)',
+        'ru': 'Анти-абуз (авто-предупреждение)',
+        'hi': 'Anti abuse (automatic chetavani)',
+        'ml': 'Anti abuse (automatic chetavani)',
+        'id': 'Anti Kata Kasar (Peringatan Otomatis)'
+    },
+    'rswIncludeChillAbuse': {
+        'en': 'Include Casual Abuse',
+        'es': 'Incluir Abuso Casual',
+        'pt': 'Incluir Abuso Casual',
+        'ru': 'Включить случайный абьюз',
+        'hi': 'Saamanya apashabda shaamil karen',
+        'ml': 'Saadhaarana apashabdam kooduthal',
+        'id': 'Sertakan Kata Kasar Kasual'
+    },
+    'rswAutoKickOnMaxWarns': {
+        'en': 'Auto Kick On Max Warns',
+        'es': 'Expulsión Automática en Máximas Advertencias',
+        'pt': 'Expulsão Automática em Máximas Advertências',
+        'ru': 'Авто-кик при максимальных предупреждениях',
+        'hi': 'Maksimam chetavani par automatic kick',
+        'ml': 'Etavum kooduthal chetavaniyil automatic kick',
+        'id': 'Tendang Otomatis Saat Peringatan Maksimal'
+    },
+    'rswRefreshPlayersProfile': {
+        'en': 'Refresh Player\'s Profile',
+        'es': 'Actualizar Perfil del Jugador',
+        'pt': 'Atualizar Perfil do Jogador',
+        'ru': 'Обновить профиль игрока',
+        'hi': 'Kheladi ke profile ko refresh karen',
+        'ml': 'Kheladinte profile refresh cheyyuka',
+        'id': 'Segarkan Profil Pemain'
+    },
+    'rswOnlyUpdateAvailablePData': {
+        'en': 'Only Update Available P-Data',
+        'es': 'Solo Actualizar P-Datos Disponibles',
+        'pt': 'Atualizar Apenas P-Dados Disponíveis',
+        'ru': 'Обновлять только доступные P-данные',
+        'hi': 'Sirf uplabdh P-data ko update karen',
+        'ml': 'Ullathil P-data matrame update cheyyuka',
+        'id': 'Hanya Perbarui P-Data yang Tersedia'
+    },
+    'rswChatLogging': {
+        'en': 'Chat Logging',
+        'es': 'Registro de Chats',
+        'pt': 'Registro de Chat',
+        'ru': 'Логирование чата',
+        'hi': 'Chat log karna',
+        'ml': 'Chat log cheyyuka',
+        'id': 'Pencatatan Obrolan'
+    },
+    'rswAddDatesAsSeparatorOnChatDataFiles': {
+        'en': 'Add Dates As Separator On Chat Data Files',
+        'es': 'Agregar Fechas Como Separador en Archivos de Datos de Chat',
+        'pt': 'Adicionar Datas Como Separador em Arquivos de Dados de Chat',
+        'ru': 'Добавить даты как разделитель в файлах данных чата',
+        'hi': 'Chat data files par dates ko separator ke roop mein jodhen',
+        'ml': 'Chat data files-il dates separator aayi kooduthal',
+        'id': 'Tambahkan Tanggal Sebagai Pemisah di File Data Obrolan'
+    },
+    'rswTranslateMachine': {
+        'en': 'Translate Machine',
+        'es': 'Máquina de Traducción',
+        'pt': 'Máquina de Tradução',
+        'ru': 'Машина перевода',
+        'hi': 'Anuvad machine',
+        'ml': 'Anuvadana yanthram',
+        'id': 'Mesin Terjemahan'
+    },
+    'rswResetPlayerWarnsEachBoot': {
+        'en': 'Reset Player Warns Each Boot',
+        'es': 'Reiniciar Advertencias de Jugador en Cada Arranque',
+        'pt': 'Redefinir Advertências do Jogador a Cada Inicialização',
+        'ru': 'Сбрасывать предупреждения игрока при каждой загрузке',
+        'hi': 'Har boot par kheladi ke chetavani ko reset karen',
+        'ml': 'Ore bootilum kheladinte chetavani reset cheyyuka',
+        'id': 'Setel Ulang Peringatan Pemain Setiap Booting'
+    },
+    'rswPartialMatchAbuses': {
+        'en': 'Partial Match Abuses',
+        'es': 'Abusos de Coincidencia Parcial',
+        'pt': 'Abusos de Correspondência Parcial',
+        'ru': 'Частичное совпадение оскорблений',
+        'hi': 'Partial match abuses',
+        'ml': 'Partial match abuses',
+        'id': 'Pencocokan Sebagian Kata Kasar'
+    },
+    'rswBypassAutoAnswerBlocker': {
+        'en': 'Bypass Auto Answer Blocker',
+        'es': 'Evitar Bloqueador de Respuesta Automática',
+        'pt': 'Ignorar Bloqueador de Resposta Automática',
+        'ru': 'Обойти блокировщик автоответов',
+        'hi': 'Automatic jawab blocker ko bypass karen',
+        'ml': 'Automatic uttar blocker bypass cheyyuka',
+        'id': 'Terobos Pemblokir Jawaban Otomatis'
+    },
+    'rswAddYourProfileToMainName': {
+        'en': 'Add Your Profile To Main Name',
+        'es': 'Agregar Tu Perfil al Nombre Principal',
+        'pt': 'Adicionar Seu Perfil ao Nome Principal',
+        'ru': 'Добавить ваш профиль к основному имени',
+        'hi': 'Apna profile main name mein jodhen',
+        'ml': 'Ninre profile main name-il kooduthal',
+        'id': 'Tambahkan Profil Anda ke Nama Utama'
+    },
+    'rswUseScreenmessageCmdPrompts': {
+        'en': 'Use Screenmessage CMD Prompts',
+        'es': 'Usar Indicaciones CMD de Mensaje en Pantalla',
+        'pt': 'Usar Prompts CMD de Mensagem na Tela',
+        'ru': 'Использовать CMD-подсказки сообщений экрана',
+        'hi': 'Screenmessage CMD prompts ka upyog karen',
+        'ml': 'Screenmessage CMD prompts upayogikkuka',
+        'id': 'Gunakan Prompt CMD Screenmessage'
+    },
+    'rswPrioritizePbIdFromBcs': {
+        'en': 'Prioritize PB-ID From BCS',
+        'es': 'Priorizar PB-ID de BCS',
+        'pt': 'Priorizar PB-ID do BCS',
+        'ru': 'Приоритет PB-ID из BCS',
+        'hi': 'BCS se PB-ID ko prathamikta den',
+        'ml': 'BCS-il ninnum PB-ID-ykk prathamikta kodukkuka',
+        'id': 'Prioritaskan PB-ID dari BCS'
+    },
+    'rswSendMyPingIfPing': {
+        'en': 'Send My Ping If Ping',
+        'es': 'Enviar Mi Ping Si Hay Ping',
+        'pt': 'Enviar Meu Ping Se Houver Ping',
+        'ru': 'Отправить мой пинг, если есть пинг',
+        'hi': 'Ping karen to mera ping bhejen',
+        'ml': 'Ping cheyyumpol ente ping ayakkuka',
+        'id': 'Kirim Ping Saya Jika Ping'
+    },
+    'rswKickVoterAnalyzer': {
+        'en': 'Kick Voter Analyzer',
+        'es': 'Analizador de Votantes de Expulsión',
+        'pt': 'Analisador de Votantes de Expulsão',
+        'ru': 'Анализатор голосований за кик',
+        'hi': 'Kick voter analyzer',
+        'ml': 'Kick voter analyzer',
+        'id': 'Analisis Penendang'
+    },
+    'errorPopupTitle': {
+        'en': 'Internal Error Log',
+        'es': 'Registro de Errores Internos',
+        'pt': 'Registro de Errores Internos',
+        'ru': 'Журнал внутренних ошибок',
+        'hi': 'Antarik truti log',
+        'ml': 'Aathya thappu log',
+        'id': 'Catatan Kesalahan Internal'
+    },
+    'errorPopupConfirmCopyError': {
+        'en': 'Copy Error To Clipboard',
+        'es': 'Copiar Error al Portapapeles',
+        'pt': 'Copiar Erro para a Área de Transferência',
+        'ru': 'Копировать ошибку в буфер обмена',
+        'hi': 'Truti ko clipboard mein copy karen',
+        'ml': 'Thappu clipboard-il copy cheyyuka',
+        'id': 'Salin Kesalahan ke Clipboard'
+    },
+    'errorPopupErrorCopied': {
+        'en': 'Error Copied',
+        'es': 'Error Copiado',
+        'pt': 'Erro Copiado',
+        'ru': 'Ошибка скопирована',
+        'hi': 'Truti copy ho gaya',
+        'ml': 'Thappu copy cheythu',
+        'id': 'Error Disalin'
+    },
+    'errorPopupNoError': {
+        'en': 'No Errors Logged',
+        'es': 'No Hay Errores Registrados',
+        'pt': 'Nenhum Erro Registrado',
+        'ru': 'Ошибок не зарегистрировано',
+        'hi': 'Koi truti log nahi hua',
+        'ml': 'Thappukal log cheythittilla',
+        'id': 'Tidak Ada Kesalahan Tercatat'
+    },
+    'v1.4ServerTitle': {
+        'en': 'Server Is V1.4',
+        'es': 'El Servidor Es V1.4',
+        'pt': 'O Servidor É V1.4',
+        'ru': 'Сервер V1.4',
+        'hi': 'Server V1.4 Hai',
+        'ml': 'Server V1.4 Aanu',
+        'id': 'Server Versi V1.4'
+    },
+    'v1.4ServerMsg': {
+        'en': 'You\'re Playing In V1.4 Server',
+        'es': 'Estás Jugando En Un Servidor V1.4',
+        'pt': 'Você Está Jogando No Servidor V1.4',
+        'ru': 'Вы играете на сервере V1.4',
+        'hi': 'Aap V1.4 Server Mein Khel Rahe Hain',
+        'ml': 'Nee V1.4 Server-il Kalikkunnu',
+        'id': 'Anda Bermain Di Server V1.4'
+    },
+    'gatherWindowStillOpen': {
+        'en': 'Gather window still opened',
+        'es': 'La ventana de reunión sigue abierta',
+        'pt': 'Janela de reunião ainda aberta',
+        'ru': 'Окно собрания всё ещё открыто',
+        'hi': 'Gather window abhi bhi khula hai',
+        'ml': 'Gather window ini open aayi nilkkunnu',
+        'id': 'Jendela Gather masih terbuka'
+    },
+    'partyConfigLoadRemoveKey': {
+        'en': 'Removing outdated or invalid partywindow config',
+        'es': 'Eliminando configuración obsoleta o inválida de PartyWindow',
+        'pt': 'Removendo configuração desatualizada ou inválida da PartyWindow',
+        'ru': 'Удаление устаревшей или недействительной конфигурации окна группы',
+        'hi': 'Purana ya amanya partywindow config hata rahe hain',
+        'ml': 'Kazhinja athava amanya partywindow config remove cheyyunnu',
+        'id': 'Menghapus konfigurasi PartyWindow yang kedaluwarsa atau tidak valid'
+    },
+    'partyConfigLoadAddKey': {
+        'en': 'Adding missing default partywindow config',
+        'es': 'Agregando configuración predeterminada faltante de PartyWindow',
+        'pt': 'Adicionando configuração padrão faltante da PartyWindow',
+        'ru': 'Добавление отсутствующей конфигурации окна группы по умолчанию',
+        'hi': 'Gumshuda default partywindow config jod rahe hain',
+        'ml': 'Kazhiya default partywindow config kooduthal',
+        'id': 'Menambahkan konfigurasi default PartyWindow yang hilang'
+    },
+    'partyConfigLoadError': {
+        'en': 'Error On Main Party Config Load',
+        'es': 'Error al Cargar la Configuración Principal de Party',
+        'pt': 'Erro ao Carregar a Configuração Principal da Party',
+        'ru': 'Ошибка при загрузке основной конфигурации группы',
+        'hi': 'Main party config load mein truti',
+        'ml': 'Main party config load-il thappu',
+        'id': 'Error Saat Memuat Konfigurasi Utama Party'
+    },
+    'responderConfigLoadRemoveKey': {
+        'en': 'Removing outdated or invalid responder config',
+        'es': 'Eliminando configuración obsoleta o inválida de Responder',
+        'pt': 'Removendo configuração desatualizada ou inválida do Responder',
+        'ru': 'Удаление устаревшей или недействительной конфигурации ответчика',
+        'hi': 'Purana ya amanya responder config hata rahe hain',
+        'ml': 'Kazhinja athava amanya responder config remove cheyyunnu',
+        'id': 'Menghapus konfigurasi Responder yang kedaluwarsa atau tidak valid'
+    },
+    'responderConfigLoadAddKey': {
+        'en': 'Adding missing default responder config',
+        'es': 'Agregando configuración predeterminada faltante de Responder',
+        'pt': 'Adicionando configuração padrão faltante do Responder',
+        'ru': 'Добавление отсутствующей конфигурации ответчика по умолчанию',
+        'hi': 'Gumshuda default responder config jod rahe hain',
+        'ml': 'Kazhiya default responder config kooduthal',
+        'id': 'Menambahkan konfigurasi default Responder yang hilang'
+    },
+    'responderConfigLoadError': {
+        'en': 'Error On Main Responder Config Load',
+        'es': 'Error al Cargar la Configuración Principal de Responder',
+        'pt': 'Erro ao Carregar a Configuração Principal do Responder',
+        'ru': 'Ошибка при загрузке основной конфигурации ответчика',
+        'hi': 'Main responder config load mein truti',
+        'ml': 'Main responder config load-il thappu',
+        'id': 'Error Saat Memuat Konfigurasi Utama Responder'
+    },
+    'translateSettingsTitle': {
+        'en': 'Translation Settings',
+        'es': 'Configuración de Traducción',
+        'pt': 'Configurações de Tradução',
+        'ru': 'Настройки перевода',
+        'hi': 'Anuvaad Settings',
+        'ml': 'Mozhi Mattal Settings',
+        'id': 'Pengaturan Terjemahan'
+    },
+    'translateSettingsTextfield': {
+        'en': 'TextField Texts',
+        'es': 'Textos de Campo de Texto',
+        'pt': 'Textos do Campo de Texto',
+        'ru': 'Тексты текстовых полей',
+        'hi': 'TextField Texts',
+        'ml': 'TextField Texts',
+        'id': 'Kolom Teks'
+    },
+    'translateSettingsOther': {
+        'en': 'Other Texts',
+        'es': 'Otros Textos',
+        'pt': 'Outros Textos',
+        'ru': 'Другие тексты',
+        'hi': 'Anya Texts',
+        'ml': 'Mattulla Texts',
+        'id': 'Teks Lainnya'
+    },
+    'translateMethod': {
+        'en': 'Translate Method',
+        'es': 'Método de Traducción',
+        'pt': 'Método de Tradução',
+        'ru': 'Метод перевода',
+        'hi': 'Anuvaad Prakriya',
+        'ml': 'Mozhi Mattal Padhathi',
+        'id': 'Metode Penerjemahan'
+    },
+    'translateMethodLINK': {
+        'en': 'Link',
+        'es': 'Enlace',
+        'pt': 'Link',
+        'ru': 'Ссылка',
+        'hi': 'Link',
+        'ml': 'Link',
+        'id': 'Tautan'
+    },
+    'translateMethodAPI': {
+        'en': 'API',
+        'es': 'API',
+        'pt': 'API',
+        'ru': 'API',
+        'hi': 'API',
+        'ml': 'API',
+        'id': 'API'
+    },
+    'pingInvalidIPandPORT': {
+        'en': 'Not A Valid IP And PORT',
+        'es': 'No Es Una IP Y Puerto Válidos',
+        'pt': 'Não É Um IP e Porta Válidos',
+        'ru': 'Неверный IP и порт',
+        'hi': 'Sahi IP Aur PORT Nahin',
+        'ml': 'Sariyaya IP Um Port Illa',
+        'id': 'IP dan PORT Tidak Valid'
+    },
+    'pingNotAvailable': {
+        'en': 'Can\'t Do Ping Right Now',
+        'es': 'No Se Puede Hacer Ping Ahora',
+        'pt': 'Não É Possível Fazer Ping Agora',
+        'ru': 'Нельзя выполнить пинг сейчас',
+        'hi': 'Abhi Ping Nahi Kar Sakte',
+        'ml': 'Ippol Ping Cheyyan Kazhiyilla',
+        'id': 'Tidak Dapat Melakukan Ping Saat Ini'
+    },
+    'isPingingServer': {
+        'en': 'Still pinging server',
+        'es': 'Todavía haciendo ping al servidor',
+        'pt': 'Ainda fazendo ping no servidor',
+        'ru': 'Всё ещё пингуем сервер',
+        'hi': 'Abhi bhi server ping ho raha hai',
+        'ml': 'Ippozhum server ping cheyyunnu',
+        'id': 'Masih melakukan ping server'
+    },
+    'credit&help': {
+        'en': 'Credit and Help',
+        'es': 'Crédito y Ayuda',
+        'pt': 'Crédito e Ajuda',
+        'ru': 'Авторство и помощь',
+        'hi': 'Shrey aur Sahayata',
+        'ml': 'Kreeditum Sahayavum',
+        'id': 'Kredit dan Bantuan'
+    },
+    # Less Finder
+    'Global.search': {
+        'en': 'Search',
+        'es': 'Buscar',
+        'pt': 'Buscar',
+        'ru': 'Поиск',
+        'hi': 'खोजें',
+        'ml': 'തിരയുക',
+        'id': 'Cari'
+    },
+    'Global.delete': {
+        'en': 'Delete',
+        'es': 'Eliminar',
+        'pt': 'Excluir',
+        'ru': 'Удалить',
+        'hi': 'हटाएं',
+        'ml': 'ഇല്ലാതാക്കുക',
+        'id': 'Hapus'
+    },
+    'Global.filter': {
+        'en': 'Filter',
+        'es': 'Filtrar',
+        'pt': 'Filtrar',
+        'ru': 'Фильтр',
+        'hi': 'फ़िल्टर',
+        'ml': 'ഫിൽട്ടർ',
+        'id': 'Saring'
+    },
+    'Global.connect': {
+        'en': 'Connect',
+        'es': 'Conectar',
+        'pt': 'Conectar',
+        'ru': 'Подключить',
+        'hi': 'कनेक्ट',
+        'ml': 'കണക്റ്റ്',
+        'id': 'Sambungkan'
+    },
+    'Global.online': {
+        'en': 'Online',
+        'es': 'En línea',
+        'pt': 'Online',
+        'ru': 'Онлайн',
+        'hi': 'ऑनलाइन',
+        'ml': 'ഓൺലൈൻ',
+        'id': 'Online'
+    },
+    'Global.fieldEmpty': {
+        'en': 'The field is empty, cannot add',
+        'es': 'El campo está vacío, no se puede agregar',
+        'pt': 'O campo está vazio, não é possível adicionar',
+        'ru': 'Поле пустое, нельзя добавить',
+        'hi': 'फ़ील्ड खाली है, जोड़ नहीं सकते',
+        'ml': 'ഫീൽഡ് ശൂന്യമാണ്, ചേർക്കാൻ സാധിക്കില്ല',
+        'id': 'Kolom kosong, tidak dapat menambahkan'
+    },
+    'Global.results': {
+        'en': 'Results',
+        'es': 'Resultados',
+        'pt': 'Resultados',
+        'ru': 'Результаты',
+        'hi': 'परिणाम',
+        'ml': 'ഫലങ്ങൾ',
+        'id': 'Hasil'
+    },
+    'Global.credits': {
+        'en': 'Credits',
+        'es': 'Créditos',
+        'pt': 'Créditos',
+        'ru': 'Благодарности',
+        'hi': 'श्रेय',
+        'ml': 'ക്രെഡിറ്റുകൾ',
+        'id': 'Kredit'
+    },
+    'Global.deletedSuccessfully': {
+        'en': 'Deleted successfully',
+        'es': 'Eliminado correctamente',
+        'pt': 'Excluído com sucesso',
+        'ru': 'Успешно удалено',
+        'hi': 'सफलतापूर्वक हटाया गया',
+        'ml': 'വിജയകരമായി നീക്കം ചെയ്തു',
+        'id': 'Berhasil dihapus'
+    },
+    'Global.addedSuccessfully': {
+        'en': 'Added successfully',
+        'es': 'Agregado correctamente',
+        'pt': 'Adicionado com sucesso',
+        'ru': 'Успешно добавлено',
+        'hi': 'सफलतापूर्वक जोड़ा गया',
+        'ml': 'വിജയകരമായി ചേർത്തു',
+        'id': 'Berhasil ditambahkan'
+    },
+    'Global.addedToFriendsList': {
+        'en': 'Added to friends list!',
+        'es': '¡Agregado a la lista de amigos!',
+        'pt': 'Adicionado à lista de amigos!',
+        'ru': 'Добавлено в список друзей!',
+        'hi': 'दोस्तों की सूची में जोड़ा गया!',
+        'ml': 'സുഹൃത്തുകളുടെ പട്ടികയിൽ ചേർത്തു!',
+        'id': 'Ditambahkan ke daftar teman!'
+    },
+    'Global.alreadyInList': {
+        'en': 'Already in list',
+        'es': 'Ya está en la lista',
+        'pt': 'Já está na lista',
+        'ru': 'Уже в списке',
+        'hi': 'पहले से सूची में है',
+        'ml': 'ഇതിനകം പട്ടികയിൽ ഉണ്ട്',
+        'id': 'Sudah ada dalam daftar'
+    },
+    'Global.alreadyInFriendsList': {
+        'en': 'Already in friends list',
+        'es': 'Ya está en la lista de amigos',
+        'pt': 'Já está na lista de amigos',
+        'ru': 'Уже в списке друзей',
+        'hi': 'पहले से दोस्तों की सूची में है',
+        'ml': 'ഇതിനകം സുഹൃത്തുകളുടെ പട്ടികയിൽ ഉണ്ട്',
+        'id': 'Sudah ada dalam daftar teman'
+    },
+    'Global.copiedToClipboard': {
+        'en': 'Copied to clipboard!',
+        'es': '¡Copiado al portapapeles!',
+        'pt': 'Copiado para a área de transferência!',
+        'ru': 'Скопировано в буфер обмена!',
+        'hi': 'क्लिपबोर्ड में कॉपी किया गया!',
+        'ml': 'ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി!',
+        'id': 'Disalin ke papan klip!'
+    },
+    'ProfileSearchWindow.profileSearch': {
+        'en': 'Profile Search',
+        'es': 'Búsqueda de Perfil',
+        'pt': 'Busca de Perfil',
+        'ru': 'Поиск профиля',
+        'hi': 'प्रोफ़ाइल खोज',
+        'ml': 'പ്രൊഫൈൽ തിരയൽ',
+        'id': 'Pencarian Profil'
+    },
+    'ProfileSearchWindow.loadingProfileData': {
+        'en': 'Loading profile data...',
+        'es': 'Cargando datos del perfil...',
+        'pt': 'Carregando dados do perfil...',
+        'ru': 'Загрузка данных профиля...',
+        'hi': 'प्रोफ़ाइल डेटा लोड हो रहा है...',
+        'ml': 'പ്രൊഫൈൽ ഡാറ്റ ലോഡ് ചെയ്യുന്നു...',
+        'id': 'Memuat data profil...'
+    },
+    'ProfileSearchWindow.name': {
+        'en': 'Name',
+        'es': 'Nombre',
+        'pt': 'Nome',
+        'ru': 'Имя',
+        'hi': 'नाम',
+        'ml': 'പേര്',
+        'id': 'Nama'
+    },
+    'ProfileSearchWindow.character': {
+        'en': 'Character',
+        'es': 'Personaje',
+        'pt': 'Personagem',
+        'ru': 'Персонаж',
+        'hi': 'चरित्र',
+        'ml': 'കഥാപാത്രം',
+        'id': 'Karakter'
+    },
+    'ProfileSearchWindow.accounts': {
+        'en': 'Accounts',
+        'es': 'Cuentas',
+        'pt': 'Contas',
+        'ru': 'Аккаунты',
+        'hi': 'खाते',
+        'ml': 'അക്കൗണ്ടുകൾ',
+        'id': 'Akun'
+    },
+    'ProfileSearchWindow.rankInfo': {
+        'en': 'Rank Info',
+        'es': 'Información de Rango',
+        'pt': 'Informações de Classificação',
+        'ru': 'Информация о ранге',
+        'hi': 'रैंक जानकारी',
+        'ml': 'റാങ്ക് വിവരങ്ങൾ',
+        'id': 'Info Peringkat'
+    },
+    'ProfileSearchWindow.current': {
+        'en': 'Current',
+        'es': 'Actual',
+        'pt': 'Atual',
+        'ru': 'Текущий',
+        'hi': 'वर्तमान',
+        'ml': 'നിലവിലെ',
+        'id': 'Saat Ini'
+    },
+    'ProfileSearchWindow.previousRanks': {
+        'en': 'Previous Ranks',
+        'es': 'Rangos Anteriores',
+        'pt': 'Classificações Anteriores',
+        'ru': 'Предыдущие ранги',
+        'hi': 'पिछले रैंक',
+        'ml': 'മുൻ റാങ്കുകൾ',
+        'id': 'Peringkat Sebelumnya'
+    },
+    'ProfileSearchWindow.season': {
+        'en': 'Season',
+        'es': 'Temporada',
+        'pt': 'Temporada',
+        'ru': 'Сезон',
+        'hi': 'सीज़न',
+        'ml': 'സീസൺ',
+        'id': 'Musim'
+    },
+    'ProfileSearchWindow.achievements': {
+        'en': 'Achievements',
+        'es': 'Logros',
+        'pt': 'Conquistas',
+        'ru': 'Достижения',
+        'hi': 'उपलब्धियाँ',
+        'ml': 'നേട്ടങ്ങൾ',
+        'id': 'Pencapaian'
+    },
+    'ProfileSearchWindow.trophies': {
+        'en': 'Trophies',
+        'es': 'Trofeos',
+        'pt': 'Troféus',
+        'ru': 'Трофеи',
+        'hi': 'ट्रॉफी',
+        'ml': 'ട്രോഫികൾ',
+        'id': 'Trofi'
+    },
+    'ProfileSearchWindow.moreInfo': {
+        'en': 'More Info',
+        'es': 'Más Información',
+        'pt': 'Mais Informações',
+        'ru': 'Подробнее',
+        'hi': 'अधिक जानकारी',
+        'ml': 'കൂടുതൽ വിവരങ്ങൾ',
+        'id': 'Info Lebih Lanjut'
+    },
+    'ProfileSearchWindow.accountType': {
+        'en': 'Account Type',
+        'es': 'Tipo de Cuenta',
+        'pt': 'Tipo de Conta',
+        'ru': 'Тип аккаунта',
+        'hi': 'खाते का प्रकार',
+        'ml': 'അക്കൗണ്ട് തരം',
+        'id': 'Jenis Akun'
+    },
+    'ProfileSearchWindow.activeDays': {
+        'en': 'Active Days',
+        'es': 'Días Activos',
+        'pt': 'Dias Ativos',
+        'ru': 'Активные дни',
+        'hi': 'सक्रिय दिन',
+        'ml': 'സജീവ ദിവസങ്ങൾ',
+        'id': 'Hari Aktif'
+    },
+    'ProfileSearchWindow.created': {
+        'en': 'Created',
+        'es': 'Creado',
+        'pt': 'Criado',
+        'ru': 'Создан',
+        'hi': 'बनाया गया',
+        'ml': 'സൃഷ്ടിച്ചത്',
+        'id': 'Dibuat'
+    },
+    'ProfileSearchWindow.lastActive': {
+        'en': 'Last Active',
+        'es': 'Última Actividad',
+        'pt': 'Última Atividade',
+        'ru': 'Последняя активность',
+        'hi': 'आखिरी बार सक्रिय',
+        'ml': 'അവസാനമായി സജീവമായ',
+        'id': 'Terakhir Aktif'
+    },
+    'ProfileSearchWindow.accountExistence': {
+        'en': 'Account Existence',
+        'es': 'Existencia de la Cuenta',
+        'pt': 'Existência da Conta',
+        'ru': 'Существование учетной записи',
+        'hi': 'खाता अस्तित्व',
+        'ml': 'അക്കൗണ്ട് നിലവിലുണ്ട്',
+        'id': 'Keberadaan Akun'
+    },
+    'ProfileSearchWindow.Error.searchingAccount': {
+        'en': 'Oops, an error occurred while searching for this account',
+        'es': 'Ups, ocurrió un error al buscar esta cuenta',
+        'pt': 'Ops, ocorreu um erro ao buscar esta conta',
+        'ru': 'Упс, произошла ошибка при поиске этой учетной записи',
+        'hi': 'ओह, इस खाते को खोजते समय एक त्रुटि हुई',
+        'ml': 'അയ്യോ, ഈ അക്കൗണ്ട് തിരയുന്നതിനിടെ ഒരു പിശക് സംഭവിച്ചു',
+        'id': 'Ups, terjadi kesalahan saat mencari akun ini'
+    },
+    'ProfileSearchWindow.Error.networkShort': {
+        'en': 'Network error:',
+        'es': 'Error de red:',
+        'pt': 'Erro de rede:',
+        'ru': 'Ошибка сети:',
+        'hi': 'नेटवर्क त्रुटि:',
+        'ml': 'നെറ്റ്‌വർക്ക് പിശക്:',
+        'id': 'Kesalahan jaringan:'
+    },
+    'ProfileSearchWindow.Error.accountNotFound': {
+        'en': 'Account not found',
+        'es': 'Cuenta no encontrada',
+        'pt': 'Conta não encontrada',
+        'ru': 'Учетная запись не найдена',
+        'hi': 'खाता नहीं मिला',
+        'ml': 'അക്കൗണ്ട് കണ്ടെത്തിയില്ല',
+        'id': 'Akun tidak ditemukan'
+    },
+    'ProfileSearchWindow.Error.noValidParameter': {
+        'en': 'No valid parameter provided',
+        'es': 'No se proporcionó un parámetro válido',
+        'pt': 'Nenhum parâmetro válido fornecido',
+        'ru': 'Не указан действительный параметр',
+        'hi': 'कोई मान्य पैरामीटर प्रदान नहीं किया गया',
+        'ml': 'സാധുവായ ഒരു പാരാമീറ്ററും നൽകിയിട്ടില്ല',
+        'id': 'Tidak ada parameter valid yang diberikan'
+    },
+    'ProfileSearch.profileSearch': {
+        'en': 'Profile Search',
+        'es': 'Búsqueda de Perfil',
+        'pt': 'Busca de Perfil',
+        'ru': 'Поиск профиля',
+        'hi': 'प्रोफ़ाइल खोज',
+        'ml': 'പ്രൊഫൈൽ തിരയൽ',
+        'id': 'Pencarian Profil'
+    },
+    'ProfileSearch.enterNameAndPressSearch': {
+        'en': 'Enter a name and press Search',
+        'es': 'Ingresa un nombre y presiona Buscar',
+        'pt': 'Digite um nome e pressione Buscar',
+        'ru': 'Введите имя и нажмите "Поиск"',
+        'hi': 'एक नाम दर्ज करें और खोज दबाएँ',
+        'ml': 'ഒരു പേര് നൽകുക, തിരയൽ അമർത്തുക',
+        'id': 'Masukkan nama dan tekan Cari'
+    },
+    'ProfileSearch.searching': {
+        'en': 'Searching...',
+        'es': 'Buscando...',
+        'pt': 'Buscando...',
+        'ru': 'Поиск...',
+        'hi': 'खोज रहा है...',
+        'ml': 'തിരയുന്നു...',
+        'id': 'Mencari...'
+    },
+    'ProfileSearch.Error.noAccountFound': {
+        'en': 'No account found with Public ID:',
+        'es': 'No se encontró ninguna cuenta con el ID público:',
+        'pt': 'Nenhuma conta encontrada com ID Público:',
+        'ru': 'Не найдена учетная запись с публичным ID:',
+        'hi': 'इस सार्वजनिक आईडी के साथ कोई खाता नहीं मिला:',
+        'ml': 'പബ്ലിക് ഐഡിയോടൊപ്പം യാതൊരു അക്കൗണ്ടും കണ്ടെത്തിയില്ല:',
+        'id': 'Tidak ditemukan akun dengan ID Publik:'
+    },
+    'ProfileSearch.Error.network': {
+        'en': 'Network error. Please check your connection and try again.',
+        'es': 'Error de red. Por favor revisa tu conexión e inténtalo de nuevo.',
+        'pt': 'Erro de rede. Por favor, verifique sua conexão e tente novamente.',
+        'ru': 'Ошибка сети. Пожалуйста, проверьте подключение и попробуйте снова.',
+        'hi': 'नेटवर्क त्रुटि। कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें।',
+        'ml': 'നെറ്റ്‌വർക്ക് പിശക്. ദയവായി നിങ്ങളുടെ കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Kesalahan jaringan. Silakan periksa koneksi Anda dan coba lagi.'
+    },
+    'ProfileSearch.Error.serviceUnavailable': {
+        'en': 'Search service is currently unavailable. Please try again later.',
+        'es': 'El servicio de búsqueda no está disponible actualmente. Por favor inténtalo más tarde.',
+        'pt': 'O serviço de busca está indisponível no momento. Por favor, tente novamente mais tarde.',
+        'ru': 'Служба поиска в настоящее время недоступна. Пожалуйста, попробуйте позже.',
+        'hi': 'खोज सेवा वर्तमान में उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।',
+        'ml': 'തിരച്ചിൽ സേവനം നിലവിൽ ലഭ്യമല്ല. ദയവായി പിന്നീട് വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Layanan pencarian saat ini tidak tersedia. Silakan coba lagi nanti.'
+    },
+    'ProfileSearch.Error.searchFailed': {
+        'en': 'Oops, an error occurred while searching. Please try again.',
+        'es': 'Ups, ocurrió un error al realizar la búsqueda. Por favor inténtalo de nuevo.',
+        'pt': 'Ops, ocorreu um erro durante a busca. Por favor, tente novamente.',
+        'ru': 'Упс, произошла ошибка при поиске. Пожалуйста, попробуйте снова.',
+        'hi': 'ओह, खोज करते समय एक त्रुटि हुई। कृपया पुनः प्रयास करें।',
+        'ml': 'അയ്യോ, തിരച്ചിൽ നടത്തുന്നതിനിടെ ഒരു പിശക് സംഭവിച്ചു. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Ups, terjadi kesalahan saat melakukan pencarian. Silakan coba lagi.'
+    },
+    'ProfileSearch.Error.invalidResponse': {
+        'en': 'Invalid response from server. Please try again.',
+        'es': 'Respuesta inválida del servidor. Por favor inténtalo de nuevo.',
+        'pt': 'Resposta inválida do servidor. Por favor, tente novamente.',
+        'ru': 'Неверный ответ от сервера. Пожалуйста, попробуйте снова.',
+        'hi': 'सर्वर से अमान्य प्रतिक्रिया मिली। कृपया पुनः प्रयास करें।',
+        'ml': 'സെർവറിൽ നിന്ന് അസാധുവായ പ്രതികരണം ലഭിച്ചു. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Respons tidak valid dari server. Silakan coba lagi.'
+    },
+    'ProfileSearch.Error.unexpected': {
+        'en': 'Oops, an unexpected error occurred. Please try again.',
+        'es': 'Ups, ocurrió un error inesperado. Por favor inténtalo de nuevo.',
+        'pt': 'Ops, ocorreu um erro inesperado. Por favor, tente novamente.',
+        'ru': 'Упс, произошла непредвиденная ошибка. Пожалуйста, попробуйте снова.',
+        'hi': 'ओह, एक अप्रत्याशित त्रुटि हुई। कृपया पुनः प्रयास करें।',
+        'ml': 'അയ്യോ, പ്രതീക്ഷിക്കാത്ത ഒരു പിശക് സംഭവിച്ചു. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+        'id': 'Ups, terjadi kesalahan tak terduga. Silakan coba lagi.'
+    },
+    'ProfileSearch.Error.noExactMatch': {
+        'en': 'No exact match found for',
+        'es': 'No se encontró una coincidencia exacta para',
+        'pt': 'Nenhuma correspondência exata encontrada para',
+        'ru': 'Точное совпадение не найдено для',
+        'hi': 'इसके लिए कोई सटीक मेल नहीं मिला',
+        'ml': 'ഇതിനായി കൃത്യമായ പൊരുത്തം കണ്ടെത്തിയില്ല',
+        'id': 'Tidak ditemukan kecocokan yang tepat untuk'
+    },
+    'ProfileSearch.Error.noAccountFoundWithId': {
+        'en': 'No account found with ID:',
+        'es': 'No se encontró ninguna cuenta con el ID:',
+        'pt': 'Nenhuma conta encontrada com ID:',
+        'ru': 'Не найдена учетная запись с ID:',
+        'hi': 'इस आईडी के साथ कोई खाता नहीं मिला:',
+        'ml': 'ഐഡിയോടൊപ്പം യാതൊരു അക്കൗണ്ടും കണ്ടെത്തിയില്ല:',
+        'id': 'Tidak ditemukan akun dengan ID:'
+    },
+    'FriendsWindow.allFriends': {
+        'en': 'All Your Friends',
+        'es': 'Todos tus Amigos',
+        'pt': 'Todos os Seus Amigos',
+        'ru': 'Все ваши друзья',
+        'hi': 'आपके सभी दोस्त',
+        'ml': 'നിങ്ങളുടെ എല്ലാ സുഹൃത്തുക്കളും',
+        'id': 'Semua Teman Anda'
+    },
+    'FriendsWindow.addManually': {
+        'en': 'Add\nManually',
+        'es': 'Agregar\nManualmente',
+        'pt': 'Adicionar\nManualmente',
+        'ru': 'Добавить\nВручную',
+        'hi': 'मैन्युअली\nजोड़ें',
+        'ml': 'മാനുവൽ\nചേർക്കുക',
+        'id': 'Tambah\nManual'
+    },
+    'FriendsWindow.selectFriendToView': {
+        'en': 'Select a friend\nto see where they are',
+        'es': 'Selecciona un amigo\npara ver donde está',
+        'pt': 'Selecione um amigo\npara ver onde ele está',
+        'ru': 'Выберите друга,\nчтобы увидеть его местоположение',
+        'hi': 'किसी दोस्त को चुनें\nयह देखने के लिए कि वह कहाँ है',
+        'ml': 'ഒരു സുഹൃത്തിനെ തിരഞ്ഞെടുക്കുക\nഅവൻ എവിടെയെന്ന് കാണാൻ',
+        'id': 'Pilih seorang teman\nuntuk melihat di mana ia berada'
+    },
+    'FriendsWindow.noFriendsOnline': {
+        'en': 'Uh, it seems\nthere are no friends\nonline, try\nsearching servers',
+        'es': 'Uh, parece que\nno hay amigos\nen línea, prueba\nbuscando servidores',
+        'pt': 'Uh, parece que\nnão há amigos\nonline, tente\nbuscar servidores',
+        'ru': 'Кажется, что\nнет друзей\nв сети, попробуйте\nпоискать серверы',
+        'hi': 'अरे, लगता है कि\nकोई दोस्त ऑनलाइन\nनहीं है, सर्वर\nखोजकर देखें',
+        'ml': 'ഉഫ്, ഓൺലൈൻ\nസുഹൃത്തുക്കൾ ഇല്ലെന്ന്\nതോന്നുന്നു, സർവർ\nതിരഞ്ഞ് നോക്കൂ',
+        'id': 'Uh, sepertinya\nbelum ada teman\nyang online,\ncoba cari server'
+    },
+    'FriendsWindow.viewProfile': {
+        'en': 'View Profile',
+        'es': 'Ver Perfil',
+        'pt': 'Ver Perfil',
+        'ru': 'Просмотреть профиль',
+        'hi': 'प्रोफ़ाइल देखें',
+        'ml': 'പ്രൊഫൈൽ കാണുക',
+        'id': 'Lihat Profil'
+    },
+    'FriendsWindow.deleteFriend': {
+        'en': 'Delete Friend',
+        'es': 'Eliminar Amigo',
+        'pt': 'Excluir Amigo',
+        'ru': 'Удалить друга',
+        'hi': 'दोस्त\nहटाएँ',
+        'ml': 'സുഹൃത്ത് ഇല്ലാതാക്കുക',
+        'id': 'Hapus Teman'
+    },
+    'FriendsWindow.addFriend': {
+        'en': 'Add\nTo Friends',
+        'es': 'Agregar\nAmigo',
+        'pt': 'Adicionar\nAmigo',
+        'ru': 'Добавить\nв друзья',
+        'hi': 'दोस्त\nजोड़ें',
+        'ml': 'സുഹൃത്ത്\nചേർക്കുക',
+        'id': 'Tambah\nTeman'
+    },
+    'FinderWindow.searchServers': {
+        'en': 'Search All Servers',
+        'es': 'Buscar todos los servidores',
+        'pt': 'Buscar Todos os Servidores',
+        'ru': 'Искать все серверы',
+        'hi': 'सभी सर्वर खोजें',
+        'ml': 'എല്ലാ സര്‍വറുകളും അന്വേഷിക്കുക',
+        'id': 'Cari Semua Server'
+    },
+    'FinderWindow.searchPlayers': {
+        'en': 'Search players without having to join a match',
+        'es': 'Busca jugadores sin tener que unirse a partida',
+        'pt': 'Busque jogadores sem precisar entrar em uma partida',
+        'ru': 'Искать игроков без необходимости присоединяться к матчу',
+        'hi': 'खिलाड़‍ियों को खोजें बिना मैच में जुड़ने की ज़रूरत',
+        'ml': 'മത്സരത്തിൽ ചേരേണ്ടതില്ലാതെ കളിക്കാരെ തിരയുക',
+        'id': 'Cari pemain tanpa harus bergabung ke pertandingan'
+    },
+    'FinderWindow.pressSearch': {
+        'en': 'Press search and\nI\'ll handle the rest!',
+        'es': '¡Pulsa buscar y yo me\nencargo del resto!',
+        'pt': 'Pressione buscar e\nEu cuido do resto!',
+        'ru': 'Нажмите поиск, и\nя позабочусь об остальном!',
+        'hi': 'सर्च दबाएँ और\nबाकी मैं संभाल लूँगा!',
+        'ml': 'സെർച്ച് അമർത്തൂ,\nമറ്റെല്ലാം ഞാൻ നോക്കാം!',
+        'id': 'Tekan cari dan\nbiar aku urus sisanya!'
+    },
+    'FinderWindow.filterDescription': {
+        'en': 'Filter by player/server names or by specific characters',
+        'es': 'Filtra por el nombre de los jugadores/servidores o por caracteres específicos',
+        'pt': 'Filtre por nomes de jogadores/servidores ou por caracteres específicos',
+        'ru': 'Фильтруйте по именам игроков/серверов или по определённым символам',
+        'hi': 'खिलाड़ियों/सर्वरों के नाम या विशिष्ट अक्षरों के अनुसार फ़िल्टर करें',
+        'ml': 'കളിക്കാരുടെ/സെർവറുകളുടെ പേരുകളോ പ്രത്യേക അക്ഷരങ്ങളോ അടിസ്ഥാനമാക്കി ഫിൽട്ടർ ചെയ്യുക',
+        'id': 'Saring berdasarkan nama pemain/server atau karakter tertentu'
+    },
+    'FinderWindow.searchServersForPlayers': {
+        'en': 'Search some servers\nto find players\nresults may vary\nby time and connection',
+        'es': 'Busca en algunos servidores\npara encontrar jugadores\nLos resultados pueden variar\nsegún la hora y la conexión',
+        'pt': 'Pesquise alguns servidores\npara encontrar jogadores\nos resultados podem variar\npor horário e conexão',
+        'ru': 'Ищите на некоторых серверах,\nчтобы найти игроков\nрезультаты могут различаться\nв зависимости от времени и подключения',
+        'hi': 'कुछ सर्वरों में खोजें\nखिलाड़ी खोजने के लिए\nपरिणाम बदल सकते हैं\nसमय और कनेक्शन के अनुसार',
+        'ml': 'ചില സര്‍വറുകളില്‍ തിരയുക\nകളിക്കാരെ കണ്ടെത്താൻ\nഫലങ്ങൾ മാറാം\nസമയം മറ്റും കണക്ഷൻ അനുസരിച്ച്',
+        'id': 'Cari di beberapa server\nuntuk menemukan pemain\nhasil dapat berbeda\nsesuai waktu dan koneksi'
+    },
+    'FinderWindow.selectToViewInfo': {
+        'en': 'Select something to\nview server info',
+        'es': 'Selecciona algo para\nver la info del servidor',
+        'pt': 'Selecione algo para\nver informações do servidor',
+        'ru': 'Выберите что-нибудь,\nчтобы просмотреть информацию о сервере',
+        'hi': 'कुछ चुनें ताकि आप\nसर्वर की जानकारी देखें',
+        'ml': 'ഏതെങ്കിലും തിരഞ്ഞെടുക്കുക\nസർവർ വിവരങ്ങൾ കാണാൻ',
+        'id': 'Pilih sesuatu untuk\nmelihat info server'
+    },
+    'FinderWindow.scanningServers': {
+        'en': 'Scanning servers!\nThis should take a few seconds.\nYou can close this window.',
+        'es': '¡Escaneando servidores!\nEsto debería tardar unos segundos.\nPuedes cerrar esta ventana.',
+        'pt': 'Escaneando servidores!\nIsso deve levar alguns segundos.\nVocê pode fechar esta janela.',
+        'ru': 'Сканирование серверов!\nЭто займет несколько секунд.\nВы можете закрыть это окно.',
+        'hi': 'सर्वर स्कैन हो रहे हैं!\nइसमें कुछ सेकंड लगेंगे।\nआप यह विंडो बंद कर सकते हैं।',
+        'ml': 'സര്‍വറുകൾ സ്കാന്‍ ചെയ്യുന്നു!\nഇതിന് കുറച്ച് സെക്കൻഡ് മാത്രം എടുക്കും.\nഈ ജാലകം നിങ്ങൾക്ക് അടയ്ക്കാം.',
+        'id': 'Sedang memindai server!\nIni seharusnya hanya\nmembutuhkan beberapa detik.\nAnda bisa menutup jendela ini.'
+    },
+    'FinderWindow.stillBusy': {
+        'en': '¡Still busy!',
+        'es': '¡Sigo ocupado!',
+        'pt': 'Ainda ocupado!',
+        'ru': 'Все еще занят!',
+        'hi': 'मैं अभी भी व्यस्त हूँ!',
+        'ml': 'ഞാൻ ഇതുവരെ തിരക്കിലാണ്!',
+        'id': 'Masih sibuk!'
+    },
+    'FinderWindow.searchProfiles': {
+        'en': 'Search Profiles',
+        'es': 'Buscar Perfiles',
+        'pt': 'Buscar Perfis',
+        'ru': 'Поиск профилей',
+        'hi': 'प्रोफ़ाइल खोजें',
+        'ml': 'പ്രൊഫൈലുകൾ തിരയുക',
+        'id': 'Cari Profil'
+    },
+    'FinderWindow.changeColors': {
+        'en': 'Change Colors',
+        'es': 'Cambiar colores',
+        'pt': 'Mudar Cores',
+        'ru': 'Изменить цвета',
+        'hi': 'रंग बदलें',
+        'ml': 'നിറങ്ങൾ മാറ്റുക',
+        'id': 'Ubah Warna'
+    },
+    'FinderWindow.changeLanguage': {
+        'en': 'Change Language',
+        'es': 'Cambiar idioma',
+        'pt': 'Mudar Idioma',
+        'ru': 'Изменить язык',
+        'hi': 'भाषा बदलें',
+        'ml': 'ഭാഷ മാറ്റുക',
+        'id': 'Ubah Bahasa'
+    },
+    'Scan.finished': {
+        'en': 'Finished!',
+        'es': '¡Terminado!',
+        'pt': 'Terminado!',
+        'ru': 'Завершено!',
+        'hi': 'समाप्त!',
+        'ml': 'പൂർത്തിയായി!',
+        'id': 'Selesai!'
+    },
+    'Scan.scanned': {
+        'en': 'Scanned',
+        'es': 'Escaneados',
+        'pt': 'Escaneado',
+        'ru': 'Отсканировано',
+        'hi': 'स्कैन किए',
+        'ml': 'സ്കാൻ ചെയ്തു',
+        'id': 'Dipindai'
+    },
+    'Scan.servers': {
+        'en': 'servers',
+        'es': 'servidores',
+        'po': 'servidores',
+        'ru': 'серверы',
+        'hi': 'सर्वर',
+        'ml': 'സർവർ',
+        'id': 'server'
+    },
+    'Scan.in': {
+        'en': 'in',
+        'es': 'en',
+        'po': 'em',
+        'ru': 'в',
+        'hi': 'में',
+        'ml': 'ഇൽ',
+        'id': 'dalam'
+    },
+    'Scan.seconds': {
+        'en': 'seconds!',
+        'es': 'segundos!',
+        'po': 'segundos!',
+        'ru': 'секунд!',
+        'hi': 'सेकंड!',
+        'ml': 'സെക്കൻഡുകൾ!',
+        'id': 'detik!'
+    },
+    'Scan.approximately': {
+        'en': 'Approximately',
+        'es': 'Aproximadamente',
+        'po': 'Aproximadamente',
+        'ru': 'Приблизительно',
+        'hi': 'लगभग',
+        'ml': 'ഏകദേശം',
+        'id': 'Sekitar'
+    },
+    'Scan.server': {
+        'en': 'servers',
+        'es': 'servidores',
+        'po': 'servidores',
+        'ru': 'серверы',
+        'hi': 'सर्वर',
+        'ml': 'സർവർ',
+        'id': 'servers'
+    },
+    'Scan.perSecond': {
+        'en': '/sec',
+        'es': '/seg',
+        'po': '/seg',
+        'ru': '/сек',
+        'hi': '/सेक',
+        'ml': '/സെക്',
+        'id': '/detik'
+    },
+    'PartyWindow.addFriend': {
+        'en': 'Add friend',
+        'es': 'Agregar amigo',
+        'po': 'Adicionar amigo',
+        'ru': 'Добавить друга',
+        'hi': 'दोस्त जोड़ें',
+        'ml': 'സുഹൃത്ത് ചേർക്കുക',
+        'id': 'Tambah teman'
+    },
+    'PartyWindow.areYouSureToKick': {
+        'en': 'Are you sure to kick',
+        'es': '¿Estás seguro de expulsar?',
+        'po': 'Tem certeza de que quer expulsar',
+        'ru': 'Вы уверены, что хотите кикнуть',
+        'hi': 'क्या आप वाकई निकालना चाहते हैं',
+        'ml': 'നിങ്ങൾ പുറത്താക്കാൻ ഉറപ്പാണോ',
+        'id': 'Apakah Anda yakin untuk mengeluarkan'
+    },
+    'PartyWindow.voteToKick': {
+        'en': 'Vote to kick',
+        'es': 'Votar para expulsar',
+        'po': 'Votar para expulsar',
+        'ru': 'Голосовать за кик',
+        'hi': 'निकालने के लिए मतदान',
+        'ml': 'പുറത്താക്കാൻ വോട്ട് ചെയ്യുക',
+        'id': 'Pemungutan suara untuk mengeluarkan'
+    },
+    'PartyWindow.viewAccount': {
+        'en': 'View account',
+        'es': 'Ver cuenta',
+        'po': 'Ver conta',
+        'ru': 'Просмотреть аккаунт',
+        'hi': 'खाता देखें',
+        'ml': 'അക്കൗണ്ട് കാണുക',
+        'id': 'Lihat akun'
+    },
+    'editAlias': {
+        'en': 'Edit Alias',
+        'es': 'Editar Alias',
+        'pt': 'Editar Apelido',
+        'ru': 'Редактировать псевдоним',
+        'hi': 'उपनाम संपादित करें',
+        'ml': 'ഉപനാമം തിരുത്തുക',
+        'id': 'Edit Alias'
+    },
+    'CreditsWindow.developer': {
+        'en': 'Developer',
+        'es': 'Desarrollador',
+        'po': 'Desenvolvedor',
+        'ru': 'Разработчик',
+        'hi': 'डेवलपर',
+        'ml': 'ഡെവലപ്പർ',
+        'id': 'Pengembang'
+    },
+    'CreditsWindow.motivation': {
+        'en': 'Motivation',
+        'es': 'Motivación',
+        'po': 'Motivação',
+        'ru': 'Мотивация',
+        'hi': 'प्रेरणा',
+        'ml': 'പ്രേരണം',
+        'id': 'Motivasi'
+    },
+    'CreditsWindow.motivationDescription': {
+        'en': 'My motivation to create this was trying to make a friends system so you can easily find your friends and play some parties, also to see a player’s level by viewing their profile and time spent playing BombSquad',
+        'es': 'Mi motivación para crear esto fue intentar hacer un sistema de amigos para poder encontrar fácilmente a tus amigos y jugar algunas fiestas, también mirar el nivel de un jugador viendo su perfil y tiempo jugando BombSquad',
+        'po': 'Minha motivação para criar isso foi tentar fazer um sistema de amigos para que você possa encontrar facilmente seus amigos e jogar algumas festas, também para ver o nível de um jogador visualizando seu perfil e tempo gasto jogando BombSquad',
+        'ru': 'Моей мотивацией для создания этого была попытка сделать систему друзей, чтобы вы могли легко находить своих друзей и играть в некоторые вечеринки, а также видеть уровень игрока, просматривая его профиль и время, проведенное за игрой в BombSquad',
+        'hi': 'इसे बनाने की मेरी प्रेरणा एक मित्र प्रणाली बनाने की कोशिश थी ताकि आप अपने दोस्तों को आसानी से ढूंढ सकें और कुछ पार्टियाँ खेल सकें, साथ ही उनके प्रोफ़ाइल और BombSquad खेलने में बिताए गए समय को देखकर किसी खिलाड़ी का स्तर भी देख सकें',
+        'ml': 'ഇത് സൃഷ്ടിക്കാൻ എനിക്ക് പ്രചോദനമായത് നിങ്ങളുടെ സുഹൃത്തുകളെ എളുപ്പത്തിൽ കണ്ടെത്താനും ചില പാർട്ടികൾ കളിക്കാനും കഴിയുന്ന ഒരു സുഹൃത്ത് സംവിധാനം ഉണ്ടാക്കുക, കൂടാതെ അവരുടെ പ്രൊഫൈലും BombSquad കളിച്ച സമയവും देखकर ഒരു കളിക്കാരന്റെ ലെവൽ കാണുക എന്നതുമായിരുന്നു',
+        'id': 'Motivasi saya untuk membuat ini adalah mencoba membuat sistem teman agar dapat dengan mudah menemukan teman Anda dan bermain beberapa pesta, juga melihat level seorang pemain dengan melihat profil mereka dan waktu bermain BombSquad'
+    },
+    'CreditsWindow.inspiration': {
+        'en': 'Inspiration',
+        'es': 'Inspiración',
+        'po': 'Inspiração',
+        'ru': 'Вдохновение',
+        'hi': 'प्रेरणा',
+        'ml': 'പ്രചോദനം',
+        'id': 'Inspirasi'
+    },
+    'CreditsWindow.inspirationDescription': {
+        'en': 'This is my first official mod, I took inspiration from features of some mods I saw within the community, I hope they do not mind, in the same way I will list them below',
+        'es': 'Este es mi primer mod oficial, tomé como inspiración funcionalidades de algunos mods que vi dentro de la comunidad, espero no se molesten, de igual forma los pondré aquí abajo',
+        'po': 'Este é meu primeiro mod oficial, me inspirei em recursos de alguns mods que vi na comunidade, espero que não se importem, da mesma forma os listarei abaixo',
+        'ru': 'Это мой первый официальный мод, я черпал вдохновение из функций некоторых модов, которые я видел в сообществе, надеюсь, они не против, точно так же я перечислю их ниже',
+        'hi': 'यह मेरा पहला आधिकारिक मॉड है, मैंने समुदाय के भीतर देखे गए कुछ मॉड्स की विशेषताओं से प्रेरणा ली है, आशा है कि उन्हें आपत्ति नहीं होगी, इसी तरह मैं उन्हें नीचे सूचीबद्ध करूँगा',
+        'ml': 'ഇത് എന്റെ ആദ്യ ഔദ്യോഗിക മോഡാണ്, കമ്മ്യൂണിറ്റിക്കുള്ളിൽ ഞാൻ കണ്ട ചില മോഡുകളുടെ സവിശേഷതകളിൽ നിന്ന് ഞാൻ പ്രചോദനം നേടി, അവർക്ക് അതിൽ പ്രശ്നമില്ലെന്ന് ഞാൻ പ്രതീക്ഷിക്കുന്നു, അതുപോലെ അവയെ ഞാൻ താഴെ ചേർക്കും',
+        'id': 'Ini adalah mod resmi pertama saya, saya mengambil inspirasi dari fitur beberapa mod yang saya lihat di dalam komunitas, saya harap mereka tidak keberatan, dengan cara yang sama saya akan mencantumkannya di bawah'
+    },
+    'CreditsWindow.thanksMessage': {
+        'en': f'Thank you {V2_LOGO}VanyOne for trying this and making the preview video, and to the people who helped with their opinions and support. I may add new features in the future. I know it is not perfect and that there are several bugs, but that is all for now. I will gradually fix the existing issues. I hope you enjoy it, with love - {CREATOR}',      
+        'es': f'Gracias {V2_LOGO}VanyOne por probar esto y hacer el video preview, y a las personas que ayudaron con sus opiniones y apoyo. Puede que añada nuevas funcionalidades en un futuro. Sé que no es perfecto y que hay varios errores, pero es todo por el momento. Igual solucionaré gradualmente los errores que existen. Espero lo disfruten, con cariño - {CREATOR}',     
+        'po': f'Obrigado {V2_LOGO}VanyOne por testar isso e fazer o vídeo de prévia, e às pessoas que ajudaram com suas opiniões e apoio. Posso adicionar novas funcionalidades no futuro. Sei que não é perfeito e que há vários erros, mas por enquanto é só isso. Também corrigirei gradualmente os erros existentes. Espero que você goste, com carinho - {CREATOR}',       
+        'ru': f'Спасибо {V2_LOGO}VanyOne за то, что попробовали это и сделали видео-превью, а также людям, которые помогли своими мнениями и поддержкой. Возможно, я добавлю новые функции в будущем. Я знаю, что это не идеально и что есть несколько ошибок, но на данный момент это всё. Я буду постепенно исправлять существующие ошибки. Надеюсь, вам понравится, с любовью - {CREATOR}',      
+        'hi': f'{V2_LOGO}VanyOne को इसे आज़माने और प्रीव्यू वीडियो बनाने के लिए धन्यवाद, साथ ही उन लोगों को भी जिन्होंने अपनी राय और समर्थन से मदद की। मैं भविष्य में नई सुविधाएँ जोड़ सकता हूँ। मुझे पता है कि यह परफेक्ट नहीं है और इसमें कई त्रुटियाँ हैं, लेकिन फिलहाल इतना ही है। मैं मौजूदा समस्याओं को धीरे-धीरे ठीक करता रहूँगा। आशा है कि आप इसका आनंद लेंगे, स्नेह सहित - {CREATOR}',      
+        'ml': f'{V2_LOGO}VanyOne ഇത് പരീക്ഷിക്കുകയും പ്രിവ്യൂ വീഡിയോ തയ്യാറാക്കുകയും ചെയ്തതിന് നന്ദി, അവരുടെ അഭിപ്രായങ്ങളും പിന്തുണയും നൽകിയ എല്ലാവർക്കും നന്ദി. ഭാവിയിൽ ഞാൻ പുതിയ ഫീച്ചറുകൾ ചേർക്കാൻ സാധ്യതയുണ്ട്. ഇത് പൂർണ്ണമായതല്ലെന്നും പല പിശകുകളും ഉണ്ടെന്നും എനിക്ക് അറിയാം, പക്ഷേ ഇപ്പോൾ ഇത്രയേ ഉള്ളൂ. നിലവിലുള്ള പ്രശ്നങ്ങൾ ഞാൻ ക്രമേണ പരിഹരിക്കും. നിങ്ങൾ ഇത് ആസ്വദിക്കുമെന്ന് ഞാൻ പ്രതീക്ഷിക്കുന്നു, സ്നേഹത്തോടെ - {CREATOR}',        
+        'id': f'Terima kasih {V2_LOGO}VanyOne telah mencoba ini dan membuat video pratinjau, serta kepada orang-orang yang membantu dengan pendapat dan dukungan mereka. Saya mungkin akan menambahkan fitur baru di masa depan. Saya tahu ini belum sempurna dan masih ada beberapa kesalahan, tetapi untuk saat ini hanya itu. Saya akan memperbaiki masalah yang ada secara bertahap. Semoga kalian menikmatinya, dengan penuh kasih - {CREATOR}'
+    }
+}
+
 """Global Access Translated Text Keys"""
 
 def get_lang_text(key: str, lang_id: Optional[str] = None) -> str:
@@ -4773,7 +4909,7 @@ def get_choices_key_lang_text(choice_key: str) -> Tuple[list[str], list[str]]:
             'muteInGameOnly', 'mutePartyWindowOnly', 'muteAll', 'unmuteAll'
         ],
         POPUP_MENU_TYPE_PARTY_MEMBER_PRESS: [
-            'votekick', 'mention', 'adminkick', 'adminremove', 'warnInfo', 'playerInfo'
+            'votekick', 'mention', 'adminkick', 'playerInfo', 'PartyWindow.viewAccount', 'PartyWindow.addFriend'
         ],
         POPUP_MENU_TYPE_WARN_SELECT: [
             'partyPressWarnDecrease', 'partyPressWarnAdd' 
@@ -5916,7 +6052,15 @@ default_party_config: Dict[str, Any] = {
     CFG_NAME_MESSAGE_NOTIFICATION_POS: 'bottom',
     CFG_NAME_MAIN_COLOR: (0.15, 0.30, 0.45),
     CFG_NAME_PLUGIN_FRESH_USAGE_TIME: datetime.now().strftime("%d-%m-%Y"),
-    CFG_NAME_LAST_ALL_NAMES_BACKUP: datetime.now().strftime("%d-%m-%Y")
+    CFG_NAME_LAST_ALL_NAMES_BACKUP: datetime.now().strftime("%d-%m-%Y"),
+    # LESS FINDER
+    CFG_NAME_PREFFERED_LANG: '',
+    CFG_NAME_FILTER_ACCOUNT: 'all',
+    CFG_NAME_COLOR_BACKGROUND: (0.1, 0.1, 0.1),
+    CFG_NAME_COLOR_SECONDARY: (0.2, 0.2, 0.2),
+    CFG_NAME_COLOR_TERTIARY: (0.6, 0.6, 0.6),
+    CFG_NAME_COLOR_PRIMARY: (1.0, 1.0, 1.0),
+    CFG_NAME_COLOR_ACCENT: (1.0, 1.0, 1.0)
     
 }
 
@@ -6295,6 +6439,6996 @@ def save_muted_players(muted_players: List[str]) -> None:
         print_internal_exception(e)
 #################### MUTED PLAYERS DATA ####################
 
+
+
+################## LESS FINDER ############################
+####### FINDER MAIN SETTINGS #######
+finder_config: Dict[str, Any] = {}
+"""Global Less Finder Settings,
+
+Usages: `finder_config.get(config_key)` OR `finder_config[config_key]`"""
+
+def load_finder_config(is_from_backup: bool=False, read_only: bool=False) -> Dict[str, Any]:
+    """Load the party configuration from the file if it exists, else create it with default values"""
+    global finder_config
+    try:
+        if os.path.exists(CONFIGS_FILE):
+            # Load the config from the file
+            updated = False
+            with open(CONFIGS_FILE, 'r') as file:
+                finder_config = load(file)
+
+            # Validate config
+            if not read_only:
+                keys_to_remove = []
+                for key in finder_config:
+                    if key not in default_party_config:
+                        keys_to_remove.append(key)
+
+                for key in keys_to_remove:
+                    TIP(f"{get_lang_text('partyConfigLoadRemoveKey')}: {key}", color=COLOR_SCREENCMD_ERROR)
+                    del finder_config[key]
+                    if not updated: updated = True
+
+                # Ensure all default configs are present, if not, add them
+                for default_key, default_value in default_party_config.items():
+                    if default_key not in finder_config:
+                        TIP(f"{get_lang_text('partyConfigLoadAddKey')}: {default_key}", color=COLOR_SCREENCMD_NORMAL)
+                        finder_config[default_key] = default_value
+                        if not updated: updated = True
+
+                if updated:
+                    save_finder_config(finder_config)
+                # Save the updated configuration with valid keys
+            return finder_config
+        else:
+            # If the file doesn't exist, create it with default values
+            if not os.path.exists(MY_DIRECTORY):
+                os.makedirs(MY_DIRECTORY)
+            save_finder_config(default_party_config, first_boot=True)
+            finder_config = default_party_config
+            return default_party_config
+    except Exception as e:
+        TIP(f"Error loading config: {e}", color=COLOR_SCREENCMD_ERROR)
+        print(e)
+        try:
+            if os.path.exists(CONFIGS_FILE):
+                if os.path.isfile(CONFIGS_FILE):
+                    os.remove(CONFIGS_FILE)
+                    if not is_from_backup: load_finder_config(is_from_backup=True)
+        except Exception as e: print(e)
+    finder_config = default_party_config
+    return default_party_config
+
+def save_finder_config(config: dict[str, Any], first_boot: bool = False, force:bool=False):
+    """Save the current PartyWindow configuration to a file"""
+    global finder_config
+    try:
+        if (not force and (not first_boot and load_finder_config(read_only=True) == config)) or not config:
+            return
+        with open(CONFIGS_FILE, 'w', encoding='utf-8') as file:
+            dump(config, file, indent=JSONS_DEFAULT_INDENT_FILE)
+            finder_config = config
+    except FileNotFoundError:
+        with open(CONFIGS_FILE, 'w', encoding='utf-8') as file:
+            dump(config, file, indent=JSONS_DEFAULT_INDENT_FILE)
+    except Exception as e:
+        print(e)
+
+def update_finder_config(key: str, value: Any):
+    """Update a specific key in the configuration file"""
+    global finder_config
+    if not finder_config: load_finder_config()
+    if finder_config and key in finder_config:
+        finder_config[key] = value
+        save_finder_config(finder_config)
+        load_finder_config()
+
+### FRIENDS STORAGE ####
+friends_list: list[dict[str, Any]] = []
+"""
+    Friends list storage.
+
+    Each friend dict contains:
+    {
+      "name": str,
+      "id": str,
+      "accounts": list[str] | None,
+      "account_pb": str | None,
+      "account_id": str | None
+    }
+"""
+
+def load_friends(is_from_backup: bool = False) -> list[dict[str, Any]]:
+    """Load the friends list from disk, or create an empty one."""
+    global friends_list
+    try:
+        if os.path.exists(FRIENDS_FILE):
+            with open(FRIENDS_FILE, "r", encoding="utf-8") as file:
+                friends_list = load(file)
+
+            changed = False
+            for friend in friends_list:
+                if "name" not in friend or "id" not in friend:
+                    friends_list.remove(friend)
+                    changed = True
+                    continue
+
+                # Ensure all fields exist
+                for key in ("accounts", "account_pb", "account_id"):
+                    if key not in friend:
+                        friend[key] = None
+                        changed = True
+
+            if changed:
+                save_friends(friends_list)
+
+            return friends_list
+
+        # If file does not exist
+        if not os.path.exists(MY_DIRECTORY):
+            os.makedirs(MY_DIRECTORY)
+
+        friends_list = []
+        save_friends(friends_list, first_boot=True)
+        return friends_list
+
+    except Exception as e:
+        TIP(f"Error loading friends: {e}", color=COLOR_SCREENCMD_ERROR)
+        print(e)
+
+        try:
+            if os.path.exists(FRIENDS_FILE):
+                os.remove(FRIENDS_FILE)
+                if not is_from_backup:
+                    return load_friends(is_from_backup=True)
+        except Exception as e:
+            print(e)
+
+    friends_list = []
+    return friends_list
+
+def save_friends(data: list[dict[str, Any]],
+                 first_boot: bool = False,
+                 force: bool = False):
+    """Persist the friends list to disk."""
+    global friends_list
+    try:
+        if not force and not first_boot and load_friends() == data:
+            return
+
+        with open(FRIENDS_FILE, "w", encoding="utf-8") as file:
+            dump(data, file, indent=JSONS_DEFAULT_INDENT_FILE)
+            friends_list = data
+
+    except Exception as e:
+        print(e)
+
+# -----------------------------------------------------
+# CRUD FUNCTIONS
+# -----------------------------------------------------
+def add_friend(name: str, friend_id: str,
+               accounts: list[str] | None = None,
+               account_pb: str | None = None,
+               account_id: str | None = None):
+    """Add a new friend."""
+    load_friends()
+
+    # Prevent duplicates by id
+    for f in friends_list:
+        if f["id"] == friend_id:
+            TIP("Friend ID already exists.", color=COLOR_SCREENCMD_ERROR)
+            return
+
+    new_friend = {
+        "name": name,
+        "id": friend_id,
+        "accounts": accounts or [],
+        "account_pb": account_pb,
+        "account_id": account_id
+    }
+
+    friends_list.append(new_friend)
+    save_friends(friends_list)
+
+
+def remove_friend(friend_id: str):
+    """Delete a friend by ID."""
+    load_friends()
+
+    friends_list[:] = [f for f in friends_list if f["id"] != friend_id]
+    save_friends(friends_list)
+
+
+def update_friend(friend_id: str, key: str, value: Any):
+    """Update a single field for a friend."""
+    load_friends()
+
+    for f in friends_list:
+        if f["id"] == friend_id:
+            f[key] = value
+            save_friends(friends_list)
+            return
+
+
+def add_account(friend_id: str, account_name: str):
+    """Add an account name to a friend."""
+    load_friends()
+
+    for f in friends_list:
+        if f["id"] == friend_id:
+            if f["accounts"] is None:
+                f["accounts"] = []
+
+            if account_name not in f["accounts"]:
+                f["accounts"].append(account_name)
+
+            save_friends(friends_list)
+            return
+
+
+def remove_account(friend_id: str, account_name: str):
+    """Remove an account from a friend."""
+    load_friends()
+
+    for f in friends_list:
+        if f["id"] == friend_id and f["accounts"]:
+            if account_name in f["accounts"]:
+                f["accounts"].remove(account_name)
+                save_friends(friends_list)
+            return
+
+def get_app_lang_as_id() -> str:
+    """
+    Returns The Language `ID`.
+    Such as: `id`, `en`, `hi`, `...`
+    """
+
+    if not finder_config:
+        load_finder_config()
+    
+    party_lang = finder_config.get(CFG_NAME_PREFFERED_LANG)
+    if party_lang:
+        return party_lang
+    
+    # Fallback to the app's language
+    App_Lang = app.lang.language
+    lang_id = 'en'
+    
+    # Search for matching language name
+    for lang_code, lang_info in DEFAULT_LANGUAGES_DICT.items():
+        if App_Lang == lang_info["name"]:
+            lang_id = lang_code
+            break
+    
+    # Save the detected language as preferred
+    update_finder_config(CFG_NAME_PREFFERED_LANG, lang_id)
+    return lang_id
+
+
+def get_languages_for_current_platform() -> dict:
+    """
+    Returns language IDs and names filtered for the current platform.
+    On non-Android platforms, only shows alphabet-compatible languages.
+    """
+    
+    if babase.app.classic.platform != 'android':
+        # Only show PC-compatible languages
+        return {
+            lang_id: lang_info["name"]
+            for lang_id, lang_info in DEFAULT_LANGUAGES_DICT.items()
+            if lang_info["pc_compatible"]
+        }
+    else:
+        # Android: show all languages
+        return get_language_names_dict()
+
+def get_lang_text(key: str, lang_id: Optional[str] = None) -> str:
+    """
+    Returns translated text based on given key.
+
+    Args:
+        key: Key to get value/text from `Translate_Texts`
+        lang_id: `('id', 'en', ...)` for specific language
+
+    Desc:
+        1 Star  : Key exists but language is empty, using 'en' as fallback
+        2 Stars : Key not found or text empty
+    """
+    invalid_text = INVALID_KEY_TEXT.format(key)
+    lang = lang_id if lang_id in DEFAULT_AVAILABLE_LANG_ID_LIST else get_app_lang_as_id()
+
+    text = Translate_Texts.get(key, {}).get(lang, '')
+
+    if not text:
+        en_text = Translate_Texts.get(key, {}).get('en', '')
+        if en_text: return f"*{en_text}"
+
+    return text if text else f"**{invalid_text}" 
+
+# UI helper functions
+def bw(*, oac=None, **k):
+    """Create a custom button widget."""
+    return obw(
+        texture=gt('white'),
+        on_activate_call=oac,
+        enable_sound=False,
+        **k
+    )
+
+def cw(*, size=None, oac=None, **k):
+    """Create the main window with overlay."""
+    p = ocw(
+        parent=zw('overlay_stack'),
+        background=False,
+        transition='in_scale',
+        size=size,
+        on_outside_click_call=oac,
+        **k
+    )
+    x,y = babase.get_virtual_screen_size()
+    iw(
+        parent=p,
+        texture=gt('white'),
+        size=(x*2, y*2),
+        position=(-x*0.5, 0-200),
+        opacity=0.55,
+        color=(0, 0, 0)
+    )
+    iw(parent=p, size=size)
+    return (p,)
+
+def TIP(text, color=None):
+    """Show a tooltip message."""
+    theme = ReactiveTheme()
+    final_color = color if color is not None else theme.get_color('COLOR_TERTIARY')
+    push(text, final_color)
+
+_spinner_states = {}
+
+def spinner(
+    *,
+    edit: _bauiv1.Widget | None = None,
+    parent: _bauiv1.Widget | None = None,
+    size: Optional[Sequence[float]] = None,
+    position: Optional[Sequence[float]] = None,
+    color: Optional[Sequence[float]] = None,
+    opacity: float | None = None,
+    style: str = 'bomb',
+    fade: bool = True,
+    visible: bool = True
+) -> _bauiv1.Widget:
+    """
+    Create or edit a spinner widget.
+    """
+    
+    # Default size if not provided
+    if size is None:
+        size = (50, 50)
+    
+    # Default color if not provided
+    if color is None:
+        color = (1, 1, 1)
+    
+    if edit is not None:
+        widget_id = id(edit)
+        if widget_id in _spinner_states:
+            state = _spinner_states[widget_id]
+            state['visible'] = visible
+        return edit
+
+    image_widget = iw(
+        parent=parent,
+        size=size,
+        position=position,
+        color=color,
+        opacity=1.0 if visible else 0.0,
+        texture=gt('spinner0'),
+        has_alpha_channel=True
+    )
+    
+    main_widget = image_widget
+
+    # Store animation state
+    widget_id = id(main_widget)
+    _spinner_states[widget_id] = {
+        'style': style,
+        'fade': fade,
+        'visible': visible,
+        'presence': 1.0 if visible else 0.0,
+        'current_frame': 0,
+        'last_update': apptime(),
+        'image_widget': image_widget
+    }
+    
+    # Set up update timer for animation
+    def update_spinner():
+        if not main_widget.exists():
+            if widget_id in _spinner_states:
+                del _spinner_states[widget_id]
+            return
+        
+        if widget_id not in _spinner_states:
+            return
+            
+        state = _spinner_states[widget_id]
+        current_time = apptime()
+        elapsed = current_time - state['last_update']
+        
+        # Update visibility and presence
+        if state['visible']:
+            if state['fade']:
+                state['presence'] = min(1.0, state['presence'] + elapsed * 1.0)
+            else:
+                state['presence'] = 1.0
+        else:
+            if state['fade']:
+                state['presence'] = max(0.0, state['presence'] - elapsed * 2.0)
+            else:
+                state['presence'] = 0.0
+        
+        # Calculate alpha based on presence
+        alpha = max(0.0, min(1.0, state['presence'] * 2.0 - 1.0))
+        
+        # Advance through frames at 24fps
+        frame = int(current_time * 24) % 12
+        texture_name = f'spinner{frame}'
+        state['current_frame'] = frame
+        
+        if state['image_widget'].exists():
+            iw(
+                edit=state['image_widget'],
+                texture=gt(texture_name),
+                opacity=alpha
+            )
+        
+        state['last_update'] = current_time
+        
+        # Continue animation if visible and present
+        if state['visible'] or state['presence'] > 0:
+            teck(0.016, update_spinner)
+    
+    # Start the animation
+    teck(0.016, update_spinner)
+    
+    return main_widget
+
+def spinner_set_visible(spinner_widget: _bauiv1.Widget, visible: bool):
+    """Set the visibility of a spinner widget."""
+    widget_id = id(spinner_widget)
+    if widget_id in _spinner_states:
+        _spinner_states[widget_id]['visible'] = visible
+
+def spinner_set_fade(spinner_widget: _bauiv1.Widget, fade: bool):
+    """Set whether the spinner fades in/out."""
+    widget_id = id(spinner_widget)
+    if widget_id in _spinner_states:
+        _spinner_states[widget_id]['fade'] = fade
+
+
+_error_states = {}
+
+def error_display(
+    *,
+    edit: _bauiv1.Widget | None = None,
+    parent: _bauiv1.Widget | None = None,
+    size: Optional[Sequence[float]] = None,
+    position: Optional[Sequence[float]] = None,
+    color: Optional[Sequence[float]] = None,
+    opacity: float | None = None,
+    error_text: str = "",
+    text_color: Optional[Sequence[float]] = None,
+    text_scale: float = 1.2,
+    text_maxwidth: float = 600,
+    icon_texture: str = 'cuteSpaz',
+    fade: bool = True,
+    visible: bool = True
+) -> _bauiv1.Widget:
+    """
+    Create or edit an error display widget with icon and text.
+    
+    Args:
+        edit: Widget to edit (if None, creates new)
+        parent: Parent widget
+        size: Size of the icon (default: (180, 200))
+        position: Position of the container (default: (0, 0))
+        color: Color of the icon (default: (1, 1, 1))
+        opacity: Opacity of the icon (default: 1.0)
+        error_text: Error message to display
+        text_color: Color of the error text (default: theme COLOR_PRIMARY)
+        text_scale: Scale of the error text
+        text_maxwidth: Maximum width for text wrapping
+        icon_texture: Texture for the error icon (default: 'cuteSpaz')
+        fade: Whether to fade in/out
+        visible: Initial visibility
+    
+    Returns:
+        Container widget containing icon and text
+    """
+    
+    # Default size if not provided
+    if size is None:
+        size = (180, 200)
+    
+    # Default color if not provided
+    if color is None:
+        color = (1, 1, 1)
+    
+    # Default text color if not provided
+    if text_color is None:
+        try:
+            theme = ReactiveTheme()
+            text_color = theme.get_color('COLOR_PRIMARY')
+        except:
+            text_color = (1, 1, 1)
+    
+    if edit is not None:
+        widget_id = id(edit)
+        if widget_id in _error_states:
+            state = _error_states[widget_id]
+            state['visible'] = visible
+            state['error_text'] = error_text
+            
+            # Update text widget if exists
+            if state['text_widget'] and state['text_widget'].exists():
+                tw(
+                    edit=state['text_widget'],
+                    text=error_text
+                )
+        return edit
+
+    # Create container for icon and text
+    container = ocw(
+        parent=parent,
+        size=size,
+        position=position,
+        background=False
+    )
+    
+    # Calculate positions for icon and text
+    icon_size = (size[0], size[1] * 0.7) 
+    text_height = size[1] * 0.3
+    
+    # Create icon widget
+    try:
+        icon_widget = iw(
+            parent=container,
+            size=icon_size,
+            position=(0, text_height),
+            color=color,
+            opacity=1.0 if visible else 0.0,
+            texture=gt(icon_texture),
+            has_alpha_channel=True
+        )
+    except Exception as e:
+        # Fallback to neoSpazIcon if cuteSpaz not available
+        print(f"Error creating error icon: {e}")
+        try:
+            icon_widget = iw(
+                parent=container,
+                size=(size[0] * 0.55, size[1] * 0.55),
+                position=(size[0] * 0.225, text_height + size[1] * 0.15),
+                color=color,
+                opacity=1.0 if visible else 0.0,
+                texture=gt('neoSpazIcon'),
+                has_alpha_channel=True
+            )
+        except Exception as e2:
+            print(f"Fallback also failed: {e2}")
+            # Create empty widget as fallback
+            icon_widget = iw(
+                parent=container,
+                size=(1, 1),
+                position=(0, 0),
+                texture=gt('white'),
+                opacity=0.0
+            )
+    
+    # Create text widget
+    text_widget = tw(
+        parent=container,
+        text=error_text,
+        color=text_color,
+        position=(size[0] * 0.2 - 30, text_height * 0.2 - 20),
+        h_align='center',
+        v_align='center',
+        scale=text_scale,
+        maxwidth=text_maxwidth,
+        size=(size[0], text_height)
+    )
+    
+    # Store animation state
+    widget_id = id(container)
+    _error_states[widget_id] = {
+        'fade': fade,
+        'visible': visible,
+        'presence': 1.0 if visible else 0.0,
+        'icon_widget': icon_widget,
+        'text_widget': text_widget,
+        'container': container,
+        'error_text': error_text,
+        'last_update': apptime()
+    }
+    
+    # Set up update timer for fade animation
+    def update_error_display():
+        if not container.exists():
+            if widget_id in _error_states:
+                del _error_states[widget_id]
+            return
+        
+        if widget_id not in _error_states:
+            return
+            
+        state = _error_states[widget_id]
+        current_time = apptime()
+        elapsed = current_time - state['last_update']
+        
+        # Update visibility and presence
+        if state['visible']:
+            if state['fade']:
+                state['presence'] = min(1.0, state['presence'] + elapsed * 2.0)
+            else:
+                state['presence'] = 1.0
+        else:
+            if state['fade']:
+                state['presence'] = max(0.0, state['presence'] - elapsed * 3.0)
+            else:
+                state['presence'] = 0.0
+        
+        # Calculate alpha based on presence
+        alpha = max(0.0, min(1.0, state['presence']))
+        
+        # Update icon opacity
+        if state['icon_widget'] and state['icon_widget'].exists():
+            iw(
+                edit=state['icon_widget'],
+                opacity=alpha
+            )
+        
+        # Update text opacity
+        if state['text_widget'] and state['text_widget'].exists():
+            text_r, text_g, text_b = text_color
+            tw(
+                edit=state['text_widget'],
+                color=(text_r, text_g, text_b, alpha)
+            )
+        
+        state['last_update'] = current_time
+        
+        # Continue animation if visible or fading out
+        if state['visible'] or state['presence'] > 0:
+            teck(0.016, update_error_display)
+    
+    # Start the animation
+    teck(0.016, update_error_display)
+    
+    return container
+
+def error_display_set_visible(error_widget: _bauiv1.Widget, visible: bool):
+    """Set the visibility of an error display widget."""
+    widget_id = id(error_widget)
+    if widget_id in _error_states:
+        _error_states[widget_id]['visible'] = visible
+
+def error_display_set_fade(error_widget: _bauiv1.Widget, fade: bool):
+    """Set whether the error display fades in/out."""
+    widget_id = id(error_widget)
+    if widget_id in _error_states:
+        _error_states[widget_id]['fade'] = fade
+
+def error_display_set_text(error_widget: _bauiv1.Widget, text: str):
+    """Update the error text of an error display widget."""
+    widget_id = id(error_widget)
+    if widget_id in _error_states:
+        state = _error_states[widget_id]
+        state['error_text'] = text
+        if state['text_widget'] and state['text_widget'].exists():
+            tw(
+                edit=state['text_widget'],
+                text=text
+            )
+
+def error_display_get_text(error_widget: _bauiv1.Widget) -> str:
+    """Get the current error text of an error display widget."""
+    widget_id = id(error_widget)
+    if widget_id in _error_states:
+        return _error_states[widget_id].get('error_text', '')
+    return ''
+
+def error_display_set_icon(error_widget: _bauiv1.Widget, icon_texture: str):
+    """Change the icon texture of an error display widget."""
+    widget_id = id(error_widget)
+    if widget_id in _error_states:
+        state = _error_states[widget_id]
+        if state['icon_widget'] and state['icon_widget'].exists():
+            try:
+                iw(
+                    edit=state['icon_widget'],
+                    texture=gt(icon_texture)
+                )
+            except:
+                print(f"Error: Texture '{icon_texture}' not found")
+
+def wrap_text(text, max_line_length=80):
+    """Wrap text to specified line length with word boundaries.
+    
+    Args:
+        text: The text to wrap.
+        max_line_length: Maximum line length in characters.
+    
+    Returns:
+        A list of lines.
+    """
+    # Split text into words
+    words = text.split()
+    
+    # Break words that are too long
+    broken_words = []
+    for word in words:
+        if len(word) > max_line_length:
+            # Break the word into chunks
+            for i in range(0, len(word), max_line_length):
+                broken_words.append(word[i:i+max_line_length])
+        else:
+            broken_words.append(word)
+    
+    # Build lines
+    lines = []
+    current_line = []
+    current_length = 0
+    
+    for word in broken_words:
+        # Check if we can add this word to the current line
+        if current_line:
+            # Account for a space
+            new_length = current_length + 1 + len(word)
+        else:
+            new_length = len(word)
+        
+        if new_length <= max_line_length:
+            current_line.append(word)
+            current_length = new_length
+        else:
+            # Start a new line
+            if current_line:
+                lines.append(' '.join(current_line))
+            current_line = [word]
+            current_length = len(word)
+    
+    # Add the last line
+    if current_line:
+        lines.append(' '.join(current_line))
+    
+    return lines
+
+class ReactiveLanguage:
+    """Class for handling texts reactively."""
+    
+    def __init__(self):
+        self._callbacks = {}
+        self._texts = {}
+        self._current_lang = 'en'
+        self._load_initial_texts()
+    
+    def _load_initial_texts(self):
+        """Load initial texts from the settings."""
+        if not finder_config:
+            load_finder_config()
+        
+        self._current_lang = get_app_lang_as_id()
+        self._load_language_texts(self._current_lang)
+    
+    def _load_language_texts(self, lang_id):
+        """Load all texts for a specific language."""
+        self._texts = {}
+        for text_key, translations in Translate_Texts.items():
+            text = translations.get(lang_id, translations.get('en', f'[{text_key}]'))
+            self._texts[text_key] = text
+    
+    def get_text(self, text_key, default=None):
+        """Get current text by key."""
+        return self._texts.get(text_key, default or f'[{text_key}]')
+    
+    def get_text_lambda(self, text_key, default=None):
+        """Return a lambda that always returns the current text."""
+        return lambda: self._texts.get(text_key, default or f'[{text_key}]')
+    
+    def subscribe(self, text_key, callback):
+        """Subscribe to a callback function for when a text changes."""
+        if text_key not in self._callbacks:
+            self._callbacks[text_key] = []
+        self._callbacks[text_key].append(callback)
+    
+    def unsubscribe(self, text_key, callback):
+        """Cancel subscription."""
+        if text_key in self._callbacks and callback in self._callbacks[text_key]:
+            self._callbacks[text_key].remove(callback)
+    
+    def update_language(self, lang_id):
+        """Change language and notify subscribers."""
+        if lang_id == self._current_lang:
+            return
+        
+        old_texts = self._texts.copy()
+        self._current_lang = lang_id
+        self._load_language_texts(lang_id)
+        
+        # Notify all text subscribers that changed
+        for text_key, callback_list in self._callbacks.items():
+            old_text = old_texts.get(text_key)
+            new_text = self._texts.get(text_key)
+            if old_text != new_text:
+                for callback in callback_list[:]:
+                    try:
+                        callback(new_text)
+                    except Exception as e:
+                        print(f"Error in callback of {text_key}: {e}")
+    
+    def refresh_from_config(self):
+        """Refresh language from settings."""
+        old_lang = self._current_lang
+        self._load_initial_texts()
+        
+        # If the language has changed, notify everyone
+        if old_lang != self._current_lang:
+            for text_key, callback_list in self._callbacks.items():
+                for callback in callback_list[:]:
+                    try:
+                        callback(self._texts.get(text_key, text_key))
+                    except Exception as e:
+                        print(f"Error in callback of {text_key}: {e}")
+
+class ReactiveTheme:
+    """Class for handling colors reactively."""
+    
+    def __init__(self):
+        self._callbacks = {}
+        self._colors = {}
+        self._load_initial_colors()
+    
+    def _load_initial_colors(self):
+        """Load initial colors from finder_config."""
+        if not finder_config:
+            load_finder_config()
+        
+        self._colors = {
+            'COLOR_BACKGROUND': tuple(finder_config.get(CFG_NAME_COLOR_BACKGROUND, (0.1, 0.1, 0.1))),
+            'COLOR_SECONDARY': tuple(finder_config.get(CFG_NAME_COLOR_SECONDARY, (0.2, 0.2, 0.2))),
+            'COLOR_TERTIARY': tuple(finder_config.get(CFG_NAME_COLOR_TERTIARY, (0.6, 0.6, 0.6))),
+            'COLOR_PRIMARY': tuple(finder_config.get(CFG_NAME_COLOR_PRIMARY, (1.0, 1.0, 1.0))),
+            'COLOR_ACCENT': tuple(finder_config.get(CFG_NAME_COLOR_ACCENT, (1.0, 1.0, 1.0)))
+        }
+    
+    def get_color(self, color_name):
+        """Get current color."""
+        return self._colors.get(color_name)
+    
+    def get_color_lambda(self, color_name):
+        """Return a lambda that always returns the current color."""
+        return lambda: self._colors.get(color_name)
+    
+    def subscribe(self, color_name, callback):
+        """Subscribe to a callback function to activate when a color changes."""
+        if color_name not in self._callbacks:
+            self._callbacks[color_name] = []
+        self._callbacks[color_name].append(callback)
+    
+    def unsubscribe(self, color_name, callback):
+        """Cancel subscription."""
+        if color_name in self._callbacks and callback in self._callbacks[color_name]:
+            self._callbacks[color_name].remove(callback)
+    
+    def update_colors(self, colors_dict):
+        """Update colors and notify subscribers."""
+        changed_colors = []
+        
+        for color_name, new_color in colors_dict.items():
+            if color_name in self._colors and self._colors[color_name] != new_color:
+                self._colors[color_name] = new_color
+                changed_colors.append(color_name)
+        
+        # Notify subscribers of the color changes
+        for color_name in changed_colors:
+            if color_name in self._callbacks:
+                for callback in self._callbacks[color_name][:]:
+                    try:
+                        callback(self._colors[color_name])
+                    except Exception as e:
+                        print(f"Error in callback of {color_name}: {e}")
+    
+    def refresh_from_config(self):
+        """Refresh colors from settings."""
+        old_colors = self._colors.copy()
+        self._load_initial_colors()
+        
+        # Check which colors changed
+        changed_colors = []
+        for color_name, new_color in self._colors.items():
+            if color_name in old_colors and old_colors[color_name] != new_color:
+                changed_colors.append(color_name)
+        
+        # Report changes
+        for color_name in changed_colors:
+            if color_name in self._callbacks:
+                for callback in self._callbacks[color_name][:]:
+                    try:
+                        callback(self._colors[color_name])
+                    except Exception as e:
+                        print(f"Error in callback of {color_name}: {e}")
+
+class BorderWindow:
+    def __init__(self, window_size, border_thickness=4, top_extra=4):
+        self.window_width, self.window_height = window_size
+        self.border_thickness = border_thickness
+        self.top_extra = top_extra
+
+        self.border_left = self._make_border(
+            size=(border_thickness, self.window_height),
+            position=(0, 0)
+        )
+
+        self.border_top = self._make_border(
+            size=(self.window_width + top_extra, border_thickness),
+            position=(0, self.window_height)
+        )
+
+        self.border_right = self._make_border(
+            size=(border_thickness, self.window_height),
+            position=(self.window_width, 0)
+        )
+
+        self.border_bottom = self._make_border(
+            size=(self.window_width, border_thickness),
+            position=(0, 0)
+        )
+
+    class BorderInfo:
+        def __init__(self, size, position):
+            self.size = size
+            self.position = position
+
+    def _make_border(self, size, position):
+        return BorderWindow.BorderInfo(size=size, position=position)
+
+class CreditsWindow:
+    """Window for displaying credits."""
+    
+    def __init__(self, source_widget):
+        self.source_widget = source_widget
+        
+        self.theme = ReactiveTheme()
+        self.language = ReactiveLanguage()
+        
+        self._create_ui()
+        self._build_content()
+    
+    def _format_inspiration(self):
+        """Format the inspiration dictionary into readable text."""
+        inspiration_data = {
+            'BrotherBoard': ['finder'],
+            'FluffyPal': ['FluffyPartyWindow'],
+            'Mr.Smoothy': ['adv']
+        }
+        
+        formatted = []
+        for author, mods in inspiration_data.items():
+            mods_str = ', '.join(mods)
+            formatted.append(f"{author} -> mods: {mods_str}")
+        
+        return '\n'.join(formatted)
+    
+    def _create_ui(self):
+        window_size = (600, 550)
+        borders = BorderWindow(window_size)
+        
+        self.root = cw(
+            scale_origin_stack_offset=self.source_widget.get_screen_space_center(),
+            size=window_size,
+            oac=self.close,
+        )[0]
+        
+        # Window background
+        iw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+        
+        # Borders
+        iw(
+            parent=self.root,
+            size=borders.border_left.size,
+            position=borders.border_left.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=borders.border_top.size,
+            position=borders.border_top.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=borders.border_right.size,
+            position=borders.border_right.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=borders.border_bottom.size,
+            position=borders.border_bottom.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        # Window title
+        tw(
+            parent=self.root,
+            text=self.language.get_text('Global.credits'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(window_size[0] * 0.45, window_size[1] - 50),
+            h_align='center',
+            v_align='center',
+            scale=1.2,
+            maxwidth=400
+        )
+        
+        # Scroll widget for content
+        self.main_scroll = sw(
+            parent=self.root,
+            size=(550, 440),
+            position=(25, 40),
+            border_opacity=0.3,
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        # Container for scroll
+        self.scroll_content = ocw(
+            parent=self.main_scroll,
+            size=(550, 1000),
+            background=False
+        )
+    
+    def _build_content(self):
+        """Build all content sections within the scroll container."""
+        current_y = 680
+        section_spacing = 40
+        line_spacing = 5
+        line_height = 25
+        self.text_widgets = []
+        
+        # Developer section
+        dev_title = tw(
+            parent=self.scroll_content,
+            text=self.language.get_text('CreditsWindow.developer'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(240, current_y),
+            h_align='center',
+            v_align='center',
+            scale=1.0,
+            maxwidth=500
+        )
+        self.text_widgets.append(dev_title)
+        current_y -= line_height + 10
+        
+        dev_name = tw(
+            parent=self.scroll_content,
+            text=CREATOR,
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            position=(240, current_y),
+            h_align='center',
+            v_align='center',
+            scale=1.1,
+            maxwidth=500
+        )
+        self.text_widgets.append(dev_name)
+        current_y -= section_spacing
+        
+        # Motivation section
+        motivation_title = tw(
+            parent=self.scroll_content,
+            text=self.language.get_text('CreditsWindow.motivation'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(240, current_y),
+            h_align='center',
+            v_align='center',
+            scale=1.0,
+            maxwidth=500
+        )
+        self.text_widgets.append(motivation_title)
+        current_y -= line_height + 10
+        
+        # Get and wrap motivation description
+        motivation_text = self.language.get_text('CreditsWindow.motivationDescription')
+        wrapped_motivation = wrap_text(motivation_text, 60)
+        
+        for i, line in enumerate(wrapped_motivation):
+            widget = tw(
+                parent=self.scroll_content,
+                text=line,
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                position=(240, current_y - (i * (line_height + line_spacing))),
+                h_align='center',
+                v_align='center',
+                scale=0.8,
+                maxwidth=500
+            )
+            self.text_widgets.append(widget)
+        
+        current_y -= (len(wrapped_motivation) * (line_height + line_spacing)) + section_spacing
+        
+        # Inspiration section
+        inspiration_title = tw(
+            parent=self.scroll_content,
+            text=self.language.get_text('CreditsWindow.inspiration'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(240, current_y),
+            h_align='center',
+            v_align='center',
+            scale=1.0,
+            maxwidth=500
+        )
+        self.text_widgets.append(inspiration_title)
+        current_y -= line_height
+        
+        inspiration_desc = self.language.get_text('CreditsWindow.inspirationDescription')
+        wrapped_inspiration = wrap_text(inspiration_desc, 60)
+        
+        for i, line in enumerate(wrapped_inspiration):
+            widget = tw(
+                parent=self.scroll_content,
+                text=line,
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                position=(240, current_y - (i * (line_height + line_spacing))),
+                h_align='center',
+                v_align='center',
+                scale=0.8,
+                maxwidth=500
+            )
+            self.text_widgets.append(widget)
+        
+        current_y -= (len(wrapped_inspiration) * (line_height + line_spacing)) + 20
+        
+        # Format and display inspiration data
+        inspiration_data = self._format_inspiration()
+        inspiration_lines = inspiration_data.split('\n')
+        
+        for i, line in enumerate(inspiration_lines):
+            widget = tw(
+                parent=self.scroll_content,
+                text=line,
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                position=(240, current_y - (i * (line_height + line_spacing))),
+                h_align='center',
+                v_align='center',
+                scale=0.9,
+                maxwidth=500
+            )
+            self.text_widgets.append(widget)
+        
+        current_y -= (len(inspiration_lines) * (line_height + line_spacing)) + section_spacing
+        
+        # Thanks message section
+        thanks_text = self.language.get_text('CreditsWindow.thanksMessage')
+        wrapped_thanks = wrap_text(thanks_text, 80)
+        
+        for i, line in enumerate(wrapped_thanks):
+            widget = tw(
+                parent=self.scroll_content,
+                text=line,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                position=(240, current_y - (i * (line_height + line_spacing))),
+                h_align='center',
+                v_align='center',
+                scale=0.9,
+                maxwidth=500
+            )
+            self.text_widgets.append(widget)
+        
+        # Calculate the bottom position
+        last_line_bottom = current_y - (len(wrapped_thanks) * (line_height + line_spacing))
+        total_height_needed = 720  
+        
+        ocw(
+            edit=self.scroll_content,
+            size=(550, total_height_needed)
+        )
+    
+    def close(self):
+        """Close the window."""
+        if self.root.exists():
+            ocw(edit=self.root, transition='out_scale')
+
+class ProfileSearchWindow:
+    """ Profile Search Window """
+
+    # Character mapping to textures
+    CHARACTER_MAP = {
+        "Frosty": "frosty",
+        "Taobao Mascot": "ali",
+        "Kronk": "kronk",
+        "Zoe": "zoe",
+        "Bernard": "bear",
+        "Wizard": "wizard",
+        "Snake Shadow": "ninja",
+        "Bones": "bones",
+        "Cyborg": "cyborg",
+        "Penguin": "penguin",
+        "Pixie": "pixie",
+        "B-9000": "cyborg",
+        "Santa Claus": "santa",
+        "Spaz": "neoSpaz",
+        "Grumbledorf": "wizard",
+        "Penguin": "penguin",
+        "Pascal": "jack",
+        "Jack Morgan": "jack",
+        "Easter Bunny": "bunny",
+        "Agent Johnson": "agent",
+        "Mel": "mel",
+        "Pixel": "pixie"
+    }
+
+    """Window for searching profiles with API."""    
+    def __init__(self, source_widget, search=None, v2=None, pb=None, id=None):
+
+        self.theme = ReactiveTheme()
+        self.language = ReactiveLanguage() 
+
+        # Determine which parameter was passed
+        self.passed_param = None
+        self.passed_value = None
+        self.profile_data = None
+        self.loading = True
+        self.error = None
+        self.account_not_found = False
+
+        # Check which parameters
+        params_provided = []
+        if search is not None:
+            params_provided.append(("search", search))
+        if v2 is not None: 
+            params_provided.append(("v2", v2))
+        if pb is not None:
+            params_provided.append(("pb", pb))
+        if id is not None:
+            params_provided.append(("id", id))
+
+        if len(params_provided) == 1:
+            self.passed_param, self.passed_value = params_provided[0]
+        elif len(params_provided) == 0:
+            # Default to v2="less"
+            self.passed_param = "v2"
+            self.passed_value = "less"
+        else:
+            self.passed_param, self.passed_value = params_provided[0]
+            print(f"[ProfileSearchWindow] Multiple parameters provided, using first: {self.passed_param}={self.passed_value}")
+            print(f"[ProfileSearchWindow] Ignored parameters: {params_provided[1:]}")
+
+        self._create_ui(source_widget)
+        self._fetch_profile_data()
+    
+    def _create_ui(self, source_widget):
+        window_size = (550, 650)
+        borders = BorderWindow(window_size)
+        
+        self.root = cw(
+            scale_origin_stack_offset=source_widget.get_screen_space_center(),
+            size=window_size,
+            oac=self.close,
+        )[0]
+
+        self.footer = obw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('empty'),
+            label='',
+            enable_sound=False
+        )
+        
+        # Window background
+        iw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+
+        self.border_left = iw(
+            parent=self.root,
+            size=borders.border_left.size,
+            position=borders.border_left.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_top = iw(
+            parent=self.root,
+            size=borders.border_top.size,
+            position=borders.border_top.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_right = iw(
+            parent=self.root,
+            size=borders.border_right.size,
+            position=borders.border_right.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_bottom = iw(
+            parent=self.root,
+            size=borders.border_bottom.size,
+            position=borders.border_bottom.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        # Window title
+        self.title_widget = tw(
+            parent=self.root,
+            text=self.language.get_text('ProfileSearchWindow.profileSearch'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(window_size[0] * 0.20, window_size[1] - 50),
+            h_align='center',
+            v_align='center',
+            scale=1.5,
+            maxwidth = 200,
+            max_height=45,
+        )
+        
+        # Loading/status text
+        self.status_widget = tw(
+            parent=self.root,
+            text=self.language.get_text('ProfileSearchWindow.loadingProfileData'),
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            position=(window_size[0] * 0.5, window_size[1] * 0.5),
+            h_align='center',
+            v_align='center',
+            scale=1.0,
+            maxwidth=window_size[0] - 50
+        )
+        
+        # Loading spinner
+        self.loading_spinner = None
+        try:
+            self.loading_spinner = spinner(
+                parent=self.root,
+                position=(window_size[0] * 0.5 - 25, window_size[1] * 0.5 - 75),
+                size=(50, 50),
+                color=(1, 1, 1),
+                visible=True
+            )
+        except Exception as e:
+            print(f"Error creating spinner: {e}")
+
+        self.header_container = None
+        self.main_scroll = None
+        self.basic_info_widgets = []
+        self.info_text_widgets = []
+        self.error_display_widget = None
+        self.add_friend_button = None
+
+    def _create_profile_content(self):
+        """Create profile content after data is loaded."""
+        window_size = (550, 650)
+        
+        # Header container
+        self.header_container = ocw(
+            parent=self.root,
+            size=(500, 120),
+            position=(25, window_size[1] - 180),
+            background=False
+        )
+        
+        # Character display
+        self.character_widget = iw(
+            parent=self.header_container,
+            size=(100, 105),
+            position=(10, 10),
+            texture=gt('white'),
+            color=(1, 1, 1),
+            opacity=0
+        )
+
+        # Create friend button with initial state
+        self._create_friend_button()
+        
+        # Basic info container
+        self.basic_info_container = ocw(
+            parent=self.header_container,
+            size=(380, 110),
+            position=(120, -5),
+            background=False
+        )
+        
+        # Main scroll container
+        self.main_scroll = sw(
+            parent=self.root,
+            size=(500, 455),
+            position=(25, 10),
+            border_opacity=0.3,
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        # Container for scroll content
+        self.scroll_content = ocw(
+            parent=self.main_scroll,
+            size=(500, 600),
+            background=False
+        )
+
+    def _create_friend_button(self):
+        """Create or recreate the friend button based on current friend status."""
+        # Remove existing button if any
+        if self.add_friend_button and self.add_friend_button.exists():
+            self.add_friend_button.delete()
+        
+        # Check friend status
+        is_already_friend = self._check_if_friend()
+        
+        if is_already_friend:
+            try:
+                texture = gt('cuteSpaz')
+                on_activate = lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+            except Exception as e:
+                print(f"Error loading cuteSpaz texture: {e}")
+                try:
+                    texture = gt('achievementStayinAlive')
+                    on_activate = lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+                except Exception as e2:
+                    print(f"Error loading achievementStayinAlive texture: {e2}")
+                    texture = gt('star')
+                    color = (0, 1, 0)
+                    on_activate = lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+        else:
+            # Not friend
+            try:
+                texture = gt('achievementStayinAlive')
+                on_activate = self._add_friend_from_profile
+            except Exception as e:
+                print(f"Error loading achievementStayinAlive texture: {e}")
+                try:
+                    texture = gt('cuteSpaz')
+                    on_activate = self._add_friend_from_profile
+                except Exception as e2:
+                    print(f"Error loading cuteSpaz texture: {e2}")
+                    texture = gt('star')
+                    on_activate = self._add_friend_from_profile
+        
+        # Create the button
+        self.add_friend_button = obw(
+            parent=self.header_container,
+            label='',
+            size=(50, 50),
+            position=(440, 110),
+            texture=texture,
+            color=(1,1,1),
+            enable_sound=True,
+            on_activate_call=on_activate
+        )
+
+    def _check_if_friend(self):
+        """Check if current profile is already in friends list."""
+        if not self.profile_data:
+            return False
+
+        profile_name = self.profile_data.get("name", "Unknown")
+        if profile_name == "Unknown":
+            return False
+
+        # Check if name start
+        if not profile_name.startswith(V2_LOGO):
+            prefixed_name = f"{V2_LOGO}{profile_name}"
+        else:
+            prefixed_name = profile_name
+
+        friends = load_friends()
+        for friend in friends:
+            if friend["name"] == prefixed_name:
+                return True
+        return False
+
+    def _add_friend_from_profile(self):
+        """Add the current profile to friends list."""
+        if not self.profile_data:
+            TIP("No profile data available")
+            return
+
+        try:
+            # Get profile data
+            profile_name = self.profile_data.get("name", "Unknown")
+            account_id = self.profile_data.get("account_id", None)
+            account_pb = self.profile_data.get("account_pb", None)
+            accounts = self.profile_data.get("accounts", [])
+
+            # Load existing friends to check for duplicates
+            friends = load_friends()
+
+            # Check if already exists by name
+            for f in friends:
+                if f["name"] == profile_name:
+                    TIP(f"{profile_name} {get_lang_text('Global.alreadyInFriendsList')}")
+                    # Update button state just in case
+                    self._update_friend_button_state()
+                    return
+
+            # Generate a new ID
+            existing_ids = [int(f["id"]) for f in friends if f["id"].isdigit()]
+            new_id = str(max(existing_ids) + 1 if existing_ids else 0).zfill(2)
+
+            # Add friend using the CRUD function
+            add_friend(
+                name=profile_name,
+                friend_id=new_id,
+                accounts=accounts,
+                account_pb=account_pb,
+                account_id=account_id
+            )
+
+            TIP(f"{profile_name} {get_lang_text('Global.addedToFriendsList')}")
+            gs('ding').play()
+
+            self._update_friend_button_state(is_friend=True)
+            self._try_refresh_friends_panel()
+
+        except Exception as e:
+            print(f"Error adding friend: {e}")
+            TIP("Error adding friend")
+
+    def _update_friend_button_state(self, is_friend=False):
+        """Update the friend button appearance based on friend status."""
+        if not hasattr(self, 'add_friend_button') or not self.add_friend_button or not self.add_friend_button.exists():
+            return
+
+        # Current friend status
+        current_is_friend = is_friend or self._check_if_friend()
+        
+        if current_is_friend:
+            # Already friend
+            try:
+                obw(
+                    edit=self.add_friend_button,
+                    texture=gt('cuteSpaz'),
+                    on_activate_call=lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+                )
+            except Exception as e:
+                print(f"Error updating to cuteSpaz: {e}")
+                try:
+                    obw(
+                        edit=self.add_friend_button,
+                        texture=gt('achievementStayinAlive'),
+                        on_activate_call=lambda: TIP(get_lang_text('Global.alreadyInFriendsList'))
+                    )
+                except Exception as e2:
+                    print(f"Error updating to achievementStayinAlive: {e2}")
+        else:
+            # Not friend
+            try:
+                obw(
+                    edit=self.add_friend_button,
+                    texture=gt('achievementStayinAlive'),
+                    on_activate_call=self._add_friend_from_profile
+                )
+            except Exception as e:
+                print(f"Error updating to achievementStayinAlive: {e}")
+                try:
+                    obw(
+                        edit=self.add_friend_button,
+                        texture=gt('cuteSpaz'),
+                        on_activate_call=self._add_friend_from_profile
+                    )
+                except Exception as e2:
+                    print(f"Error updating to cuteSpaz: {e2}")
+
+    def _try_refresh_friends_panel(self):
+        """Try to refresh the friends panel if it exists."""
+        try:
+            FriendsWindow.refresh_friends_lists()
+        except Exception as e:
+            print(f"Error refreshing friends panel: {e}")
+
+    def _display_error(self, error_message=None):
+        """Display error message with error_display component."""
+        if not self.root.exists():
+            return
+
+        # Clear any existing error display
+        if self.error_display_widget and self.error_display_widget.exists():
+            self.error_display_widget.delete()
+            self.error_display_widget = None
+
+        # Use custom message or default
+        if error_message is None:
+            error_text = get_lang_text('ProfileSearchWindow.Error.searchingAccount')
+        else:
+            error_text = error_message
+
+        # Clear status
+        tw(edit=self.status_widget, text="")
+        wrapped_lines = wrap_text(error_text, 30)
+        display_text = '\n'.join(wrapped_lines)
+
+        # Display error with component
+        try:
+            self.error_display_widget = error_display(
+                parent=self.root,
+                size=(180, 200),
+                position=(185, 250),
+                error_text=display_text,
+                text_color=self.theme.get_color('COLOR_PRIMARY'),
+                text_scale=1.2,
+                text_maxwidth=400,
+                icon_texture='cuteSpaz',
+                fade=True,
+                visible=True
+            )
+        except Exception as e:
+            try:
+                self.error_display_widget = error_display(
+                    parent=self.root,
+                    size=(100, 150),
+                    position=(225, 250),
+                    error_text=display_text,
+                    text_color=self.theme.get_color('COLOR_PRIMARY'),
+                    text_scale=1.2,
+                    text_maxwidth=400,
+                    icon_texture='neoSpazIcon',
+                    fade=True,
+                    visible=True
+                )
+            except Exception as e2:
+                tw(edit=self.status_widget, text=error_text)
+
+    def _extract_value_from_text(self, text):
+        """Extract the value part from text."""
+        if ':' in text:
+            colon_index = text.find(':')
+            if colon_index != -1:
+                value = text[colon_index + 1:].strip()
+                return value
+        # If no colon found
+        return text
+
+    def _copy_data_to_clipboard(self, text):
+        """Copy extracted value to clipboard."""
+        try:
+            # Extract the value part
+            value = self._extract_value_from_text(text)
+            
+            COPY(value)
+            TIP(get_lang_text('Global.copiedToClipboard'))
+            gs('dingSmall').play()
+            
+        except Exception as e:
+            print(f"Error copying to clipboard: {e}")
+            TIP("Failed to copy to clipboard")
+            gs('error').play()
+
+    def _open_discord_url(self, user_id):
+        """Open Discord URL for the given user ID."""
+        discord_url = f"https://discord.com/users/{user_id}"
+        print(f"[ProfileSearchWindow] Opening Discord URL: {discord_url}")
+        open_url(discord_url)
+
+    def _fetch_profile_data(self):
+        """Fetch profile data from API in a separate thread."""
+        def fetch_thread():
+            try:
+                # Build API URL
+                base_url = f"{BASE_URL}/api/account"
+                if self.passed_param == "v2":
+                    url = f"{base_url}?v2={self.passed_value}"
+                elif self.passed_param == "pb":
+                    url = f"{base_url}?pb={self.passed_value}"
+                elif self.passed_param == "id":
+                    url = f"{base_url}?id={self.passed_value}"
+                else:
+                    self.error = get_lang_text('ProfileSearchWindow.Error.noValidParameter')
+                    self.loading = False
+                    pushcall(self._update_ui, from_other_thread=True)
+                    return
+
+                # Make API request
+                req = urllib.request.Request(
+                    url, 
+                    headers={'User-Agent': 'BombSquad Mod'}
+                )
+
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    data = response.read().decode()
+                    parsed_data = json.loads(data)
+
+                if "result" in parsed_data and parsed_data["result"]:
+                    self.profile_data = parsed_data["result"]
+                    self.loading = False
+                    self.error = None
+                    self.account_not_found = False
+                else:
+                    self.error = get_lang_text('ProfileSearchWindow.Error.accountNotFound')
+                    self.loading = False
+                    self.account_not_found = True
+
+            except urllib.error.URLError as e:
+                self.error = f"{get_lang_text('ProfileSearchWindow.Error.networkShort')} {str(e)}"
+                self.loading = False
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    self.error = get_lang_text('ProfileSearchWindow.Error.accountNotFound')
+                    self.account_not_found = True
+                else:
+                    self.error = get_lang_text('ProfileSearchWindow.Error.searchingAccount')
+                    self.account_not_found = False
+            except json.JSONDecodeError as e:
+                self.error = get_lang_text('ProfileSearchWindow.Error.searchingAccount')
+                self.loading = False
+            except Exception as e:
+                self.error = get_lang_text('ProfileSearchWindow.Error.searchingAccount')
+                self.loading = False
+                import traceback
+                print(f"[ProfileSearchWindow] Traceback: {traceback.format_exc()}")
+
+            # Update UI in main thread
+            pushcall(self._update_ui, from_other_thread=True)
+
+        # Start the API call in a separate thread
+        thread = Thread(target=fetch_thread)
+        thread.daemon = True
+        thread.start()
+    
+    def _update_ui(self):
+        """Update the UI with profile data or error message."""
+        
+        if not self.root.exists():
+            return
+            
+        # Remove loading spinner
+        if self.loading_spinner and self.loading_spinner.exists():
+            self.loading_spinner.delete()
+            
+        if self.loading:
+            tw(edit=self.status_widget, text=self.language.get_text('ProfileSearchWindow.loadingProfileData'))
+            return
+            
+        if self.error:
+            # Always show error with cuteSpaz icon
+            error_message = get_lang_text('ProfileSearchWindow.Error.accountNotFound') if self.account_not_found else get_lang_text('ProfileSearchWindow.Error.searchingAccount')
+            self._display_error(error_message)
+            return
+            
+        # Clear error icon if exists
+        if self.error_display_widget and self.error_display_widget.exists():
+            self.error_display_widget.delete()
+            self.error_display_widget = None
+            
+        # Clear status and create profile content
+        tw(edit=self.status_widget, text="")
+        
+        # Create profile content only when we have data
+        if self.profile_data and not self.header_container:
+            self._create_profile_content()
+        
+        # Update friend button state
+        self._update_friend_button_state()
+        
+        # Update title with profile name
+        profile_name = self.profile_data.get("name", "Unknown")
+        
+        # Display
+        self._display_character()
+        self._display_basic_info()
+        self._display_profile_info()
+    
+    def _display_character(self):
+        """Display the character with proper colors and mask."""
+        if not self.profile_data or not self.character_widget.exists():
+            return
+            
+        # Get character and colors from profile
+        external_info = self.profile_data.get("external_info", {})
+        bs_info = external_info.get("bsAccountInfo", {})
+        profile_info = bs_info.get("profile", {})
+        
+        character_name = profile_info.get("character", "Spaz")
+        color = profile_info.get("color", [1, 1, 1])
+        highlight = profile_info.get("highlight", [1, 1, 1])
+        
+        # Convert to tuples (RGB format)
+        color_tuple = tuple(color[:3])
+        highlight_tuple = tuple(highlight[:3])
+        
+        # Map character name to texture name
+        char_key = self.CHARACTER_MAP.get(character_name, "neoSpaz")
+        texture_name = f"{char_key}Icon"
+        mask_texture_name = f"{char_key}IconColorMask"
+        
+        try:
+            iw(
+                edit=self.character_widget,
+                texture=gt(texture_name),
+                tint_texture=gt(mask_texture_name),
+                mask_texture=gt("characterIconMask"),
+                tint_color=color_tuple,
+                tint2_color=highlight_tuple,
+                opacity=1
+            )
+        except Exception as e:
+            print(f"Error loading character textures: {e}")
+            try:
+                iw(
+                    edit=self.character_widget,
+                    texture=gt('neoSpazIcon'),
+                    tint_texture=gt('neoSpazIconColorMask'),
+                    mask_texture=gt("characterIconMask"),
+                    tint_color=color_tuple,
+                    tint2_color=highlight_tuple,
+                    opacity=1
+                )
+            except Exception as e2:
+                print(f"Fallback also failed: {e2}")
+
+    def _display_basic_info(self):
+        """Display basic profile information in the header."""
+        if not self.profile_data or not self.basic_info_container.exists():
+            return
+
+        # Clear previous basic info widgets
+        for widget in self.basic_info_widgets:
+            if widget.exists():
+                widget.delete()
+        self.basic_info_widgets = []
+
+        external_info = self.profile_data.get("external_info", {})
+        bs_info = external_info.get("bsAccountInfo", {})
+        base_info = external_info.get("baseInfo", {})
+        profile_info = bs_info.get("profile", {})
+
+        # Basic profile info lines
+        basic_info_data = [
+            (f"{self.language.get_text('ProfileSearchWindow.name')}:", base_info.get('name', self.profile_data.get('name'))),
+            ("Account ID:", self.profile_data.get('account_id', 'Unknown')),
+            ("Account PB:", self.profile_data.get('account_pb', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.character')}:", profile_info.get('character', 'Unknown'))
+        ]
+
+        # Add basic info to header
+        line_height = 25
+        for i, (label, value) in enumerate(basic_info_data):
+            full_text = f"{label} {value}"
+            text_widget = tw(
+                parent=self.basic_info_container,
+                text=full_text,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                size=(390, 35),
+                position=(-30, 90 - (i * line_height)),
+                h_align='left',
+                v_align='top',
+                scale=0.8,
+                maxwidth=390,
+                max_height=25,
+                selectable=True,
+                click_activate=True,
+                glow_type='uniform',
+                on_activate_call=lambda t=full_text: self._copy_data_to_clipboard(t)
+            )
+            self.basic_info_widgets.append(text_widget)
+    
+    def _display_profile_info(self):
+        """Display the detailed profile information in the scroll container."""
+        if not self.profile_data or not self.scroll_content.exists():
+            return
+
+        # Clear previous info widgets
+        for widget in self.info_text_widgets:
+            if widget.exists():
+                widget.delete()
+        self.info_text_widgets = []
+
+        external_info = self.profile_data.get("external_info", {})
+        bs_info = external_info.get("bsAccountInfo", {})
+        base_info = external_info.get("baseInfo", {})
+        ballistica_info = external_info.get("ballisticaAccountInfo", {})
+        profile_info = bs_info.get("profile", {})
+
+        # Start position
+        current_y = 550
+        line_height = 25
+        section_spacing = 15
+
+        # Accounts section
+        accounts = self.profile_data.get("accounts", [])
+        if accounts:
+            accounts_title_text = f"{self.language.get_text('ProfileSearchWindow.accounts')}:"
+            accounts_title = tw(
+                parent=self.scroll_content,
+                text=accounts_title_text,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                position=(10, current_y),
+                h_align='left',
+                v_align='top',
+                scale=0.8,
+                maxwidth=480,
+                glow_type='uniform'
+            )
+            self.info_text_widgets.append(accounts_title)
+            current_y -= line_height
+
+            # Display accounts
+            for account in accounts:
+                account_text = f"• {account}"
+                account_widget = tw(
+                    parent=self.scroll_content,
+                    text=account_text,
+                    color=self.theme.get_color('COLOR_TERTIARY'),
+                    size=(600, 30),
+                    position=(-50, current_y),
+                    h_align='left',
+                    v_align='top',
+                    scale=0.7,
+                    maxwidth=460,
+                    selectable=True,
+                    click_activate=True,
+                    glow_type='uniform',
+                    on_activate_call=lambda t=account_text: self._copy_data_to_clipboard(t)
+                )
+                self.info_text_widgets.append(account_widget)
+                current_y -= line_height
+
+            current_y -= section_spacing
+
+        # Rank Info section
+        rank = bs_info.get("rank", [])
+        prev_ranks = bs_info.get("prevRanks", [])
+
+        if rank or prev_ranks:
+            # Rank Info title
+            rank_title_text = f"{self.language.get_text('ProfileSearchWindow.rankInfo')}:"
+            rank_title = tw(
+                parent=self.scroll_content,
+                text=rank_title_text,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                position=(10, current_y),
+                h_align='left',
+                v_align='top',
+                scale=0.8,
+                maxwidth=480,
+                glow_type='uniform',
+            )
+            self.info_text_widgets.append(rank_title)
+            current_y -= line_height
+
+            # Current rank
+            if rank and len(rank) >= 3:
+                rank_text = f"  {self.language.get_text('ProfileSearchWindow.current')}: {rank[0]} {rank[1]} #{rank[2]}"
+                rank_widget = tw(
+                    parent=self.scroll_content,
+                    text=rank_text,
+                    color=self.theme.get_color('COLOR_TERTIARY'),
+                    size=(600, 30),
+                    position=(-50, current_y),
+                    h_align='left',
+                    v_align='top',
+                    scale=0.7,
+                    maxwidth=460,
+                    selectable=True,
+                    click_activate=True,
+                    glow_type='uniform',
+                    on_activate_call=lambda t=rank_text: self._copy_data_to_clipboard(t)
+                )
+                self.info_text_widgets.append(rank_widget)
+                current_y -= line_height
+
+            # Previous ranks
+            if prev_ranks:
+                prev_title_text = f"  {self.language.get_text('ProfileSearchWindow.previousRanks')}:"
+                prev_title = tw(
+                    parent=self.scroll_content,
+                    text=prev_title_text,
+                    color=self.theme.get_color('COLOR_TERTIARY'),
+                    position=(34, current_y),
+                    h_align='left',
+                    v_align='top',
+                    scale=0.7,
+                    maxwidth=460,
+                    glow_type='uniform',
+                )
+                self.info_text_widgets.append(prev_title)
+                current_y -= line_height
+
+                for prev_rank in prev_ranks:
+                    if len(prev_rank) >= 4:
+                        season, rank_name, points, position = prev_rank
+                        rank_line_text = f"{self.language.get_text('ProfileSearchWindow.season')} {season}: #{position} {rank_name} {points}"
+                        rank_line = tw(
+                            parent=self.scroll_content,
+                            text=rank_line_text,
+                            color=self.theme.get_color('COLOR_TERTIARY'),
+                            size=(600, 30),
+                            position=(-30, current_y),
+                            h_align='left',
+                            v_align='top',
+                            scale=0.65,
+                            maxwidth=440,
+                            selectable=True,
+                            click_activate=True,
+                            glow_type='uniform',
+                            on_activate_call=lambda t=rank_line_text: self._copy_data_to_clipboard(t)
+                        )
+                        self.info_text_widgets.append(rank_line)
+                        current_y -= line_height
+
+                current_y -= section_spacing
+
+        # Achievements section
+        achievements = APP.classic.ach.achievements
+        achievements_text_str = f"{self.language.get_text('ProfileSearchWindow.achievements')}: {bs_info.get('achievementsCompleted', 0)}/{str(len(achievements))}"
+        achievements_widget = tw(
+            parent=self.scroll_content,
+            text=achievements_text_str,
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(10, current_y),
+            h_align='left',
+            v_align='top',
+            scale=0.8,
+            maxwidth=480,
+            glow_type='uniform',
+        )
+        self.info_text_widgets.append(achievements_widget)
+        current_y -= line_height + section_spacing
+
+        # Trophies section
+        trophies_text = bs_info.get("trophies", "")
+        if trophies_text:
+            # Count unique trophy characters
+            trophy_counts = {}
+            for char in trophies_text:
+                trophy_counts[char] = trophy_counts.get(char, 0) + 1
+
+            # Create final trophy string grouping repeated characters
+            final_trophy_string = ""
+            current_char = None
+            current_count = 0
+
+            for char in trophies_text:
+                if char == current_char:
+                    current_count += 1
+                else:
+                    if current_char is not None:
+                        if current_count > 1:
+                            final_trophy_string += f"{current_char}×{current_count} "
+                        else:
+                            final_trophy_string += f"{current_char} "
+                    current_char = char
+                    current_count = 1
+
+            # Add last group
+            if current_char is not None:
+                if current_count > 1:
+                    final_trophy_string += f"{current_char}×{current_count}"
+                else:
+                    final_trophy_string += f"{current_char}"
+
+            # Trophies title
+            trophies_title_text = f"{self.language.get_text('ProfileSearchWindow.trophies')}:"
+            trophies_title = tw(
+                parent=self.scroll_content,
+                text=trophies_title_text,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                position=(10, current_y),
+                h_align='left',
+                v_align='top',
+                scale=0.8,
+                maxwidth=480,
+                glow_type='uniform',
+            )
+            self.info_text_widgets.append(trophies_title)
+            current_y -= line_height
+
+            # Trophies display
+            trophy_display = tw(
+                parent=self.scroll_content,
+                text=final_trophy_string,
+                color=self.theme.get_color('COLOR_ACCENT'),
+                size=(570, 30),
+                position=(-50, current_y-5),
+                h_align='left',
+                v_align='top',
+                scale=0.8,
+                maxwidth=460,
+                selectable=True,
+                click_activate=True,
+                glow_type='uniform',
+                on_activate_call=lambda t=final_trophy_string: self._copy_data_to_clipboard(t)
+            )
+            self.info_text_widgets.append(trophy_display)
+            current_y -= line_height + section_spacing
+
+        # More Info
+        more_info_title_text = f"{self.language.get_text('ProfileSearchWindow.moreInfo')}:"
+        more_info_title = tw(
+            parent=self.scroll_content,
+            text=more_info_title_text,
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(10, current_y),
+            h_align='left',
+            v_align='top',
+            scale=0.8,
+            maxwidth=480,
+            glow_type='uniform',
+        )
+        self.info_text_widgets.append(more_info_title)
+        current_y -= line_height
+
+        from datetime import datetime
+        raw_date = base_info.get('created', 'Unknown')
+
+        if raw_date != 'Unknown':
+            dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+            formatted = dt.strftime("%d/%m/%Y %H:%M")
+        else:
+            formatted = 'Unknown'
+
+        # More Data
+        more_data = [
+            (f"{self.language.get_text('ProfileSearchWindow.accountType')}:", ballistica_info.get('accountType', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.activeDays')}:", ballistica_info.get('totalActiveDays', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.created')}:", ballistica_info.get('created', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.lastActive')}:", ballistica_info.get('lastActive', 'Unknown')),
+            (f"{self.language.get_text('ProfileSearchWindow.accountExistence')}:", formatted)
+        ]
+
+        for label, value in more_data:
+            full_text = f"{label} {value}"
+            text_widget = tw(
+                parent=self.scroll_content,
+                text=full_text,
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                size=(600, 30),
+                position=(-50, current_y),
+                h_align='left',
+                v_align='top',
+                scale=0.7,
+                maxwidth=480,
+                selectable=True,
+                click_activate=True,
+                glow_type='uniform',
+                on_activate_call=lambda t=full_text: self._copy_data_to_clipboard(t)
+            )
+            self.info_text_widgets.append(text_widget)
+            current_y -= line_height
+
+        # Set fixed height for scroll container
+        ocw(edit=self.scroll_content, size=(500, 585))
+
+    def close(self):
+        """Close the window."""
+        if self.root.exists():
+            ocw(edit=self.root, transition='out_scale')
+
+class AccountCard():
+    def __init__(
+        self,
+        name: str,
+        accounts: list[str],
+        call: callable = None,
+        parent: str = None,
+        position: tuple[float, float] = (0.0, 0.0),
+    ) -> None:
+        super().__init__()
+        self._name = name
+        self._accounts = accounts
+        self._call = call
+
+        # Card size
+        card_width = 650 - 40
+        card_height = 100
+        
+        x = position[0]
+        y = position[1]
+
+        def _on_click():
+            if call:
+                call()
+
+        # Container
+        self._container = obw(
+            parent=parent,
+            label='',
+            size=(card_width, card_height),
+            position=(x, y),
+            texture=gt('white'),
+            color=(0.15, 0.15, 0.15),
+            on_activate_call=_on_click,
+            enable_sound=False,
+        )
+
+        # Character on the left
+        character_size = (70, 70)
+        character_x = x + 10
+        character_y = y + (card_height - character_size[1]) / 2
+
+        self.character_widget = iw(
+            parent=parent,
+            draw_controller=self._container,
+            size=character_size,
+            position=(character_x, character_y),
+            texture=gt('cuteSpaz'),
+        )
+
+        # Header information on the right
+        content_x = character_x + character_size[0] + 15
+        content_width = card_width - content_x - 10
+
+        # Check if it should be vertically centered
+        should_center = self._should_center_title(name, accounts)
+
+        if should_center:
+            # Vertically centered title
+            self.title_widget = tw(
+                parent=parent,
+                draw_controller=self._container,
+                position=(content_x, y + card_height / 2 - 15),
+                text=name,
+                color=(0.95, 0.95, 0.95),
+                scale=1.1,
+                h_align='left',
+                v_align='center',
+                maxwidth=content_width
+            )
+            # Do not show accounts when centered
+            self.accounts_widget = None
+        else:
+            # Title at the top
+            self.title_widget = tw(
+                parent=parent,
+                draw_controller=self._container,
+                position=(content_x, y + card_height - 40),
+                text=name,
+                color=(0.95, 0.95, 0.95),
+                scale=1.1,
+                h_align='left',
+                v_align='center',
+                maxwidth=content_width
+            )
+
+            # Process the accounts to format them with line breaks
+            accounts_text = self._format_accounts(accounts)
+            
+            # Account text at the bottom
+            self.accounts_widget = tw(
+                parent=parent,
+                draw_controller=self._container,
+                position=(content_x, y + 15),
+                text=accounts_text,
+                color=(0.7, 0.7, 0.7),
+                scale=0.8,
+                h_align='left',
+                v_align='center',
+                maxwidth=content_width
+            )
+
+    def _should_center_title(self, name: str, accounts: list[str]) -> bool:
+        """Determine if the title should be vertically centered."""
+        # If there is exactly one account and it matches the name, center
+        if len(accounts) == 1 and accounts[0] == name:
+            return True
+        # If there are no accounts, also center
+        if not accounts:
+            return True
+        return False
+
+    def _format_accounts(self, accounts: list[str]) -> str:
+        """ 
+            Format the account list with a maximum of 5
+            accounts and line breaks every 3 accounts.
+        """
+        if not accounts:
+            return "No accounts"
+        
+        # Limit to a maximum of 5 accounts
+        display_accounts = accounts[:5]
+        has_more = len(accounts) > 5
+        
+        formatted = []
+        for i, account in enumerate(display_accounts, 1):
+            formatted.append(account)
+            if i % 3 == 0 and i < len(display_accounts):
+                formatted.append("\n")
+            elif i < len(display_accounts):
+                formatted.append(", ")
+        
+        # Add "..." if there are more accounts
+        if has_more:
+            if len(display_accounts) % 3 == 0:
+                formatted.append("\n...")
+            else:
+                formatted.append(", ...")
+        
+        return "".join(formatted)
+
+    def get_button(self):
+        """Return the main button widget for external use"""
+        return self._container
+    
+class ProfileSearch:
+    """Window for searching profiles by name."""
+    
+    def __init__(self, source_widget, search_term: str = ""):
+        self.source_widget = source_widget
+        self.search_term = search_term
+        self.loading = True if search_term else False
+        self.error = None
+        self.results = []
+        self.current_page = 0
+        self.total_pages = 0
+        self.total_results = 0
+        self.page_size = 0
+
+        self.theme = ReactiveTheme()
+        self.language = ReactiveLanguage() 
+
+        if not finder_config:
+            load_finder_config()
+        self.current_filter = finder_config.get(CFG_NAME_FILTER_ACCOUNT, 'all') 
+
+        self._create_ui()
+        if self.search_term:
+            self._fetch_search_results()
+
+    def _create_ui(self):
+
+        window_size = (700, 550)
+        borders = BorderWindow(window_size)
+
+        self.root = cw(
+            scale_origin_stack_offset=self.source_widget.get_screen_space_center(),
+            size=window_size,
+            oac=self.close,
+        )[0]
+
+        # Footer
+        self.footer = obw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('empty'),
+            label='',
+            enable_sound=False
+        )
+
+        # Window background
+        iw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+
+        # Borders
+        self.border_left = iw(
+            parent=self.root,
+            size=borders.border_left.size,
+            position=borders.border_left.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_top = iw(
+            parent=self.root,
+            size=borders.border_top.size,
+            position=borders.border_top.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_right = iw(
+            parent=self.root,
+            size=borders.border_right.size,
+            position=borders.border_right.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_bottom = iw(
+            parent=self.root,
+            size=borders.border_bottom.size,
+            position=borders.border_bottom.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        # Window title
+        self.title_widget = tw(
+            parent=self.root,
+            text=self.language.get_text('ProfileSearch.profileSearch'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(window_size[0] * 0.5, window_size[1] - 50),
+            h_align='center',
+            v_align='center',
+            scale=1.2,
+            maxwidth = 400,
+            max_height=32,
+        )
+
+        # Search input field
+        self.search_input = tw(
+            parent=self.root,
+            position=(35, window_size[1] - 100),
+            size=(330, 40),
+            text=self.search_term,
+            editable=True,
+            description="Enter player name to search",
+            maxwidth=350,
+            h_align='left',
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        # Search placeholder
+        self.search_placeholder = tw(
+            parent=self.root,
+            position=(75, window_size[1] - 103),
+            text="",
+            color=self.theme.get_color('COLOR_TERTIARY')
+        )
+
+        # Search button
+        buttonSearchSize = (120, 40)
+        buttonSearchPosition = (405, window_size[1] - 100)
+        self.search_button = bw(
+            parent=self.root,
+            position=buttonSearchPosition,
+            size=buttonSearchSize,
+            label=self.language.get_text('Global.search'),
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=self._on_search_pressed
+        )
+
+        borders = BorderWindow(buttonSearchSize)
+        
+        # Search borders button
+        self.search_border_left = iw(
+            parent=self.root,
+            size=(borders.border_left.size[0]-1, borders.border_left.size[1]+3.5),
+            position=(buttonSearchPosition[0]-5, buttonSearchPosition[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.search_border_top = iw(
+            parent=self.root,
+            size=(borders.border_top.size[0]+4, borders.border_top.size[1]-1),
+            position=(buttonSearchPosition[0]-2, buttonSearchPosition[1]+buttonSearchSize[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.search_border_right = iw(
+            parent=self.root,
+            size=(borders.border_right.size[0]-1, borders.border_right.size[1]+3.5),
+            position=(buttonSearchPosition[0]+buttonSearchSize[0]+4, buttonSearchPosition[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.search_border_bottom = iw(
+            parent=self.root,
+            size=(borders.border_bottom.size[0]+6.5, borders.border_bottom.size[1]-1),
+            position=(buttonSearchPosition[0]-2, buttonSearchPosition[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        # Filter button
+        buttonFilterSize = (120, 40)
+        buttonFilterPosition = (545, window_size[1] - 100)
+        borders = BorderWindow(buttonFilterSize)
+
+        self.filter_button = bw(
+            parent=self.root,
+            position=buttonFilterPosition,
+            size=buttonFilterSize,
+            label=f"{self.language.get_text('Global.filter')}: {self.current_filter.upper()}",
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=self._show_filter_popup
+        )
+
+        self.filter_border_left = iw(
+            parent=self.root,
+            size=(borders.border_left.size[0], borders.border_left.size[1]+3.5),
+            position=(buttonFilterPosition[0]-5, buttonFilterPosition[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.filter_border_top = iw(
+            parent=self.root,
+            size=(borders.border_top.size[0]+4, borders.border_top.size[1]-1),
+            position=(buttonFilterPosition[0]-2, buttonFilterPosition[1]+buttonFilterSize[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.filter_border_right = iw(
+            parent=self.root,
+            size=(borders.border_right.size[0]-1, borders.border_right.size[1]+3.5),
+            position=(buttonFilterPosition[0]+buttonFilterSize[0]+4, buttonFilterPosition[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.filter_border_bottom = iw(
+            parent=self.root,
+            size=(borders.border_bottom.size[0]+6.5, borders.border_bottom.size[1]-1),
+            position=(buttonFilterPosition[0]-2, buttonFilterPosition[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        # Loading/status text
+        self.status_widget = tw(
+            parent=self.root,
+            text=self.language.get_text('ProfileSearch.enterNameAndPressSearch') if not self.search_term else self.language.get_text('ProfileSearch.searching'),
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            position=(window_size[0] * 0.47, window_size[1] * 0.45),
+            h_align='center',
+            v_align='center',
+            scale=1.3,
+            maxwidth=window_size[0] - 50
+        )
+
+        # Loading spinner
+        self.loading_spinner = None
+        if self.search_term:
+            try:
+                self.loading_spinner = spinner(
+                    parent=self.root,
+                    position=(window_size[0] * 0.5 - 25, window_size[1] * 0.5 - 75),
+                    size=(50, 50),
+                    style='simple',
+                    color=(1, 1, 1),
+                    visible=True
+                )
+            except Exception as e:
+                print(f"Error creating spinner: {e}")
+
+            
+        # Scroll widget for results
+        self.scroll_widget = sw(
+            parent=self.root,
+            size=(650, 380),
+            position=(25, 50),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+
+        # Container for content
+        self.container_widget = ocw(
+            parent=self.scroll_widget,
+            size=(650, 0),
+            background=False
+        )
+
+        # Error widgets
+        self.error_display_widget = None
+
+        # Set up filter updater
+        self._update_search_placeholder()
+        self.filter_updater = tuck(0.1, self._update_search_placeholder, repeat=True)
+    
+    def _update_search_placeholder(self):
+        """Update the search placeholder visibility."""
+        if not self.search_placeholder.exists():
+            self.filter_updater = None
+            return
+            
+        current_text = tw(query=self.search_input)
+        tw(edit=self.search_placeholder, text="" if current_text else "")
+    
+    def _show_filter_popup(self):
+        """Show filter options popup."""
+        x, y = self.filter_button.get_screen_space_center()
+        popup = PopupMenuWindow(
+            position=(x, y - 70),
+            choices=[""],
+            current_choice=self.current_filter,
+            delegate=self,
+            width=1
+        )
+        
+        # Filter option buttons
+        for i, filter_type in enumerate(["all", "v2", "id", "pb"]):
+            bw(
+                parent=popup.root_widget,
+                position=(-70, 55 - i * 55),
+                size=(140, 50),
+                label=filter_type.upper(),
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=CallStrict(self._on_filter_selected, filter_type, popup)
+            )
+            self._popup_target = "filter_accounts"
+    
+    def popup_menu_closing(self, popup_window) -> None:
+        """Handle popup menu closing."""
+        self._popup_target = None
+
+    def _on_filter_selected(self, filter_type, popup):
+        """Handle filter selection."""
+        self.current_filter = filter_type
+        popup.root_widget.delete()
+
+        # UPDATE SETTINGS AND BUTTON
+        update_finder_config(CFG_NAME_FILTER_ACCOUNT, filter_type)
+
+        # Update filter button text
+        obw(
+            edit=self.filter_button,
+            label=f"{self.language.get_text('Global.filter')}: {filter_type.upper()}"
+        )
+
+        # Update placeholder
+        placeholder_text = {
+            "all": "Enter player name (shows all matches)",
+            "v2": "Enter exact player name (finds specific account)",
+            "id": "Enter account ID (e.g., a-g45489)",
+            "pb": "Enter public ID (e.g., pb-IF4JU08_Jg==)"
+        }.get(filter_type, "Enter search term")
+
+        tw(edit=self.search_input, description=placeholder_text)
+    
+    def _clear_error_display(self):
+        """Clear any existing error display."""
+        if self.error_display_widget and self.error_display_widget.exists():
+            self.error_display_widget.delete()
+            self.error_display_widget = None
+        
+        # Clear error text
+        tw(edit=self.status_widget, text="")
+    
+    def _on_search_pressed(self):
+        """Handle search button press."""
+        search_term = tw(query=self.search_input)
+        if not search_term:
+            return
+
+        # Clear previous error
+        self._clear_error_display()
+
+        self.search_term = search_term
+        self.loading = True
+        self.error = None
+        self.results = []
+
+        # Update UI for loading
+        tw(edit=self.status_widget, text=self.language.get_text('ProfileSearch.searching'))
+        if self.loading_spinner and self.loading_spinner.exists():
+            self.loading_spinner.delete()
+        try:
+            self.loading_spinner = spinner(
+                parent=self.root,
+                position=(350 - 25, 250 - 50),
+                size=(50, 50),
+                style='simple',
+                color=(1, 1, 1),
+                visible=True
+            )
+        except Exception as e:
+            print(f"Error creating spinner: {e}")
+        
+        # Clear previous results
+        if self.container_widget.exists():
+            self.container_widget.delete()
+        
+        self.container_widget = ocw(
+            parent=self.scroll_widget,
+            size=(650, 0),
+            background=False
+        )
+
+        self._fetch_search_results()
+    
+    def _fetch_search_results(self):
+        """Fetch search results from API in a separate thread."""
+        def fetch_thread():
+            try:
+                # Always use the same search endpoint
+                url = f"{BASE_URL}/api/account?search={self.search_term}&max=all"
+                req = urllib.request.Request(
+                    url, 
+                    headers={'User-Agent': 'BombSquad Mod'}
+                )
+
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    data = response.read().decode()
+                    parsed_data = json.loads(data)
+                    #print(f"[ProfileSearch] JSON parsed successfully")
+
+                # Check if we have results
+                if "results" not in parsed_data or not parsed_data["results"]:
+                    self.error = "No results found"
+                    self.loading = False
+                    pushcall(self._update_ui, from_other_thread=True)
+                    return
+
+                results = parsed_data["results"]
+
+                # Filter results
+                if self.current_filter == "all":
+                    self.results = results
+                    self.total_results = parsed_data.get("totalResults", len(results))
+                    self.page_size = parsed_data.get("pageSize", len(results))
+                    self.total_pages = parsed_data.get("totalPages", 1)
+                    self.loading = False
+                    self.error = None
+
+                elif self.current_filter == "v2":
+                    exact_match = None
+                    for result in results:
+                        name = result.get('name')
+                        if name:
+                            clean_name = name.replace(V2_LOGO, '')
+                            if clean_name.lower() == self.search_term.lower():
+                                exact_match = result
+                                break
+
+                    if exact_match:
+                        self.results = [exact_match]
+                        self.total_results = 1
+                        self.page_size = 1
+                        self.loading = False
+                        self.error = None
+                    else:
+                        # Second search across all results
+                        url_all = f"{BASE_URL}/api/account?search={self.search_term}&max=all"
+                        req_all = urllib.request.Request(
+                            url_all, 
+                            headers={'User-Agent': 'BombSquad Mod'}
+                        )
+
+                        with urllib.request.urlopen(req_all, timeout=15) as response_all:
+                            data_all = response_all.read().decode()
+                            parsed_data_all = json.loads(data_all)
+                            #print(f"[ProfileSearch] All accounts search completed")
+
+                        # Search for an exact match across all results
+                        exact_match_all = None
+                        if "results" in parsed_data_all:
+                            for result in parsed_data_all["results"]:
+                                name = result.get('name')
+                                if name:
+                                    clean_name = name.replace(V2_LOGO, '')
+                                    if clean_name.lower() == self.search_term.lower():
+                                        exact_match_all = result
+                                        break
+
+                        if exact_match_all:
+                            self.results = [exact_match_all]
+                            self.total_results = 1
+                            self.page_size = 1
+                            self.loading = False
+                            self.error = None
+                            #print(f"[ProfileSearch] Found exact match in all results")
+                        else:
+                            self.error = f"{get_lang_text('ProfileSearch.Error.noExactMatch')} '{self.search_term}'"
+                            self.loading = False
+                            #print(f"[ProfileSearch] No exact match found")
+
+                elif self.current_filter == "id":
+                    # Search by exact account_id
+                    exact_match = None
+                    for result in results:
+                        account_id = result.get('account_id')
+                        if account_id and str(account_id).lower() == self.search_term.lower():
+                            exact_match = result
+                            break
+
+                    if exact_match:
+                        self.results = [exact_match]
+                        self.total_results = 1
+                        self.page_size = 1
+                        self.loading = False
+                        self.error = None
+                        #print(f"[ProfileSearch] Found exact account_id match")
+                    else:
+                        self.error = f"{get_lang_text('ProfileSearch.Error.noAccountFoundWithId')} {self.search_term}"
+                        self.loading = False
+
+                elif self.current_filter == "pb":
+                    # Search by account PB
+                    exact_match = None
+                    for result in results:
+                        account_pb = result.get('account_pb')
+                        if account_pb and str(account_pb).lower() == self.search_term.lower():
+                            exact_match = result
+                            break
+
+                    if exact_match:
+                        self.results = [exact_match]
+                        self.total_results = 1
+                        self.page_size = 1
+                        self.loading = False
+                        self.error = None
+                    else:
+                        self.error = f"{get_lang_text('ProfileSearch.Error.noAccountFound')} {self.search_term}"
+                        self.loading = False
+
+            except urllib.error.URLError as e:
+                self.error = get_lang_text('ProfileSearch.Error.network')
+                self.loading = False
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    self.error = get_lang_text('ProfileSearch.Error.serviceUnavailable')
+                else:
+                    self.error = get_lang_text('ProfileSearch.Error.searchFailed')
+                self.loading = False
+            except json.JSONDecodeError as e:
+                self.error = get_lang_text('ProfileSearch.Error.invalidResponse')
+                self.loading = False
+            except Exception as e:
+                self.error = get_lang_text('ProfileSearch.Error.unexpected')
+                self.loading = False
+                import traceback
+                #print(f"[ProfileSearch] Traceback: {traceback.format_exc()}")
+
+            # Update UI in main thread
+            pushcall(self._update_ui, from_other_thread=True)
+
+        thread = Thread(target=fetch_thread)
+        thread.daemon = True
+        thread.start()
+
+    def _update_ui(self):
+        """Update the UI with search results or error message."""
+        if not self.root.exists():
+            return
+
+        # Remove loading spinner
+        if self.loading_spinner and self.loading_spinner.exists():
+            self.loading_spinner.delete()
+
+        if self.loading:
+            tw(edit=self.status_widget, text=self.language.get_text('ProfileSearch.searching'))
+            return
+
+        if self.error:
+            self._display_error(self.error)
+            return
+
+        # Clear any error display
+        self._clear_error_display()
+
+        title_text = f"{self.language.get_text('Global.search')}: {self.search_term} ({self.page_size} {self.language.get_text('Global.results')})"
+        tw(edit=self.title_widget, text=title_text)
+
+        # If there are no results, show message
+        if not self.results:
+            self._display_error("No results found")
+            return
+
+        card_height = 100
+        spacing = 10
+        total_height = len(self.results) * (card_height + spacing)
+        
+        ocw(
+            edit=self.container_widget,
+            size=(650, total_height)
+        )
+
+        # Calculate initial position
+        current_y = total_height - card_height
+
+        # Show results
+        for i, result in enumerate(self.results):
+            name = result.get('name', 'Unknown')
+            accounts = result.get('accounts', [])
+
+            # Create AccountCard
+            account_card = AccountCard(
+                name=name,
+                accounts=accounts,
+                call=lambda r=result: self._on_result_pressed(r),
+                parent=self.container_widget,
+                position=(20, current_y)
+            )
+
+            # Update position for the next card
+            current_y -= (card_height + spacing)
+
+    def _display_error(self, error_message):
+        """Display error message with error_display component."""
+        if not self.root.exists():
+            return
+
+        # Clear any existing error display first
+        self._clear_error_display()
+
+        wrapped_lines = wrap_text(error_message, 30)
+        display_text = '\n'.join(wrapped_lines)
+        
+        # Create error display component
+        try:
+            self.error_display_widget = error_display(
+                parent=self.root,
+                size=(180, 200),
+                position=(260, 200),
+                error_text=display_text,
+                text_color=self.theme.get_color('COLOR_PRIMARY'),
+                text_scale=1.2,
+                text_maxwidth=600,
+                icon_texture='cuteSpaz',
+                fade=True,
+                visible=True
+            )
+        except Exception as e:
+            tw(edit=self.status_widget, text=error_message)
+    
+    def _on_result_pressed(self, result):
+        """
+            Handle result button press 
+                - open ProfileSearchWindow with 
+                account PB.
+        """
+        account_pb = result.get('account_pb')
+        name = result.get('name', 'Unknown')
+        
+        if account_pb:
+            ProfileSearchWindow(self.source_widget, pb=account_pb)
+        else:
+            self._display_error("Error: No account PB found in the selected profile")
+    
+    def close(self):
+        """Close the window."""
+        if self.root.exists():
+            ocw(edit=self.root, transition='out_scale')
+
+class FriendsWindow:
+    """Friends Panel."""
+
+    # Class variable to store all active instances
+    _active_instances = []
+
+    def __init__(self, parent_widget, theme, language, get_filtered_players_callback,
+                 add_friend_callback, delete_friend_callback, connect_callback):
+        """
+        Initialize the Friends Panel.
+        
+        Args:
+            parent_widget: The parent widget to attach to
+            theme: ReactiveTheme instance for color management
+            language: ReactiveLanguage instance for text management
+            get_filtered_players_callback: Callback to get current filtered players
+            add_friend_callback: Callback to add a friend
+            delete_friend_callback: Callback to delete a friend
+            connect_callback: Callback to connect to a server
+        """
+        
+        self.theme = theme
+        self.language = language
+        self._get_filtered_players = get_filtered_players_callback
+        self._add_friend = add_friend_callback
+        self._delete_friend = delete_friend_callback
+        self._connect_to_server = connect_callback
+        
+        # State variables
+        self.best_friends_connected = 0
+        self._current_displayed_best_friend = None
+        self._popup_target = None
+        
+        # Widget references
+        self.friends_parent = None
+        self.friends_background = None
+        self.friends_separator = None
+        self.all_friends_text = None
+        self.friend_input = None
+        self.add_manual_button = None
+        self.friends_separator2 = None
+        self.online_friends_text = None
+        self._friends_scroll_container = None
+        self._friends_list_container = None
+        self._connected_friends_scroll_container = None
+        self._connected_friends_list_container = None
+        self._friend_info_container = None
+        self.friend_info_tip = None
+        self.no_friends_online_text = None
+        
+        # Element lists
+        self.best_friends_elements = []
+        self._friend_text_widgets = []
+        self._connected_friend_text_widgets = []
+        
+        # Subscriptions
+        self._language_subscriptions = []
+        self._color_subscriptions = []
+        
+        # Register this instance
+        FriendsWindow._active_instances.append(self)
+        
+        # Create the panel
+        self._create_friends_panel(parent_widget)
+        self._setup_language_subscriptions()
+        self._setup_color_subscriptions()
+
+    @classmethod
+    def refresh_friends_lists(cls):
+        """
+        Load current friends from storage and update both UI lists.
+        This method can be called from anywhere to refresh the friends panel.
+        """
+        #print("[FriendsWindow] Refreshing friends lists")
+        
+        # Get all active instances
+        active_instances = []
+        for instance in cls._active_instances:
+            try:
+                if (hasattr(instance, 'friends_parent') and 
+                    instance.friends_parent and 
+                    instance.friends_parent.exists()):
+                    active_instances.append(instance)
+            except:
+                # Skip invalid instances
+                continue
+        
+        if not active_instances:
+            #print("[FriendsWindow] No active instances found")
+            return
+            
+        for instance in active_instances:
+            try:
+                # Load current friends from storage
+                current_friends = instance.get_all_friends()
+                #print(f"[FriendsWindow] Loaded {len(current_friends)} friends")
+                
+                # Update the all friends list
+                instance.refresh_best_friends_ui()
+                
+                try:
+                    players_list = [V2_LOGO + player.strip() for player, _ in instance._get_filtered_players()]
+                except Exception as e:
+                    print(f"[FriendsWindow] Could not get players list: {e}")
+                    players_list = []
+                    
+                instance.refresh_best_friends_connected_ui(players_list)
+                #print(f"[FriendsWindow] Successfully updated instance")
+                
+            except Exception as e:
+                print(f"[FriendsWindow] Error updating instance: {e}")
+
+    def _create_friends_panel(self, parent_widget):
+        """Create the friends panel window."""
+        panel_size = (355, 435)
+        self.friends_parent = ocw(
+            parent=parent_widget,
+            size=panel_size,
+            position=(460, 0),
+            background=False,
+        )
+
+        self.friends_background = iw(
+            parent=self.friends_parent,
+            size=panel_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+
+        # Separator
+        self.friends_separator = iw(
+            parent=self.friends_parent,
+            size=(3, 435),
+            position=(0, 0),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+
+        self.all_friends_text = tw(
+            parent=self.friends_parent,
+            text=self.language.get_text('FriendsWindow.allFriends'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            maxwidth = 250,
+            max_height=35,
+            position=(540-450, 400)
+        )
+
+        self.friend_input = tw(
+            parent=self.friends_parent,
+            position=(695-450, 320),
+            size=(120, 50),
+            text="",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            editable=True,
+            h_align='center',
+            v_align='center',
+            corner_scale=0.1,
+            scale=10,
+            allow_clear_button=False,
+            shadow=0,
+            flatness=1,
+        )
+
+        self.add_manual_button = bw(
+            parent=self.friends_parent,
+            position=(640-450, 250),
+            size=(120, 39),
+            text_scale=0.6,
+            label=self.language.get_text('FriendsWindow.addManually'),
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=lambda: (
+                (lambda friend: (
+                    self._add_friend(friend),
+                    tw(edit=self.friend_input, text=""),
+                    self.refresh_best_friends_ui(),
+                    self.refresh_best_friends_connected_ui()
+                ))(tw(query=self.friend_input))
+            )
+        )
+
+        # Separator
+        self.friends_separator2 = iw(
+            parent=self.friends_parent,
+            size=(320, 1),
+            position=(470-450, 235),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+
+        # Online friends header
+        online_friends_tr = self.language.get_text("Global.online") + "\ue019"
+        self.online_friends_text = tw(
+            parent=self.friends_parent,
+            text=online_friends_tr,
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(465-450, 195),
+            maxwidth = 180,
+            max_height=40,
+        )
+
+        # Best friends list
+        self._friends_scroll_container = sw(
+            parent=self.friends_parent,
+            position=(465-450, 240),
+            size=(140, 130),
+            border_opacity=0.4,
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        self._friends_list_container = None
+        self.refresh_best_friends_ui()
+
+        # Connected friends list
+        self._connected_friends_scroll_container = sw(
+            parent=self.friends_parent,
+            position=(465-450, 17),
+            size=(140, 170),
+            border_opacity=0.4,
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+
+        self._connected_friends_list_container = None
+
+        # Friend info container
+        self._friend_info_container = ocw(
+            parent=self.friends_parent,
+            position=(615-450, 17),
+            size=(175, 170),
+            background=False
+        )
+
+        iw(
+            parent=self.friends_parent,
+            position=(160, 17),
+            size=(180, 172),
+            texture=gt('scrollWidget'),
+            mesh_transparent=gm('softEdgeOutside'),
+            opacity=0.4
+        )
+
+        self.friend_info_tip = tw(
+            parent=self._friend_info_container,
+            size=(165, 170),
+            position=(0, 0),
+            text=self.language.get_text('FriendsWindow.selectFriendToView'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            maxwidth=160,
+            h_align='center',
+            v_align='center'
+        )
+
+        self.refresh_best_friends_ui()
+        self.refresh_best_friends_connected_ui()
+
+    def refresh_best_friends_ui(self):
+        """Refresh the best friends list UI."""
+        if hasattr(self, "_friends_list_container") and self._friends_list_container and self._friends_list_container.exists():
+            self._friends_list_container.delete()
+
+        friends_list = self.get_all_friends()
+
+        if not friends_list:
+            # Create a small container
+            container_height = 140
+            self._friends_list_container = ocw(
+                parent=self._friends_scroll_container,
+                size=(190, container_height),
+                background=False
+            )
+
+            # Show default
+            default_friend_widget = tw(
+                parent=self._friends_list_container,
+                size=(170, 30),
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                text=f"{V2_LOGO}less",
+                position=(0, container_height - 30),
+                maxwidth=160,
+                selectable=True,
+                click_activate=True,
+                v_align='center',
+                on_activate_call=CallStrict(self._show_friend_popup, (200, 100), delete_user=False)
+            )
+
+            # Initialize or clear widget list
+            if hasattr(self, '_friend_text_widgets'):
+                self._friend_text_widgets.clear()
+            else:
+                self._friend_text_widgets = []
+
+            # Store only
+            self._friend_text_widgets.append(default_friend_widget)
+
+            return
+
+        # Continue with normal friends list
+        container_height = max(len(friends_list) * 30, 140)
+
+        self._friends_list_container = ocw(
+            parent=self._friends_scroll_container,
+            size=(190, container_height),
+            background=False
+        )
+
+        if not hasattr(self, '_friend_text_widgets'):
+            self._friend_text_widgets = []
+        else:
+            self._friend_text_widgets.clear()
+
+        for i, friend in enumerate(friends_list):
+            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
+            pos_y = container_height - 30 - 30 * i
+
+            friend_widget = tw(
+                parent=self._friends_list_container,
+                size=(170, 30),
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                text=display_name,
+                position=(0, pos_y),
+                maxwidth=100,
+                selectable=True,
+                click_activate=True,
+                v_align='center',
+                on_activate_call=CallStrict(
+                    self._show_friend_popup,
+                    (200, 100),
+                    friend 
+                )
+            )
+
+            # Save widget reference
+            self._friend_text_widgets.append(friend_widget)
+
+    def refresh_best_friends_connected_ui(self, players_list=None):
+        """Refresh the connected best friends list UI."""
+        if not (self.friends_parent and self.friends_parent.exists()):
+            return
+
+        # Clean up previous no friends online text
+        if hasattr(self, 'no_friends_online_text') and self.no_friends_online_text and self.no_friends_online_text.exists():
+            self.no_friends_online_text.delete()
+            self.no_friends_online_text = None
+
+        if hasattr(self, "_connected_friends_list_container") and self._connected_friends_list_container and self._connected_friends_list_container.exists():
+            self._connected_friends_list_container.delete()
+            self._connected_friends_list_container = None
+
+        if hasattr(self, '_connected_friend_text_widgets'):
+            self._connected_friend_text_widgets.clear()
+        else:
+            self._connected_friend_text_widgets = []
+
+        # Get players list if not provided
+        if players_list is None:
+            players_list = [V2_LOGO + player.strip() for player, _ in self._get_filtered_players()]
+
+        # List of best friends online
+        real_friends = self.get_all_friends()
+        connected_friends = self._get_connected_best_friends(players_list)
+        self.best_friends_connected = len(connected_friends)
+
+        # Display message
+        if not connected_friends or not real_friends:
+            self.no_friends_online_text = tw(
+                parent=self.friends_parent,
+                position=(60, 90),
+                text=self.language.get_text('FriendsWindow.noFriendsOnline'),
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                maxwidth=120,
+                max_height=90,
+                h_align='center',
+                v_align='center'
+            )
+            return
+
+        self._connected_friends_list_container = sw(
+            parent=self.friends_parent,
+            position=(465-450, 17),
+            size=(140, 170),
+            border_opacity=0.4,
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+
+        container_height = max(len(connected_friends) * 30, 170)
+        self._connected_friends_inner_container = ocw(
+            parent=self._connected_friends_list_container,
+            size=(140, container_height),
+            background=False
+        )
+
+        # Fill UI with connected names
+        for i, friend in enumerate(connected_friends):
+            display_name = friend if len(friend) <= 7 else friend[:7] + "..."
+            pos_y = container_height - 30 - 30 * i
+
+            connected_widget = tw(
+                parent=self._connected_friends_inner_container,
+                size=(130, 30),
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                text=display_name,
+                position=(5, pos_y),
+                maxwidth=100,
+                selectable=True,
+                click_activate=True,
+                v_align='center',
+                on_activate_call=CallStrict(self._display_best_friend_info, friend)
+            )
+
+            # Save widget reference
+            self._connected_friend_text_widgets.append(connected_widget)
+
+    def get_all_friends(self) -> list[str]:
+        """Return the list of all real friend names from storage (excluding default 'less')."""
+        try:
+            friends = load_friends()
+            # Filter out the default
+            return [friend["name"] for friend in friends if friend["name"] != "less"]
+        except Exception as e:
+            print(f"Error loading friends: {e}")
+            return []
+
+    def _get_connected_best_friends(self, players_list: list[str] | None = None) -> list[str]:
+        """Get list of best friends that are currently connected."""
+        try:
+            best_friends = self.get_all_friends()
+            connected_best_friends = []
+
+            if not players_list:
+                return []
+
+            # Create a set for efficient search
+            best_friends_set = set(best_friends)
+            
+            for player in players_list:
+                # Check if player is in friends list
+                if player in best_friends_set:
+                    connected_best_friends.append(player)
+                    
+                # Also check with prefix
+                clean_player = player.lstrip(V2_LOGO)
+                if clean_player in best_friends_set:
+                    connected_best_friends.append(player)
+
+            return list(set(connected_best_friends))
+            
+        except Exception as e:
+            print(f"Error getting connected best friends: {e}")
+            return []
+
+    def _show_friend_popup(
+        self,
+        position: tuple[float, float],
+        friend: str | None = None,
+        delete_user: bool = True
+    ):
+        viewProfileText = self.language.get_text('FriendsWindow.viewProfile')
+        deleteText = self.language.get_text('FriendsWindow.deleteFriend')
+
+        choices = [viewProfileText]
+        if friend is not None and delete_user:
+            choices.append(deleteText)
+
+        popup = PopupMenuWindow(
+            position=position,
+            choices=choices,
+            current_choice="",
+            delegate=self,
+            width=1,
+        )
+
+        # View profile button
+        bw(
+            parent=popup.root_widget,
+            position=(0, 60 if friend is not None and delete_user else 0),
+            size=(140, 54),
+            label=viewProfileText,
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=lambda: (
+                popup.root_widget.delete(),
+                ProfileSearchWindow(
+                    self.friends_parent,
+                    v2=friend.replace(V2_LOGO, '') if friend else None
+                )
+            )
+        )
+
+        # Delete friend button
+        if friend is not None and delete_user:
+            bw(
+                parent=popup.root_widget,
+                position=(0, 0),
+                size=(140, 54),
+                label=deleteText,
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=lambda: (
+                    popup.root_widget.delete(),
+                    self._delete_friend(friend),
+                    self.refresh_best_friends_ui(),
+                    self.refresh_best_friends_connected_ui(),
+                    self._show_friend_info_tip()
+                )
+            )
+
+        self._popup_target = friend
+
+    def _show_friend_info_tip(self):
+        """Show the friend info tip message."""
+        [element.delete() for element in self.best_friends_elements]
+        self.best_friends_elements.clear()
+
+        # Create or update the tip
+        if self._friend_info_container and self._friend_info_container.exists():
+            self.friend_info_tip = tw(
+                parent=self._friend_info_container,
+                size=(165, 170),
+                position=(0, 0),
+                text=self.language.get_text('FriendsWindow.selectFriendToView'),
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                maxwidth=160,
+                h_align='center',
+                v_align='center'
+            )
+
+        # Reset the reference of the friend shown
+        self._current_displayed_best_friend = None
+
+    def _display_best_friend_info(self, player_name):
+        """Display information about a best friend."""
+        # Clean the player name
+        clean_player_name = player_name.lstrip(V2_LOGO)
+
+        # Clean UI
+        [element.delete() for element in self.best_friends_elements]
+        self.best_friends_elements.clear()
+        if self.friend_info_tip and self.friend_info_tip.exists():
+            self.friend_info_tip.delete()
+
+        self._current_displayed_best_friend = player_name
+        server_info = None
+        server_address = None
+        server_port = None
+
+        # Search in current server memory if available
+        try:
+            cls = FinderWindow
+
+            for server in cls.SERVER_MEMORY:
+                for roster_entry in server.get('roster', []):
+                    spec_data = self._safe_load_spec(roster_entry.get('spec', ''))
+                    if not spec_data:
+                        continue
+
+                    if spec_data.get('n') == clean_player_name or spec_data.get('n') == player_name:
+                        server_info = server
+                        server_address = server['a']
+                        server_port = server['p']
+                        break
+                if server_info:
+                    break
+        except:
+            pass
+        
+        # HEADER
+        friend_name_widget = tw(
+            parent=self._friend_info_container,
+            position=(10, 140),
+            h_align='left',
+            v_align='center',
+            maxwidth=90,
+            text=f"{V2_LOGO}{clean_player_name}",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            size=(155, 25),
+            selectable=True,
+            click_activate=True,
+            glow_type='uniform',
+            on_activate_call=CallStrict(self._copy_to_clipboard, clean_player_name)
+        )
+        self.best_friends_elements.append(friend_name_widget)
+
+        more_info_account = obw(
+            parent=self._friend_info_container,
+            label='',
+            size=(25, 25),
+            position=(135, 140),
+            texture=gt('cuteSpaz'),
+            selectable=False,
+            color=(1,1,1),
+            enable_sound=False,
+            on_activate_call=lambda: ProfileSearchWindow(more_info_account, v2=clean_player_name)
+        )
+
+        self.best_friends_elements.append(more_info_account)
+
+        # Divider
+        header_divider = iw(
+            parent=self._friend_info_container,
+            size=(155, 2),
+            position=(10, 135), 
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        self.best_friends_elements.append(header_divider)
+
+        # Server name
+        server_name = server_info['n'] if server_info else 'N/A'
+        server_name_widget = tw(
+            parent=self._friend_info_container,
+            position=(10, 115-20),
+            h_align='left',
+            v_align='center',
+            maxwidth=155,
+            text=server_name,
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            size=(155, 25),
+            selectable=True,
+            click_activate=True,
+            glow_type='uniform',
+            on_activate_call=CallStrict(self._copy_to_clipboard, server_name)
+        )
+        self.best_friends_elements.append(server_name_widget)
+
+        # IP and Port on the same line
+        if server_address and server_port:
+            # IP widget
+            ip_widget = tw(
+                parent=self._friend_info_container,
+                position=(10, 90-20),
+                h_align='left',
+                v_align='center',
+                maxwidth=100,
+                text=server_address,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                size=(100, 25),
+                selectable=True,
+                click_activate=True,
+                glow_type='uniform',
+                on_activate_call=CallStrict(self._copy_to_clipboard, server_address)
+            )
+            self.best_friends_elements.append(ip_widget)
+
+            # Separator between IP and port
+            separator = tw(
+                parent=self._friend_info_container,
+                position=(112, 90-20),
+                text=":",
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                scale=1.0
+            )
+            self.best_friends_elements.append(separator)
+
+            # Port widget
+            port_widget = tw(
+                parent=self._friend_info_container,
+                position=(120, 90-20),
+                h_align='left',
+                v_align='center',
+                maxwidth=45,
+                text=str(server_port),
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                size=(45, 25),
+                selectable=True,
+                click_activate=True,
+                glow_type='uniform',
+                on_activate_call=CallStrict(self._copy_to_clipboard, str(server_port))
+            )
+            self.best_friends_elements.append(port_widget)
+        else:
+            # Show "N/A" for both if not available
+            na_widget = tw(
+                parent=self._friend_info_container,
+                position=(10, 90-20),
+                h_align='left',
+                v_align='center',
+                maxwidth=155,
+                text="N/A",
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                size=(155, 25),
+                selectable=False
+            )
+            self.best_friends_elements.append(na_widget)
+
+        connect_text = self.language.get_text('Global.connect')
+        delete_text = self.language.get_text('FriendsWindow.deleteFriend')
+
+        # Divider
+        button_divider = iw(
+            parent=self._friend_info_container,
+            size=(165, 1),
+            position=(10, 65),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        self.best_friends_elements.append(button_divider)
+
+        if server_info and server_address and server_port:
+            # Friend is online
+            connect_button = bw(
+                parent=self._friend_info_container,
+                position=(10, 35),
+                size=(150, 25),
+                label=connect_text,
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=CallStrict(self._connect_to_server, server_address, int(server_port), False)
+            )
+            self.best_friends_elements.append(connect_button)
+
+            delete_button = bw(
+                parent=self._friend_info_container,
+                position=(10, 5),
+                size=(150, 25),
+                label=delete_text,
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=CallStrict(lambda: (
+                    self._delete_friend(player_name),
+                    self.refresh_best_friends_ui(),
+                    self.refresh_best_friends_connected_ui(),
+                    self._show_friend_info_tip()
+                ))
+            )
+            self.best_friends_elements.append(delete_button)
+        else:
+            # Friend is offline
+            delete_button = bw(
+                parent=self._friend_info_container,
+                position=(12, 35),
+                size=(150, 25),
+                label=delete_text,
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=CallStrict(lambda: (
+                    self._delete_friend(player_name),
+                    self.refresh_best_friends_ui(),
+                    self.refresh_best_friends_connected_ui(),
+                    self._show_friend_info_tip()
+                ))
+            )
+            self.best_friends_elements.append(delete_button)
+
+    def _safe_load_spec(self, spec_str):
+        """Safely load spec dictionary from JSON string."""
+        if not spec_str:
+            return None
+
+        try:
+            from json import loads
+            try:
+                return loads(spec_str)
+            except:
+                cleaned_spec = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', spec_str)
+                return loads(cleaned_spec)
+        except Exception as e:
+            return None
+
+    def _copy_to_clipboard(self, text):
+        """Copy text to clipboard and show confirmation."""
+        try:
+            COPY(text)
+            TIP(get_lang_text('Global.copiedToClipboard'))
+        except:
+            pass
+
+    def popup_menu_closing(self, popup_window) -> None:
+        """Handle popup menu closing."""
+        self._popup_target = None
+
+    def get_connected_count(self):
+        """Get the current count of connected friends."""
+        return self.best_friends_connected
+
+    def update_connected_count_display(self, count_widget):
+        """Update the connected count display widget."""
+        if count_widget and count_widget.exists():
+            tw(edit=count_widget, text=str(self.best_friends_connected))
+
+    def _subscribe_language(self, text_key, callback):
+        """Subscribe to a text callback and save the reference."""
+        self.language.subscribe(text_key, callback)
+        self._language_subscriptions.append((text_key, callback))
+
+    def _subscribe_color(self, color_name, callback):
+        """Subscribe to a color callback and save the reference."""
+        self.theme.subscribe(color_name, callback)
+        self._color_subscriptions.append((color_name, callback))
+
+    def _setup_language_subscriptions(self):
+        """Configure all language subscriptions."""
+        self._subscribe_language('Global.online', self._update_online_friends_text)
+        self._subscribe_language('FriendsWindow.allFriends', self._update_all_friends_text)
+        self._subscribe_language('FriendsWindow.addManually', self._update_add_manual_button_text)
+        self._subscribe_language('FriendsWindow.selectFriendToView', self._update_friend_info_tip_text)
+        self._subscribe_language('FriendsWindow.noFriendsOnline', self._update_no_friends_online_text)
+        self._subscribe_language('FriendsWindow.noFriendsAdded', self._update_no_friends_added_text)
+
+    def _setup_color_subscriptions(self):
+        """Configure all color subscriptions."""
+        self._subscribe_color('COLOR_BACKGROUND', self._update_friends_background_color)
+        self._subscribe_color('COLOR_SECONDARY', self._update_friends_separator_color)
+        self._subscribe_color('COLOR_SECONDARY', self._update_friends_separator2_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_all_friends_text_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_friend_input_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_online_friends_color)
+        self._subscribe_color('COLOR_SECONDARY', self._update_add_manual_button_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_add_manual_button_textcolor)
+        self._subscribe_color('COLOR_SECONDARY', self._update_friends_scroll_container_color)
+        self._subscribe_color('COLOR_SECONDARY', self._update_connected_friends_scroll_color)
+        self._subscribe_color('COLOR_SECONDARY', self._update_friend_info_container_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_friend_info_tip_color)
+        self._subscribe_color('COLOR_TERTIARY', self._update_no_friends_online_color)
+        self._subscribe_color('COLOR_TERTIARY', self._update_friend_text_widgets_color)
+        self._subscribe_color('COLOR_TERTIARY', self._update_connected_friend_text_widgets_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_best_friends_info_color)
+        self._subscribe_color('COLOR_SECONDARY', self._update_best_friends_info_button_color)
+
+    # Language update methods
+    def _update_online_friends_text(self, new_text):
+        """Update online friends text."""
+        if hasattr(self, 'online_friends_text') and self.online_friends_text and self.online_friends_text.exists():
+            tw(edit=self.online_friends_text, text=new_text + "\ue019")
+
+    def _update_all_friends_text(self, new_text):
+        """Update 'All Friends' text."""
+        if hasattr(self, 'all_friends_text') and self.all_friends_text and self.all_friends_text.exists():
+            tw(edit=self.all_friends_text, text=new_text)
+
+    def _update_add_manual_button_text(self, new_text):
+        """Update the text of the 'Add Manually' button."""
+        if hasattr(self, 'add_manual_button') and self.add_manual_button and self.add_manual_button.exists():
+            obw(edit=self.add_manual_button, label=new_text)
+
+    def _update_friend_info_tip_text(self, new_text):
+        """Update friend information tip text."""
+        if hasattr(self, 'friend_info_tip') and self.friend_info_tip and self.friend_info_tip.exists():
+            tw(edit=self.friend_info_tip, text=new_text)
+
+    def _update_no_friends_online_text(self, new_text):
+        """Update 'No Friends Online' text."""
+        if hasattr(self, 'no_friends_online_text') and self.no_friends_online_text and self.no_friends_online_text.exists():
+            tw(edit=self.no_friends_online_text, text=new_text)
+
+    def _update_no_friends_added_text(self, new_text):
+        """Update 'No Friends Added' text."""
+        # This updates the text in the friends list when empty
+        # We need to find and update the text widget in _friends_list_container
+        if hasattr(self, '_friends_list_container') and self._friends_list_container and self._friends_list_container.exists():
+            # Find text widgets in the container
+            children = self._friends_list_container.get_children()
+            for child in children:
+                if hasattr(child, 'get_text'):
+                    current_text = child.get_text()
+                    if current_text and ('noFriends' in current_text or 'No friends' in current_text):
+                        tw(edit=child, text=new_text)
+
+    # Color update methods
+    def _update_friends_background_color(self, new_color):
+        """Update the background color of the Friends panel."""
+        if hasattr(self, 'friends_background') and self.friends_background and self.friends_background.exists():
+            iw(edit=self.friends_background, color=new_color)
+
+    def _update_friends_separator_color(self, new_color):
+        """Update the color of the friends panel separator."""
+        if hasattr(self, 'friends_separator') and self.friends_separator and self.friends_separator.exists():
+            iw(edit=self.friends_separator, color=new_color)
+
+    def _update_friends_separator2_color(self, new_color):
+        """Update color of second separator."""
+        if hasattr(self, 'friends_separator2') and self.friends_separator2 and self.friends_separator2.exists():
+            iw(edit=self.friends_separator2, color=new_color)
+
+    def _update_all_friends_text_color(self, new_color):
+        """Update the color of the 'All Friends' text."""
+        if hasattr(self, 'all_friends_text') and self.all_friends_text and self.all_friends_text.exists():
+            tw(edit=self.all_friends_text, color=new_color)
+
+    def _update_friend_input_color(self, new_color):
+        """Update the color of the friends input."""
+        if hasattr(self, 'friend_input') and self.friend_input and self.friend_input.exists():
+            tw(edit=self.friend_input, color=new_color)
+
+    def _update_online_friends_color(self, new_color):
+        """Update the color of the 'Online Friends' text."""
+        if hasattr(self, 'online_friends_text') and self.online_friends_text and self.online_friends_text.exists():
+            tw(edit=self.online_friends_text, color=new_color)
+
+    def _update_add_manual_button_color(self, new_color):
+        """Update color of 'Add Manually' button."""
+        if hasattr(self, 'add_manual_button') and self.add_manual_button and self.add_manual_button.exists():
+            obw(edit=self.add_manual_button, color=new_color)
+
+    def _update_add_manual_button_textcolor(self, new_color):
+        """Update the text color of the 'Add Manually' button."""
+        if hasattr(self, 'add_manual_button') and self.add_manual_button and self.add_manual_button.exists():
+            obw(edit=self.add_manual_button, textcolor=new_color)
+
+    def _update_friends_scroll_container_color(self, new_color):
+        """Update the color of the friends scroll container."""
+        if hasattr(self, '_friends_scroll_container') and self._friends_scroll_container and self._friends_scroll_container.exists():
+            sw(edit=self._friends_scroll_container, color=new_color)
+
+    def _update_connected_friends_scroll_color(self, new_color):
+        """Update the color of the connected friends scroll container."""
+        if hasattr(self, '_connected_friends_scroll_container') and self._connected_friends_scroll_container and self._connected_friends_scroll_container.exists():
+            sw(edit=self._connected_friends_scroll_container, color=new_color)
+
+    def _update_friend_info_container_color(self, new_color):
+        """Update the color of the friends info container."""
+        if hasattr(self, '_friend_info_container') and self._friend_info_container and self._friend_info_container.exists():
+            sw(edit=self._friend_info_container, color=new_color)
+
+    def _update_friend_info_tip_color(self, new_color):
+        """Update friend info tip color."""
+        if hasattr(self, 'friend_info_tip') and self.friend_info_tip and self.friend_info_tip.exists():
+            tw(edit=self.friend_info_tip, color=new_color)
+
+    def _update_no_friends_online_color(self, new_color):
+        """Update the text color of 'No Friends Online'."""
+        if hasattr(self, 'no_friends_online_text') and self.no_friends_online_text and self.no_friends_online_text.exists():
+            tw(edit=self.no_friends_online_text, color=new_color)
+
+    def _update_friend_text_widgets_color(self, new_color):
+        """Update the text color in the friends list."""
+        if hasattr(self, '_friend_text_widgets'):
+            for widget in self._friend_text_widgets:
+                if widget and widget.exists():
+                    tw(edit=widget, color=new_color)
+
+    def _update_connected_friend_text_widgets_color(self, new_color):
+        """Update the color of the text in the online friends list."""
+        if hasattr(self, '_connected_friend_text_widgets'):
+            for widget in self._connected_friend_text_widgets:
+                if widget and widget.exists():
+                    tw(edit=widget, color=new_color)
+
+    def _update_best_friends_info_color(self, new_color):
+        """Update color of best friends info elements."""
+        if hasattr(self, '_current_displayed_best_friend') and self._current_displayed_best_friend:
+            self._display_best_friend_info(self._current_displayed_best_friend)
+
+    def _update_best_friends_info_button_color(self, new_color):
+        """Update background color of best friends buttons."""
+        if hasattr(self, '_current_displayed_best_friend') and self._current_displayed_best_friend:
+            self._display_best_friend_info(self._current_displayed_best_friend)
+
+    def cleanup(self):
+        """Clean up all subscriptions and references."""
+        # Unsubscribe from language updates
+        for text_key, callback in self._language_subscriptions:
+            self.language.unsubscribe(text_key, callback)
+        self._language_subscriptions.clear()
+
+        # Unsubscribe from color updates
+        for color_name, callback in self._color_subscriptions:
+            self.theme.unsubscribe(color_name, callback)
+        self._color_subscriptions.clear()
+
+class FinderWindow:
+    """Less Finder."""
+
+    language = ReactiveLanguage() 
+    theme = ReactiveTheme()
+
+    # Server connection constants
+    SPEC = {"s":"{\"n\":\"Finder\",\"a\":\"\",\"sn\":\"\"}","d":"69"*20}
+    AUTH = {'b': app.env.engine_build_number, 'tk': '', 'ph': ''}
+
+    # UI state variables
+    MAX_PING = 0.3
+    TOP_SERVERS = 1
+    SERVER_MEMORY = []
+    ART_DISPLAY = []
+    BEST_SERVERS = []
+    IS_SCANNING = False
+    SERVER_LIST_ELEMENTS = []
+    PLAYERS_LIST = []
+    ART_DISPLAY_WIDGET = None
+    SCROLL_WIDGET = None
+    TIP_WIDGET = None
+    FILTER_TEXT = ''
+    FILTER_TEXT_WIDGET = None
+    FILTER_UPDATER = None
+    SHOWING_SERVER_ART = False 
+    SHOWING_SERVER_INFO = False
+
+    def __init__(self, source):
+        """Initialize the Server Finder UI."""
+        
+        self.theme.refresh_from_config()
+        self._current_selected_player = None
+        self._current_displayed_player = None 
+        self._language_subscriptions = []
+        self._color_subscriptions = [] 
+        self.scan_threads = []
+        self.info_elements = []
+        self.progress_trackers = []
+        self.status_updater = None
+        self.background_sound = self._play_sound('powerup01')
+        
+        cls = self.__class__
+        
+        # Create main window
+        window_size = (800, 435)
+        borders = BorderWindow(window_size)
+
+        cls.root = cw(
+            scale_origin_stack_offset=source.get_screen_space_center(),
+            size=window_size,
+            oac=self.close_interface,
+        )[0]
+
+        self.footer = obw(
+            parent=cls.root,
+            size=window_size,
+            texture=gt('empty'),
+            label='',
+            enable_sound=False
+        )
+
+        # Create main content area
+        content_size = (460, 435)
+        cls.MainParent = ocw(
+            position=(0, 0),
+            parent=cls.root,
+            size=content_size,
+            background=False
+        )
+
+        # Background
+        iw(
+            parent=cls.MainParent,
+            size=content_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+
+        # Window border
+        sw(
+            parent=cls.MainParent,
+            size=content_size,
+            border_opacity=0
+        )
+
+        # Create friends panel
+        self.friends_panel = FriendsWindow(
+            parent_widget=cls.root,
+            theme=self.theme,
+            language=self.language,
+            get_filtered_players_callback=self._get_filtered_players,
+            add_friend_callback=self._add_friend,
+            delete_friend_callback=self._delete_friend,
+            connect_callback=CON
+        )
+
+        options_button = obw(
+            parent=cls.MainParent,
+            label='',
+            size=(45, 45),
+            position=(350, 390),
+            texture=gt('menuButton'),
+            selectable=False,
+            color=(1,1,1),
+            enable_sound=False,
+            on_activate_call=lambda: self._show_options_popup(options_button)
+        )
+
+        # Friends connected button
+        friends_connected_btn = obw(
+            parent=cls.MainParent,
+            label='',
+            size=(45, 45),
+            position=(400, 390),
+            texture=gt('usersButton'),
+            selectable=False,
+            color=(1,1,1),
+            enable_sound=False
+        )
+
+        # Friends connected count
+        connected_count = self.friends_panel.get_connected_count() if hasattr(self, 'friends_panel') else 0
+        self.connected_users_count = tw(
+            parent=cls.MainParent,
+            text=str(connected_count),
+            size=(0, 0),
+            position=(400 + 21, 390 + 16),
+            h_align="center",
+            v_align="center",
+            scale=0.6,
+            color=(0, 1, 0, 1),
+            draw_controller=friends_connected_btn  
+        )
+
+        # Search section header
+        self.search_servers_text = tw(
+            parent=cls.MainParent,
+            text=self.language.get_text('FinderWindow.searchServers'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(19, 359),
+            maxwidth = 320,
+            max_height=28,
+        )
+
+        # Search button
+        self.search_button = bw(
+            parent=cls.MainParent,
+            position=(360, 343),
+            size=(80, 39),
+            text_scale=0.7,
+            label=self.language.get_text('Global.search'),
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=self.start_server_scan
+        )
+
+        # Search description
+        self.search_players_text = tw(
+            parent=cls.MainParent,
+            text=self.language.get_text('FinderWindow.searchPlayers'),
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            scale=0.8,
+            position=(15, 330),
+            maxwidth = 320,
+            max_height=28,
+        )
+        
+        # Separator
+        iw(
+            parent=cls.MainParent,
+            size=(429, 1),
+            position=(17, 330),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+
+        # Art display area
+        cls.ART_DISPLAY_WIDGET = tw(
+            parent=cls.MainParent,
+            text=self.language.get_text('FinderWindow.pressSearch'),
+            maxwidth=430,
+            max_height=125,
+            h_align='center',
+            v_align='top',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(205, 260),
+        )
+
+        # Separator
+        iw(
+            parent=cls.MainParent,
+            size=(429, 1),
+            position=(17, 200),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+
+        # Filter input
+        cls.FILTER_TEXT_WIDGET = tw(
+            parent=cls.MainParent,
+            position=(23, 150),
+            size=(201, 35),
+            text=cls.FILTER_TEXT,
+            editable=True,
+            glow_type='uniform',
+            allow_clear_button=False,
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            description=get_lang_text('FinderWindow.filterDescription')
+        )
+
+        search = get_lang_text('Global.search')
+        self.filter_placeholder = tw(
+            parent=cls.MainParent,
+            position=(26, 153),
+            text=search,
+            maxwidth = 80,
+            max_height=25,
+            color=self.theme.get_color('COLOR_TERTIARY')
+        )
+        
+        # Players list container
+        self.players_parent = sw(
+            parent=cls.MainParent,
+            position=(20, 18),
+            size=(205, 122),
+            border_opacity=0.4,
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        cls.MainParent2 = ocw(
+            parent=self.players_parent,
+            size=(205, 1),
+            background=False
+        )
+
+        self.players_tip = tw(
+            parent=cls.MainParent,
+            position=(90, 100),
+            text=self.language.get_text('FinderWindow.searchServersForPlayers'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            maxwidth = 175,
+            max_height=100,
+            h_align='center'
+        )
+
+        # Info panel background
+        iw(
+            parent=cls.MainParent,
+            position=(235, 18),
+            size=(205, 172),
+            texture=gt('scrollWidget'),
+            mesh_transparent=gm('softEdgeOutside'),
+            opacity=0.4
+        )
+
+        self.border_left = iw(
+            parent=cls.root,
+            size=borders.border_left.size,
+            position=borders.border_left.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_top = iw(
+            parent=cls.root,
+            size = (borders.border_top.size[0] + 12, borders.border_top.size[1]),
+            position=borders.border_top.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_right = iw(
+            parent=cls.root,
+            size=borders.border_right.size,
+            position=(borders.border_right.position[0] + 12, borders.border_right.position[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        self.border_bottom = iw(
+            parent=cls.root,
+            size = (borders.border_bottom.size[0] + 15, borders.border_bottom.size[1]),
+            position=borders.border_bottom.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+
+        cls.TIP_WIDGET = tw(
+            parent=cls.MainParent,
+            position=(310, 98),
+            text=self.language.get_text('FinderWindow.selectToViewInfo'),
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            maxwidth=170,
+            max_height=100,
+            h_align='center'
+        )
+
+        self._setup_language_subscriptions()
+        self._setup_colors_subscriptions()
+
+        # Final setup
+        self._draw_art() if cls.ART_DISPLAY else None
+        self._update_players_list()
+        cls.SCROLL_WIDGET and self._display_server_info(cls.SCROLL_WIDGET)
+        cls.FILTER_UPDATER = tuck(0.1, self._update_filter, repeat=True)
+
+    def _subscribe_language(self, text_key, callback):
+        """Subscribe to a text callback and save the reference."""
+        self.language.subscribe(text_key, callback)
+        self._language_subscriptions.append((text_key, callback))
+
+    def _unsubscribe_all_languages(self):
+        """Remove all language subscriptions on close."""
+        for text_key, callback in self._language_subscriptions:
+            self.language.unsubscribe(text_key, callback)
+        self._language_subscriptions.clear()
+
+    def _subscribe_color(self, color_name, callback):
+        """Subscribe to a callback and save the reference."""
+        self.theme.subscribe(color_name, callback)
+        self._color_subscriptions.append((color_name, callback))
+
+    def _unsubscribe_all(self):
+        """Remove all subscriptions upon closing."""
+        # Unsubscribe from colors
+        for color_name, callback in self._color_subscriptions:
+            self.theme.unsubscribe(color_name, callback)
+        self._color_subscriptions.clear()
+        
+        # Unsubscribe from languages
+        self._unsubscribe_all_languages()
+        
+        # Clean up friends panel if exists
+        if hasattr(self, 'friends_panel'):
+            self.friends_panel.cleanup()
+
+    def _update_filter(self):
+        """Update the filter text and refresh the display."""
+        cls = self.__class__
+        if not self.filter_placeholder.exists():
+            cls.FILTER_UPDATER = None
+            return
+            
+        current_text = tw(query=cls.FILTER_TEXT_WIDGET)
+        search = get_lang_text('Global.search')
+        tw(self.filter_placeholder, text=[search,''][bool(current_text)])
+        
+        if current_text != self.FILTER_TEXT:
+            cls.FILTER_TEXT = current_text
+            self._update_players_list()
+
+    def _on_server_select(self, index, player_name):
+        """Handle server selection in the list."""
+        cls = self.__class__
+        cls.SCROLL_WIDGET = player_name
+        self._current_selected_player = player_name 
+
+        # Update colors immediately
+        for i, element in enumerate(cls.SERVER_LIST_ELEMENTS):
+            if element and element.exists():
+                color = self.theme.get_color('COLOR_PRIMARY') if i == index else self.theme.get_color('COLOR_TERTIARY')
+                tw(edit=element, color=color)
+
+        self._display_server_info(player_name)
+
+    def _display_server_info(self, player_name):
+        """Display detailed information about the selected server."""
+        [element.delete() for element in self.info_elements]
+        self.info_elements.clear()
+        cls = self.__class__
+        tw(cls.TIP_WIDGET, text='')
+
+        cls.SHOWING_SERVER_INFO = True
+        self._current_displayed_player = player_name
+
+        server_info = None
+        for server in cls.SERVER_MEMORY:
+            for roster_entry in server.get('roster', []):
+                spec_data = self._safe_load_spec(roster_entry.get('spec', ''))
+                if not spec_data:
+                    continue
+
+                if spec_data.get('n') == player_name:
+                    server_info = server
+                    player_data = roster_entry['p']
+                    break
+
+        if server_info is None:
+            cls.SCROLL_WIDGET = None
+            cls.SHOWING_SERVER_INFO = False
+            tw(cls.TIP_WIDGET, text=self.default_tip_text)
+            self._current_displayed_player = None
+            return
+
+        # Display server info
+        for i, key in enumerate(['n', 'a', 'p']):
+            field_text = str(server_info[key])
+            pos_x = [250, 245, 375][i]
+            pos_y = [155, 115][bool(i)]
+            size_x = [175, 115, 55][i]
+
+            text_widget = tw(
+                parent=cls.MainParent,
+                position=(pos_x, pos_y),
+                h_align='center',
+                v_align='center',
+                maxwidth=size_x,
+                text=field_text,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                size=(size_x, 30),
+                selectable=True,
+                click_activate=True,
+                glow_type='uniform',
+                on_activate_call=CallStrict(self._copy_to_clipboard, field_text)
+            )
+            self.info_elements.append(text_widget)
+
+        account_v2 = [str(list(player.values())[1]) for player in player_data]
+
+        account_button = bw(
+            parent=cls.MainParent,
+            position=(253, 65),
+            size=(170, 30),
+            label=str(account_v2[0]) if account_v2 and account_v2[0] != [] else player_name,
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=CallStrict(self._show_notification, '\n'.join([' | '.join([str(j) for j in player.values()]) for player in player_data]) or 'Nothing')
+        )
+        self.info_elements.append(account_button)
+
+        connect = get_lang_text('Global.connect')
+        if account_v2 and str(account_v2[0]).startswith(V2_LOGO):
+            # Show both buttons side by side for v2 accounts
+            connect_button = bw(
+                parent=cls.MainParent,
+                position=(250, 30),
+                size=(80, 30),
+                label=connect,
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=CallStrict(CON, server_info['a'], server_info['p'], False)
+            )
+            self.info_elements.append(connect_button)
+
+            addFriend = get_lang_text('FriendsWindow.addFriend')
+            add_friend_button = bw(
+                parent=cls.MainParent,
+                position=(340, 30),
+                size=(87, 30),
+                label=addFriend,
+                text_scale=0.5,
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=CallStrict(lambda: (
+                    self._add_friend(player_name),
+                    self._update_friends_panel()
+                ))
+            )
+            self.info_elements.append(add_friend_button)
+        else:
+            connect_button = bw(
+                parent=cls.MainParent,
+                position=(253, 30),
+                size=(170, 30),
+                label=connect,
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                textcolor=self.theme.get_color('COLOR_PRIMARY'),
+                oac=CallStrict(CON, server_info['a'], server_info['p'], False)
+            )
+            self.info_elements.append(connect_button)
+
+    def _update_friends_panel(self):
+        """Update the friends panel after changes."""
+        if hasattr(self, 'friends_panel'):
+            self.friends_panel.refresh_best_friends_ui()
+            players_list = [V2_LOGO + player.strip() for player, _ in self._get_filtered_players()]
+            self.friends_panel.refresh_best_friends_connected_ui(players_list)
+            self.friends_panel.update_connected_count_display(self.connected_users_count)
+
+    def _show_options_popup(self, source_button):
+        """Show options popup with profile search and color picker."""
+        searchProfiles = get_lang_text('FinderWindow.searchProfiles')
+        changeColors = get_lang_text('FinderWindow.changeColors')
+        changeLanguage = get_lang_text('FinderWindow.changeLanguage')
+        creditsText = get_lang_text('Global.credits')
+        
+        x = source_button.get_screen_space_center()[0]
+        y = source_button.get_screen_space_center()[1] - 70
+        popup = PopupMenuWindow(
+            position=(x, y),
+            choices=[searchProfiles, changeColors, changeLanguage, creditsText],
+            current_choice="",
+            delegate=self,
+            width=1,
+        )
+
+        # Search profiles button
+        bw(
+            parent=popup.root_widget,
+            position=(-100, 55+50),
+            size=(180, 50),
+            label=searchProfiles,
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=lambda: (
+                popup.root_widget.delete(),
+                self._search_profiles() 
+            )
+        )
+
+        # Change colors button
+        bw(
+            parent=popup.root_widget,
+            position=(-100, 0+50),
+            size=(180, 50),
+            label=changeColors,
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=lambda: (
+                popup.root_widget.delete(),
+                self._create_color_picker(
+                    position=(self.root.get_screen_space_center()),
+                    initial_color=self.theme.get_color('COLOR_ACCENT'),
+                    call='color',
+                )
+            )
+        )
+
+        # Change lang button
+        bw(
+            parent=popup.root_widget,
+            position=(-100, -55+50),
+            size=(180, 50),
+            label=changeLanguage,
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=lambda: (
+                popup.root_widget.delete(),
+                self._translate_window()
+            )
+        )
+
+        bw(
+            parent=popup.root_widget,
+            position=(-100, -110+50),
+            size=(180, 50),
+            label=creditsText,
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=lambda: (
+                popup.root_widget.delete(),
+                self._credits()
+            )
+        )
+
+        self._popup_target = "options"
+
+    def _search_profiles(self):
+        """Open the profile search window."""
+        source_widget = self.__class__.root if hasattr(self.__class__, 'root') and self.__class__.root.exists() else zw('overlay_stack')
+        ProfileSearch(source_widget)
+    
+    def _translate_window(self):
+        """Create language selection popup."""
+        popup_size = (250, 300)
+        popup_window = ocw(
+            parent=zw('overlay_stack'),
+            size=popup_size,
+            background=False,
+            transition='in_scale',
+            on_outside_click_call=lambda: popup_window.delete()
+        )
+    
+        # Popup background
+        iw(
+            parent=popup_window,
+            size=popup_size,
+            texture=gt('softRect'),
+            color=self.theme.get_color('COLOR_BACKGROUND'),
+            opacity=0.95
+        )
+    
+        languages_to_show = get_languages_for_current_platform()
+        if (APP.classic.platform != 'android'):
+            tw(
+                parent=popup_window,
+                text="",
+                position=(popup_size[0]/2, popup_size[1]-20),
+                h_align='center',
+                scale=0.6,
+                color=(0.7, 0.7, 0.7, 1)
+            )
+
+        scroll_container = sw(
+            parent=popup_window,
+            position=(25, 50),
+            size=(200, 200),
+            border_opacity=0.3,
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+    
+        languages_container = ocw(
+            parent=scroll_container,
+            size=(180, len(languages_to_show) * 55),
+            background=False
+        )
+    
+        # Get current language from settings
+        current_lang_id = get_app_lang_as_id()
+        current_lang_name = get_language_name(current_lang_id)
+    
+        # Color for current language
+        CURRENT_LANG_COLOR = self.theme.get_color('COLOR_TERTIARY')
+        NORMAL_LANG_COLOR = self.theme.get_color('COLOR_SECONDARY')
+    
+        # Create buttons for each language
+        for i, (lang_id, lang_name) in enumerate(languages_to_show.items()):
+            y_position = (len(languages_to_show) - i - 1) * 55
+    
+            # Determine color based on whether it is the current language
+            is_current = lang_id == current_lang_id
+            button_color = CURRENT_LANG_COLOR if is_current else NORMAL_LANG_COLOR
+            text_color = (0, 0, 0, 1) if is_current else self.theme.get_color('COLOR_PRIMARY')
+    
+            # Language button
+            lang_button = bw(
+                parent=languages_container,
+                position=(10, y_position + 10),
+                size=(160, 45),
+                label=lang_name,
+                color=button_color,
+                textcolor=text_color,
+                oac=lambda lid=lang_id, lname=lang_name: self._select_language(lid, lname, popup_window)
+            )
+    
+            # Current language indicator
+            if is_current:
+                tw(
+                    parent=languages_container,
+                    text='✓',
+                    position=(150, y_position + 25),
+                    h_align='center',
+                    scale=1.5,
+                    color=(0, 0, 0, 1)
+                )
+
+            if (APP.classic.platform != 'android') and not DEFAULT_LANGUAGES_DICT[lang_id]["pc_compatible"]:
+                tw(
+                    parent=languages_container,
+                    text='⚠',
+                    position=(140, y_position + 25),
+                    h_align='center',
+                    scale=0.8,
+                    color=(1, 0.5, 0, 1)
+                )
+    
+    def _select_language(self, lang_id: str, lang_name: str, popup_window):
+        """Handle language selection."""
+
+        update_finder_config(CFG_NAME_PREFFERED_LANG, lang_id)
+        self.language.update_language(lang_id)
+    
+        confirmation_texts = {
+            'id': f'Bahasa diubah ke: {lang_name}',
+            'en': f'Language changed to: {lang_name}',
+            'hi': f'भाषा बदली गई: {lang_name}',
+            'es': f'Idioma cambiado a: {lang_name}',
+            'ml': f'ഭാഷ മാറ്റി: {lang_name}'
+        }
+    
+        TIP(confirmation_texts.get(lang_id, confirmation_texts['en']))
+        popup_window.delete()
+
+
+    def _credits(self):
+        """Open Creditr."""
+        source_widget = self.__class__.root if hasattr(self.__class__, 'root') and self.__class__.root.exists() else zw('overlay_stack')
+        CreditsWindow(source_widget)
+
+    #def _reload_interface(self):
+    #    """Reload the interface to apply language changes."""
+    #    self.close_interface()
+    #    def reload():
+    #        load_finder_config()
+    #        #teck(0.1, byLess.activate_button)
+    #    teck(0.2, reload)
+
+    def _generate_theme_from_color(self, base_color):
+        """Generate a color theme based on a base color."""
+        def adjust_color(color, factor):
+            return tuple(max(0.0, min(1.0, c * factor)) for c in color)
+
+        base = tuple(base_color)
+
+        return {
+            CFG_NAME_COLOR_BACKGROUND: (0.1, 0.1, 0.1),
+            CFG_NAME_COLOR_SECONDARY: (0.2, 0.2, 0.2),
+            CFG_NAME_COLOR_TERTIARY: adjust_color(base, 0.6),
+            CFG_NAME_COLOR_PRIMARY: base,
+            CFG_NAME_COLOR_ACCENT: adjust_color(base, 1.2),
+        }
+
+    def _create_color_picker(self, position, initial_color, call):
+        """Create a color picker dialog."""
+        self._initial_picker_color = initial_color
+        self._color_changed = False
+        return colorpicker.ColorPicker(
+            parent=self.root,
+            position=position,
+            initial_color=initial_color,
+            delegate=self,
+            tag=call,
+        )
+    
+    def _save_colors_to_config(self, colors: dict):
+        """Save colors to the configuration using finder_config."""
+        # Update finder_config with the new colors
+        for color_key, color_value in colors.items():
+            finder_config[color_key] = tuple(color_value)
+        
+        # Save the settings
+        save_finder_config(finder_config)
+        
+        # Update the reactive theme
+        self.theme.update_colors({
+            'COLOR_BACKGROUND': tuple(finder_config.get(CFG_NAME_COLOR_BACKGROUND)),
+            'COLOR_SECONDARY': tuple(finder_config.get(CFG_NAME_COLOR_SECONDARY)),
+            'COLOR_TERTIARY': tuple(finder_config.get(CFG_NAME_COLOR_TERTIARY)),
+            'COLOR_PRIMARY': tuple(finder_config.get(CFG_NAME_COLOR_PRIMARY)),
+            'COLOR_ACCENT': tuple(finder_config.get(CFG_NAME_COLOR_ACCENT))
+        })
+
+    def color_picker_selected_color(self, picker, color):
+        """Handle color selection from color picker."""
+        tag = picker.get_tag()
+        theme = self._generate_theme_from_color(color)
+
+        # Check if the color actually changed
+        if color != self._initial_picker_color:
+            self._color_changed = True
+
+            # Save to new configuration
+            self._save_colors_to_config(theme)
+
+            if tag == 'color':
+                self._main_color = tuple(color)
+
+    def color_picker_closing(self, picker):
+        """Handle color picker closing."""
+        if self._color_changed:
+            TIP("Colors updated successfully!")
+
+    def popup_menu_closing(self, popup_window) -> None:
+        """Handle popup menu closing."""
+        self._popup_target = None
+
+    def on_popup_cancel(self):
+        """Handle popup cancellation."""
+        pass
+
+    def _show_notification(self, text):
+        """Show a notification message."""
+        TIP(text)
+        self._play_ding_sound(1, 1)
+
+    def _copy_to_clipboard(self, text):
+        """Copy text to clipboard and show confirmation."""
+        self._play_ding_sound(1, 1)
+        TIP(get_lang_text('Global.copiedToClipboard'))
+        COPY(text)
+
+    def _get_filtered_players(self):
+        """Get list of filtered players from servers."""
+        player_list = []
+        cls = self.__class__
+
+        for server in cls.SERVER_MEMORY:
+            address = server['a']
+            roster = server.get('roster', {})
+
+            if roster:
+                for player in roster:
+                    player_spec = self._safe_extract_player_spec(player)
+                    if not player_spec:
+                        continue
+                    
+                    # Skip if player is Finder or doesn't match filter
+                    if (player_spec == 'Finder' or
+                        (cls.FILTER_TEXT and not self._check_server_against_filter(roster))):
+                        continue
+                    player_list.append((player_spec, address))
+
+        return sorted(player_list, key=lambda x: x[0].startswith('Server'))
+
+    def _safe_extract_player_spec(self, player_data):
+        """Extract the player's name safely."""
+        try:
+            spec_str = player_data.get('spec', '')
+            if not spec_str:
+                return None
+
+            try:
+                spec_data = loads(spec_str)
+                return spec_data.get('n', '')
+            except JSONDecodeError:
+                match = re.search(r'"n"\s*:\s*"([^"]*)"', spec_str)
+                if match:
+                    return match.group(1)
+
+                match = re.search(r'"name"\s*:\s*"([^"]*)"', spec_str)
+                if match:
+                    return match.group(1)
+
+                return None
+
+        except Exception as e:
+            print(f"Safe error extracting player spec: {e}")
+            return None
+
+    def _check_server_against_filter(self, roster):
+        """Check if server matches current filter text."""
+        filter_text = self.__class__.FILTER_TEXT.lower()
+        
+        for player in roster:
+            player_name = self._safe_extract_player_spec(player)
+            if player_name and player_name != 'Finder' and filter_text in player_name.lower():
+                return True
+                
+            for profile in player['p']:
+                if filter_text in profile['nf'].lower():
+                    return True
+                        
+        return False
+
+    def _safe_load_spec(self, spec_str):
+        """Securely load the spec dictionary from a JSON string."""
+        if not spec_str:
+            return None
+
+        try:
+            try:
+                return loads(spec_str)
+            except JSONDecodeError:
+                cleaned_spec = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', spec_str)
+                return loads(cleaned_spec)
+        except Exception as e:
+            return None
+
+    def _play_sound(self, sound_type):
+        """Play a sound effect."""
+        sound = gs(sound_type)
+        sound.play()
+        teck(uf(0.14, 0.18), sound.stop)
+        return sound
+
+    def close_interface(self):
+        """Close the server finder interface."""
+        self.background_sound.stop()
+        cls = self.__class__
+        ocw(cls.root, transition='out_scale')
+        laser_sound = self._play_sound('laser')
+        self._unsubscribe_all()
+        
+        def stop_sound_check():
+            if cls.root:
+                teck(0.01, stop_sound_check)
+            else:
+                laser_sound.stop()
+                
+        stop_sound_check()
+
+    def open_interface(self):
+        """Open the server finder interface."""
+        cls = self.__class__
+        ocw(cls.root, transition='in_scale')
+
+    def _play_ding_sound(self, *sound_sequence):
+        """Play sequence of ding sounds."""
+        sound_sizes = ['Small', '']
+        for i, sound_index in enumerate(sound_sequence):
+            sound_name = 'ding' + sound_sizes[sound_index]
+            if i < (len(sound_sequence) - 1):
+                teck(i/10, CallStrict(self._play_sound, sound_name))
+            else:
+                gs(sound_name).play()
+
+    def start_server_scan(self):
+        """Start scanning for servers."""
+        cls = self.__class__
+        if cls.IS_SCANNING:
+            stillBusy = get_lang_text('FinderWindow.stillBusy')
+            TIP(stillBusy)
+            self._play_ding_sound(0, 0)
+            return
+
+        # Reset the state of the art
+        cls.SHOWING_SERVER_ART = False
+        cls.SHOWING_SERVER_INFO = False 
+
+        scanningServers = get_lang_text('FinderWindow.scanningServers')
+        TIP(scanningServers)
+        cls.SCAN_START_TIME = time.time()
+        self._play_ding_sound(1, 0)
+        cls.IS_SCANNING = True
+
+        plus = app.plus
+        plus.add_v1_account_transaction(
+            {
+                'type': 'PUBLIC_PARTY_QUERY',
+                'proto': PT(),
+                'lang': 'English'
+            },
+            callback=self._on_server_query_response,
+        )
+        plus.run_v1_account_transactions()
+
+    def get_all_friends(self) -> list[str]:
+        """Return the list of all friend names (new storage)."""
+        friends = load_friends()
+        return [f["name"] for f in friends]
+
+    def _get_connected_best_friends(self, players_list: list[str] | None = None) -> list[str]:
+        """Get list of best friends that are currently connected."""
+        best_friends = self.get_all_friends()
+        connected_best_friends = []
+
+        if not players_list:
+            return []
+
+        for player in players_list:
+            if player in best_friends:
+                connected_best_friends.append(player)
+
+        return connected_best_friends
+
+    def _add_friend(self, friend: str):
+        """Add a friend."""
+
+        if not friend or friend.strip() == "":
+            fieldEmpty = get_lang_text('Global.fieldEmpty')
+            push(fieldEmpty, (1, 0, 0))
+            gs('error').play()
+            return
+
+        prefixed_friend = f"{V2_LOGO}{friend.strip()}"
+
+        # Load current friends
+        friends = load_friends()
+
+        # Check if already exists
+        for f in friends:
+            if f["name"] == prefixed_friend:
+                TIP(f"{prefixed_friend} {get_lang_text('Global.alreadyInList')}")
+                return
+
+        # Generate new ID
+        existing_ids = [int(f["id"]) for f in friends if f["id"].isdigit()]
+        new_id = str(max(existing_ids) + 1 if existing_ids else 0).zfill(2)
+
+        # Add friend object
+        add_friend(
+            name=prefixed_friend,
+            friend_id=new_id,
+            accounts=[],
+            account_pb=None,
+            account_id=None
+        )
+
+        self._play_ding_sound(1, 0)
+
+        if hasattr(self, 'friends_panel'):
+            self.friends_panel.refresh_best_friends_ui()
+            players_list = [V2_LOGO + player.strip() for player, _ in self._get_filtered_players()]
+            self.friends_panel.refresh_best_friends_connected_ui(players_list)
+            self.friends_panel.update_connected_count_display(self.connected_users_count)
+
+        TIP(f"{prefixed_friend} {get_lang_text('Global.addedSuccessfully')}")
+
+    def _delete_friend(self, friend: str):
+        """Delete a friend from the friends list (new system)."""
+
+        if not friend or friend.strip() == "":
+            fieldEmpty = get_lang_text('Global.fieldEmpty')
+            push(fieldEmpty, (1, 0, 0))
+            gs('error').play()
+            return
+
+        prefixed_friend = friend.strip()
+
+        friends = load_friends()
+
+        # Find by name
+        target = None
+        for f in friends:
+            if f["name"] == prefixed_friend:
+                target = f
+                break
+
+        if not target:
+            TIP(f"{prefixed_friend} not found in list")
+            return
+
+        remove_friend(target["id"])
+
+        self._play_ding_sound(0, 1)
+        TIP(f"{prefixed_friend} {get_lang_text('Global.deletedSuccessfully')}")
+
+        # Update friends panel
+        self._update_friends_panel()
+
+    def _on_server_query_response(self, response):
+        """Handle server query response."""
+        cls = self.__class__
+        cls.SERVER_MEMORY = response['l']
+        cls.ART_DISPLAY = [cs(sc.OUYA_BUTTON_U)] * len(cls.SERVER_MEMORY)
+        self.scan_threads = []
+        
+        for i, server in enumerate(cls.SERVER_MEMORY):
+            thread = Thread(target=CallStrict(self._ping_server, server, i))
+            self.scan_threads.append(thread)
+            thread.start()
+            
+        self.status_updater = tuck(0.01, self._update_ping_status, repeat=True)
+
+    def _ping_server(self, server, index):
+        """Ping a server and retrieve its roster."""
+        server['ping'], server['roster'] = ping_and_get_roster(
+            server['a'], server['p'], pro=self.progress_trackers, dex=index
+        )
+
+    def _update_ping_status(self):
+        """Update the ping status display."""
+        if not self.progress_trackers:
+            return
+            
+        index, ping = self.progress_trackers.pop()
+        cls = self.__class__
+        
+        if ping == 999:
+            cls.ART_DISPLAY[index] = cs(sc.OUYA_BUTTON_A)
+        elif ping is not None and ping < 100:
+            cls.ART_DISPLAY[index] = cs(sc.OUYA_BUTTON_O)
+        else:
+            cls.ART_DISPLAY[index] = cs(sc.OUYA_BUTTON_Y)
+            
+        if cls.ART_DISPLAY_WIDGET.exists():
+            self._draw_art()
+            
+        if cs(sc.OUYA_BUTTON_U) not in cls.ART_DISPLAY:
+            self.status_updater = None
+            self._on_scan_complete()
+
+    def _draw_art(self):
+        """Draw the art display showing server status."""
+        cls = self.__class__
+        art_text = '\n'.join(''.join(cls.ART_DISPLAY[i:i+40]) for i in range(0, len(self.ART_DISPLAY), 40))
+
+        cls.SHOWING_SERVER_ART = True
+
+        if hasattr(cls, 'ART_DISPLAY_WIDGET') and cls.ART_DISPLAY_WIDGET and cls.ART_DISPLAY_WIDGET.exists():
+            tw(cls.ART_DISPLAY_WIDGET, text=art_text, position=(205, 295))
+
+        self._update_players_list()
+
+    def _update_players_list(self):
+        """Update the players list display."""
+        cls = self.__class__
+        [element.delete() for element in cls.SERVER_LIST_ELEMENTS]
+        cls.SERVER_LIST_ELEMENTS.clear()
+
+        players = self._get_filtered_players()
+        if players:
+            self.players_tip.delete()
+
+        container_height = max(len(players) * 30, 90)
+        ocw(cls.MainParent2, size=(205, container_height))
+
+        found_selected = False
+        for i, player_data in enumerate(players):
+            player_name, address = player_data
+
+            # Determine color based on selection
+            is_selected = player_name == cls.SCROLL_WIDGET and not found_selected
+            color = self.theme.get_color('COLOR_PRIMARY') if is_selected else self.theme.get_color('COLOR_TERTIARY')
+
+            text_widget = tw(
+                parent=cls.MainParent2,
+                size=(200, 30),
+                selectable=True,
+                click_activate=True,
+                glow_type='uniform',
+                color=color,
+                text=player_name,
+                position=(0, container_height - 30 - 30 * i),
+                maxwidth=175,
+                on_activate_call=CallStrict(self._on_server_select, i, player_name),
+                v_align='center'
+            )
+
+            if not found_selected and is_selected:
+                ocw(cls.MainParent2, visible_child=text_widget)
+                found_selected = True
+
+            cls.SERVER_LIST_ELEMENTS.append(text_widget)
+
+        # Save current selection state for color updates
+        self._current_selected_player = cls.SCROLL_WIDGET
+
+    def _on_scan_complete(self):
+        """Handle scan completion."""
+        self._play_ding_sound(0, 1)
+        [thread.join() for thread in self.scan_threads]
+        self.scan_threads.clear()
+        
+        cls = self.__class__
+
+        scan_time = time.time() - cls.SCAN_START_TIME
+        servers_scanned = len(self.SERVER_MEMORY)
+        servers_per_second = int(servers_scanned / scan_time)
+        scan_finished = get_lang_text('Scan.finished')
+        scan_scanned = get_lang_text('Scan.scanned')
+        scan_servers = get_lang_text('Scan.servers')
+        scan_in = get_lang_text('Scan.in')
+        scan_seconds = get_lang_text('Scan.seconds')
+        scan_approx = get_lang_text('Scan.approximately')
+        scan_server = get_lang_text('Scan.server')
+        scan_per_second = get_lang_text('Scan.perSecond')
+
+        TIP(
+            f'{scan_finished}\n'
+            f'{scan_scanned} {servers_scanned} {scan_servers} {scan_in} {round(scan_time,2)} {scan_seconds}\n'
+            f'{scan_approx} {servers_per_second} {scan_server}{scan_per_second}'
+        )
+
+        cls.IS_SCANNING = False
+        
+        # Update friends panel with new server data
+        self._update_friends_panel()
+
+    # Language subscription methods
+    def _setup_language_subscriptions(self):
+        """Configure all language subscriptions."""
+        self._subscribe_language('Global.search', self._update_search_button_text)
+        self._subscribe_language('FinderWindow.searchServers', self._update_search_servers_header)
+        self._subscribe_language('FinderWindow.searchPlayers', self._update_search_players_text)
+        self._subscribe_language('FinderWindow.searchServersForPlayers', self._update_players_tip_text)
+        self._subscribe_language('FinderWindow.pressSearch', self._update_art_display_text)
+        self._subscribe_language('FinderWindow.selectToViewInfo', self._update_tip_widget_text)
+
+    def _update_search_button_text(self, new_text):
+        """Update search button text."""
+        if hasattr(self, 'search_button') and self.search_button and self.search_button.exists():
+            obw(edit=self.search_button, label=new_text)
+
+    def _update_search_servers_header(self, new_text):
+        """Update server search header text."""
+        if hasattr(self, 'search_servers_text') and self.search_servers_text and self.search_servers_text.exists():
+            tw(edit=self.search_servers_text, text=new_text)
+
+    def _update_search_players_text(self, new_text):
+        """Update search description text."""
+        if hasattr(self, 'search_players_text') and self.search_players_text and self.search_players_text.exists():
+            tw(edit=self.search_players_text, text=new_text)
+
+    def _update_players_tip_text(self, new_text):
+        """Update player tip text."""
+        if hasattr(self, 'players_tip') and self.players_tip and self.players_tip.exists():
+            tw(edit=self.players_tip, text=new_text)
+
+    def _update_art_display_text(self, new_text):
+        """Update the display art text only if we are not displaying server-side art."""
+        cls = self.__class__
+        if not cls.SHOWING_SERVER_ART:
+            if hasattr(cls, 'ART_DISPLAY_WIDGET') and cls.ART_DISPLAY_WIDGET and cls.ART_DISPLAY_WIDGET.exists():
+                tw(edit=cls.ART_DISPLAY_WIDGET, text=new_text)
+
+    def _update_tip_widget_text(self, new_text):
+        """Update tip widget text only if we are not displaying server information."""
+        cls = self.__class__
+        if not cls.SHOWING_SERVER_INFO:
+            if hasattr(cls, 'TIP_WIDGET') and cls.TIP_WIDGET and cls.TIP_WIDGET.exists():
+                tw(edit=cls.TIP_WIDGET, text=new_text)
+                self.default_tip_text = new_text
+
+    # Color subscription methods
+    def _setup_colors_subscriptions(self):
+        """Configure all color subscriptions."""
+        self._subscribe_color('COLOR_PRIMARY', self._update_art_display_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_filter_text_color)
+        self._subscribe_color('COLOR_TERTIARY', self._update_search_description_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_search_servers_text_color)
+        self._subscribe_color('COLOR_SECONDARY', self._update_search_button_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_search_button_textcolor)
+        self._subscribe_color('COLOR_TERTIARY', self._update_filter_placeholder_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_players_container_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_players_tip_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_tip_widget_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_info_elements_color)
+        self._subscribe_color('COLOR_SECONDARY', self._update_info_elements_button_color)
+        self._subscribe_color('COLOR_TERTIARY', self._update_server_list_elements_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_server_list_selected_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_border_left_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_border_top_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_border_right_color)
+        self._subscribe_color('COLOR_PRIMARY', self._update_border_bottom_color)
+    
+    def _update_filter_text_color(self, new_color):
+        """Update filter text color."""
+        cls = self.__class__
+        if hasattr(cls, 'FILTER_TEXT_WIDGET') and cls.FILTER_TEXT_WIDGET and cls.FILTER_TEXT_WIDGET.exists():
+            tw(edit=cls.FILTER_TEXT_WIDGET, color=new_color)
+
+    def _update_search_description_color(self, new_color):
+        """Update search description color."""
+        if hasattr(self, 'search_players_text') and self.search_players_text and self.search_players_text.exists():
+            tw(edit=self.search_players_text, color=new_color)
+
+    def _update_art_display_color(self, new_color):
+        """Update the art display color."""
+        cls = self.__class__
+        if hasattr(cls, 'ART_DISPLAY_WIDGET') and cls.ART_DISPLAY_WIDGET and cls.ART_DISPLAY_WIDGET.exists():
+            tw(edit=cls.ART_DISPLAY_WIDGET, color=new_color)
+
+    def _update_search_servers_text_color(self, new_color):
+        """Update the color of the 'Search Servers' text."""
+        if hasattr(self, 'search_servers_text') and self.search_servers_text and self.search_servers_text.exists():
+            tw(edit=self.search_servers_text, color=new_color)
+
+    def _update_search_button_color(self, new_color):
+        """Update search button color."""
+        if hasattr(self, 'search_button') and self.search_button and self.search_button.exists():
+            obw(edit=self.search_button, color=new_color)
+
+    def _update_search_button_textcolor(self, new_color):
+        """Update the text color of the search button."""
+        if hasattr(self, 'search_button') and self.search_button and self.search_button.exists():
+            obw(edit=self.search_button, textcolor=new_color)
+
+    def _update_filter_placeholder_color(self, new_color):
+        """Update filter placeholder color."""
+        if hasattr(self, 'filter_placeholder') and self.filter_placeholder and self.filter_placeholder.exists():
+            tw(edit=self.filter_placeholder, color=new_color)
+    
+    def _update_players_container_color(self, new_color):
+        """Update player container color."""
+        if hasattr(self, 'players_parent') and self.players_parent and self.players_parent.exists():
+            sw(edit=self.players_parent, color=new_color)
+    
+    def _update_players_tip_color(self, new_color):
+        """Update player tip color."""
+        if hasattr(self, 'players_tip') and self.players_tip and self.players_tip.exists():
+            tw(edit=self.players_tip, color=new_color)
+    
+    def _update_tip_widget_color(self, new_color):
+        """Update tip widget color."""
+        cls = self.__class__
+        if hasattr(cls, 'TIP_WIDGET') and cls.TIP_WIDGET and cls.TIP_WIDGET.exists():
+            tw(edit=cls.TIP_WIDGET, color=new_color)
+
+    def _update_info_elements_color(self, new_color):
+        """Update the color of dynamic information elements."""
+        if hasattr(self, '_current_displayed_player') and self._current_displayed_player:
+            self._display_server_info(self._current_displayed_player)
+
+    def _update_info_elements_button_color(self, new_color):
+        """Update background color of dynamic information buttons."""
+        if hasattr(self, '_current_displayed_player') and self._current_displayed_player:
+            self._display_server_info(self._current_displayed_player)
+
+    def _update_server_list_elements_color(self, new_color):
+        """Update the color of the items in the server lists."""
+        cls = self.__class__
+        if hasattr(cls, 'SERVER_LIST_ELEMENTS'):
+            for element in cls.SERVER_LIST_ELEMENTS:
+                if element and element.exists():
+                    # Only update unselected items
+                    current_text = tw(query=element)
+                    if current_text != self._current_selected_player:
+                        tw(edit=element, color=new_color)
+
+    def _update_server_list_selected_color(self, new_color):
+        """Update the color of the selected item in the server list."""
+        cls = self.__class__
+        if hasattr(cls, 'SERVER_LIST_ELEMENTS') and hasattr(self, '_current_selected_player'):
+            for element in cls.SERVER_LIST_ELEMENTS:
+                if element and element.exists():
+                    current_text = tw(query=element)
+                    if current_text == self._current_selected_player:
+                        tw(edit=element, color=new_color)
+
+    def _update_border_left_color(self, new_color):
+        """Update left border color."""
+        if hasattr(self, 'border_left') and self.border_left and self.border_left.exists():
+            iw(edit=self.border_left, color=new_color)
+
+    def _update_border_top_color(self, new_color):
+        """Update top border color."""
+        if hasattr(self, 'border_top') and self.border_top and self.border_top.exists():
+            iw(edit=self.border_top, color=new_color)
+
+    def _update_border_right_color(self, new_color):
+        """Update right border color."""
+        if hasattr(self, 'border_right') and self.border_right and self.border_right.exists():
+            iw(edit=self.border_right, color=new_color)
+
+    def _update_border_bottom_color(self, new_color):
+        """Update bottom border color."""
+        if hasattr(self, 'border_bottom') and self.border_bottom and self.border_bottom.exists():
+            iw(edit=self.border_bottom, color=new_color)
+
+def ping_and_get_roster(
+    address: str,
+    port: int,
+    ping_wait: float = 0.3,
+    timeout: float = 3.5,
+    pro = [],
+    dex = None,
+):
+    """
+    Ping a server and retrieve its roster using a single connection.
+
+    Args:
+        address (str): The server's IP address.
+        port (int): The server's port.
+        ping_wait (float): Time to wait between ping retries.
+        timeout (float): Overall timeout for the entire operation.
+        progress_trackers (list): List to track progress.
+        index (int): Index of the server being pinged.
+
+    Returns:
+        tuple[float | None, dict | None]: A tuple containing the ping in milliseconds
+                                          and the parsed roster dictionary.
+    """
+    ping_result = None
+    roster_result = None
+    sock = socket.socket(IPT(address), socket.SOCK_DGRAM)
+    sock.settimeout(timeout)
+
+    try:
+        ping_start_time = time.time()
+        ping_success = False
+        for _ in range(3):
+            try:
+                sock.sendto(b'\x0b', (address, port))
+                data, addr = sock.recvfrom(10)
+                # Ensure the response is correct and from the right server
+                if data == b'\x0c' and addr[0] == address:
+                    ping_success = True
+                    break
+            except:
+                break
+            time.sleep(ping_wait)
+            
+        if ping_success:
+            ping_result = (time.time() - ping_start_time) * 1000
+        else:
+            pro.append((dex, 999))
+            return (999, [])
+
+        json_dumps = lambda h: dumps(h).encode('utf-8')
+        bytes_from_hex = lambda h: bytes.fromhex(h.replace(' ', ''))
+        send_packet = lambda h, e=b'': sock.sendto(bytes_from_hex(h) + e, (address, port))
+        receive_packet = lambda b: sock.recvfrom(b)[0]
+        
+        # Start Handshake
+        my_handshake = f'{(71 + randint(0, 150)):02x}'
+        send_packet(f'18 21 00 {my_handshake}', _babase.app_instance_uuid().encode())
+        # The server's response contains its handshake byte at index 1
+        server_handshake = f'{receive_packet(3)[1]:02x}'
+        receive_packet(1024)  # Ack/Server-Info packet
+
+        send_packet(f'24 {server_handshake} 10 21 00', json_dumps(FinderWindow.SPEC))
+        send_packet(f'24 {server_handshake} 11 f0 ff f0 ff 00 12', json_dumps(FinderWindow.AUTH))
+        send_packet(f'24 {server_handshake} 11 f1 ff f0 ff 00 15', json_dumps({}))
+        send_packet(f'24 {server_handshake} 11 f2 ff f0 ff 00 03')
+
+        receive_packet(1024)  # Ack
+        receive_packet(9)     # Ack
+        # End Handshake
+
+        # Roster Retrieval Loop
+        SERVER_RELIABLE_MESSAGE = 0x25
+        BA_SCENEPACKET_MESSAGE = 0x11
+        BA_MESSAGE_MULTIPART = 0x0d
+        BA_MESSAGE_MULTIPART_END = 0x0e
+        BA_MESSAGE_PARTY_ROSTER = 0x09
+        
+        roster_parts = bytearray()
+        collecting_roster = False
+        roster_listen_start_time = time.time()
+        
+        while time.time() - roster_listen_start_time < (timeout / 2):
+            packet = receive_packet(2048)
+
+            if not packet or len(packet) < 9:
+                continue
+
+            if packet[0] == SERVER_RELIABLE_MESSAGE and packet[2] == BA_SCENEPACKET_MESSAGE:
+                payload_type = packet[8]
+                payload_data = packet[9:]
+
+                if payload_type == BA_MESSAGE_PARTY_ROSTER:
+                    json_string = payload_data.rstrip(b'\x00').decode('utf-8')
+                    roster_result = loads(json_string)
+                    break
+
+                elif payload_type == BA_MESSAGE_MULTIPART:
+                    if payload_data and payload_data[0] == BA_MESSAGE_PARTY_ROSTER:
+                        collecting_roster = True
+                        roster_parts.clear()
+                        roster_parts.extend(payload_data[1:])
+                    elif collecting_roster:
+                        roster_parts.extend(payload_data)
+
+                elif payload_type == BA_MESSAGE_MULTIPART_END and collecting_roster:
+                    roster_parts.extend(payload_data)
+                    json_string = roster_parts.rstrip(b'\x00').decode('utf-8')
+                    roster_result = loads(json_string)
+                    break
+                    
+        # Send Disconnect
+        send_packet(f'20 {server_handshake}')
+
+    except:
+        pass
+    finally:
+        sock.close()
+        
+    pro.append((dex, ping_result))
+    return (ping_result, roster_result or [])
+
+# Global helper functions
+def BTW(text):
+    """Show a blocking message with sound."""
+    push(text, color=(1, 1, 0))
+    gs('block').play()
+
+def _get_popup_window_scale() -> float:
+    uiscale = bui.app.ui_v1.uiscale
+    return (2.3 if uiscale is babase.UIScale.SMALL else
+            1.65 if uiscale is babase.UIScale.MEDIUM else 1.23)
+
+def _creat_Lstr_list(string_list: list = []) -> list:
+    return ([babase.Lstr(resource="??Unknown??", fallback_value=item) for item in string_list])
+
+################## LESS FINDER ############################
+
+
+######################### DM ###############################
+class AuthWindow:    
+    def __init__(self, source_widget, mode="login"):
+        self.source_widget = source_widget
+        self.mode = mode
+        self.loading = False
+        self.error = None
+        
+        self.theme = ReactiveTheme()
+        self.language = ReactiveLanguage()
+        
+        print(f"[AuthWindow] Initializing {mode} window")
+        print(f"[AuthWindow] API URL: {API_URL_DM}")
+        
+        self._create_ui()
+    
+    def _create_ui(self):
+        if self.mode == "login":
+            window_size = (500, 400)
+        else:  # register
+            window_size = (500, 500)
+            
+        borders = BorderWindow(window_size)
+        
+        self.root = cw(
+            scale_origin_stack_offset=self.source_widget.get_screen_space_center(),
+            size=window_size,
+            oac=self.close,
+        )[0]
+        
+        # Footer
+        self.footer = obw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('empty'),
+            label='',
+            enable_sound=False
+        )
+        
+        # Background
+        iw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+        
+        # Window borders
+        self.border_left = iw(
+            parent=self.root,
+            size=borders.border_left.size,
+            position=borders.border_left.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_top = iw(
+            parent=self.root,
+            size=borders.border_top.size,
+            position=borders.border_top.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_right = iw(
+            parent=self.root,
+            size=borders.border_right.size,
+            position=borders.border_right.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_bottom = iw(
+            parent=self.root,
+            size=borders.border_bottom.size,
+            position=borders.border_bottom.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        # Title
+        title_text = "LOGIN" if self.mode == "login" else "REGISTER"
+        self.title_widget = tw(
+            parent=self.root,
+            text=title_text,
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(window_size[0] * 0.5, window_size[1] - 40),
+            h_align='center',
+            v_align='center',
+            scale=1.2,
+            maxwidth=400,
+            max_height=32,
+        )
+        
+        if self.mode == "login":
+            self._create_login_ui(window_size)
+        else:
+            self._create_register_ui(window_size)
+        
+        # Status message
+        self.status_widget = tw(
+            parent=self.root,
+            text="",
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            position=(window_size[0] * 0.5, 80),
+            h_align='center',
+            v_align='center'
+        )
+        
+        self.loading_spinner = None
+    
+    def _create_login_ui(self, window_size):
+        # Input fields with labels for login
+        y_offset = window_size[1] - 100
+        
+        # Nickname field
+        self.nickname_label = tw(
+            parent=self.root,
+            text="Nickname:",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(30, y_offset),
+            h_align='left',
+            v_align='center',
+            scale=0.9
+        )
+        
+        self.nickname_input = tw(
+            parent=self.root,
+            position=(160, y_offset - 5),
+            size=(300, 40),
+            text="",
+            editable=True,
+            description="Enter your nickname",
+            maxwidth=350,
+            h_align='left',
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            max_chars=15
+        )
+        
+        y_offset -= 60
+        
+        # Password field
+        self.password_label = tw(
+            parent=self.root,
+            text="Password:",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(30, y_offset),
+            h_align='left',
+            v_align='center',
+            scale=0.9
+        )
+        
+        self.password_input = tw(
+            parent=self.root,
+            position=(160, y_offset - 5),
+            size=(300, 40),
+            text="",
+            editable=True,
+            description="Enter your password",
+            maxwidth=350,
+            h_align='left',
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            max_chars=50
+        )
+        
+        y_offset -= 80
+        
+        # Login button
+        button_size = (150, 35)
+        button_pos = (window_size[0]/2 - button_size[0]/2, y_offset)
+        
+        self.action_button = bw(
+            parent=self.root,
+            position=button_pos,
+            size=button_size,
+            label="LOGIN",
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=self._perform_login
+        )
+        
+        # Button borders
+        action_borders = BorderWindow(button_size)
+        
+        iw(
+            parent=self.root,
+            size=(action_borders.border_left.size[0]-1, action_borders.border_left.size[1]+3.5),
+            position=(button_pos[0]-5, button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(action_borders.border_top.size[0]+4, action_borders.border_top.size[1]-1),
+            position=(button_pos[0]-2, button_pos[1]+button_size[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(action_borders.border_right.size[0]-1, action_borders.border_right.size[1]+3.5),
+            position=(button_pos[0]+button_size[0]+4, button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(action_borders.border_bottom.size[0]+6.5, action_borders.border_bottom.size[1]-1),
+            position=(button_pos[0]-2, button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        # Switch to register button
+        switch_button_size = (200, 30)
+        switch_button_pos = (window_size[0]/2 - switch_button_size[0]/2, 50)
+        
+        self.switch_button = bw(
+            parent=self.root,
+            position=switch_button_pos,
+            size=switch_button_size,
+            label="Create account",
+            color=(0.2, 0.2, 0.2),
+            textcolor=self.theme.get_color('COLOR_TERTIARY'),
+            oac=self._switch_mode
+        )
+        
+        # Switch button borders
+        switch_borders = BorderWindow(switch_button_size)
+        
+        iw(
+            parent=self.root,
+            size=(switch_borders.border_left.size[0]-1, switch_borders.border_left.size[1]+3.5),
+            position=(switch_button_pos[0]-5, switch_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(switch_borders.border_top.size[0]+4, switch_borders.border_top.size[1]-1),
+            position=(switch_button_pos[0]-2, switch_button_pos[1]+switch_button_size[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(switch_borders.border_right.size[0]-1, switch_borders.border_right.size[1]+3.5),
+            position=(switch_button_pos[0]+switch_button_size[0]+4, switch_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(switch_borders.border_bottom.size[0]+6.5, switch_borders.border_bottom.size[1]-1),
+            position=(switch_button_pos[0]-2, switch_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+    
+    def _create_register_ui(self, window_size):
+        # Create scroll widget for registration form
+        self.scroll_widget = sw(
+            parent=self.root,
+            size=(450, 280),
+            position=(25, 100),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        # Container inside scroll
+        self.container_widget = ocw(
+            parent=self.scroll_widget,
+            size=(450, 400),
+            background=False
+        )
+        
+        # Input fields inside container
+        container_y = 380
+        
+        # Name field
+        self.name_label = tw(
+            parent=self.container_widget,
+            text="Name:",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(30, container_y),
+            h_align='left',
+            v_align='center',
+            scale=0.9
+        )
+        
+        self.name_input = tw(
+            parent=self.container_widget,
+            position=(160, container_y - 5),
+            size=(270, 40),
+            text="",
+            editable=True,
+            description="Enter your full name",
+            maxwidth=350,
+            h_align='left',
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            max_chars=25
+        )
+        
+        container_y -= 60
+        
+        # Nickname field
+        self.nickname_label = tw(
+            parent=self.container_widget,
+            text="Nickname:",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(30, container_y),
+            h_align='left',
+            v_align='center',
+            scale=0.9
+        )
+        
+        self.nickname_input = tw(
+            parent=self.container_widget,
+            position=(160, container_y - 5),
+            size=(270, 40),
+            text="",
+            editable=True,
+            description="Enter your nickname",
+            maxwidth=350,
+            h_align='left',
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            max_chars=15
+        )
+        
+        container_y -= 60
+        
+        # Password field
+        self.password_label = tw(
+            parent=self.container_widget,
+            text="Password:",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(30, container_y),
+            h_align='left',
+            v_align='center',
+            scale=0.9
+        )
+        
+        self.password_input = tw(
+            parent=self.container_widget,
+            position=(160, container_y - 5),
+            size=(270, 40),
+            text="",
+            editable=True,
+            description="Enter your password",
+            maxwidth=350,
+            h_align='left',
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            max_chars=50
+        )
+        
+        container_y -= 60
+        
+        # Confirm password field
+        self.confirm_label = tw(
+            parent=self.container_widget,
+            text="Confirm:",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(30, container_y),
+            h_align='left',
+            v_align='center',
+            scale=0.9
+        )
+        
+        self.confirm_input = tw(
+            parent=self.container_widget,
+            position=(160, container_y - 5),
+            size=(270, 40),
+            text="",
+            editable=True,
+            description="Confirm your password",
+            maxwidth=350,
+            h_align='left',
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            max_chars=50
+        )
+        
+        # Buttons below scroll widget
+        button_y = 50
+        
+        # Register button
+        register_button_size = (150, 35)
+        register_button_pos = (window_size[0]/2 - register_button_size[0]/2, button_y)
+        
+        self.action_button = bw(
+            parent=self.root,
+            position=register_button_pos,
+            size=register_button_size,
+            label="REGISTER",
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            textcolor=self.theme.get_color('COLOR_PRIMARY'),
+            oac=self._perform_register
+        )
+        
+        # Register button borders
+        register_borders = BorderWindow(register_button_size)
+        
+        iw(
+            parent=self.root,
+            size=(register_borders.border_left.size[0]-1, register_borders.border_left.size[1]+3.5),
+            position=(register_button_pos[0]-5, register_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(register_borders.border_top.size[0]+4, register_borders.border_top.size[1]-1),
+            position=(register_button_pos[0]-2, register_button_pos[1]+register_button_size[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(register_borders.border_right.size[0]-1, register_borders.border_right.size[1]+3.5),
+            position=(register_button_pos[0]+register_button_size[0]+4, register_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(register_borders.border_bottom.size[0]+6.5, register_borders.border_bottom.size[1]-1),
+            position=(register_button_pos[0]-2, register_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        # Switch to login button
+        switch_button_size = (200, 30)
+        switch_button_pos = (window_size[0]/2 - switch_button_size[0]/2, 10)
+        
+        self.switch_button = bw(
+            parent=self.root,
+            position=switch_button_pos,
+            size=switch_button_size,
+            label="Already have account",
+            color=(0.2, 0.2, 0.2),
+            textcolor=self.theme.get_color('COLOR_TERTIARY'),
+            oac=self._switch_mode
+        )
+        
+        # Switch button borders
+        switch_borders = BorderWindow(switch_button_size)
+        
+        iw(
+            parent=self.root,
+            size=(switch_borders.border_left.size[0]-1, switch_borders.border_left.size[1]+3.5),
+            position=(switch_button_pos[0]-5, switch_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(switch_borders.border_top.size[0]+4, switch_borders.border_top.size[1]-1),
+            position=(switch_button_pos[0]-2, switch_button_pos[1]+switch_button_size[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(switch_borders.border_right.size[0]-1, switch_borders.border_right.size[1]+3.5),
+            position=(switch_button_pos[0]+switch_button_size[0]+4, switch_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(switch_borders.border_bottom.size[0]+6.5, switch_borders.border_bottom.size[1]-1),
+            position=(switch_button_pos[0]-2, switch_button_pos[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+    
+    def _show_loading(self):
+        if self.loading_spinner and self.loading_spinner.exists():
+            self.loading_spinner.delete()
+        
+        window_center = (250, 250) if self.mode == "login" else (250, 300)
+        
+        try:
+            self.loading_spinner = spinner(
+                parent=self.root,
+                position=(window_center[0] - 25, window_center[1] - 25),
+                size=(50, 50),
+                style='simple',
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                visible=True
+            )
+        except Exception as e:
+            print(f"[AuthWindow] Error creating spinner: {e}")
+    
+    def _hide_loading(self):
+        if self.loading_spinner and self.loading_spinner.exists():
+            self.loading_spinner.delete()
+            self.loading_spinner = None
+    
+    def _validate_fields(self):
+        if self.mode == "login":
+            nickname = tw(query=self.nickname_input)
+            password = tw(query=self.password_input)
+            
+            if not nickname or not password:
+                return "Please fill all fields"
+            
+            if len(nickname) > 15:
+                return "Nickname max 15 chars"
+            
+            return None
+            
+        else:  # register
+            name = tw(query=self.name_input)
+            nickname = tw(query=self.nickname_input)
+            password = tw(query=self.password_input)
+            confirm = tw(query=self.confirm_input)
+            
+            if not name or not nickname or not password or not confirm:
+                return "Please fill all fields"
+            
+            if len(name) > 25:
+                return "Name max 25 chars"
+            
+            if len(nickname) > 15:
+                return "Nickname max 15 chars"
+            
+            if password != confirm:
+                return "Passwords do not match"
+            
+            if len(password) < 8:
+                return "Password must be at least 8 characters"
+            
+            return None
+    
+    def _perform_login(self):
+        validation_error = self._validate_fields()
+        if validation_error:
+            tw(edit=self.status_widget, text=validation_error)
+            tw(edit=self.status_widget, color=(1, 0.2, 0.2))
+            print(f"[AuthWindow] Login validation failed: {validation_error}")
+            return
+        
+        nickname = tw(query=self.nickname_input)
+        password = tw(query=self.password_input)
+        
+        self.loading = True
+        self._show_loading()
+        tw(edit=self.status_widget, text="Logging in...")
+        tw(edit=self.status_widget, color=self.theme.get_color('COLOR_TERTIARY'))
+        
+        print(f"[AuthWindow] Starting login process for nickname: {nickname}")
+        print(f"[AuthWindow] API endpoint: {API_URL_DM}/auth/login")
+        
+        def login_thread():
+            try:
+                data = {
+                    "nickname": nickname,
+                    "password": password
+                }
+                
+                print(f"[AuthWindow] Sending login request with data: {data}")
+                
+                req = urllib.request.Request(
+                    f"{API_URL_DM}/auth/login",
+                    data=json.dumps(data).encode('utf-8'),
+                    headers={
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'BombSquad Mod'
+                    },
+                    method='POST'
+                )
+                
+                print(f"[AuthWindow] Opening connection...")
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    print(f"[AuthWindow] Response code: {response.getcode()}")
+                    result_data = response.read().decode()
+                    print(f"[AuthWindow] Raw response: {result_data}")
+                    
+                    result = json.loads(result_data)
+                    print(f"[AuthWindow] JSON parsed successfully. Keys: {list(result.keys())}")
+                    
+                    self.loading = False
+                    
+                    if 'accessToken' in result and 'user' in result:
+                        print(f"[AuthWindow] Login successful for user: {result['user']}")
+                        pushcall(lambda: self._on_login_success(result), from_other_thread=True)
+                    else:
+                        error_msg = result.get('message', 'Login failed')
+                        print(f"[AuthWindow] Login failed: {error_msg}")
+                        pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+                        
+            except urllib.error.HTTPError as e:
+                self.loading = False
+                print(f"[AuthWindow] HTTP Error: {e.code} - {e.reason}")
+                try:
+                    error_data = json.loads(e.read().decode())
+                    error_msg = error_data.get('message', f'Error {e.code}')
+                    print(f"[AuthWindow] Error response: {error_data}")
+                except:
+                    error_msg = f'Error {e.code}: {e.reason}'
+                pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+                
+            except urllib.error.URLError as e:
+                self.loading = False
+                error_msg = f"Network error: {str(e.reason)}"
+                print(f"[AuthWindow] URL Error: {e.reason}")
+                pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+                
+            except Exception as e:
+                self.loading = False
+                error_msg = f"Connection error: {str(e)}"
+                print(f"[AuthWindow] General error: {e}")
+                traceback.print_exc()
+                pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+        
+        thread = Thread(target=login_thread)
+        thread.daemon = True
+        thread.start()
+    
+    def _perform_register(self):
+        validation_error = self._validate_fields()
+        if validation_error:
+            tw(edit=self.status_widget, text=validation_error)
+            tw(edit=self.status_widget, color=(1, 0.2, 0.2))
+            print(f"[AuthWindow] Registration validation failed: {validation_error}")
+            return
+        
+        name = tw(query=self.name_input)
+        nickname = tw(query=self.nickname_input)
+        password = tw(query=self.password_input)
+        
+        self.loading = True
+        self._show_loading()
+        tw(edit=self.status_widget, text="Creating account...")
+        tw(edit=self.status_widget, color=self.theme.get_color('COLOR_TERTIARY'))
+        
+        print(f"[AuthWindow] Starting registration process for: {nickname} ({name})")
+        print(f"[AuthWindow] API endpoint: {API_URL_DM}/auth/register")
+        
+        def register_thread():
+            try:
+                data = {
+                    "name": name,
+                    "nickname": nickname,
+                    "password": password
+                }
+                
+                print(f"[AuthWindow] Sending registration request: {data}")
+                
+                req = urllib.request.Request(
+                    f"{API_URL_DM}/auth/register",
+                    data=json.dumps(data).encode('utf-8'),
+                    headers={
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'BombSquad Mod'
+                    },
+                    method='POST'
+                )
+                
+                print(f"[AuthWindow] Opening connection...")
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    print(f"[AuthWindow] Response code: {response.getcode()}")
+                    result_data = response.read().decode()
+                    print(f"[AuthWindow] Raw response: {result_data}")
+                    
+                    result = json.loads(result_data)
+                    print(f"[AuthWindow] JSON parsed successfully. Keys: {list(result.keys())}")
+                    
+                    self.loading = False
+                    
+                    if 'accessToken' in result and 'user' in result:
+                        print(f"[AuthWindow] Registration successful: {result['user']}")
+                        pushcall(lambda: self._on_register_success(result), from_other_thread=True)
+                    else:
+                        error_msg = result.get('message', 'Registration failed')
+                        print(f"[AuthWindow] Registration failed: {error_msg}")
+                        pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+                        
+            except urllib.error.HTTPError as e:
+                self.loading = False
+                print(f"[AuthWindow] HTTP Error: {e.code} - {e.reason}")
+                try:
+                    error_data = json.loads(e.read().decode())
+                    error_msg = error_data.get('message', f'Error {e.code}')
+                    print(f"[AuthWindow] Error response: {error_data}")
+                except:
+                    error_msg = f'Error {e.code}: {e.reason}'
+                pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+                
+            except urllib.error.URLError as e:
+                self.loading = False
+                error_msg = f"Network error: {str(e.reason)}"
+                print(f"[AuthWindow] URL Error: {e.reason}")
+                pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+                
+            except Exception as e:
+                self.loading = False
+                error_msg = f"Connection error: {str(e)}"
+                print(f"[AuthWindow] General error: {e}")
+                traceback.print_exc()
+                pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+        
+        thread = Thread(target=register_thread)
+        thread.daemon = True
+        thread.start()
+    
+    def _on_login_success(self, result):
+        self._hide_loading()
+        
+        access_token = result['accessToken']
+        refresh_token = result['refreshToken']
+        user_data = result['user']
+        
+        print(f"[AuthWindow] Login success - Access token: {access_token[:20]}...")
+        print(f"[AuthWindow] Refresh token: {refresh_token[:20]}...")
+        print(f"[AuthWindow] User data: {user_data}")
+        
+        tw(edit=self.status_widget, text=f"Welcome {user_data['nickname']}!")
+        tw(edit=self.status_widget, color=self.theme.get_color('COLOR_TERTIARY'))
+        
+        try:
+            print(f"[AuthWindow] Saving tokens to app.config...")
+            app.config['accessToken'] = access_token
+            app.config['refreshToken'] = refresh_token
+            app.config['user'] = user_data
+            app.config.commit()
+            print(f"[AuthWindow] Tokens saved successfully")
+        except Exception as e:
+            print(f"[AuthWindow] Error saving tokens: {e}")
+            traceback.print_exc()
+        
+        # Close login window and open DM window after delay
+        timer(1.5, lambda: (
+            print(f"[AuthWindow] Closing login window and opening DM"),
+            self.close(),
+            timer(0.2, lambda: DirectMessagesWindow(self.source_widget))
+        ))
+    
+    def _on_register_success(self, result):
+        self._hide_loading()
+        
+        access_token = result['accessToken']
+        refresh_token = result['refreshToken']
+        user_data = result['user']
+        
+        print(f"[AuthWindow] Registration success - Access token: {access_token[:20]}...")
+        print(f"[AuthWindow] Refresh token: {refresh_token[:20]}...")
+        print(f"[AuthWindow] User data: {user_data}")
+        
+        tw(edit=self.status_widget, text=f"Account created successfully! Welcome {user_data['nickname']}")
+        tw(edit=self.status_widget, color=self.theme.get_color('COLOR_TERTIARY'))
+        
+        try:
+            print(f"[AuthWindow] Saving tokens to app.config...")
+            app.config['accessToken'] = access_token
+            app.config['refreshToken'] = refresh_token
+            app.config['user'] = user_data
+            app.config.commit()
+            print(f"[AuthWindow] Tokens saved successfully")
+        except Exception as e:
+            print(f"[AuthWindow] Error saving tokens: {e}")
+            traceback.print_exc()
+        
+        # Close registration window and open DM window after delay
+        timer(2.0, lambda: (
+            print(f"[AuthWindow] Closing registration window and opening DM"),
+            self.close(),
+            timer(0.2, lambda: DirectMessagesWindow(self.source_widget))
+        ))
+    
+    def _show_error(self, message):
+        self._hide_loading()
+        tw(edit=self.status_widget, text=message)
+        tw(edit=self.status_widget, color=(1, 0.2, 0.2))
+        print(f"[AuthWindow] Error displayed: {message}")
+    
+    def _switch_mode(self):
+        print(f"[AuthWindow] Switching mode from {self.mode} to {'register' if self.mode == 'login' else 'login'}")
+        self.close()
+        new_mode = "register" if self.mode == "login" else "login"
+        AuthWindow(self.source_widget, mode=new_mode)
+    
+    def close(self):
+        print(f"[AuthWindow] Closing window")
+        if self.root.exists():
+            ocw(edit=self.root, transition='out_scale')
+
+
+def check_and_refresh_token(callback):
+    """
+    Check if access token is valid or refresh it using refresh token.
+    If successful, execute callback with new access token.
+    """
+    access_token = app.config.get('accessToken', '')
+    refresh_token = app.config.get('refreshToken', '')
+    
+    if not access_token or not refresh_token:
+        print("[Token] No tokens available, authentication required")
+        callback(False, "No tokens available")
+        return
+    
+    print(f"[Token] Checking token validity...")
+    
+    def refresh_thread():
+        try:
+            # First, try to use the access token to get user info
+            # This will fail if token is expired
+            url = f"{API_URL_DM}/user"
+            req = urllib.request.Request(
+                url,
+                headers={
+                    'Authorization': f'Bearer {access_token}',
+                    'User-Agent': 'BombSquad Mod'
+                }
+            )
+            
+            with urllib.request.urlopen(req, timeout=10) as response:
+                # Token is still valid
+                print("[Token] Access token is valid")
+                pushcall(lambda: callback(True, access_token), from_other_thread=True)
+                return
+                
+        except urllib.error.HTTPError as e:
+            if e.code == 401:
+                # Token expired, try to refresh
+                print("[Token] Access token expired, attempting refresh...")
+                try:
+                    refresh_data = {"refreshToken": refresh_token}
+                    
+                    refresh_req = urllib.request.Request(
+                        f"{API_URL_DM}/auth/refresh",
+                        data=json.dumps(refresh_data).encode('utf-8'),
+                        headers={
+                            'Content-Type': 'application/json',
+                            'User-Agent': 'BombSquad Mod'
+                        },
+                        method='POST'
+                    )
+                    
+                    with urllib.request.urlopen(refresh_req, timeout=10) as refresh_response:
+                        refresh_result = json.loads(refresh_response.read().decode())
+                        
+                        if 'accessToken' in refresh_result:
+                            new_access_token = refresh_result['accessToken']
+                            print(f"[Token] Token refreshed successfully: {new_access_token[:20]}...")
+                            
+                            # Update stored token
+                            app.config['accessToken'] = new_access_token
+                            app.config.commit()
+                            
+                            pushcall(lambda: callback(True, new_access_token), from_other_thread=True)
+                        else:
+                            error_msg = refresh_result.get('message', 'Refresh failed')
+                            print(f"[Token] Token refresh failed: {error_msg}")
+                            pushcall(lambda: callback(False, error_msg), from_other_thread=True)
+                            
+                except Exception as refresh_e:
+                    error_msg = f"Refresh error: {str(refresh_e)}"
+                    print(f"[Token] {error_msg}")
+                    pushcall(lambda: callback(False, error_msg), from_other_thread=True)
+                    
+            else:
+                error_msg = f"HTTP Error: {e.code}"
+                print(f"[Token] {error_msg}")
+                pushcall(lambda: callback(False, error_msg), from_other_thread=True)
+                
+        except Exception as e:
+            error_msg = f"Token check error: {str(e)}"
+            print(f"[Token] {error_msg}")
+            pushcall(lambda: callback(False, error_msg), from_other_thread=True)
+    
+    thread = Thread(target=refresh_thread)
+    thread.daemon = True
+    thread.start()
+
+
+def auto_login(source_widget):
+    """
+    Attempt to automatically login using stored tokens.
+    If successful, opens DirectMessagesWindow.
+    If not, opens AuthWindow.
+    """
+    print("[AutoLogin] Attempting automatic login...")
+    
+    def handle_token_result(success, token_or_error):
+        if success:
+            print("[AutoLogin] Automatic login successful")
+            DirectMessagesWindow(source_widget)
+        else:
+            print(f"[AutoLogin] Automatic login failed: {token_or_error}")
+            AuthWindow(source_widget, mode="login")
+    
+    check_and_refresh_token(handle_token_result)
+
+class DirectMessagesWindow:
+    """Main window for direct messages and friend list."""
+    
+    def __init__(self, source_widget):
+        self.source_widget = source_widget
+        self.friends = []
+        self.selected_friend = None
+        
+        self.theme = ReactiveTheme()
+        self.language = ReactiveLanguage()
+        
+        print(f"[DirectMessagesWindow] Initializing")
+        
+        self._create_ui()
+        self._load_friends()
+    
+    def _create_ui(self):
+        window_size = (800, 600)
+        borders = BorderWindow(window_size)
+        
+        self.root = cw(
+            scale_origin_stack_offset=self.source_widget.get_screen_space_center(),
+            size=window_size,
+            oac=self.close,
+        )[0]
+        
+        # Footer
+        self.footer = obw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('empty'),
+            label='',
+        )
+        
+        # Background
+        iw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+        
+        # Window borders
+        self.border_left = iw(
+            parent=self.root,
+            size=borders.border_left.size,
+            position=borders.border_left.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_top = iw(
+            parent=self.root,
+            size=borders.border_top.size,
+            position=borders.border_top.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_right = iw(
+            parent=self.root,
+            size=borders.border_right.size,
+            position=borders.border_right.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_bottom = iw(
+            parent=self.root,
+            size=borders.border_bottom.size,
+            position=borders.border_bottom.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        # Title
+        self.title_widget = tw(
+            parent=self.root,
+            text="Direct Messages",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(window_size[0] * 0.5, window_size[1] - 40),
+            h_align='center',
+            v_align='center',
+            scale=1.2,
+            maxwidth=400,
+            max_height=32,
+        )
+        
+        # Header with icons
+        self._create_header(window_size)
+        
+        # Friends list container
+        self._create_friends_list(window_size)
+        
+        # Status message
+        self.status_widget = tw(
+            parent=self.root,
+            text="Loading friends...",
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            position=(window_size[0] * 0.5, window_size[1] * 0.5),
+            h_align='center',
+            v_align='center',
+            scale=1.0
+        )
+        
+        self.loading_spinner = None
+    
+    def _create_header(self, window_size):
+        """Create header with action icons."""
+        icon_size = (40, 40)
+        icon_y = window_size[1] - 80
+        
+        # Add friend icon - using cuteSpaz texture
+        self.add_friend_icon = obw(
+            parent=self.root,
+            position=(window_size[0] - 100, icon_y),
+            size=icon_size,
+            texture=gt('cuteSpaz'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        # Friend requests icon - using cuteSpaz texture
+        self.requests_icon = obw(
+            parent=self.root,
+            position=(window_size[0] - 50, icon_y),
+            size=icon_size,
+            texture=gt('cuteSpaz'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        # Add borders to icons
+        self._add_icon_borders(self.add_friend_icon, (window_size[0] - 100, icon_y), icon_size)
+        self._add_icon_borders(self.requests_icon, (window_size[0] - 50, icon_y), icon_size)
+        
+        # Separator line
+        iw(
+            parent=self.root,
+            size=(window_size[0] - 40, 2),
+            position=(20, window_size[1] - 120),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+    
+    def _add_icon_borders(self, icon_widget, position, size):
+        """Add decorative borders to icon buttons."""
+        borders = BorderWindow(size)
+        
+        iw(
+            parent=self.root,
+            size=(borders.border_left.size[0]-1, borders.border_left.size[1]+3.5),
+            position=(position[0]-5, position[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(borders.border_top.size[0]+4, borders.border_top.size[1]-1),
+            position=(position[0]-2, position[1]+size[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(borders.border_right.size[0]-1, borders.border_right.size[1]+3.5),
+            position=(position[0]+size[0]+4, position[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(borders.border_bottom.size[0]+6.5, borders.border_bottom.size[1]-1),
+            position=(position[0]-2, position[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+    
+    def _create_friends_list(self, window_size):
+        """Create friends list scroll container."""
+        self.scroll_widget = sw(
+            parent=self.root,
+            size=(760, 450),
+            position=(20, 50),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        self.container_widget = ocw(
+            parent=self.scroll_widget,
+            size=(760, 0),
+            background=False
+        )
+    
+    def _load_friends(self):
+        """Load friends list from API."""
+        self._show_loading()
+        
+        def load_thread():
+            try:
+                # Get access token
+                access_token = app.config.get('accessToken', '')
+                if not access_token:
+                    pushcall(lambda: self._show_error("Not authenticated"), from_other_thread=True)
+                    return
+                
+                # Make API request
+                url = f"{API_URL_DM}/friends"
+                req = urllib.request.Request(
+                    url,
+                    headers={
+                        'Authorization': f'Bearer {access_token}',
+                        'User-Agent': 'BombSquad Mod'
+                    }
+                )
+                
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    data = response.read().decode()
+                    friends_data = json.loads(data)
+                    
+                    self.friends = friends_data
+                    
+                    pushcall(self._update_friends_list, from_other_thread=True)
+                    
+            except urllib.error.HTTPError as e:
+                error_msg = f"HTTP Error: {e.code}"
+                if e.code == 401:
+                    error_msg = "Authentication expired"
+                pushcall(lambda: self._show_error(error_msg), from_other_thread=True)
+                
+            except urllib.error.URLError as e:
+                pushcall(lambda: self._show_error(f"Network error: {e.reason}"), from_other_thread=True)
+                
+            except Exception as e:
+                pushcall(lambda: self._show_error(f"Error loading friends: {str(e)}"), from_other_thread=True)
+        
+        thread = Thread(target=load_thread)
+        thread.daemon = True
+        thread.start()
+    
+    def _show_loading(self):
+        """Show loading spinner."""
+        if self.loading_spinner and self.loading_spinner.exists():
+            self.loading_spinner.delete()
+        
+        try:
+            self.loading_spinner = spinner(
+                parent=self.root,
+                position=(400 - 25, 300 - 25),
+                size=(50, 50),
+                style='simple',
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                visible=True
+            )
+        except Exception as e:
+            print(f"[DirectMessagesWindow] Error creating spinner: {e}")
+    
+    def _hide_loading(self):
+        """Hide loading spinner."""
+        if self.loading_spinner and self.loading_spinner.exists():
+            self.loading_spinner.delete()
+            self.loading_spinner = None
+    
+    def _show_error(self, message):
+        """Display error message."""
+        self._hide_loading()
+        
+        if self.status_widget.exists():
+            tw(edit=self.status_widget, text=message)
+            tw(edit=self.status_widget, color=(1, 0.2, 0.2))
+    
+    def _update_friends_list(self):
+        """Update UI with friends list."""
+        self._hide_loading()
+        
+        if self.status_widget.exists():
+            self.status_widget.delete()
+        
+        if not self.friends:
+            tw(
+                parent=self.container_widget,
+                text="No friends yet. Add some friends!",
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                position=(380, 200),
+                h_align='center',
+                v_align='center'
+            )
+            return
+        
+        # Calculate container height
+        friend_height = 70
+        spacing = 5
+        container_height = len(self.friends) * (friend_height + spacing)
+        
+        ocw(
+            edit=self.container_widget,
+            size=(760, container_height)
+        )
+        
+        # Add each friend
+        current_y = container_height - friend_height
+        
+        for i, friend in enumerate(self.friends):
+            friend_id = friend.get('friendId', friend.get('id', i))
+            friend_name = friend.get('friendName', friend.get('name', 'Unknown'))
+            friend_nickname = friend.get('friendNickname', friend.get('nickname', 'unknown'))
+            
+            # Create clickable friend entry background
+            entry_bg = obw(
+                parent=self.container_widget,
+                position=(10, current_y),
+                size=(740, friend_height),
+                texture=gt('white'),
+                color=self.theme.get_color('COLOR_SECONDARY'),
+                on_activate_call=CallStrict(self._open_chat, friend_id, friend_nickname, friend_name)
+            )
+            
+            # Friend name
+            name_widget = tw(
+                parent=self.container_widget,
+                position=(20, current_y + friend_height - 20),
+                text=friend_name,
+                color=self.theme.get_color('COLOR_PRIMARY'),
+                h_align='left',
+                v_align='center',
+                scale=1.0,
+                maxwidth=200
+            )
+            
+            # Friend nickname
+            nickname_widget = tw(
+                parent=self.container_widget,
+                position=(20, current_y + friend_height - 45),
+                text=f"@{friend_nickname}",
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                h_align='left',
+                v_align='center',
+                scale=0.8,
+                maxwidth=200
+            )
+            
+            # Online status indicator (placeholder)
+            status_color = (0.2, 0.8, 0.2)  # Green for online
+            status_text = "Online"
+            
+            status_indicator = iw(
+                parent=self.container_widget,
+                position=(700, current_y + friend_height - 35),
+                size=(10, 10),
+                texture=gt('circle'),
+                color=status_color
+            )
+            
+            status_label = tw(
+                parent=self.container_widget,
+                position=(720, current_y + friend_height - 35),
+                text=status_text,
+                color=self.theme.get_color('COLOR_TERTIARY'),
+                h_align='right',
+                v_align='center',
+                scale=0.7
+            )
+            
+            # Store references
+            friend['widgets'] = {
+                'bg': entry_bg,
+                'name': name_widget,
+                'nickname': nickname_widget,
+                'status': status_indicator,
+                'status_label': status_label
+            }
+            
+            current_y -= (friend_height + spacing)
+    
+    def _open_chat(self, friend_id, friend_nickname, friend_name):
+        """Open chat window with selected friend."""
+        print(f"[DirectMessagesWindow] Opening chat with {friend_nickname} ({friend_name})")
+        ChatWindow(self.root, friend_id, friend_nickname, friend_name)
+    
+    def close(self):
+        """Close the window."""
+        print(f"[DirectMessagesWindow] Closing window")
+        if self.root.exists():
+            ocw(edit=self.root, transition='out_scale')
+
+class ChatWindow:
+    """Chat window for messaging a friend."""
+    
+    def __init__(self, source_widget, friend_id, friend_nickname, friend_name):
+        self.source_widget = source_widget
+        self.friend_id = friend_id
+        self.friend_nickname = friend_nickname
+        self.friend_name = friend_name
+        
+        self.messages = []
+        self.theme = ReactiveTheme()
+        self.language = ReactiveLanguage()
+        
+        print(f"[ChatWindow] Opening chat with {friend_nickname} (ID: {friend_id})")
+        
+        self._create_ui()
+    
+    def _create_ui(self):
+        window_size = (600, 500)
+        borders = BorderWindow(window_size)
+        
+        self.root = cw(
+            scale_origin_stack_offset=self.source_widget.get_screen_space_center(),
+            size=window_size,
+            oac=self.close,
+        )[0]
+        
+        # Footer
+        self.footer = obw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('empty'),
+            label='',
+        )
+        
+        # Background
+        iw(
+            parent=self.root,
+            size=window_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_BACKGROUND')
+        )
+        
+        # Window borders
+        self.border_left = iw(
+            parent=self.root,
+            size=borders.border_left.size,
+            position=borders.border_left.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_top = iw(
+            parent=self.root,
+            size=borders.border_top.size,
+            position=borders.border_top.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_right = iw(
+            parent=self.root,
+            size=borders.border_right.size,
+            position=borders.border_right.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        self.border_bottom = iw(
+            parent=self.root,
+            size=borders.border_bottom.size,
+            position=borders.border_bottom.position,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        # Title with friend info
+        title_text = f"Chat with {self.friend_name}"
+        self.title_widget = tw(
+            parent=self.root,
+            text=title_text,
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            position=(window_size[0] * 0.5, window_size[1] - 40),
+            h_align='center',
+            v_align='center',
+            scale=1.1,
+            maxwidth=400,
+            max_height=32,
+        )
+        
+        # Subtitle with nickname
+        subtitle_text = f"@{self.friend_nickname}"
+        self.subtitle_widget = tw(
+            parent=self.root,
+            text=subtitle_text,
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            position=(window_size[0] * 0.5, window_size[1] - 65),
+            h_align='center',
+            v_align='center',
+            scale=0.9,
+            maxwidth=400,
+        )
+        
+        # Messages area
+        self._create_messages_area(window_size)
+        
+        # Input area
+        self._create_input_area(window_size)
+        
+        # Add some placeholder messages
+        self._add_placeholder_messages()
+    
+    def _create_messages_area(self, window_size):
+        """Create scrollable messages area."""
+        self.messages_scroll = sw(
+            parent=self.root,
+            size=(560, 340),
+            position=(20, 120),
+            color=self.theme.get_color('COLOR_SECONDARY')
+        )
+        
+        self.messages_container = ocw(
+            parent=self.messages_scroll,
+            size=(560, 400),
+            background=False
+        )
+        
+        # Initial empty state
+        self.empty_state = tw(
+            parent=self.messages_container,
+            text="No messages yet. Start the conversation!",
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            position=(280, 200),
+            h_align='center',
+            v_align='center',
+            scale=1.0
+        )
+    
+    def _create_input_area(self, window_size):
+        """Create message input area."""
+        # Message input
+        self.message_input = tw(
+            parent=self.root,
+            position=(20, 60),
+            size=(480, 40),
+            text="",
+            editable=True,
+            description="Type your message here...",
+            maxwidth=470,
+            h_align='left',
+            v_align='center',
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            max_chars=500
+        )
+        
+        # Send button
+        button_size = (60, 40)
+        button_pos = (510, 60)
+        
+        self.send_button = obw(
+            parent=self.root,
+            position=button_pos,
+            size=button_size,
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_SECONDARY'),
+            on_activate_call=self._send_message
+        )
+        
+        # Send button text
+        tw(
+            parent=self.root,
+            position=(button_pos[0] + button_size[0]/2, button_pos[1] + button_size[1]/2),
+            text="Send",
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            h_align='center',
+            v_align='center',
+            scale=0.9
+        )
+        
+        # Button borders
+        self._add_button_borders(self.send_button, button_pos, button_size)
+    
+    def _add_button_borders(self, button, position, size):
+        """Add decorative borders to button."""
+        borders = BorderWindow(size)
+        
+        iw(
+            parent=self.root,
+            size=(borders.border_left.size[0]-1, borders.border_left.size[1]+3.5),
+            position=(position[0]-5, position[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(borders.border_top.size[0]+4, borders.border_top.size[1]-1),
+            position=(position[0]-2, position[1]+size[1]),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(borders.border_right.size[0]-1, borders.border_right.size[1]+3.5),
+            position=(position[0]+size[0]+4, position[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+        
+        iw(
+            parent=self.root,
+            size=(borders.border_bottom.size[0]+6.5, borders.border_bottom.size[1]-1),
+            position=(position[0]-2, position[1]-1),
+            texture=gt('white'),
+            color=self.theme.get_color('COLOR_PRIMARY')
+        )
+    
+    def _add_placeholder_messages(self):
+        """Add some placeholder messages for demo."""
+        # Remove empty state
+        if self.empty_state.exists():
+            self.empty_state.delete()
+        
+        # Update container height
+        ocw(edit=self.messages_container, size=(560, 600))
+        
+        # Add a received message
+        self._add_message("Hi there! How are you?", False, "10:30 AM")
+        
+        # Add a sent message
+        self._add_message("I'm good! Just playing BombSquad.", True, "10:32 AM")
+        
+        # Add another received message
+        self._add_message("Awesome! Want to join my server?", False, "10:33 AM")
+    
+    def _add_message(self, text, is_sent, timestamp):
+        """Add a message bubble to the chat."""
+        message_id = len(self.messages)
+        self.messages.append({
+            'id': message_id,
+            'text': text,
+            'is_sent': is_sent,
+            'timestamp': timestamp
+        })
+        
+        # Calculate position
+        message_height = self._calculate_message_height(text)
+        current_height = 600 - (sum(msg.get('height', 50) for msg in self.messages) + 20 * len(self.messages))
+        
+        # Message bubble background - without corner_scale
+        bubble_color = self.theme.get_color('COLOR_SECONDARY') if is_sent else (0.3, 0.3, 0.5)
+        
+        bubble = iw(
+            parent=self.messages_container,
+            position=(400 if is_sent else 20, current_height),
+            size=(140, message_height),
+            texture=gt('white'),
+            color=bubble_color
+        )
+        
+        # Message text
+        message_text = tw(
+            parent=self.messages_container,
+            position=(410 if is_sent else 30, current_height + message_height - 15),
+            text=text,
+            color=self.theme.get_color('COLOR_PRIMARY'),
+            h_align='left',
+            v_align='top',
+            scale=0.9,
+            maxwidth=130
+        )
+        
+        # Timestamp
+        time_text = tw(
+            parent=self.messages_container,
+            position=(470 if is_sent else 160, current_height + 5),
+            text=timestamp,
+            color=self.theme.get_color('COLOR_TERTIARY'),
+            h_align='right' if is_sent else 'left',
+            v_align='bottom',
+            scale=0.7
+        )
+        
+        # Store height for layout
+        self.messages[-1]['height'] = message_height
+        self.messages[-1]['widgets'] = {
+            'bubble': bubble,
+            'text': message_text,
+            'time': time_text
+        }
+    
+    def _calculate_message_height(self, text):
+        """Calculate approximate height needed for message."""
+        lines = len(text) // 25 + 1
+        return max(40, lines * 25)
+    
+    def _send_message(self):
+        """Send message handler."""
+        message_text = tw(query=self.message_input)
+        
+        if not message_text or not message_text.strip():
+            return
+        
+        # Clear input
+        tw(edit=self.message_input, text="")
+        
+        # Add message to UI
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%I:%M %p")
+        
+        self._add_message(message_text, True, timestamp)
+        
+        # Scroll to bottom
+        self._scroll_to_bottom()
+        
+        # In a real implementation, send via WebSocket
+        print(f"[ChatWindow] Message sent to {self.friend_nickname}: {message_text}")
+    
+    def _scroll_to_bottom(self):
+        """Scroll messages to bottom."""
+        # This would require adjusting the scroll widget
+        # For now, we just note it
+        pass
+    
+    def close(self):
+        """Close the window."""
+        print(f"[ChatWindow] Closing chat window")
+        if self.root.exists():
+            ocw(edit=self.root, transition='out_scale')
+
+######################### DM ###############################
 
 ####################### ANTI ABUSE DATA #######################
 indonesian_abuses_default = [
@@ -8693,6 +15827,7 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
         self._uiopenstate = bui.UIOpenState('classicparty')
         self.uiscale : babase.UIScale = bui.app.ui_v1.uiscale
         self.bg_color: tuple[float, float, float] = party_config.get(CFG_NAME_MAIN_COLOR, bui.app.ui_v1.heading_color)
+        global all_names
 
         self._size_radius = -100
         self._width  : int = (1250 if self.uiscale is babase.UIScale.SMALL else
@@ -8841,32 +15976,70 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             color=self.bg_color)
         bui.buttonwidget(edit=self._chat_name_view_type_button, on_activate_call=self._on_chat_view_button_press)
 
+        finder_ds: str = f'{get_lang_text("search")}!'
+        self._finder_button = bui.buttonwidget(
+            parent=self._root_widget,
+            size=(45, 25),
+            scale=2.15,
+            label=finder_ds,
+            button_type='square',
+            color=self.bg_color,
+            position=(self._width-25, self._height * 0.75 if not self.uiscale is babase.UIScale.SMALL else self._height * 0.65),
+        )
 
-        toxic_ds: str = f'{get_lang_text("toxic")}!'
-        self._toxic_button = bui.buttonwidget(
+        bui.buttonwidget(
+            edit=self._finder_button,
+            on_activate_call=lambda: FinderWindow(self._finder_button),
+        )
+
+
+        auto_ds: str = f'{get_lang_text("auto_respond")}!'
+        self._auto_button = bui.buttonwidget(
+            parent=self._root_widget,
+            size=(45, 25),
+            scale=2.15,
+            label=auto_ds,
+            button_type='square',
+            color=self.bg_color,
+            position=(self._width-25, self._height * 0.95 if not self.uiscale is babase.UIScale.SMALL else self._height * 0.56),
+        )
+
+        bui.buttonwidget(
+            edit=self._auto_button,
+            on_activate_call=lambda: AutoResponder(self._auto_button),
+        )
+
+        dm_ds: str = f'DM!'
+        self._dm_button = bui.buttonwidget(
             parent=self._root_widget,
             size=(45, 30),
             scale=2.15,
-            label=toxic_ds,
+            label=dm_ds,
             button_type='square',
             color=self.bg_color,
             position=(self._width-25, self._height * 0.55 if not self.uiscale is babase.UIScale.SMALL else self._height * 0.46),
         )
 
+
         bui.buttonwidget(
-            edit=self._toxic_button,
-            on_activate_call=CallStrict(
-                self._start_button_delay,
-                self._toxic_button,
-                toxic_ds,
-                get_random_toxic_words,
-                toxic_delay
-            ),
-            label=(
-                toxic_ds if ButtonDelayHandler().get_delay(toxic_ds) is False else
-                ButtonDelayHandler().continue_delay(self._toxic_button, toxic_ds)
-            )
+            edit=self._dm_button,
+            on_activate_call=lambda: AuthWindow(self._dm_button),
         )
+
+        #bui.buttonwidget(
+        #    edit=self._toxic_button,
+        #    on_activate_call=CallStrict(
+        #        self._start_button_delay,
+        #        self._toxic_button,
+        #        toxic_ds,
+        #        get_random_toxic_words,
+        #        toxic_delay
+        #    ),
+        #    label=(
+        #        toxic_ds if ButtonDelayHandler().get_delay(toxic_ds) is False else
+        #        ButtonDelayHandler().continue_delay(self._toxic_button, toxic_ds)
+        #    )
+        #)
 
         #thanks_ds: str = f'{get_lang_text("thanks")}!'
         #self._thanks_button = bui.buttonwidget(
@@ -9475,15 +16648,9 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
         if self._firstcall:
             self._roster = []
             self._firstcall = False
-       #     self._chat_text_widgets: List[bui.Widget] = []
-            """if not party_config[CFG_NAME_PARTY_CHAT_MUTED]:
-                msgs = bs.get_chat_messages()
-                for msg in msgs:
-                    self._add_msg(msg)"""
 
         if party_config.get(CFG_NAME_PARTY_CHAT_MUTED):
             bui.textwidget(edit=self._muted_text, color=(1, 1, 1, 0.3))
-            # clear any chat texts we're showing
             while self._chat_text_widgets:
                 first = self._chat_text_widgets.pop()
                 first.delete()
@@ -9495,10 +16662,9 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
         if roster == self._roster and not force:
             return
 
-        global is_1_4_server, is_muted_player
+        global is_1_4_server, is_muted_player, all_names
         self._roster = roster
 
-        # Lets clear name widget to refresh player showing
         for name_widget in self._name_widgets:
             name_widget.delete()
         self._name_widgets.clear()
@@ -9524,12 +16690,13 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
             c_height = 45
             c_height_total = c_height * rows
             global players_anti_abuse_exception
-            friend = players_anti_abuse_exception # Friend
-            notfriend = player_blacklisted_list # Not Friend
+            friend = players_anti_abuse_exception
+            notfriend = player_blacklisted_list
             hated = player_muted_list
             master: str = ''
             p_str: str = ''
             p_acc: str = ''
+            
             for y in range(rows):
                 for x in range(columns):
                     index = y * columns + x
@@ -9537,10 +16704,8 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                         t_scale = 1.275
                         pos: tuple[float, float] = (self._width * 0.545 - c_width_total * 0.5 + c_width * x - 25, self._height - 65 - c_height * y - 15)
 
-                        # if there are players present for this client, use
-                        # their names as a display string instead of the
-                        # client spec-string
                         p_acc: str = self._roster[index]['display_string']
+                        original_display_str = p_acc
                         if p_acc and p_acc[0] not in SPECIAL_CHARS and not p_acc.startswith('<HIDDEN>'):
                             p_acc = babase.charstr(SpecialChar.V2_LOGO) + p_acc
                             is_1_4_server = True
@@ -9549,38 +16714,140 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                             is_hidden_names_by_server = True
                         if p_acc in MY_MASTER:
                             master = p_acc
+                        
                         try:
                             if not roster_name_viewer:
-                                if self._roster[index]['players']:
-                                    # if there's just one, use the full name;
-                                    # otherwise combine short names
-                                    if len(self._roster[index]['players']) == 1:
-                                        p_str = self._roster[index]['players'][0]['name_full']
-                                    else:
-                                        p_str = ('/'.join([entry['name'] for entry in self._roster[index]['players']]))
-                                        if len(p_str) > P_NAME_STR_MAX_WIDTH:
-                                            # Cut long player name str
-                                            p_str = p_str[:P_NAME_STR_MAX_WIDTH] + '...'
+                                # PROFILE NAMES MODE - Check for nickname to replace profile name
+                                print(f"[DEBUG] Profile mode for index {index}, account: {original_display_str}")
+                                
+                                # Find the account in all_names to check for nickname
+                                account_key = None
+                                if original_display_str in all_names:
+                                    account_key = original_display_str
+                                elif p_acc in all_names:
+                                    account_key = p_acc
                                 else:
+                                    try:
+                                        import json
+                                        spec = json.loads(self._roster[index]['spec_string'])
+                                        real_name = spec.get('n', '')
+                                        if real_name and real_name in all_names:
+                                            account_key = real_name
+                                    except:
+                                        pass
+                                
+                                has_nickname = False
+                                nickname = ''
+                                if account_key:
+                                    nickname = all_names[account_key].get('nickname', '')
+                                    if nickname and nickname.strip() and nickname != 'N/A':
+                                        has_nickname = True
+                                        print(f"[DEBUG] Found nickname for profile: '{nickname}'")
+                                
+                                if self._roster[index]['players']:
+                                    if has_nickname:
+                                        # Use nickname instead of profile name
+                                        p_str = nickname.strip()
+                                        print(f"[DEBUG] Replacing profile name with nickname: {p_str}")
+                                    else:
+                                        # No nickname, use normal profile name
+                                        if len(self._roster[index]['players']) == 1:
+                                            p_str = self._roster[index]['players'][0]['name_full']
+                                        else:
+                                            p_str = ('/'.join([entry['name'] for entry in self._roster[index]['players']]))
+                                            if len(p_str) > P_NAME_STR_MAX_WIDTH:
+                                                p_str = p_str[:P_NAME_STR_MAX_WIDTH] + '...'
+                                        print(f"[DEBUG] No nickname, using profile name: {p_str}")
+                                else:
+                                    # No players, use display string
                                     p_str = self._roster[index]['display_string']
                                     if p_str and p_str[0] not in SPECIAL_CHARS and not p_str.startswith('<HIDDEN>'):
                                         p_str = babase.charstr(SpecialChar.V2_LOGO) + p_str
                                         is_1_4_server = True
+                                    print(f"[DEBUG] No players, using display string: {p_str}")
                             else:
-                                p_str = f"{p_acc} [{self._roster[index]['client_id']}]" if party_config.get(CFG_NAME_INCLUDE_CID_IN_QC_NAME_CHANGER) else p_acc
+                                # ACCOUNT NAMES MODE - Keep account name but check for nickname for color
+                                display_str = self._roster[index]['display_string']
+                                print(f"[DEBUG] Account mode for index {index}, display_str: {display_str}")
+                                
+                                # Find the account in all_names to check for nickname
+                                account_key = None
+                                if display_str in all_names:
+                                    account_key = display_str
+                                elif p_acc in all_names:
+                                    account_key = p_acc
+                                else:
+                                    try:
+                                        import json
+                                        spec = json.loads(self._roster[index]['spec_string'])
+                                        real_name = spec.get('n', '')
+                                        if real_name and real_name in all_names:
+                                            account_key = real_name
+                                    except:
+                                        pass
+                                
+                                # Always use the account name, not the nickname
+                                p_str = display_str
+                                print(f"[DEBUG] Account mode - using account name: {display_str}")
+                                
+                                # Apply client ID if configured
+                                if party_config.get(CFG_NAME_INCLUDE_CID_IN_QC_NAME_CHANGER):
+                                    p_str = f"{p_str} [{self._roster[index]['client_id']}]"
+                                    print(f"[DEBUG] Added client ID: {p_str}")
+                                
+                                # Trim if too long
+                                if len(p_str) > P_NAME_STR_MAX_WIDTH:
+                                    p_str = p_str[:P_NAME_STR_MAX_WIDTH] + '...'
+                                    print(f"[DEBUG] Trimmed name to: {p_str}")
                         except Exception as e:
-                            print(f'Error calcing client name str: {e}')
+                            print(f'Error calculating client name string: {e}')
                             p_str = '???'
 
-                        if '"' in p_str: p_str = p_str.replace('"', '\"')
-                        if "'" in p_str: p_str = p_str.replace("'", "\'")
+                        if '"' in p_str: 
+                            p_str = p_str.replace('"', '\"')
+                        if "'" in p_str: 
+                            p_str = p_str.replace("'", "\'")
 
+                        # Default color is white
                         color: tuple[float, float, float] = (1, 1, 1)
-                        if any(p_acc == name for name in MY_MASTER): # Its My Master
+                        
+                        # Check if this account has a nickname for orange color
+                        has_nickname_for_color = False
+                        try:
+                            # Check if account exists in all_names and has nickname
+                            display_str = self._roster[index]['display_string']
+                            account_key = None
+                            
+                            if display_str in all_names:
+                                account_key = display_str
+                            elif p_acc in all_names:
+                                account_key = p_acc
+                            else:
+                                try:
+                                    import json
+                                    spec = json.loads(self._roster[index]['spec_string'])
+                                    real_name = spec.get('n', '')
+                                    if real_name and real_name in all_names:
+                                        account_key = real_name
+                                except:
+                                    pass
+                            
+                            if account_key:
+                                nickname = all_names[account_key].get('nickname', '')
+                                if nickname and nickname.strip() and nickname != 'N/A':
+                                    has_nickname_for_color = True
+                                    print(f"[DEBUG] Account has nickname for color check: '{nickname}'")
+                        except Exception as e:
+                            print(f"[DEBUG] Error checking for nickname color: {e}")
+                        
+                        # Apply status-based colors (these override nickname color)
+                        if any(p_acc == name for name in MY_MASTER):
                             col_range = 0.5
                             color = (self.bg_color[0]+col_range, self.bg_color[1]+col_range, self.bg_color[2]+col_range)
+                            print(f"[DEBUG] Master color for {p_acc}")
                         elif p_acc in f"{babase.charstr(babase.SpecialChar.V2_LOGO)}LessPal":
                             color = COLORS.get('pink', color)
+                            print(f"[DEBUG] LessPal color for {p_acc}")
                         elif p_acc in friend:
                             if player_warnings.get(p_acc):
                                 color = COLORS.get('lime', color)
@@ -9588,20 +16855,31 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                                 color = COLORS.get('blue', color)
                             else:
                                 color = COLORS.get('cyan', color)
+                            print(f"[DEBUG] Friend color for {p_acc}")
                         elif p_acc in notfriend:
                             if player_warnings.get(p_acc):
                                 color = COLORS.get('orange', color)
                             else:
                                 color = COLORS.get('brown', color)
+                            print(f"[DEBUG] NotFriend color for {p_acc}")
                         elif p_acc in hated:
                             if player_warnings.get(p_acc):
                                 color = COLORS.get('black', color)
                             else:
                                 color = COLORS.get('red', color)
+                            print(f"[DEBUG] Hated color for {p_acc}")
                         elif player_warnings.get(p_acc):
                             color = COLORS.get('yellow', color)
+                            print(f"[DEBUG] Warning color for {p_acc}")
                         elif p_acc in friend and p_acc in notfriend:
                             color = COLORS.get('purple', color)
+                            print(f"[DEBUG] Friend+NotFriend color for {p_acc}")
+                        # If no special status and has nickname, set to orange
+                        elif has_nickname_for_color:
+                            color = (1.0, 0.5, 0.0)  # Orange color for nicknames
+                            print(f"[DEBUG] Nickname orange color applied (account has nickname)")
+                        else:
+                            print(f"[DEBUG] Default white color for {p_acc}")
 
                         how_many_p_with_this_str = 0
                         if p_str in self._name_texts:
@@ -9625,21 +16903,14 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                         self._name_widgets.append(widget)
                         self._name_texts.append(p_str)
 
-                        # in newer versions client_id will be present and
-                        # we can use that to determine who the host is.
-                        # in older versions we assume the first client is
-                        # host
                         if self._roster[index]['client_id'] is not None:
                             is_host = self._roster[index]['client_id'] == -1
                         else:
                             is_host = (index == 0)
 
-                        # FIXME: Should pass client_id to these sort of
-                        #  calls; not spec-string (perhaps should wait till
-                        #  client_id is more readily available though).
                         bui.textwidget(edit=widget,
                             on_activate_call=CallStrict(
-                                self._on_party_member_press, # Action 
+                                self._on_party_member_press,
                                 self._roster[index]['client_id'],
                                 is_host,
                                 widget,
@@ -9648,9 +16919,6 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
 
                         pos: tuple[float, float] = (self._width * 0.53 - c_width_total * 0.5 + c_width * x, self._height - 65 - c_height * y)
 
-                        # Make the assumption that the first roster
-                        # entry is the server.
-                        # FIXME: Shouldn't do this.
                         if is_host:
                             twd = min(
                                 c_width * 0.85,
@@ -9780,9 +17048,6 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                 choice_display = choice_display.format(player_warning)
 
             choices_display.append(choice_display)
-
-        choices.append('customCommands')
-        choices_display.append(get_lang_text('customCommands'))
 
         self._popup_type = POPUP_MENU_TYPE_PARTY_MEMBER_PRESS
         self._popup_party_member_client_id = client_id
@@ -10366,6 +17631,49 @@ class LessPartyWindow(bauiv1lib.party.PartyWindow):
                     if profiles:
                         account_name = profiles[0]
                 PlayerInfoPopup(account_name)
+    
+            elif choice == 'PartyWindow.viewAccount':
+                if client_id == -1:
+                    if profiles:
+                        account_name = profiles[0]
+                ProfileSearchWindow(self.get_root_widget(), v2 = account_name.replace(V2_LOGO, ''))
+
+            elif choice == 'PartyWindow.addFriend':
+                if client_id == -1:
+                    if profiles:
+                        account_name = profiles[0]
+
+                if not account_name or account_name.strip() == "":
+                    fieldEmpty = get_lang_text('Global.fieldEmpty')
+                    push(fieldEmpty, (1, 0, 0))
+                    gs('error').play()
+                    return
+
+                prefixed_friend = account_name
+
+                # Load current friends
+                friends = load_friends()
+
+                # Check if already exists
+                for f in friends:
+                    if f["name"] == prefixed_friend:
+                        TIP(f"{prefixed_friend} {get_lang_text('Global.alreadyInList')}")
+                        return
+
+                # Generate new ID
+                existing_ids = [int(f["id"]) for f in friends if f["id"].isdigit()]
+                new_id = str(max(existing_ids) + 1 if existing_ids else 0).zfill(2)
+
+                # Add friend object
+                add_friend(
+                    name=prefixed_friend,
+                    friend_id=new_id,
+                    accounts=[],
+                    account_pb=None,
+                    account_id=None
+                )
+
+                TIP(f"{prefixed_friend} {get_lang_text('Global.addedSuccessfully')}")
 
         elif self._popup_type == POPUP_MENU_TYPE_CHAT_PRESS:
             pname, current_text = '', ''
@@ -11765,7 +19073,8 @@ class LessAutoResponder:
                     'profile_name': profile_names,
                     'client_id': client_id,
                     'last_met': last_met_timestamp,
-                    'mutual_server': [server_name]
+                    'mutual_server': [server_name],
+                    'nickname': ''
                 }
                 if profile_names:
                     profile_str_joint = ', '.join(all_names[current_real_name]['profile_name'])
@@ -14014,17 +21323,16 @@ def _edit_text_field_global(text: str, action='add', auto_space: bool = True, wi
             bui.textwidget(edit=curr_widget, text=(current_text + text))
 
 class PlayerInfoPopup(popup.PopupWindow):
-    """Show Player Info Window Using Their Name, Including Their Chats(If Available)"""
+    """Show Player Info Window Using Their Name, Including Their Chats (If Available)"""
     def __init__(self, real_name: str):
         self.chats = internal_player_chats_data.get(real_name, [])
-        self.chats_per_page = maximum_bombsquad_chat_messages # Use the default maximum party window chats each pages
-        self.current_page = (len(self.chats) - 1) // self.chats_per_page # Automatically show the last page
+        self.chats_per_page = maximum_bombsquad_chat_messages
+        self.current_page = (len(self.chats) - 1) // self.chats_per_page
         global all_names
         self.player_data = all_names
         self.real_name = real_name
-        self.total_pages = (len(self.chats) - 1) // self.chats_per_page + 1  # Calculate the total pages
+        self.total_pages = (len(self.chats) - 1) // self.chats_per_page + 1
 
-        # Window dimensions based on whether chats are available
         if self.chats:
             self._width = 950
             self._height = 625
@@ -14033,7 +21341,7 @@ class PlayerInfoPopup(popup.PopupWindow):
             self._spacing = 32.5
         else:
             self._width = 750
-            self._height = 320
+            self._height = 380  # Increased for better spacing
             self._start_gap = 75
             self._info_text_scale = 1.0
             self._spacing = 35
@@ -14046,9 +21354,8 @@ class PlayerInfoPopup(popup.PopupWindow):
         self._pressed_textwidget_text = ''
         self._pressed_textwidget: bui.Widget = ''
         self._popup_party_member_client_id = 0
-        self.uiscale : babase.UIScale = uiscale
+        self.uiscale: babase.UIScale = uiscale
 
-        # Set up the popup window
         super().__init__(
             position=(0.0, 0.0),
             size=(self._width, self._height),
@@ -14056,7 +21363,6 @@ class PlayerInfoPopup(popup.PopupWindow):
             bg_color=self.bg_color
         )
 
-        # Main label
         self._label = bui.textwidget(
             parent=self.root_widget,
             position=(self._width * 0.5, self._height - 25),
@@ -14068,7 +21374,6 @@ class PlayerInfoPopup(popup.PopupWindow):
             text=get_lang_text('playerInfo')
         )
 
-        # Cancel button
         self._cancel_button = bui.buttonwidget(
             parent=self.root_widget,
             position=(55, self._height - 63),
@@ -14088,14 +21393,17 @@ class PlayerInfoPopup(popup.PopupWindow):
             size=(40, 40),
             label='',
             scale=1,
-            on_activate_call=CallStrict(self.on_send_click, real_name, self.player_data[real_name].get('profile_name', None), self.player_data[real_name].get('client_id', '?'), self.player_data[real_name].get('pb_id', None)),
+            on_activate_call=CallStrict(self.on_send_click, real_name, 
+                                       self.player_data[real_name].get('profile_name', None),
+                                       self.player_data[real_name].get('client_id', '?'),
+                                       self.player_data[real_name].get('pb_id', None)),
             color=self.bg_color,
             autoselect=False,
             icon=bui.gettexture('rightButton'),
             icon_color=self.bg_color,
-            iconscale=1.2)
+            iconscale=1.2
+        )
 
-        # Search Player Data from BCS Database Manually
         self._search_button = bui.buttonwidget(
             parent=self.root_widget,
             position=(self._width * 0.775, self._height * 0.025),
@@ -14110,8 +21418,6 @@ class PlayerInfoPopup(popup.PopupWindow):
             iconscale=1.2
         )
 
-        # View Account Info Button
-        # Let's determine the logic for on_activate_call and icon..
         self._view_account_button = bui.buttonwidget(
             parent=self.root_widget,
             position=(self._width * 0.7, self._height * 0.025),
@@ -14121,7 +21427,9 @@ class PlayerInfoPopup(popup.PopupWindow):
             on_activate_call=self._on_view_account_button_press if all_names[self.real_name].get('pb_id') else self._on_search_button_press,
             color=self.bg_color,
             autoselect=False,
-            icon=bui.gettexture('ouyaUButton') if all_names[self.real_name].get('_id') else bui.gettexture('ouyaYButton') if all_names[self.real_name].get('pb_id') else bui.gettexture('ouyaAButton'),
+            icon=bui.gettexture('ouyaUButton') if all_names[self.real_name].get('_id') else 
+                 bui.gettexture('ouyaYButton') if all_names[self.real_name].get('pb_id') else 
+                 bui.gettexture('ouyaAButton'),
             iconscale=1.2
         )
 
@@ -14156,16 +21464,75 @@ class PlayerInfoPopup(popup.PopupWindow):
             iconscale=1.2
         )
 
+        if 'nickname' not in self.player_data[self.real_name]:
+            self.player_data[self.real_name]['nickname'] = ''
+            all_names[self.real_name]['nickname'] = ''
+
+        nickname_value = self.player_data[real_name].get('nickname', '')
+        if not nickname_value:
+            nickname_value = 'N/A'
+
+        label_x = self._width * 0.125
+        value_x = self._width * 0.325
+        
+        self._create_label_value_pair(
+            label=("Name:" if self.player_data[real_name].get('client_id', 'N/A') != -1 else "Server Name:"),
+            value=real_name,
+            position_y=self._height - self._start_gap - self._spacing,
+            label_x=label_x,
+            value_x=value_x
+        )
+        
+        self._create_label_value_pair(
+            label=("Profile:" if self.player_data[real_name].get('client_id', 'N/A') != -1 else "Server Version:"),
+            value=', '.join(self.player_data[real_name].get('profile_name', [])) if self.player_data[real_name].get('profile_name') else "N/A",
+            position_y=self._height - self._start_gap - self._spacing*2,
+            label_x=label_x,
+            value_x=value_x
+        )
+        
+        self._create_label_value_pair(
+            label="Nickname:",
+            value=nickname_value,
+            position_y=self._height - self._start_gap - self._spacing*3,
+            label_x=label_x,
+            value_x=value_x,
+            editable=True
+        )
+        
+        self._create_label_value_pair(
+            label="Client ID:",
+            value=str(self.player_data[real_name].get('client_id', 'N/A')),
+            position_y=self._height - self._start_gap - self._spacing*4,
+            label_x=label_x,
+            value_x=value_x
+        )
+        
+        self._create_label_value_pair(
+            label="PB-ID:",
+            value=str(self.player_data[real_name].get('pb_id', 'N/A')),
+            position_y=self._height - self._start_gap - self._spacing*5,
+            label_x=label_x,
+            value_x=value_x
+        )
+        
+        self._create_label_value_pair(
+            label="Last Met:",
+            value=self.player_data[real_name].get('last_met', 'N/A'),
+            position_y=self._height - self._start_gap - self._spacing*6,
+            label_x=label_x,
+            value_x=value_x
+        )
+
         self._prioritize_bcs_pb_checkbox = bui.checkboxwidget(
             parent=self.root_widget,
-            position=(self._width * 0.135, self._height - 75) if self.chats else (self._width * 0.125, self._height * 0.025),
+            position=(self._width * 0.135, self._height - 100) if self.chats else (self._width * 0.125, self._height * 0.025),
             size=(200, 30),
             text=get_lang_text('bcsPbPriority'),
             value=responder_config.get(config_name_prioritize_bcs_pb, default_responder_config.get(config_name_prioritize_bcs_pb, False)),
             on_value_change_call=lambda v: self._set_config(config_name_prioritize_bcs_pb, v)
         )
 
-        # Player chat list and navigation buttons
         if self.chats:
             if len(self.chats) > self.chats_per_page:
                 self._page_text = bui.textwidget(
@@ -14179,60 +21546,103 @@ class PlayerInfoPopup(popup.PopupWindow):
                 )
             self._setup_chat_scroll(focous_to_last=True)
 
-        # Create info text widgets for player attributes
-        self._create_info_text(
-            label=("Name:" if self.player_data[real_name].get('client_id', 'N/A') != -1 else "Server Name:"),
-            text=real_name,
-            position=(self._width * 0.125, self._height - self._start_gap - self._spacing),
-            maxwidth=self._width * 0.6
+    def _create_label_value_pair(self, label: str, value: str, position_y: float, 
+                                 label_x: float, value_x: float, editable: bool = False):
+        bui.textwidget(
+            parent=self.root_widget,
+            position=(label_x, position_y),
+            size=(0, 0),
+            scale=self._info_text_scale,
+            h_align='left',
+            v_align='center',
+            text=label,
+            color=bui.app.ui_v1.title_color
         )
-        self._create_info_text(
-            label=("Profile:" if self.player_data[real_name].get('client_id', 'N/A') != -1 else "Server Version:"),
-            text=', '.join(self.player_data[real_name].get('profile_name', [])) if self.player_data[real_name].get('profile_name') else "N/A",
-            position=(self._width * 0.125, self._height - self._start_gap - self._spacing*2),
-            maxwidth=self._width * 0.85
-        )
-        self._create_info_text(
-            label="Client ID:",
-            text=str(self.player_data[real_name].get('client_id', 'N/A')),
-            position=(self._width * 0.125, self._height - self._start_gap - self._spacing*3),
-            maxwidth=self._width * 0.6
-        )
-        self._create_info_text(
-            label="PB-ID:",
-            text=str(self.player_data[real_name].get('pb_id', 'N/A')),
-            position=(self._width * 0.125, self._height - self._start_gap - self._spacing*4),
-            maxwidth=self._width * 0.85
-        )
-        self._create_info_text(
-            label="Last Met:",
-            text=self.player_data[real_name].get('last_met', 'N/A'),
-            position=(self._width * 0.125, self._height - self._start_gap - self._spacing*5),
-            maxwidth=self._width * 0.40
-        )
+        
+        if editable:
+            self._nickname_value_widget = bui.textwidget(
+                parent=self.root_widget,
+                position=(value_x, position_y - 15),
+                size=(self._width * 0.4, 35),
+                maxwidth=self._width * 0.4,
+                scale=self._info_text_scale,
+                h_align='left',
+                v_align='center',
+                text=value if value != 'N/A' else '',
+                selectable=True,
+                editable=True,
+                autoselect=True,
+                max_chars=25,
+                on_return_press_call=CallStrict(self._save_nickname),
+                color=bui.app.ui_v1.title_color,
+                description="Edit nickname"
+            )
+            
+            self._save_nickname_button = bui.buttonwidget(
+                parent=self.root_widget,
+                position=(value_x + self._width * 0.4 + 15, position_y - 12),
+                size=(80, 35),
+                label='Confirm',
+                scale=0.8,
+                on_activate_call=CallStrict(self._save_nickname),
+                color=self.bg_color,
+                autoselect=False
+            )
+        else:
+            bui.textwidget(
+                parent=self.root_widget,
+                position=(value_x, position_y),
+                size=(0, 0),
+                scale=self._info_text_scale,
+                h_align='left',
+                v_align='center',
+                text=value,
+                selectable=True,
+                autoselect=False,
+                click_activate=True,
+                on_activate_call=CallStrict(self._confirm_copy, value, label == "PB-ID:"),
+                color=bui.app.ui_v1.title_color
+            )
+
+    def _save_nickname(self):
+        current_text = bui.textwidget(query=self._nickname_value_widget)
+        
+        if not current_text or current_text.strip() == '':
+            self.player_data[self.real_name]['nickname'] = ''
+            all_names[self.real_name]['nickname'] = ''
+            # Update widget to show N/A when empty
+            bui.textwidget(edit=self._nickname_value_widget, text='')
+        else:
+            self.player_data[self.real_name]['nickname'] = current_text
+            all_names[self.real_name]['nickname'] = current_text
+        
+        _save_names_to_file()
+        
+        screenmessage(f"Nickname saved for {self.real_name}", color=(0, 1, 0))
+        bui.getsound('ding').play()
+        
+        # Remove focus from the text widget
+        bui.containerwidget(edit=self.root_widget, selected_child=None)
 
     def _set_config(self, config_key: str, value: bool) -> None:
-        """Update the setting when a checkbox is toggled"""
         global responder_config
         update_responder_config(config_key, value)
-        #screenmessage(f'{display_name}: {"Enabled" if value else "Disabled"}', color=COLOR_SCREENCMD_NORMAL)
-        # Apply and save the new configuration globally
         responder_config[config_key] = value
 
     def _on_search_button_press(self):
         is_searched = all_names[self.real_name].get('searched_bcs')
         p_pb = all_names[self.real_name].get('pb_id')
-        if is_searched is None: # Means The Status Of Player's Searched Data From BCS is: Unknown
+        if is_searched is None:
             if not p_pb:
                 text_str = f"{get_lang_text('bcsOnSearchTryEmpty').format(self.real_name)}"
             else:
                 text_str = f"{get_lang_text('bcsOnSearchTryOnlyPb').format(self.real_name)}"
-        elif is_searched is False: # Means The Status Of Player's Searched Data From BCS is: Already Searched And No Data Found
+        elif is_searched is False:
             if not p_pb:
                 text_str = f"{get_lang_text('bcsOnSearchTryNoPbNoBcs').format(self.real_name)}"
             else:
                 text_str = f"{get_lang_text('bcsOnSearchTryNoBcs').format(pb_id=p_pb, name=self.real_name)}?"
-        elif is_searched is True: # Means The Status Of Player's Searched Data From BCS is: Already Searched And The Data Obtained
+        elif is_searched is True:
             text_str = f"{get_lang_text('bcsOnSearchTryFull').format(pb_id=p_pb, name=self.real_name)}?"
         else:
             text_str = f"{get_lang_text('bcsOnSearchTryUnknown').format(name=self.real_name, pb_id=p_pb, other=str(is_searched))}"
@@ -14246,12 +21656,13 @@ class PlayerInfoPopup(popup.PopupWindow):
             cancel_is_selected=True,
             text_scale=1,
             ok_text=get_lang_text('yes'),
-            cancel_text=get_lang_text('cancel'))
+            cancel_text=get_lang_text('cancel')
+        )
 
     def _on_view_account_button_press(self):
         CustomAccountViewerWindow(self.real_name, self.player_data[self.real_name], self.player_data[self.real_name].get('pb_id', None))
 
-    def _setup_chat_scroll(self, focous_to_last: bool=False):
+    def _setup_chat_scroll(self, focous_to_last: bool = False):
         self.scrollwidget = bui.scrollwidget(
             parent=self.root_widget,
             size=(self._width, self._height - 275),
@@ -14264,9 +21675,8 @@ class PlayerInfoPopup(popup.PopupWindow):
             border=2,
             margin=0
         )
-        self._show_page(self.current_page, focous_to_last)  # Populate the first page of chats
+        self._show_page(self.current_page, focous_to_last)
 
-        # Navigation buttons for paginated chat list
         if len(self.chats) > self.chats_per_page:
             self._prev_button = bui.buttonwidget(
                 parent=self.root_widget,
@@ -14291,8 +21701,7 @@ class PlayerInfoPopup(popup.PopupWindow):
                 color=self.bg_color
             )
 
-    def _show_page(self, page: int, focous_to_last: bool=False):
-        """Populate the text container with the current page of texts"""
+    def _show_page(self, page: int, focous_to_last: bool = False):
         self.chat_container.delete()
 
         self.scrollwidget.delete()
@@ -14301,9 +21710,10 @@ class PlayerInfoPopup(popup.PopupWindow):
             size=(self._width, self._height - 275),
             position=(10, 200),
             color=(self.bg_color[0]+0.2, self.bg_color[1]+0.2, self.bg_color[2]+0.2),
-            highlight=False)
+            highlight=False
+        )
 
-        self.chat_container = bui.columnwidget(parent=self.scrollwidget,border=2,margin=0)
+        self.chat_container = bui.columnwidget(parent=self.scrollwidget, border=2, margin=0)
 
         start_index = page * self.chats_per_page
         end_index = start_index + self.chats_per_page
@@ -14329,33 +21739,22 @@ class PlayerInfoPopup(popup.PopupWindow):
 
     def _on_textwidget_pressed(self, text: str, widget: bui.Widget):
         self._popup_type = POPUP_MENU_TYPE_CHAT_PRESS
-        self._pressed_textwidget_text = text # Make sure its pname and the msg not splitted yet
+        self._pressed_textwidget_text = text
         self._pressed_textwidget = widget
         choices_key, choices_display = get_choices_key_lang_text(POPUP_MENU_TYPE_CHAT_PRESS)
-
-        #Using current session may cause less accurate current player
-        #chosen_player_data = current_namelist if current_namelist else all_names
-
-        # Show on party member press
-        """player_acc = self.real_name
-        if current_session_namelist.get(player_acc):
-            choices_key.append('playerMenuOptionFromText')
-            choices_display.append(get_lang_text('playerMenuOptionFromText'))
-            self._popup_party_member_client_id = chosen_player_data.get(player_acc, {}).get('client_id')
-        else:
-            pass""" # On a second thought, you dont need it :moyai:
 
         self._popup_type = POPUP_MENU_TYPE_CHAT_PRESS
         pos: tuple[float, float] = widget.get_screen_space_center()
         pos = (pos[0]*25, pos[1])
         PopupMenuWindow(
             position=pos,
-            color=self.bg_color, # type: ignore
-            scale= _get_popup_window_scale(),
+            color=self.bg_color,
+            scale=_get_popup_window_scale(),
             choices=choices_key,
             choices_display=_create_baLstr_list(choices_display),
             current_choice=choices_key[0],
-            delegate=self)
+            delegate=self
+        )
 
     def _on_other_option_pressed(self):
         choices_key: List[str] = []
@@ -14401,12 +21800,13 @@ class PlayerInfoPopup(popup.PopupWindow):
         self._popup_type = POPUP_MENU_TYPE_PLAYER_OPTION
         PopupMenuWindow(
             position=self._other_option_button.get_screen_space_center(),
-            color=self.bg_color, # type: ignore
+            color=self.bg_color,
             scale=_get_popup_window_scale(),
             choices=choices_key,
             choices_display=_create_baLstr_list(choices_display),
             current_choice=choices_key[-1],
-            delegate=self)
+            delegate=self
+        )
 
     def popup_menu_selected_choice(self, popup_window: PopupMenuWindow, choice: str) -> None:
         if self._popup_type == POPUP_MENU_TYPE_CHAT_PRESS:
@@ -14417,7 +21817,6 @@ class PlayerInfoPopup(popup.PopupWindow):
                     pname = pname.split(' ', 1)[0].strip()
             current_textwidget_text = self._pressed_textwidget_text
             current_textwidget: bui.Widget = self._pressed_textwidget
-     #       current_text = self._pressed_textwidget_text
             if self._pressed_textwidget_text:
                 player_data = all_names
                 player_acc: str = self.real_name
@@ -14432,7 +21831,8 @@ class PlayerInfoPopup(popup.PopupWindow):
                 _copy_to_clipboard(current_textwidget_text)
 
             elif choice == 'translateText':
-                if not current_textwidget_text: return
+                if not current_textwidget_text:
+                    return
                 self._translate_textwidget(current_text, current_textwidget)
 
             elif choice == 'insertText':
@@ -14519,19 +21919,20 @@ class PlayerInfoPopup(popup.PopupWindow):
                 choices_key, choices_display = get_choices_key_lang_text(POPUP_MENU_TYPE_WARN_SELECT)
                 PopupMenuWindow(
                     position=popup_window.root_widget.get_screen_space_center(),
-                    color=self.bg_color, # type: ignore
+                    color=self.bg_color,
                     scale=_get_popup_window_scale(),
                     choices=choices_key,
                     choices_display=_create_baLstr_list(choices_display),
                     current_choice=choices_key[0],
-                    delegate=self)
+                    delegate=self
+                )
 
             elif choice == 'playerOptionRemoveData':
                 if self.real_name in all_names and self.real_name not in MY_MASTER:
                     text = get_lang_text('playerOptionRemoveDataConfirm').format(self.real_name)
                     ConfirmWindow(
                         origin_widget=self.root_widget,
-                        text= f"{text}?",
+                        text=f"{text}?",
                         width=(len(text) * 13.5),
                         height=125,
                         action=self._delete_this_player_data,
@@ -14540,7 +21941,6 @@ class PlayerInfoPopup(popup.PopupWindow):
                         text_scale=1,
                         ok_text=get_lang_text('yes')
                     )
-
                 elif self.real_name in MY_MASTER:
                     screenmessage(message=(get_lang_text('playerOptionRemoveDataInMasterList') + f' {get_random_unamused_emoji()}'), color=COLOR_SCREENCMD_NORMAL)
                     bui.getsound('error').play(1.5)
@@ -14551,14 +21951,13 @@ class PlayerInfoPopup(popup.PopupWindow):
         elif self._popup_type == POPUP_MENU_TYPE_WARN_SELECT:
             if choice == 'partyPressWarnAdd':
                 manual_add_warn(player_name=self.real_name, manual=True)
-
             elif choice == 'partyPressWarnDecrease':
                 manual_decrease_warn(player_name=self.real_name, is_master=True)
 
         del popup_window
 
     def popup_menu_closing(self, popup_window: PopupWindow) -> None:
-        """Called when the popup is closing."""
+        pass
 
     def _delete_this_player_data(self):
         try:
@@ -14571,13 +21970,11 @@ class PlayerInfoPopup(popup.PopupWindow):
             print_internal_exception(e)
 
         try:
-            # Also remove from internal_chats if present
             if self.real_name in internal_player_chats_data:
                 del internal_player_chats_data[self.real_name]
                 save_internal_player_chats_data()
         except Exception as e:
             print_internal_exception(e)
-
 
     def _get_popup_window_scale(self) -> float:
         uiscale = bui.app.ui_v1.uiscale
@@ -14586,7 +21983,6 @@ class PlayerInfoPopup(popup.PopupWindow):
                 2.0)
 
     def _translate_textwidget(self, text_widget_text: str, text_widget: bui.Widget):
-        """Translate the Pressed textwidget"""
         msg: str = bui.textwidget(query=text_widget)
         cleaned_msg = ''.join(filter(str.isalpha, text_widget_text))
 
@@ -14627,7 +22023,6 @@ class PlayerInfoPopup(popup.PopupWindow):
             self._show_page(self.current_page)
 
     def _create_info_text(self, label: str, text: str, position: tuple, maxwidth: float):
-        """Creates a pressable text widget for player attributes"""
         full_text = f"{label} {text}"
         if label != "PB-ID:":
             bui.textwidget(
@@ -14643,7 +22038,8 @@ class PlayerInfoPopup(popup.PopupWindow):
                 autoselect=False,
                 click_activate=True,
                 on_activate_call=CallStrict(self._confirm_copy, text),
-                color=bui.app.ui_v1.title_color)
+                color=bui.app.ui_v1.title_color
+            )
         else:
             self._pb_text_widget = bui.textwidget(
                 parent=self.root_widget,
@@ -14658,7 +22054,8 @@ class PlayerInfoPopup(popup.PopupWindow):
                 autoselect=False,
                 click_activate=True,
                 on_activate_call=CallStrict(self._confirm_copy, text, True),
-                color=bui.app.ui_v1.title_color)
+                color=bui.app.ui_v1.title_color
+            )
 
     def _confirm_copy_chat(self, text: str):
         max_width = 75
@@ -14671,7 +22068,7 @@ class PlayerInfoPopup(popup.PopupWindow):
         ConfirmWindow(
             origin_widget=self.root_widget,
             text=f"{get_lang_text('confirmCopy')}\n{text_title}",
-            width= width,
+            width=width,
             height=135,
             action=Call(_copy_to_clipboard, text),
             cancel_is_selected=True,
@@ -14680,8 +22077,7 @@ class PlayerInfoPopup(popup.PopupWindow):
             cancel_text=get_lang_text('cancel')
         )
 
-    def _confirm_copy(self, text: str, is_pb: bool=False):
-        """Opens a confirm window to copy the selected text"""
+    def _confirm_copy(self, text: str, is_pb: bool = False):
         if not is_pb:
             if text != "N/A":
                 ConfirmWindow(
@@ -14693,7 +22089,8 @@ class PlayerInfoPopup(popup.PopupWindow):
                     cancel_is_selected=True,
                     text_scale=1,
                     cancel_text=get_lang_text('cancel'),
-                    ok_text=get_lang_text('copy'))
+                    ok_text=get_lang_text('copy')
+                )
             else:
                 screenmessage(f"{text}", color=(.7, .35, .5))
         else:
@@ -14703,17 +22100,17 @@ class PlayerInfoPopup(popup.PopupWindow):
                     return
                 is_searched = all_names[self.real_name].get('searched_bcs')
                 p_pb = all_names[self.real_name].get('pb_id')
-                if is_searched is None: # Means The Status Of Player's Searched Data From BCS is: Unknown
+                if is_searched is None:
                     if not p_pb:
                         text_str = f"{get_lang_text('bcsOnSearchTryEmpty').format(self.real_name)}"
                     else:
                         text_str = f"{get_lang_text('bcsOnSearchTryOnlyPb').format(self.real_name)}"
-                elif is_searched is False: # Means The Status Of Player's Searched Data From BCS is: Already Searched And No Data Found
+                elif is_searched is False:
                     if not p_pb:
                         text_str = f"{get_lang_text('bcsOnSearchTryNoPbNoBcs').format(self.real_name)}"
                     else:
                         text_str = f"{get_lang_text('bcsOnSearchTryNoBcs').format(pb_id=p_pb, name=self.real_name)}?"
-                elif is_searched is True: # Means The Status Of Player's Searched Data From BCS is: Already Searched And The Data Obtained
+                elif is_searched is True:
                     text_str = f"{get_lang_text('bcsOnSearchTryFull').format(pb_id=p_pb, name=self.real_name)}?"
                 else:
                     text_str = f"{get_lang_text('bcsOnSearchTryUnknown').format(self.real_name, p_pb, str(is_searched))}"
@@ -14727,7 +22124,8 @@ class PlayerInfoPopup(popup.PopupWindow):
                     cancel_is_selected=True,
                     text_scale=1,
                     cancel_text=get_lang_text('cancel'),
-                    ok_text=get_lang_text('get'))
+                    ok_text=get_lang_text('get')
+                )
             else:
                 ConfirmWindow(
                     origin_widget=self.root_widget,
@@ -14738,7 +22136,8 @@ class PlayerInfoPopup(popup.PopupWindow):
                     cancel_is_selected=True,
                     text_scale=1,
                     cancel_text=get_lang_text('cancel'),
-                    ok_text=get_lang_text('copy'))
+                    ok_text=get_lang_text('copy')
+                )
 
     def _get_pb_online(self):
         screenmessage(f"{get_lang_text('bcsGettingPlayerData').format(self.real_name)}...", color=COLOR_SCREENCMD_NORMAL)
@@ -14758,6 +22157,7 @@ class PlayerInfoPopup(popup.PopupWindow):
 
     def _transition_out(self) -> None:
         if not self._transitioning_out:
+            # No guardar automáticamente al cerrar - solo al confirmar
             bui.containerwidget(edit=self.root_widget, transition='out_scale')
             self._transitioning_out = True
             save_responder_config(responder_config)
@@ -19018,75 +26418,8 @@ class byLess(babase.Plugin):
         c.BTN.activate() if c.BTN.exists() else None
 
     def __init__(self):
-        p = LessPartyWindow
-        a = '__init__'
-        o = getattr(p, a)
-        setattr(p, a, lambda z, *a, **k: (o(z, *a, **k), self.make(z))[0])
-
         self.chat_messages = []
         timer(5, self.monitor_chat)
-
-    @property
-    def uiscale(self):
-        return bui.app.ui_v1.uiscale
-
-    def make(self, z):
-        sz = (120, 70)
-        p = z._root_widget
-
-        scale_name = (
-            "SMALL" if self.uiscale is babase.UIScale.SMALL else
-            "MEDIUM" if self.uiscale is babase.UIScale.MEDIUM else
-            "LARGE"
-        )
-
-        #print(f"[byLess] Current UI Scale: {scale_name}")
-        #babase.screenmessage(f"UI Scale: {scale_name}", color=(0, 1, 1))
-
-        x: int = (
-            1220 if self.uiscale is babase.UIScale.SMALL else
-            1065 if self.uiscale is babase.UIScale.MEDIUM else
-            964
-        )
-        y: int = (
-            530 if self.uiscale is babase.UIScale.SMALL else
-            745 if self.uiscale is babase.UIScale.MEDIUM else
-            850
-        )
-
-        iw(
-            parent=p,
-            size=(sz[0] * 1.34, sz[1] * 1.4),
-            position=(x - sz[0] * 0.14, y - sz[1] * 0.20),
-            texture=gt('softRect'),
-            opacity=0.2,
-            color=(0, 0, 0)
-        )
-
-        search_ds: str = f'{get_lang_text("search")}!'
-        self.search_button = self.__class__.BTN = bui.buttonwidget(
-            parent=p,
-            position=(x, y),
-            label=search_ds,
-            color=Finder.COL1,
-            textcolor=Finder.COL3,
-            size=sz,
-            on_activate_call=lambda: Finder(self.search_button)
-        )
-
-        auto_respond_ds: str = f'{get_lang_text("auto_respond")}!'
-        self.auto_respond_button = bui.buttonwidget(
-            icon=gt('achievementOutline'),
-            parent=p,
-            position=(x, y-70),
-            label=auto_respond_ds,
-            color=Finder.COL1,
-            textcolor=Finder.COL3,
-            size=sz,
-            on_activate_call=lambda: AutoResponder(self.auto_respond_button )
-        )
-
-        #bui.buttonwidget(self.auto_respond_button , on_activate_call=lambda: AutoResponder(self.auto_respond_button ))
 
     def monitor_chat(self):
         """Monitor chat for triggers"""
