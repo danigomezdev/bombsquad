@@ -1,270 +1,386 @@
-# BombSquad Less Server Scripts v1.1.1
-#### A handy BombSquad server manager that makes it easy to keep your server up to date with the latest versions — packed with features and ready to use or tweak however you like.
+# Less Server Scripts v1.1.5
 
-> [!NOTE]
->  ### Running on **Bombsquad 1.7.51 (API 9)**
+A comprehensive BombSquad server manager with Docker support, making it easy to deploy and maintain multiple server instances with advanced features and mods.
+
+> **Running on BombSquad 1.7.51 (API 9)**
 
 ---
 
 ## Quick Start
 
-### What You'll Need
+### Requirements
 
-**Option 1: Docker (Recommended)**
 - **Docker** and **Docker Compose** installed
-- **A VPS** - Amazon Web Services, Google Cloud, Microsoft Azure, or your favorite provider
+- **A VPS** - AWS, Google Cloud, Azure, or any Linux server
 - **Memory** - 1 GB minimum (2 GB recommended)
-
-**Option 2: Manual Installation**
-- **Basic Linux knowledge**
-- **A VPS** - Amazon Web Services, Google Cloud, Microsoft Azure, or your favorite provider
-- **Linux distro** - Ubuntu 22+ recommended
-- **Python 3.13**
-- **Memory** - 1 GB minimum (2 GB recommended)
+- **Python 3.13** on local machine for deployment script
 
 ---
 
-## Installation Guide
+## Installation
 
-### 🐳 Docker Installation (Recommended)
+### 1. Clone Repository
 
-#### Step 1: Download Server Files
 ```bash
 git clone --depth=1 https://github.com/danigomezdev/bombsquad
 cd bombsquad
 ```
 
-#### Step 2: Configure Environment Variables
+### 2. Configure Environment
+
 ```bash
-# Copy the example environment file
+# Copy environment template
 cp .env.example .env
 
-# Edit .env with your settings
+# Edit with your settings
 nano .env
 ```
 
 **Environment Variables:**
-- `ENVIRONMENT`: `development` or `production`
-  - `development`: deploys to `/home/ubuntu/tests/SERVER_NAME`
-  - `production`: deploys to `/home/ubuntu/servers/SERVER_NAME`
-- `SERVER_NAME`: Folder name on remote server (e.g., `less_east_c1`)
-- `PARTY_NAME`: Server name shown in public list
-- `PORT`: UDP port (default: 6666)
-- `SSH_HOST`: Remote server address
-- `SSH_KEY`: Path to SSH private key
-
-#### Step 3: Configure Server Settings
-Edit `config.toml` for advanced settings (admins, playlist, team names, etc.)
-
-**Note:** `party_name` and `port` in `config.toml` will be overridden by `.env` values during deployment.
-
-#### Step 4: Deploy to Remote Server
 ```bash
-# Deploy to remote server (uses .env configuration)
+ENVIRONMENT="production"      # or "development"
+SERVER_NAME="less_east_c1"    # Server folder name
+PARTY_NAME="Teams @ Less"     # Public server name
+PORT="43210"                  # UDP port
+SSH_HOST="ubuntu@your-server" # Remote server
+SSH_KEY="~/.ssh/yourkey.pem"  # SSH key path
+```
+
+### 3. Deploy to Server
+
+```bash
+# Quick deploy presets
+./deploy.sh dev   # Deploy to /home/ubuntu/tests/test (port 6666)
+./deploy.sh prod  # Deploy to /home/ubuntu/servers/less (port 43210)
+
+# Or use custom .env configuration
 ./deploy.sh
 ```
 
-The deployment script will:
-- Read configuration from `.env`
-- Update `config.toml` with your party name and port
-- Deploy to the correct environment path
-- Restore original `config.toml` after deployment
+### 4. Start Server
 
-#### Step 5: Start the Server
-
-**On Remote Server (SSH into it first):**
+**On remote server:**
 ```bash
+# SSH into server
+ssh -i ~/.ssh/yourkey.pem ubuntu@your-server
+
 # Navigate to deployed directory
-cd /home/ubuntu/tests/less_east_c1  # or /home/ubuntu/servers/less_east_c1 for production
+cd /home/ubuntu/servers/less
 
-# Start server using interactive menu
-./docker-start.sh
+# Start server
+./docker.sh
+# Select option 1 (Start server)
 ```
-
-The script will:
-- Check if Docker is installed
-- Build image only on first run or when explicitly requested
-- Smart restart without rebuild for code changes
-- Provide interactive menu for all operations
-
-#### Server Management Commands
-
-**Interactive Menu:**
-```bash
-./docker-start.sh
-```
-Options:
-1. Start server (builds only if needed)
-2. Stop server
-3. Restart server (quick reload without rebuild)
-4. View logs (live)
-5. View logs (last 200 lines)
-6. Force rebuild image
-7. Server status
-8. Enter container shell
-9. Stop and remove container
-
-**Direct Docker Commands:**
-```bash
-# View logs in real-time
-docker compose logs -f
-
-# Check server status
-docker compose ps
-
-# Restart after config changes
-docker compose restart
-```
-
-#### 🚀 Multi-Server Deployment
-
-You can deploy multiple servers using different `.env` configurations:
-
-```bash
-# Server 1: US East Development
-ENVIRONMENT=development
-SERVER_NAME=us_east_dev
-PARTY_NAME=Test Server US East
-PORT=6666
-
-# Server 2: EU West Production
-ENVIRONMENT=production
-SERVER_NAME=eu_west_prod
-PARTY_NAME=Official EU West Server
-PORT=6667
-```
-
-Simply change `.env` values and run `./deploy.sh` to deploy to different locations
 
 ---
 
-### 📦 Manual Installation
+## Server Management
 
-#### Step 1: Install Python 3.13
+### Docker Management Script
+
+The `docker.sh` script provides an interactive menu for managing your server:
+
 ```bash
-sudo apt install python3.13 python3.13-dev python3.13-venv python3-pip -y
+./docker.sh
 ```
 
-#### Step 2: Update System Packages
-```bash
-sudo apt update && sudo apt upgrade -y
+**Menu Options:**
+```
+1) Start server (build if needed)
+2) Stop server
+3) Restart server (config/mods changes only)
+4) Rebuild and restart (code changes)         <- Use after deploy
+5) View logs (live)
+6) View logs (last 200 lines)
+7) Force full rebuild (clean rebuild)
+8) Server status
+9) Enter container shell
+0) Stop and remove container
 ```
 
-#### Step 3: Start a tmux Session
+### Common Workflows
+
+**After editing config or mods:**
 ```bash
-tmux new -s server
+./docker.sh
+# Option 3 - Restart (5 seconds)
 ```
 
-#### Step 4: Download Server Files
+**After deploying code changes:**
 ```bash
-git clone --depth=1 https://github.com/danigomezdev/bombsquad
-cd bombsquad
+./deploy.sh prod
+# Then on server:
+./docker.sh
+# Option 4 - Rebuild and restart (30-60 seconds)
 ```
 
-#### Step 5: Make Files Executable
+**View logs in real-time:**
 ```bash
-chmod +x bombsquad_server
-chmod +x dist/bombsquad_headless
+./docker.sh
+# Option 5 - View logs (live)
 ```
-
-#### Step 6: Configure Your Server
-Edit `config.toml` in the root directory to set your server name, port, admins, playlist, and team names.
-
-#### Step 7: Start Your Server
-```bash
-./bombsquad_server
-```
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/ccb85dc6-86ca-45a7-816f-11b86ab23be3" />
 
 ---
 
-## Advanced Configuration
+## Project Structure
 
-### Server Settings
-Open `dist/ba_root/mods/setting.json` to customize your server settings.
-
-<!--
-**Useful Resources:**
-- [How to edit settings.json](https://github.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/wiki/Server-Settings)
-- [Available chat commands](https://github.com/imayushsaini/Bombsquad-Ballistica-Modded-Server/wiki/Chat-commands)
--->
-
-### Adding Yourself as Owner
-1. Open `dist/ba_root/mods/playersData/roles.json`
-2. Add your Pb-id to the owner list
-3. Restart your server
-
-### Player Management
-Manage your community in `dist/ba_root/mods/playersData/profiles.json`:
-- Ban players
-- Mute players
-- Disable kick votes
+```
+bombsquad-server/
+├── assets/                      # Screenshots and media
+├── dist/
+│   ├── ba_data/                 # Python modules (bacommon, efro)
+│   ├── ba_root/
+│   │   └── mods/
+│   │       ├── characters/      # Custom character mods
+│   │       ├── chathandle/      # Chat commands system
+│   │       ├── features/        # Server features
+│   │       │   ├── afk_check.py
+│   │       │   ├── announcement.py
+│   │       │   ├── discord_bot.py
+│   │       │   ├── fire_flies.py
+│   │       │   ├── team_balancer.py
+│   │       │   └── votingmachine.py
+│   │       ├── playersdata/     # Player profiles and roles
+│   │       ├── serverdata/      # Server logs and data
+│   │       ├── stats/           # Player statistics
+│   │       └── tools/           # Utility scripts
+│   └── bombsquad_headless       # Server binary
+├── bombsquad_server             # Main server script
+├── config.toml                  # Server configuration
+├── docker-compose.yml           # Docker setup
+├── docker.sh                    # Server management script
+├── deploy.sh                    # Deployment script
+├── Dockerfile                   # Docker image definition
+├── .env                         # Environment config (not in repo)
+└── .env.example                 # Environment template
+```
 
 ---
 
 ## Features
 
-### Ranking & Social Systems
-- Advanced Rank System with progression tracking
-- Live Leaderboard displaying top 5 players
-- Team Chat using comma prefix for team-only messages
-- In-game Popup Chat using dot prefix for prominent messages
-
-### Gameplay Enhancements
-- Character Chooser allowing players to select characters when joining
-- Custom Characters support with easy loading from character maker
-- Floater system for enhanced visual effects
-- Ping checking using /ping command to monitor connection quality
-
 ### Server Management
-- V2 Account System with cloud console for remote management
-- Flexible Role System supporting unlimited custom roles with specific commands
-- Rejoin Cooldown to prevent spam rejoining
-- Automatic Stats Reset on configured schedule
+- **Multi-Server Support** - Run multiple servers on one machine with unique names
+- **Docker Containerization** - Isolated, reproducible server environments
+- **Smart Deployment** - Separate dev/prod environments with data protection
+- **Auto-Restart** - Server restarts automatically if it crashes
+- **Easy Updates** - Quick rebuild system for code changes
 
-### Moderation & Voting
-- Custom Voting System activated by end, sm, nv, dv commands
-- Player ID hiding with /hideid and /showid commands
-- Automatic update checking to keep server current
-- Spectator control to hide player specs from clients
+### Gameplay Features
+- **Character Chooser** - Players can select their character on join
+- **Custom Characters** - Support for custom character mods
+- **Team Auto-Balance** - Automatic team balancing
+- **AFK Detection** - Automatic AFK player removal
+- **Vote System** - Custom voting for maps, modes, and kicks
+- **Fireflies Mode** - Visual effects during night mode
+- **Map Announcements** - Display messages on maps
 
-### Customization Options
-- Configurable Server Host Names
-- Centralized Settings in settings.json file (no coding required)
-- Easy role management with custom tags and permissions
+### Player Management
+- **Advanced Stats System** - Track player statistics and rankings
+- **Role System** - Custom roles with permissions (Owner, Admin, VIP, etc.)
+- **Player Profiles** - Persistent player data across sessions
+- **Kick/Ban System** - Player moderation tools
+- **Whitelist Support** - Restrict server access
+
+### Chat & Communication
+- **Team Chat** - Prefix messages with comma for team-only chat
+- **Popup Chat** - Prefix messages with dot for prominent display
+- **Chat Commands** - Extensive command system
+- **Profanity Filter** - Optional chat filtering
+- **Discord Integration** - Link server to Discord bot
+
+### Statistics & Tracking
+- **Live Leaderboard** - Top 5 players displayed in-game
+- **Rank Progression** - Player ranking system
+- **Stats Web Interface** - View stats via web browser
+- **Auto Stats Reset** - Scheduled stats reset
+
+### Server Customization
+- **Auto Night Mode** - Automatic lighting changes based on time
+- **Custom Team Names** - Configurable team names and colors
+- **Server Branding** - Custom host name and device name
+- **Flexible Playlists** - Custom game mode playlists
 
 ---
 
 ## Screenshots
 
-![Gameplay 1](https://github.com/user-attachments/assets/4c8024c0-4562-41b6-83a5-f493a960245f)
+### Gameplay
 
-![Gameplay 2](https://github.com/user-attachments/assets/5b95068c-1286-4aa7-914e-a8eb760ebf24)
+![Gameplay 1](assets/gameplay_1.webp)
 
-- ### More characters
+![Gameplay 2](assets/gameplay_2.webp)
+
+### Characters
 
 <div align="center">
 
-| | |
+| Character Mods | Character Mods |
 |:---:|:---:|
-| <img src="https://github.com/user-attachments/assets/0b34cf2f-27d1-4998-b04e-196abea0c703" width="100%"> | <img src="https://github.com/user-attachments/assets/7728892e-f71a-40f8-9ce4-cefb3008c1d2" width="100%"> |
-| <img src="https://github.com/user-attachments/assets/3556ac0a-8885-4945-bc87-3ea699ca4f58" width="100%"> | <img src="https://github.com/user-attachments/assets/a03d32c7-953d-47a8-864c-3e299e551716" width="100%"> |
+| <img src="assets/char_1.webp" width="100%"> | <img src="assets/char_2.webp" width="100%"> |
+| <img src="assets/char_3.webp" width="100%"> | <img src="assets/char_4.webp" width="100%"> |
 
 </div>
 
 ---
 
-## Videos
+## Configuration
 
+### Server Settings
 
-- ###  Effects
+Edit `config.toml` for basic server settings:
 
-https://github.com/user-attachments/assets/a03445ed-0081-4cf6-a24a-335c49ef3f02
+```toml
+party_name = "Teams @ Less Server"
+port = 43210
+max_party_size = 7
+session_type = "teams"
+team_names = ["Blue", "Red"]
+```
+
+### Advanced Settings
+
+Edit `dist/ba_root/mods/setting.json` for advanced features:
+
+```json
+{
+  "character_chooser": { "enable": true },
+  "autoTeamBalance": true,
+  "afk_remover": { "enable": true },
+  "autoNightMode": {
+    "enable": true,
+    "startTime": "18:00",
+    "endTime": "06:00"
+  }
+}
+```
+
+### Player Roles
+
+Edit `dist/ba_root/mods/playersdata/roles.json`:
+
+```json
+{
+  "owners": ["pb-YourAccountID"],
+  "admins": [],
+  "vips": []
+}
+```
+
+To get your account ID, use `/getaccountid` command in-game.
+
+---
+
+## Deployment Modes
+
+### Development Mode
+
+```bash
+./deploy.sh dev
+```
+
+- Deploys to `/home/ubuntu/tests/test`
+- Port: 6666
+- Overwrites all data (including stats)
+- Perfect for testing changes
+
+### Production Mode
+
+```bash
+./deploy.sh prod
+```
+
+- Deploys to `/home/ubuntu/servers/less`
+- Port: 43210
+- Preserves player data and stats
+- Safe for live servers
+
+### Custom Configuration
+
+Edit `.env` and run:
+```bash
+./deploy.sh
+```
+
+---
+
+## Multi-Server Setup
+
+You can run multiple servers on the same machine:
+
+```bash
+# Server 1
+cd /home/ubuntu/servers/server_1
+./docker.sh  # Runs as server_1-server on port from config
+
+# Server 2
+cd /home/ubuntu/servers/server_2
+./docker.sh  # Runs as server_2-server on different port
+
+# Both run simultaneously without conflicts
+```
+
+Each server gets unique:
+- Container name (based on directory)
+- Image name
+- Network
+- Volumes
+- Port
+
+---
+
+## Troubleshooting
+
+### Check Server Status
+
+```bash
+./docker.sh
+# Option 8 - Server status
+```
+
+### View Logs
+
+```bash
+./docker.sh
+# Option 5 - Live logs
+# Option 6 - Last 200 lines
+```
+
+### Enter Container Shell
+
+```bash
+./docker.sh
+# Option 9 - Enter container shell
+```
+
+### Rebuild from Scratch
+
+```bash
+./docker.sh
+# Option 7 - Force full rebuild
+```
+
+### Common Issues
+
+**"ModuleNotFoundError: No module named 'bacommon'"**
+- Solution: Rebuild image (option 4 or 7)
+
+**"Container exists but is stopped"**
+- Solution: Use option 1 (will auto-remove and recreate)
+
+**Port already in use**
+- Solution: Change `PORT` in config.toml or .env
 
 ---
 
 ## Credits
 
-**Original Creation:** [Bombsquad Community](https://github.com/bombsquad-community/)  
+**Original Creation:** [BombSquad Community](https://github.com/bombsquad-community/)
+
 **Maintained by:** [Less](https://github.com/danigomezdev)
+
+---
+
+## License
+
+See [LICENSE](LICENSE) file for details.
