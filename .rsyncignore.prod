@@ -1,7 +1,5 @@
-# Environment and deployment
-.env
-config.toml.backup
-*.tmp
+# Production-specific rsync exclusions
+# These files are EXCLUDED only in production to preserve user data
 
 # Version control
 .git/
@@ -31,12 +29,13 @@ cache/
 *.log
 *.log.*
 
-# Stats and data files (generated on server)
+# PRODUCTION: Preserve all user-generated data
 dist/ba_root/mods/playersdata/*.json*
 dist/ba_root/mods/serverdata/*.log
 dist/ba_root/mods/serverdata/*.log*
 dist/ba_root/mods/serverdata/*.json
 dist/ba_root/mods/stats/*.json
+dist/ba_root/mods/stats/*.json.backup
 
 # Documentation
 B*G*.md
@@ -44,9 +43,15 @@ D*T*.md
 C*E.md
 CLAUDE.md
 
-# Deployment
+# Environment and deployment
+.env
+config.toml.backup
+*.tmp
+
+# Deployment files
 deploy.sh
 .rsyncignore
+.rsyncignore.prod
 
 # GitHub workflows
 .github/

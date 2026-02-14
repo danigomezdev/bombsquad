@@ -10,6 +10,12 @@
 
 ### What You'll Need
 
+**Option 1: Docker (Recommended)**
+- **Docker** and **Docker Compose** installed
+- **A VPS** - Amazon Web Services, Google Cloud, Microsoft Azure, or your favorite provider
+- **Memory** - 1 GB minimum (2 GB recommended)
+
+**Option 2: Manual Installation**
 - **Basic Linux knowledge**
 - **A VPS** - Amazon Web Services, Google Cloud, Microsoft Azure, or your favorite provider
 - **Linux distro** - Ubuntu 22+ recommended
@@ -20,41 +26,153 @@
 
 ## Installation Guide
 
-### Step 1: Install Python 3.13
-```
-sudo apt install python3.13 python3.13-dev python3.13-venv python3-pip -y
-```
+### 🐳 Docker Installation (Recommended)
 
-### Step 2: Update System Packages
-```
-sudo apt update && sudo apt upgrade -y
-```
-
-### Step 3: Start a tmux Session
-```
-tmux new -s server
-```
-
-### Step 4: Download Server Files
-```
+#### Step 1: Download Server Files
+```bash
 git clone --depth=1 https://github.com/danigomezdev/bombsquad
+cd bombsquad
 ```
 
-### Step 5: Make Files Executable
-```
-chmod 777 bombsquad_server
-chmod 777 dist/bombsquad_headless
+#### Step 2: Configure Environment Variables
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env with your settings
+nano .env
 ```
 
-### Step 6: Configure Your Server
-Edit `config.yaml` in the root directory to set your server name, port, admins, playlist, and team names.
+**Environment Variables:**
+- `ENVIRONMENT`: `development` or `production`
+  - `development`: deploys to `/home/ubuntu/tests/SERVER_NAME`
+  - `production`: deploys to `/home/ubuntu/servers/SERVER_NAME`
+- `SERVER_NAME`: Folder name on remote server (e.g., `less_east_c1`)
+- `PARTY_NAME`: Server name shown in public list
+- `PORT`: UDP port (default: 6666)
+- `SSH_HOST`: Remote server address
+- `SSH_KEY`: Path to SSH private key
+
+#### Step 3: Configure Server Settings
+Edit `config.toml` for advanced settings (admins, playlist, team names, etc.)
+
+**Note:** `party_name` and `port` in `config.toml` will be overridden by `.env` values during deployment.
+
+#### Step 4: Deploy to Remote Server
+```bash
+# Deploy to remote server (uses .env configuration)
+./deploy.sh
+```
+
+The deployment script will:
+- Read configuration from `.env`
+- Update `config.toml` with your party name and port
+- Deploy to the correct environment path
+- Restore original `config.toml` after deployment
+
+#### Step 5: Start the Server
+
+**On Remote Server (SSH into it first):**
+```bash
+# Navigate to deployed directory
+cd /home/ubuntu/tests/less_east_c1  # or /home/ubuntu/servers/less_east_c1 for production
+
+# Start server using interactive menu
+./docker-start.sh
+```
+
+The script will:
+- Check if Docker is installed
+- Build image only on first run or when explicitly requested
+- Smart restart without rebuild for code changes
+- Provide interactive menu for all operations
+
+#### Server Management Commands
+
+**Interactive Menu:**
+```bash
+./docker-start.sh
+```
+Options:
+1. Start server (builds only if needed)
+2. Stop server
+3. Restart server (quick reload without rebuild)
+4. View logs (live)
+5. View logs (last 200 lines)
+6. Force rebuild image
+7. Server status
+8. Enter container shell
+9. Stop and remove container
+
+**Direct Docker Commands:**
+```bash
+# View logs in real-time
+docker compose logs -f
+
+# Check server status
+docker compose ps
+
+# Restart after config changes
+docker compose restart
+```
+
+#### 🚀 Multi-Server Deployment
+
+You can deploy multiple servers using different `.env` configurations:
+
+```bash
+# Server 1: US East Development
+ENVIRONMENT=development
+SERVER_NAME=us_east_dev
+PARTY_NAME=Test Server US East
+PORT=6666
+
+# Server 2: EU West Production
+ENVIRONMENT=production
+SERVER_NAME=eu_west_prod
+PARTY_NAME=Official EU West Server
+PORT=6667
+```
+
+Simply change `.env` values and run `./deploy.sh` to deploy to different locations
 
 ---
 
-## Starting Your Server
+### 📦 Manual Installation
 
+#### Step 1: Install Python 3.13
+```bash
+sudo apt install python3.13 python3.13-dev python3.13-venv python3-pip -y
 ```
-./bombsquad_server.py
+
+#### Step 2: Update System Packages
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+#### Step 3: Start a tmux Session
+```bash
+tmux new -s server
+```
+
+#### Step 4: Download Server Files
+```bash
+git clone --depth=1 https://github.com/danigomezdev/bombsquad
+cd bombsquad
+```
+
+#### Step 5: Make Files Executable
+```bash
+chmod +x bombsquad_server
+chmod +x dist/bombsquad_headless
+```
+
+#### Step 6: Configure Your Server
+Edit `config.toml` in the root directory to set your server name, port, admins, playlist, and team names.
+
+#### Step 7: Start Your Server
+```bash
+./bombsquad_server
 ```
 
 <img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/ccb85dc6-86ca-45a7-816f-11b86ab23be3" />

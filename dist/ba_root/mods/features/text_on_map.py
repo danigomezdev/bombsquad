@@ -140,7 +140,7 @@ class textonmap:
             'color': (1, 1, 1)
         })
 
-        base_x = 120
+        base_x = 130
         top_y = 90
         bottom_y = 55
 
@@ -149,7 +149,7 @@ class textonmap:
             'color': (1, 1, 0),
             'position': (base_x, top_y),
             'attach': 'bottomLeft',
-            'scale': (220, 4),
+            'scale': (240, 4),
             'opacity': 0.9
         })
 
@@ -158,7 +158,7 @@ class textonmap:
             'color': (1, 1, 0),
             'position': (base_x, bottom_y),
             'attach': 'bottomLeft',
-            'scale': (220, 4),
+            'scale': (240, 4),
             'opacity': 0.9
         })
 

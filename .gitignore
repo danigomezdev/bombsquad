@@ -1,3 +1,8 @@
+# Environment and configuration
+.env
+config.toml.backup
+*.tmp
+
 __pycache__/
 *.py[cod]
 *$py.class
@@ -18,3 +23,11 @@ B*G*.md
 D*T*.md
 C*E.md
 
+# Docker
+.docker/
+docker-volumes/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
