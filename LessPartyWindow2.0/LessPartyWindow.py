@@ -6532,12 +6532,198 @@ def _normalize_account_name(name: str) -> str:
     return V2_LOGO + name if name else name
 
 
+def _format_sender_global(sender: str) -> str:
+    """Format chat sender name based on current chat view setting (used for screenmessage)."""
+    view_type = finder_config.get(CFG_NAME_CHAT_VIEWER_TYPE, False)
+    show_cid = finder_config.get(CFG_NAME_CHAT_VIEWER_SHOW_CID, False)
+
+    if not view_type:
+        return sender
+
+    roster = bs.get_game_roster() or []
+    match = None
+    for entry in roster:
+        for player in entry.get('players', []):
+            name = player.get('name', '')
+            name_full = player.get('name_full', '')
+            if sender in (name, name_full) or name in sender or name_full in sender:
+                match = entry
+                break
+        if match:
+            break
+
+    if not match:
+        return sender
+
+    account = match.get('display_string', sender)
+    profiles_full = [
+        p.get('name_full', '') or p.get('name', '')
+        for p in match.get('players', [])
+        if p.get('name_full') or p.get('name')
+    ]
+    profile_joint = ', '.join(profiles_full) if profiles_full else sender
+    client_id = match.get('client_id', -1)
+    cid_prefix = f'[{client_id}] ' if show_cid and client_id != -1 else ''
+
+    if profiles_full:
+        real_name = _normalize_account_name(account)
+        pdata = get_all_players().get(real_name) or get_all_players().get(account)
+        if pdata:
+            nick = (pdata.get('nickname') or '').strip()
+            if nick:
+                return cid_prefix + _fmt_nickname(nick)
+
+    account_icon = account[0] if account and account[0] in _SPECIAL_CHARS else ''
+
+    if view_type == CHAT_VIEW_TYPE_PROFILE:
+        return cid_prefix + (profile_joint if profiles_full else sender)
+    if view_type == CHAT_VIEW_TYPE_ACCOUNT:
+        return cid_prefix + account
+    if view_type in (CHAT_VIEW_TYPE_MULTI, CHAT_VIEW_TYPE_MULTI_V2):
+        if account != profile_joint:
+            return cid_prefix + account + ' | ' + profile_joint
+        return cid_prefix + account
+    if account_icon and not sender.startswith(account_icon):
+        return account_icon + sender
+    return sender
+
+
+def _install_chat_screenmessage_interceptor() -> None:
+    """Install a global screenmessage interceptor for chat notifications."""
+    import logging
+
+    try:
+        orig = babase.screenmessage
+
+        def _interceptor(msg: str, *args, **kwargs) -> None:
+            # Only intercept plain chat messages (no explicit color arg, has ': ')
+            if not args and 'color' not in kwargs and ': ' in msg:
+                sender, _, body = msg.partition(': ')
+
+                pw = _active_party_window_ref() if _active_party_window_ref else None
+                window_open = pw is not None and pw._root_widget.exists()
+
+                blocked = is_blocked(sender)
+
+                if not window_open:
+                    import logging
+                    logging.info(
+                        f'[LParty] notification (window closed): '
+                        f'sender={sender!r}, blocked={blocked}, body={body!r}'
+                    )
+
+                if blocked:
+                    return
+
+                # Apply sender color
+                base = _chat_color_tracker.get(sender)
+                if base is not None:
+                    intensity = finder_config.get(CFG_NAME_CHAT_COLOR_INTENSITY, 'strong')
+                    if intensity == 'strong':
+                        kwargs['color'] = tuple(min(1.0, c + 0.3) for c in base)
+                    elif intensity == 'soft':
+                        kwargs['color'] = tuple((c + 1.0) / 2.0 for c in base)
+
+                # When party window is closed, reformat the sender name
+                if not window_open:
+                    msg = _format_sender_global(sender) + ': ' + body
+
+            orig(msg, *args, **kwargs)
+
+        babase.screenmessage = _interceptor
+        if babase.screenmessage is _interceptor:
+            logging.info('[LParty] babase.screenmessage interceptor installed OK')
+        else:
+            logging.warning('[LParty] babase.screenmessage interceptor NOT installed (read-only?)')
+    except Exception as e:
+        logging.warning(f'[LParty] babase.screenmessage patch failed: {e}')
+
+    # Also patch bui.screenmessage — the engine may use this for closed-window notifications
+    try:
+        orig_bui = bui.screenmessage
+
+        def _bui_interceptor(msg: str, *args, **kwargs) -> None:
+            if not args and 'color' not in kwargs and ': ' in msg:
+                sender, _, body = msg.partition(': ')
+
+                pw = _active_party_window_ref() if _active_party_window_ref else None
+                window_open = pw is not None and pw._root_widget.exists()
+
+                blocked = is_blocked(sender)
+
+                if not window_open:
+                    import logging
+                    logging.info(
+                        f'[LParty/bui] notification (window closed): '
+                        f'sender={sender!r}, blocked={blocked}, body={body!r}'
+                    )
+
+                if blocked:
+                    return
+
+                base = _chat_color_tracker.get(sender)
+                if base is not None:
+                    intensity = finder_config.get(CFG_NAME_CHAT_COLOR_INTENSITY, 'strong')
+                    if intensity == 'strong':
+                        kwargs['color'] = tuple(min(1.0, c + 0.3) for c in base)
+                    elif intensity == 'soft':
+                        kwargs['color'] = tuple((c + 1.0) / 2.0 for c in base)
+
+                if not window_open:
+                    msg = _format_sender_global(sender) + ': ' + body
+
+            orig_bui(msg, *args, **kwargs)
+
+        bui.screenmessage = _bui_interceptor
+        if bui.screenmessage is _bui_interceptor:
+            logging.info('[LParty] bui.screenmessage interceptor installed OK')
+        else:
+            logging.warning('[LParty] bui.screenmessage interceptor NOT installed (read-only?)')
+    except Exception as e:
+        logging.warning(f'[LParty] bui.screenmessage patch failed: {e}')
+
+    # Also patch bascenev1.broadcastmessage — sample mods use this path for chat notifications
+    try:
+        orig_bs = bs.broadcastmessage
+
+        def _bs_interceptor(msg: object, *args, **kwargs) -> None:
+            if isinstance(msg, str) and not args and 'color' not in kwargs and ': ' in msg:
+                sender, _, body = msg.partition(': ')
+                pw = _active_party_window_ref() if _active_party_window_ref else None
+                window_open = pw is not None and pw._root_widget.exists()
+                if not window_open:
+                    import logging
+                    logging.info(
+                        f'[LParty/bs] broadcastmessage (window closed): sender={sender!r}'
+                    )
+                    for entry in bs.get_game_roster() or []:
+                        for player in entry.get('players', []):
+                            n = player.get('name', '')
+                            nf = player.get('name_full', '')
+                            if sender in (n, nf) or n in sender or nf in sender:
+                                account = entry.get('display_string', '')
+                                if account and is_blocked(account):
+                                    return
+                                break
+            orig_bs(msg, *args, **kwargs)
+
+        bs.broadcastmessage = _bs_interceptor
+    except Exception as e:
+        import logging
+        logging.warning(f'[LParty] bs.broadcastmessage patch failed: {e}')
+
+
 def _ping_color(ms: float) -> tuple[float, float, float]:
     if ms < 100:
         return (0.0, 1.0, 0.0)
     if ms < 900:
         return (1.0, 1.0, 0.0)
     return (1.0, 0.0, 0.0)
+
+
+# Keeps a closed LPartyWindow alive so its UIOpenState stays active,
+# forcing C++ to call on_chat_message instead of native screenmessage.
+_zombie_party_window: 'LPartyWindow | None' = None
 
 
 class _ThemedPopupMenu(PopupMenuWindow):
@@ -6605,6 +6791,13 @@ _CFG_CHAT_MUTED = 'lparty.chat_muted'
 class LPartyWindow(party.PartyWindow):
 
     def __init__(self, origin: Sequence[float] = (0, 0)) -> None:
+        global _zombie_party_window
+        if _zombie_party_window is not None:
+            try:
+                _zombie_party_window._uiopenstate = None  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            _zombie_party_window = None
         log_uiscale('party_window_open')
         self._roster_show_account: bool = False
         self._chat_raw_msgs: list[str] = []
@@ -6632,6 +6825,10 @@ class LPartyWindow(party.PartyWindow):
             if not _root_created[0] and 'edit' not in kwargs:
                 _root_created[0] = True
                 kwargs['color'] = _bg
+                if bui.app.ui_v1.uiscale is babase.UIScale.SMALL:
+                    w, h = kwargs.get('size', (500, 365))
+                    kwargs['size'] = (w + 50, h)
+                    self._width = w + 50
             return _orig_cw(*args, **kwargs)
 
         bui.buttonwidget = _intercept_bw
@@ -6639,6 +6836,9 @@ class LPartyWindow(party.PartyWindow):
         super().__init__(origin)
         bui.buttonwidget = _orig_bw
         bui.containerwidget = _orig_cw
+
+        if bui.app.ui_v1.uiscale is babase.UIScale.SMALL:
+            bui.textwidget(edit=self._text_field, size=(580, 40), maxwidth=544)
 
         global _active_party_window_ref
         _active_party_window_ref = _weakref.ref(self)
@@ -7169,35 +7369,7 @@ class LPartyWindow(party.PartyWindow):
         # prevent stock from loading old messages when we're muted
         if is_muted:
             self._display_old_msgs = False
-        _orig_sm = babase.screenmessage
-        _sm_patched = False
-
-        def _colored_sm(msg: str, *args, **kwargs) -> None:
-            if not args and 'color' not in kwargs and ': ' in msg:
-                sender, _, _ = msg.partition(': ')
-                base = _chat_color_tracker.get(sender)
-                if base is not None:
-                    _intensity = finder_config.get(CFG_NAME_CHAT_COLOR_INTENSITY, 'strong')
-                    if _intensity == 'strong':
-                        kwargs['color'] = tuple(min(1.0, c + 0.3) for c in base)
-                    elif _intensity == 'soft':
-                        kwargs['color'] = tuple((c + 1.0) / 2.0 for c in base)
-            _orig_sm(msg, *args, **kwargs)
-
-        try:
-            babase.screenmessage = _colored_sm
-            _sm_patched = True
-        except (AttributeError, TypeError):
-            pass
-
-        try:
-            super()._update()
-        finally:
-            if _sm_patched:
-                try:
-                    babase.screenmessage = _orig_sm
-                except (AttributeError, TypeError):
-                    pass
+        super()._update()
         # always hide the stock muted text; we use our own
         if self._muted_text.exists():
             bui.textwidget(edit=self._muted_text, color=(0, 0, 0, 0))
@@ -7389,6 +7561,38 @@ class LPartyWindow(party.PartyWindow):
         if '{}' in fmt:
             bs.chatmessage(fmt.format(round(self._ping_ms)))
 
+    def on_chat_message(self, msg: str) -> None:
+        zombie = not self._root_widget or not self._root_widget.exists()
+        sender = msg.partition(': ')[0] if ': ' in msg else None
+        v2 = self._get_v2_account(sender) if sender else None
+        blocked = is_blocked(v2) if v2 else is_blocked(sender) if sender else False
+
+        # Zombie path: window closed but object kept alive for UIOpenState.
+        if zombie:
+            if ': ' not in msg:
+                return
+            _, _, body = msg.partition(': ')
+            if blocked:
+                return
+            formatted = _format_sender_global(sender) + ': ' + body
+            color: tuple | None = None
+            base = _chat_color_tracker.get(sender)
+            if base is not None:
+                intensity = finder_config.get(CFG_NAME_CHAT_COLOR_INTENSITY, 'strong')
+                if intensity == 'strong':
+                    color = tuple(min(1.0, c + 0.3) for c in base)  # type: ignore[assignment]
+                elif intensity == 'soft':
+                    color = tuple((c + 1.0) / 2.0 for c in base)  # type: ignore[assignment]
+            if color:
+                babase.screenmessage(formatted, color=color)
+            else:
+                babase.screenmessage(formatted)
+            return
+        if blocked:
+            return
+        if not babase.app.config.get(_CFG_CHAT_MUTED, False):
+            self._add_msg(msg)
+
     def _add_msg(self, msg: str) -> None:
         # Format sender
         sender = None
@@ -7419,7 +7623,7 @@ class LPartyWindow(party.PartyWindow):
             size=(900, 13),
             text=display_msg,
             color=msg_color,
-            autoselect=True,
+            autoselect=False,
             always_highlight=True,
             maxwidth=self._scroll_width * 0.94,
             shadow=0.3,
@@ -7741,7 +7945,7 @@ class LPartyWindow(party.PartyWindow):
         # If player has a nickname and is using a profile
         if profiles_full:
             real_name = _normalize_account_name(account)
-            _pdata = _gap().get(real_name) or _gap().get(account)
+            _pdata = get_all_players().get(real_name) or get_all_players().get(account)
             if _pdata:
                 _nick = (_pdata.get('nickname') or '').strip()
                 if _nick:
@@ -8050,15 +8254,17 @@ class LPartyWindow(party.PartyWindow):
             babase.apptimer(0.5, root.delete)
         # Temporarily register GatherModified in the nav system so that
         # if it auto-recreates gather, it uses the right class.
-        from _bampui.lparty import set_global_gather_modified
-        set_global_gather_modified(True)
+        global _orig_gather_window
+        import bauiv1lib.gather as _gather_mod
+        if _orig_gather_window is None:
+            _orig_gather_window = _gather_mod.GatherWindow
+        _gather_mod.GatherWindow = GatherModified
         GatherModified(transition='in_left', from_party=True)
 
     def _update_background_color(self, new_color: tuple) -> None:
         self.background_color = new_color
         if self._root_widget and self._root_widget.exists():
-            from _bampui.theme import o_container
-            o_container(edit=self._root_widget, color=new_color)
+            bui.containerwidget(edit=self._root_widget, color=new_color)
 
     def _update_scroll_color(self, new_color: tuple) -> None:
         if self._scrollwidget and self._scrollwidget.exists():
@@ -8675,14 +8881,30 @@ class LPartyWindow(party.PartyWindow):
                 babase.Lstr(resource='internal.cantKickHostError'),
                 color=(1, 0, 0))
 
-    def _is_sender_blocked(self, sender: str) -> bool:
+    def _get_v2_account(self, sender: str) -> str | None:
+        """Returns V2 display_string for sender.
+
+        If sender already starts with a special char it IS the V2 account.
+        Otherwise look it up via the roster player names.
+        """
+        if not sender:
+            return None
+        v2_logo = babase.charstr(babase.SpecialChar.V2_LOGO)
+        if sender[0] == v2_logo:
+            return sender
         for entry in bs.get_game_roster() or []:
             for player in entry.get('players', []):
                 n = player.get('name', '')
                 nf = player.get('name_full', '')
                 if sender in (n, nf) or n in sender or nf in sender:
-                    account = entry.get('display_string', '')
-                    return bool(account and is_blocked(account))
+                    acc = entry.get('display_string', '')
+                    return acc if acc else None
+        return None
+
+    def _is_sender_blocked(self, sender: str) -> bool:
+        account = self._get_v2_account(sender)
+        if account is not None:
+            return is_blocked(account)
         return False
 
     def _save_last_game_replay(self) -> None:
@@ -8773,12 +8995,16 @@ class LPartyWindow(party.PartyWindow):
         self._party_check_timer = None
         self._unsubscribe_all_changes()
         super().close()
+        global _zombie_party_window
+        _zombie_party_window = self
 
     def close_with_sound(self) -> None:
         self._window_open = False
         self._party_check_timer = None
         self._unsubscribe_all_changes()
         super().close_with_sound()
+        global _zombie_party_window
+        _zombie_party_window = self
 
 
 class _FriendPickerWindow(PopupWindow):
@@ -9124,9 +9350,11 @@ class GatherModified(GatherWindow):
 
     def _on_back(self) -> None:
         # Restore original GatherWindow and patches if the user hasn't enabled it globally.
-        from _bampui.lparty import set_global_gather_modified
         if not finder_config.get(CFG_NAME_GLOBAL_GATHER, False):
-            set_global_gather_modified(False)
+            global _orig_gather_window
+            import bauiv1lib.gather as _gather_mod
+            if _orig_gather_window is not None:
+                _gather_mod.GatherWindow = _orig_gather_window
             GatherModified._unpatch_public_tab()
         self._save_state()
         try:
@@ -16397,7 +16625,7 @@ class ProfileSearchWindow:
                 else:
                     self.error = get_lang_text('ProfileSearchWindow.Error.noValidParameter')
                     self.loading = False
-                    pushcall(self._update_ui, from_other_thread=True)
+                    babase.pushcall(self._update_ui, from_other_thread=True)
                     return
 
                 req = urllib.request.Request(url, headers={'User-Agent': 'BombSquad Mod'})
@@ -16431,7 +16659,7 @@ class ProfileSearchWindow:
                 import traceback
                 print(f'[ProfileSearchWindow] {traceback.format_exc()}')
 
-            pushcall(self._update_ui, from_other_thread=True)
+            babase.pushcall(self._update_ui, from_other_thread=True)
 
         t = Thread(target=fetch_thread, daemon=True)
         t.start()
@@ -17085,7 +17313,7 @@ class ProfileSearch:
                     if not results:
                         self.error = 'No results found'
                         self.loading = False
-                        pushcall(self._update_ui, from_other_thread=True)
+                        babase.pushcall(self._update_ui, from_other_thread=True)
                         return
 
                     self.results = results
@@ -17104,7 +17332,7 @@ class ProfileSearch:
                     if 'results' not in parsed_data or not parsed_data['results']:
                         self.error = 'No results found'
                         self.loading = False
-                        pushcall(self._update_ui, from_other_thread=True)
+                        babase.pushcall(self._update_ui, from_other_thread=True)
                         return
 
                     results = parsed_data['results']
@@ -17181,7 +17409,7 @@ class ProfileSearch:
                 self.error = get_lang_text('ProfileSearch.Error.unexpected')
                 self.loading = False
 
-            pushcall(self._update_ui, from_other_thread=True)
+            babase.pushcall(self._update_ui, from_other_thread=True)
 
         Thread(target=fetch_thread, daemon=True).start()
 
@@ -18301,8 +18529,7 @@ class SettingsWindow:
 
     def _on_bg_color_change(self, new_color: tuple) -> None:
         if self._root_widget and self._root_widget.exists():
-            from _bampui.theme import o_container
-            o_container(edit=self._root_widget, color=new_color)
+            bui.containerwidget(edit=self._root_widget, color=new_color)
 
     def _on_secondary_color_change(self, _: tuple) -> None:
         if self._root_widget and self._root_widget.exists():
@@ -21198,6 +21425,42 @@ def _apply_global_gather() -> None:
 
 
 babase.apptimer(0.6, _apply_global_gather)
+
+_install_chat_screenmessage_interceptor()
+
+
+def _patch_chat_hooks() -> None:
+    import logging
+    import bascenev1._hooks as _bs_hooks
+    import baclassic._appsubsystem as _appsub
+
+    # Patch local_chat_message to log all incoming messages.
+    _orig_local_chat = _bs_hooks.local_chat_message
+
+    def _patched_local_chat(msg: str) -> None:
+        _orig_local_chat(msg)
+
+    _bs_hooks.local_chat_message = _patched_local_chat
+
+    # Patch party_icon_activate so zombie is released before toggling party window.
+    _orig_activate = _appsub.ClassicAppSubsystem.party_icon_activate
+
+    def _patched_activate(self, origin):
+        global _zombie_party_window
+        if _zombie_party_window is not None:
+            try:
+                _zombie_party_window._uiopenstate = None  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            _zombie_party_window = None
+            self.party_window = None
+        _orig_activate(self, origin)
+
+    _appsub.ClassicAppSubsystem.party_icon_activate = _patched_activate
+    logging.info('[LParty] chat hooks patched')
+
+
+babase.apptimer(0.5, _patch_chat_hooks)
 
 
 def _setup_camera_auto_restore() -> None:
