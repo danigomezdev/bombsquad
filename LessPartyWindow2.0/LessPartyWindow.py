@@ -1307,6 +1307,15 @@ Translate_Texts: Dict[str, Dict[str, str]] = {
         'ml': 'കളിക്കാരന്റെ ഓപ്ഷനുകൾ',
         'id': 'Opsi Pemain',
     },
+    'ChatPopup.playerInfo': {
+        'en': 'Player Info',
+        'es': 'Información de Jugador',
+        'pt': 'Informações do Jogador',
+        'ru': 'Информация об игроке',
+        'hi': 'खिलाड़ी जानकारी',
+        'ml': 'കളിക്കാരന്റെ വിവരം',
+        'id': 'Info Pemain',
+    },
     'ChatPopup.playerNotFound': {
         'en': 'Player not found in records',
         'es': 'Jugador no encontrado en registros',
@@ -6829,6 +6838,10 @@ class LPartyWindow(party.PartyWindow):
                     w, h = kwargs.get('size', (500, 365))
                     kwargs['size'] = (w + 50, h)
                     self._width = w + 50
+                elif bui.app.ui_v1.uiscale is babase.UIScale.LARGE:
+                    w, h = kwargs.get('size', (500, 600))
+                    kwargs['size'] = (w, h + 30)
+                    self._height = h + 30
             return _orig_cw(*args, **kwargs)
 
         bui.buttonwidget = _intercept_bw
@@ -6838,7 +6851,13 @@ class LPartyWindow(party.PartyWindow):
         bui.containerwidget = _orig_cw
 
         if bui.app.ui_v1.uiscale is babase.UIScale.SMALL:
-            bui.textwidget(edit=self._text_field, size=(580, 40), maxwidth=544)
+            bui.textwidget(edit=self._text_field, size=(595, 60), maxwidth=559, position=(44, 24))
+        elif bui.app.ui_v1.uiscale is babase.UIScale.MEDIUM:
+            bui.textwidget(edit=self._text_field, size=(530, 60), position=(44, 29))
+        else:
+            bui.textwidget(edit=self._text_field, size=(530, 60), position=(44, 29))
+
+        self._scroll_width -= 10
 
         global _active_party_window_ref
         _active_party_window_ref = _weakref.ref(self)
@@ -6869,7 +6888,7 @@ class LPartyWindow(party.PartyWindow):
                 texture=bui.gettexture('rightButton'),
                 size=(send_size),
                 color=(1, 1, 1),
-                position=(self._width - 80, 35),
+                position=(self._width - 80, 25 if is_small else 30),
             )
 
         if _menu_ref:
@@ -6911,7 +6930,7 @@ class LPartyWindow(party.PartyWindow):
 
         if is_small:
             bui.buttonwidget(edit=self._cancel_button, scale=0.55,
-                             position=(30, self._height - 25))
+                             position=(27, self._height - 25))
             bui.buttonwidget(edit=self._menu_button, scale=0.55,
                              position=(self._width - 40, self._height - 25))
             bui.textwidget(edit=self._title_text, scale=0.75,
@@ -6921,6 +6940,8 @@ class LPartyWindow(party.PartyWindow):
             bui.textwidget(edit=self._empty_str_2,
                            position=(self._width * 0.5, self._height - 53))
         else:
+            bui.buttonwidget(edit=self._cancel_button,
+                             position=(27, self._height - 47))
             bui.buttonwidget(edit=self._menu_button,
                              position=(self._width - 45, self._height - 47))
             bui.textwidget(edit=self._title_text, scale=1.05,
@@ -6957,7 +6978,7 @@ class LPartyWindow(party.PartyWindow):
         icon_btn_size = (30, 30)
         trans_scale = 1.0 if is_small else btn_scale
         trans_x = self._width - 35
-        trans_y = 38 if is_small else 35
+        trans_y = 28 if is_small else (35 if is_medium else 33)
 
         button_start_y = self._height // 2 + btn_spacing * 2
 
@@ -7239,17 +7260,22 @@ class LPartyWindow(party.PartyWindow):
 
             uiscale = bui.app.ui_v1.uiscale
             if uiscale is babase.UIScale.SMALL:
-                _bs, _bsz, _gap, _bx, _by = 0.7, (37, 37), 31, -5, 60
+                _bs, _bsz, _gap, _bx, _by = 0.7, (37, 37), 31, -9, 60
             elif uiscale is babase.UIScale.MEDIUM:
-                _bs, _bsz, _gap, _bx, _by = 0.8, (39, 39), 37, -15, 90
+                _bs, _bsz, _gap, _bx, _by = 0.8, (39, 39), 37, -19, 90
             else:
-                _bs, _bsz, _gap, _bx, _by = 1.0, (45, 45), 53, -30, 105
+                _bs, _bsz, _gap, _bx, _by = 1.0, (45, 45), 53, -34, 105
+            _ping_bsz = (round(_bsz[0] * 1.25), round(_bsz[1] * 1.25))
+            _other_bsz = (round(_bsz[0] * 0.99), round(_bsz[1] * 0.99))
+            _gap += 1
+            # center the 3 sub-buttons vertically (same logic as right-side buttons)
+            _left_start_y = self._height // 2 + _gap
 
             if self._ping_button is None or not self._ping_button.exists():
                 self._ping_button = bui.buttonwidget(
                     parent=self._root_widget,
-                    position=(_bx, self._height - _by),
-                    size=_bsz,
+                    position=(_bx + 4, self._height - _by),
+                    size=_ping_bsz,
                     label='?',
                     scale=_bs,
                     button_type='square',
@@ -7265,8 +7291,8 @@ class LPartyWindow(party.PartyWindow):
             if self._icon_button is None or not self._icon_button.exists():
                 self._icon_button = bui.buttonwidget(
                     parent=self._root_widget,
-                    position=(_bx, self._height - _by - _gap),
-                    size=_bsz,
+                    position=(_bx + 6, _left_start_y),
+                    size=_other_bsz,
                     label='',
                     scale=_bs,
                     button_type='square',
@@ -7281,8 +7307,8 @@ class LPartyWindow(party.PartyWindow):
             if self._ip_button is None or not self._ip_button.exists():
                 self._ip_button = bui.buttonwidget(
                     parent=self._root_widget,
-                    position=(_bx, self._height - _by - _gap * 2),
-                    size=_bsz,
+                    position=(_bx + 6, _left_start_y - _gap),
+                    size=_other_bsz,
                     label='IP',
                     scale=_bs,
                     button_type='square',
@@ -7295,8 +7321,8 @@ class LPartyWindow(party.PartyWindow):
             if self._gather_button is None or not self._gather_button.exists():
                 self._gather_button = bui.buttonwidget(
                     parent=self._root_widget,
-                    position=(_bx, self._height - _by - _gap * 3),
-                    size=_bsz,
+                    position=(_bx + 6, _left_start_y - _gap * 2),
+                    size=_other_bsz,
                     label='',
                     scale=_bs,
                     button_type='square',
@@ -7461,16 +7487,7 @@ class LPartyWindow(party.PartyWindow):
         if bs.get_game_roster() and getattr(self, '_roster_show_account', False):
             self._apply_account_names()
         if self._roster_hidden:
-            for w in self._name_widgets:
-                if w.exists():
-                    bui.textwidget(edit=w, text='')
-            # Expand scroll to fill the space freed by hiding the user list
-            is_small = bui.app.ui_v1.uiscale is bui.UIScale.SMALL
-            scroll_h = max(100, self._height - (115 if is_small else 139))
-            bui.scrollwidget(
-                edit=self._scrollwidget,
-                size=(self._scroll_width, scroll_h),
-            )
+            self._apply_filtered_roster_layout()
         if bui.app.ui_v1.uiscale is bui.UIScale.SMALL and not self._roster_hidden:
             if self._name_widgets and self._roster:
                 roster = self._roster
@@ -7488,6 +7505,7 @@ class LPartyWindow(party.PartyWindow):
                     edit=self._scrollwidget,
                     size=(self._scroll_width,
                           max(100, self._height - 110 - c_height_total)),
+                    position=(37, 80),
                 )
                 # Shift names up and reduce scale
                 wi = 0
@@ -7512,7 +7530,17 @@ class LPartyWindow(party.PartyWindow):
                 bui.scrollwidget(
                     edit=self._scrollwidget,
                     size=(self._scroll_width, self._height - 150),
+                    position=(37, 80),
                 )
+        elif not self._roster_hidden:
+            # super()._update() uses self._width - 50; restore our narrower width
+            if self._roster:
+                columns = 1 if len(self._roster) == 1 else 2 if len(self._roster) == 2 else 3
+                c_height_total = 24 * math.ceil(len(self._roster) / columns)
+                scroll_h = max(100, self._height - 139 - c_height_total)
+            else:
+                scroll_h = self._height - 170
+            bui.scrollwidget(edit=self._scrollwidget, size=(self._scroll_width, scroll_h), position=(37, 80))
 
     def _do_ping(self) -> None:
         if not self._window_open or self._ping_running:
@@ -7698,16 +7726,9 @@ class LPartyWindow(party.PartyWindow):
             language.get_text('ChatPopup.copyText'),
             language.get_text('ChatPopup.insertText'),
         ])
-        if not _restrict:
+        if _entry and not _restrict:
             choices.append('chat_player')
             choices_display.append(babase.Lstr(value=language.get_text('ChatPopup.playerOption')))
-
-        if _entry and not _restrict:
-            choices += ['chat_mention', block_choice]
-            choices_display += [
-                babase.Lstr(value=language.get_text('PartyWindow.mention')),
-                babase.Lstr(value=block_label),
-            ]
 
         pos = (
             widget.get_screen_space_center()
@@ -7782,6 +7803,141 @@ class LPartyWindow(party.PartyWindow):
                 )
             widget_idx += 1
 
+    def _keep_visible_when_hidden(self, idx: int) -> bool:
+        """Returns True if this roster entry should stay visible in hidden mode."""
+        if not self._roster or idx >= len(self._roster):
+            return False
+        entry = self._roster[idx]
+        if entry.get('client_id') == -1:
+            return True
+        acc = entry.get('display_string', '')
+        try:
+            plus = babase.app.plus
+            if plus is not None:
+                raw = plus.get_v1_account_display_string()
+                if raw and acc and _normalize_account_name(raw).strip() == acc.strip():
+                    return True
+        except Exception:
+            pass
+        friends = load_friends()
+        friend_names: set[str] = set()
+        for f in friends:
+            n = f['name']
+            friend_names.add(n)
+            friend_names.add(n.replace(V2_LOGO, ''))
+            friend_names.add(f'{V2_LOGO}{n}')
+        if acc and (acc in friend_names or acc.replace(V2_LOGO, '') in friend_names):
+            return True
+        if acc:
+            _all_players = get_all_players()
+            real_name = _normalize_account_name(acc)
+            player_data = _all_players.get(real_name) or _all_players.get(acc)
+            if player_data and (player_data.get('nickname') or '').strip():
+                return True
+        return False
+
+    def _get_entry_category(self, idx: int) -> int:
+        """Returns sort category: 0=host, 1=self, 2=friend, 3=nicknamed, 99=hidden."""
+        if not self._roster or idx >= len(self._roster):
+            return 99
+        entry = self._roster[idx]
+        if entry.get('client_id') == -1:
+            return 0
+        acc = entry.get('display_string', '')
+        try:
+            plus = babase.app.plus
+            if plus is not None:
+                raw = plus.get_v1_account_display_string()
+                if raw and acc and _normalize_account_name(raw).strip() == acc.strip():
+                    return 1
+        except Exception:
+            pass
+        friends = load_friends()
+        friend_names: set[str] = set()
+        for f in friends:
+            n = f['name']
+            friend_names.add(n)
+            friend_names.add(n.replace(V2_LOGO, ''))
+            friend_names.add(f'{V2_LOGO}{n}')
+        if acc and (acc in friend_names or acc.replace(V2_LOGO, '') in friend_names):
+            return 2
+        if acc:
+            _all_players = get_all_players()
+            real_name = _normalize_account_name(acc)
+            player_data = _all_players.get(real_name) or _all_players.get(acc)
+            if player_data and (player_data.get('nickname') or '').strip():
+                return 3
+        return 99
+
+    def _apply_filtered_roster_layout(self) -> None:
+        """Reposition name widgets showing only host/self/friends/nicknamed entries."""
+        if not self._roster or not self._name_widgets:
+            return
+        total = min(len(self._roster), len(self._name_widgets))
+        categorized = [(self._get_entry_category(i), i) for i in range(total)]
+        visible = sorted([(cat, i) for cat, i in categorized if cat < 99])
+        hidden_indices = [i for cat, i in categorized if cat == 99]
+
+        accent = _global_theme.get_color('COLOR_ACCENT')
+        _all_players = get_all_players()
+        friends = load_friends()
+        friend_names: set[str] = set()
+        for f in friends:
+            n = f['name']
+            friend_names.add(n)
+            friend_names.add(n.replace(V2_LOGO, ''))
+            friend_names.add(f'{V2_LOGO}{n}')
+
+        n = len(visible)
+        c_height = 24
+        is_small = bui.app.ui_v1.uiscale is bui.UIScale.SMALL
+
+        if n == 0:
+            for i in hidden_indices:
+                w = self._name_widgets[i]
+                if w.exists():
+                    bui.textwidget(edit=w, text='', position=(-1000, -1000))
+            scroll_h = max(100, self._height - (121 if is_small else 159))
+            bui.scrollwidget(edit=self._scrollwidget,
+                             size=(self._scroll_width, scroll_h), position=(37, 80))
+            return
+
+        columns = 1 if n == 1 else 2 if n == 2 else 3
+        rows = int(math.ceil(n / columns))
+        c_width = (self._width * 0.9) / max(3, columns)
+        c_width_total = c_width * columns
+        c_height_total = c_height * rows
+        y_offset = 20 if is_small else 0
+
+        for display_idx, (cat, orig_idx) in enumerate(visible):
+            yr = display_idx // columns
+            xr = display_idx % columns
+            px = self._width * 0.53 - c_width_total * 0.5 + c_width * xr - 23
+            py = self._height - 65 - c_height * yr - 15 + y_offset
+            w = self._name_widgets[orig_idx]
+            if not w.exists():
+                continue
+            acc = self._roster[orig_idx].get('display_string', '')
+            if cat == 0 or cat == 1:
+                color = accent
+            elif cat == 2:
+                color = (0.3, 1.0, 0.4)
+            else:
+                color = (1.0, 0.6, 0.2)
+            if acc and is_blocked(acc):
+                color = (1.0, 0.3, 0.3)
+            bui.textwidget(edit=w, position=(px, py),
+                           scale=0.55 if is_small else 0.65, color=color)
+
+        for orig_idx in hidden_indices:
+            w = self._name_widgets[orig_idx]
+            if w.exists():
+                bui.textwidget(edit=w, text='', position=(-1000, -1000))
+
+        scroll_h = max(100, self._height - (116 if is_small else 130) - c_height_total)
+        bui.scrollwidget(edit=self._scrollwidget,
+                         size=(self._scroll_width, scroll_h), position=(37, 80))
+
     def _on_title_click(self) -> None:
         self._roster_hidden = not self._roster_hidden
         bui.app.config[_CFG_ROSTER_HIDDEN] = {
@@ -7790,9 +7946,7 @@ class LPartyWindow(party.PartyWindow):
         }
         bui.app.config.commit()
         if self._roster_hidden:
-            for w in self._name_widgets:
-                if w.exists():
-                    bui.textwidget(edit=w, text='')
+            self._apply_filtered_roster_layout()
         else:
             self._roster = []
             self._update()
@@ -8473,16 +8627,21 @@ class LPartyWindow(party.PartyWindow):
         except Exception:
             pass
 
-        items = [
-            ('mention', babase.Lstr(value=language.get_text('PartyWindow.mention'))),
-        ]
-        if not is_host:
-            items.append(('info', babase.Lstr(value=get_lang_text('PartyWindow.viewAccount'))))
+        items = []
         if not is_host and not is_self:
             items += [
                 ('kick', babase.Lstr(value=get_lang_text('PartyWindow.voteToKick'))),
                 ('kick_by_id', babase.Lstr(value=kick_label)),
-                ('player_info', babase.Lstr(value=get_lang_text('ChatPopup.playerOption'))),
+            ]
+        items.append(('mention', babase.Lstr(value=language.get_text('PartyWindow.mention'))))
+        if not is_host and not is_self:
+            items += [
+                ('player_info', babase.Lstr(value=get_lang_text('ChatPopup.playerInfo'))),
+            ]
+        if not is_host:
+            items.append(('info', babase.Lstr(value=get_lang_text('PartyWindow.viewAccount'))))
+        if not is_host and not is_self:
+            items += [
                 (friend_choice, babase.Lstr(value=friend_label)),
                 (block_choice, babase.Lstr(value=block_label)),
             ]
@@ -8592,22 +8751,24 @@ class LPartyWindow(party.PartyWindow):
                 self._append_to_chat(msg)
             elif choice == 'chat_player':
                 sender = getattr(self, '_pressed_chat_sender', '')
-                # match against roster to get the V2 display_string (playerinfo key)
                 roster = bs.get_game_roster() or []
-                v2_name = None
+                client_id = None
+                is_host = False
                 for entry in roster:
                     for player in entry.get('players', []):
                         pname = player.get('name', '')
                         pname_full = player.get('name_full', '')
                         if sender in (pname, pname_full) or pname in sender or pname_full in sender:
-                            v2_name = entry.get('display_string')
+                            client_id = entry.get('client_id')
+                            is_host = client_id == -1
                             break
-                    if v2_name:
+                    if client_id is not None:
                         break
-                players = get_all_players()
-                real_name = v2_name if v2_name and v2_name in players else None
-                if real_name:
-                    babase.apptimer(0.15, lambda n=real_name: PlayerInfoPopup(n))
+                if client_id is not None:
+                    babase.apptimer(0.15, bui.WeakCall(
+                        self._on_party_member_press, client_id, is_host,
+                        self.get_root_widget()
+                    ))
                 else:
                     babase.screenmessage(get_lang_text('ChatPopup.playerNotFound'),
                                         color=(1, 0.5, 0.5))
@@ -8745,15 +8906,17 @@ class LPartyWindow(party.PartyWindow):
         if self._popup_type == 'partyMemberPress':
             if choice == 'kick':
                 areYouSureToKickText = get_lang_text('PartyWindow.areYouSureToKick')
-                ConfirmWindow(
+                _cw = ConfirmWindow(
                     text=f'{areYouSureToKickText} {self._getObjectByID("account")}?',
                     action=self._kick_selected_player,
                     cancel_button=True,
                     cancel_is_selected=True,
-                    color=(1, 1, 1),
+                    color=_global_theme.get_color('COLOR_PRIMARY'),
                     text_scale=1.0,
                     origin_widget=self.get_root_widget()
                 )
+                bui.containerwidget(edit=_cw.root_widget,
+                                    color=_global_theme.get_color('COLOR_BACKGROUND'))
             elif choice == 'info':
                 account = self._getObjectByID('account')
                 clean_name = account.replace(V2_LOGO, '')
