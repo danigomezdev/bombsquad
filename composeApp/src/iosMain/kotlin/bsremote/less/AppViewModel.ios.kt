@@ -1,10 +1,6 @@
 package bsremote.less
 
-import android.app.Application
-import android.content.Context
-import android.net.wifi.WifiManager
-import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bsremote.less.model.Party
 import bsremote.less.model.RemoteState
@@ -14,10 +10,8 @@ import bsremote.less.network.Scanner
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.random.Random
 
-private const val TAG = "BSRemote.ViewModel"
-
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-actual class AppViewModel(application: Application) : AndroidViewModel(application) {
+actual class AppViewModel : ViewModel() {
     private val scanner    = Scanner()
     private val connection = Connection()
 
@@ -27,44 +21,22 @@ actual class AppViewModel(application: Application) : AndroidViewModel(applicati
     actual var playerName: String = "Player"
     private val uniqueId: Int = Random.nextInt(1, 65535)
 
-    private val wifiManager =
-        application.getSystemService(Context.WIFI_SERVICE) as WifiManager
-    private val multicastLock =
-        wifiManager.createMulticastLock("BSRemote").apply { setReferenceCounted(true) }
-
     init {
-        acquireMulticastLock()
         scanner.start(viewModelScope)
     }
 
-    private fun acquireMulticastLock() {
-        try {
-            if (!multicastLock.isHeld) { multicastLock.acquire(); Log.d(TAG, "multicast lock acquired") }
-        } catch (e: Exception) { Log.e(TAG, "failed to acquire multicast lock: ${e.message}") }
-    }
-
-    private fun releaseMulticastLock() {
-        try {
-            if (multicastLock.isHeld) { multicastLock.release(); Log.d(TAG, "multicast lock released") }
-        } catch (e: Exception) { Log.e(TAG, "failed to release multicast lock: ${e.message}") }
-    }
-
     actual fun connectTo(party: Party) {
-        Log.d(TAG, "connecting to ${party.name} @ ${party.address}:${party.port}")
         scanner.stop()
         connection.connect(party.address, party.port, playerName, uniqueId, viewModelScope)
     }
 
     actual fun connectToAddress(address: String, port: Int) {
-        Log.d(TAG, "connecting to $address:$port")
         scanner.stop()
         connection.connect(address, port, playerName, uniqueId, viewModelScope)
     }
 
     actual fun disconnect() {
-        Log.d(TAG, "disconnecting")
         connection.disconnect()
-        acquireMulticastLock()
         scanner.start(viewModelScope)
     }
 
@@ -75,6 +47,5 @@ actual class AppViewModel(application: Application) : AndroidViewModel(applicati
     override fun onCleared() {
         scanner.stop()
         connection.disconnect()
-        releaseMulticastLock()
     }
 }

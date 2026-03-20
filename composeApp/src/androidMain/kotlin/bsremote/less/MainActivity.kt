@@ -13,6 +13,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        AppPrefs.init(this)
+
         // Keep screen on while using as a game controller
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
