@@ -23,7 +23,7 @@ from threading import Thread, Thread as _Thread
 import time
 import traceback
 from typing import (
-    TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Set, Union
+    TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Set, Union, cast
 )
 import urllib.error
 import urllib.parse
@@ -72,7 +72,7 @@ from bauiv1lib.tabs import TabRow
 
 
 
-BASE_URL = "https://api.bombsquad.lat" # http://localhost:3333
+BASE_URL = "https://api.bombsquad.lat" #  http://localhost:3333
 V2_LOGO = "\ue063"
 CREATOR = "\ue043Less"
 
@@ -90,6 +90,7 @@ CHATS_DIRECTORY = os.path.join(MY_DIRECTORY, "chats")
 CHATS_JSON_FILE = os.path.join(CHATS_DIRECTORY, "chats.json")
 DM_MSGS_FILE = os.path.join(REMOTE_DIRECTORY, "msgs.json")
 QUICK_RESPONDS_FILE = os.path.join(MY_DIRECTORY, "quick_responds.txt")
+MEDIA_DIRECTORY = os.path.join(MY_DIRECTORY, "media")
 
 # Config key names
 CFG_NAME_PREFFERED_LANG = 'Less Finder Language'
@@ -3383,6 +3384,24 @@ Translate_Texts: Dict[str, Dict[str, str]] = {
         'ml': '{nick}-ൽ നിന്ന് {min} മിനിറ്റ് ക്ഷണം ബ്ലോക്ക് ചെയ്യണോ?',
         'id': 'Blokir undangan dari {nick} selama {min} menit?',
     },
+    'Invite.join': {
+        'en': 'Join',
+        'es': 'Unirse',
+        'pt': 'Entrar',
+        'ru': 'Войти',
+        'hi': 'जुड़ें',
+        'ml': 'ചേരുക',
+        'id': 'Bergabung',
+    },
+    'Invite.serverInvite': {
+        'en': 'Server Invitation',
+        'es': 'Invitación al servidor',
+        'pt': 'Convite de servidor',
+        'ru': 'Приглашение на сервер',
+        'hi': 'सर्वर आमंत्रण',
+        'ml': 'സെർവർ ക്ഷണം',
+        'id': 'Undangan server',
+    },
     'InviteWindow.invitedBy': {
         'en': 'Invited by {sender}',
         'es': 'Invitado por {sender}',
@@ -3670,6 +3689,258 @@ Translate_Texts: Dict[str, Dict[str, str]] = {
         'hi': '{nick} का खाता हटाया गया।',
         'ml': '{nick}-ന്റെ അക്കൗണ്ട് ഇല്ലാതാക്കി.',
         'id': 'Akun {nick} dihapus.',
+    },
+    'Send.selectType': {
+        'en': 'Send...',
+        'es': 'Enviar...',
+        'pt': 'Enviar...',
+        'ru': 'Отправить...',
+        'hi': 'भेजें...',
+        'ml': 'അയക്കുക...',
+        'id': 'Kirim...',
+    },
+    'Send.replay': {
+        'en': 'Replay',
+        'es': 'Repetición',
+        'pt': 'Replay',
+        'ru': 'Повтор',
+        'hi': 'रिप्ले',
+        'ml': 'റിപ്ലേ',
+        'id': 'Replay',
+    },
+    'Send.mod': {
+        'en': 'Mod',
+        'es': 'Mod',
+        'pt': 'Mod',
+        'ru': 'Мод',
+        'hi': 'मॉड',
+        'ml': 'മോഡ്',
+        'id': 'Mod',
+    },
+    'Mod.sendTitle': {
+        'en': 'Send Mod',
+        'es': 'Enviar Mod',
+        'pt': 'Enviar Mod',
+        'ru': 'Отправить мод',
+        'hi': 'मॉड भेजें',
+        'ml': 'മോഡ് അയക്കുക',
+        'id': 'Kirim Mod',
+    },
+    'Mod.confirmInstall': {
+        'en': 'Install this mod?',
+        'es': '¿Instalar este mod?',
+        'pt': 'Instalar este mod?',
+        'ru': 'Установить этот мод?',
+        'hi': 'यह मॉड इंस्टॉल करें?',
+        'ml': 'ഈ മോഡ് ഇൻസ്റ്റാൾ ചെയ്യണോ?',
+        'id': 'Instal mod ini?',
+    },
+    'Mod.install': {
+        'en': 'Install',
+        'es': 'Instalar',
+        'pt': 'Instalar',
+        'ru': 'Установить',
+        'hi': 'इंस्टॉल करें',
+        'ml': 'ഇൻസ്റ്റാൾ',
+        'id': 'Instal',
+    },
+    'Mod.installed': {
+        'en': 'Mod installed! Restart may be required.',
+        'es': '¡Mod instalado! Puede requerirse reinicio.',
+        'pt': 'Mod instalado! Reinício pode ser necessário.',
+        'ru': 'Мод установлен! Может потребоваться перезапуск.',
+        'hi': 'मॉड इंस्टॉल हो गया! पुनः आरंभ आवश्यक हो सकता है।',
+        'ml': 'മോഡ് ഇൻസ്റ്റാൾ ചെയ്തു! പുനരാരംഭം ആവശ്യമായേക്കാം.',
+        'id': 'Mod terpasang! Restart mungkin diperlukan.',
+    },
+    'Mod.noMods': {
+        'en': 'No mods found.',
+        'es': 'No se encontraron mods.',
+        'pt': 'Nenhum mod encontrado.',
+        'ru': 'Моды не найдены.',
+        'hi': 'कोई मॉड नहीं मिला।',
+        'ml': 'മോഡുകൾ കണ്ടെത്തിയില്ല.',
+        'id': 'Mod tidak ditemukan.',
+    },
+    'Image.sendTitle': {
+        'en': 'Send Image',
+        'es': 'Enviar Imagen',
+        'pt': 'Enviar Imagem',
+        'ru': 'Отправить изображение',
+        'hi': 'छवि भेजें',
+        'ml': 'ചിത്രം അയക്കുക',
+        'id': 'Kirim Gambar',
+    },
+    'Image.noImages': {
+        'en': 'No images found.',
+        'es': 'No se encontraron imágenes.',
+        'pt': 'Nenhuma imagem encontrada.',
+        'ru': 'Изображения не найдены.',
+        'hi': 'कोई छवि नहीं मिली।',
+        'ml': 'ചിത്രങ്ങൾ കണ്ടെത്തിയില്ല.',
+        'id': 'Gambar tidak ditemukan.',
+    },
+    'Send.image': {
+        'en': 'Image',
+        'es': 'Imagen',
+        'pt': 'Imagem',
+        'ru': 'Изображение',
+        'hi': 'छवि',
+        'ml': 'ചിത്രം',
+        'id': 'Gambar',
+    },
+    'Image.unavailable': {
+        'en': 'Image unavailable.',
+        'es': 'Imagen no disponible.',
+        'pt': 'Imagem indisponível.',
+        'ru': 'Изображение недоступно.',
+        'hi': 'छवि अनुपलब्ध।',
+        'ml': 'ചിത്രം ലഭ്യമല്ല.',
+        'id': 'Gambar tidak tersedia.',
+    },
+    'Mod.enable': {
+        'en': 'Enable',
+        'es': 'Activar',
+        'pt': 'Ativar',
+        'ru': 'Включить',
+        'hi': 'सक्षम करें',
+        'ml': 'പ്രവർത്തനക്ഷമമാക്കുക',
+        'id': 'Aktifkan',
+    },
+    'Mod.disable': {
+        'en': 'Disable',
+        'es': 'Desactivar',
+        'pt': 'Desativar',
+        'ru': 'Отключить',
+        'hi': 'अक्षम करें',
+        'ml': 'പ്രവർത്തനരഹിതമാക്കുക',
+        'id': 'Nonaktifkan',
+    },
+    'Mod.showPath': {
+        'en': 'Show',
+        'es': 'Mostrar',
+        'pt': 'Mostrar',
+        'ru': 'Показать',
+        'hi': 'दिखाएं',
+        'ml': 'കാണിക്കുക',
+        'id': 'Tampilkan',
+    },
+    'Mod.settingsHint': {
+        'en': 'Go to Settings > Advanced > Plugins to enable or disable this mod.',
+        'es': 'Ve a Ajustes > Avanzado > Complementos para activar o desactivar este mod.',
+        'pt': 'Vá em Configurações > Avançado > Plugins para ativar ou desativar este mod.',
+        'ru': 'Перейдите в Настройки > Дополнительно > Плагины для управления модом.',
+        'hi': 'इस मॉड को सक्षम/अक्षम करने के लिए Settings > Advanced > Plugins पर जाएं।',
+        'ml': 'Settings > Advanced > Plugins-ൽ ഈ മോഡ് enable/disable ചെയ്യാം.',
+        'id': 'Buka Settings > Advanced > Plugins untuk mengaktifkan atau menonaktifkan mod ini.',
+    },
+    'Mod.restartRequired': {
+        'en': 'Restart required to apply changes.',
+        'es': 'Se requiere reinicio para aplicar los cambios.',
+        'pt': 'Reinício necessário para aplicar as alterações.',
+        'ru': 'Для применения изменений требуется перезапуск.',
+        'hi': 'परिवर्तन लागू करने के लिए पुनः आरंभ आवश्यक है।',
+        'ml': 'മാറ്റങ്ങൾ പ്രയോഗിക്കാൻ പുനരാരംഭം ആവശ്യമാണ്.',
+        'id': 'Restart diperlukan untuk menerapkan perubahan.',
+    },
+    'Mod.notDetected': {
+        'en': 'Mod not loaded yet. Restart the game first.',
+        'es': 'Mod aún no cargado. Reinicia el juego primero.',
+        'pt': 'Mod ainda não carregado. Reinicie o jogo primeiro.',
+        'ru': 'Мод ещё не загружен. Сначала перезапустите игру.',
+        'hi': 'मॉड अभी लोड नहीं हुआ। पहले गेम रीस्टार्ट करें।',
+        'ml': 'മോഡ് ഇതുവരെ ലോഡ് ആയിട്ടില്ല. ആദ്യം ഗെയിം പുനരാരംഭിക്കുക.',
+        'id': 'Mod belum dimuat. Restart game terlebih dahulu.',
+    },
+    'Replay.sendTitle': {
+        'en': 'Send Replay',
+        'es': 'Enviar Repetición',
+        'pt': 'Enviar Replay',
+        'ru': 'Отправить повтор',
+        'hi': 'रिप्ले भेजें',
+        'ml': 'റിപ്ലേ അയക്കുക',
+        'id': 'Kirim Replay',
+    },
+    'Replay.confirmSend': {
+        'en': 'Send "{name}"?',
+        'es': '¿Enviar "{name}"?',
+        'pt': 'Enviar "{name}"?',
+        'ru': 'Отправить "{name}"?',
+        'hi': '"{name}" भेजें?',
+        'ml': '"{name}" അയക്കണോ?',
+        'id': 'Kirim "{name}"?',
+    },
+    'Replay.confirmOpen': {
+        'en': 'Open this replay?',
+        'es': '¿Abrir esta repetición?',
+        'pt': 'Abrir este replay?',
+        'ru': 'Открыть повтор?',
+        'hi': 'यह रिप्ले खोलें?',
+        'ml': 'ഈ റിപ്ലേ തുറക്കണോ?',
+        'id': 'Buka replay ini?',
+    },
+    'Replay.send': {
+        'en': 'Send',
+        'es': 'Enviar',
+        'pt': 'Enviar',
+        'ru': 'Отправить',
+        'hi': 'भेजें',
+        'ml': 'അയക്കുക',
+        'id': 'Kirim',
+    },
+    'Replay.open': {
+        'en': 'Open',
+        'es': 'Abrir',
+        'pt': 'Abrir',
+        'ru': 'Открыть',
+        'hi': 'खोलें',
+        'ml': 'തുറക്കുക',
+        'id': 'Buka',
+    },
+    'Replay.cancel': {
+        'en': 'Cancel',
+        'es': 'Cancelar',
+        'pt': 'Cancelar',
+        'ru': 'Отмена',
+        'hi': 'रद्द करें',
+        'ml': 'റദ്ദാക്കുക',
+        'id': 'Batal',
+    },
+    'Replay.noReplays': {
+        'en': 'No replays found.',
+        'es': 'No se encontraron repeticiones.',
+        'pt': 'Nenhum replay encontrado.',
+        'ru': 'Повторы не найдены.',
+        'hi': 'कोई रिप्ले नहीं मिला।',
+        'ml': 'റിപ്ലേകൾ കണ്ടെത്തിയില്ല.',
+        'id': 'Replay tidak ditemukan.',
+    },
+    'Replay.downloading': {
+        'en': 'Downloading replay...',
+        'es': 'Descargando repetición...',
+        'pt': 'Baixando replay...',
+        'ru': 'Загрузка повтора...',
+        'hi': 'रिप्ले डाउनलोड हो रहा है...',
+        'ml': 'റിപ്ലേ ഡൗൺലോഡ് ചെയ്യുന്നു...',
+        'id': 'Mengunduh replay...',
+    },
+    'Replay.failDownload': {
+        'en': 'Failed to download replay.',
+        'es': 'Error al descargar la repetición.',
+        'pt': 'Falha ao baixar o replay.',
+        'ru': 'Ошибка загрузки повтора.',
+        'hi': 'रिप्ले डाउनलोड विफल।',
+        'ml': 'റിപ്ലേ ഡൗൺലോഡ് പരാജയപ്പെട്ടു.',
+        'id': 'Gagal mengunduh replay.',
+    },
+    'Replay.failSend': {
+        'en': 'Failed to send replay.',
+        'es': 'Error al enviar la repetición.',
+        'pt': 'Falha ao enviar o replay.',
+        'ru': 'Ошибка отправки повтора.',
+        'hi': 'रिप्ले भेजना विफल।',
+        'ml': 'റിപ്ലേ അയക്കൽ പരാജയപ്പെട്ടു.',
+        'id': 'Gagal mengirim replay.',
     },
 }
 
@@ -5769,6 +6040,98 @@ def authenticated_delete(path: str, payload: Optional[dict] = None) -> tuple[Uni
     return _with_refresh('DELETE', path, payload)
 
 
+def authenticated_upload_file(path: str, file_path: str, field_name: str) -> tuple[Union[dict, list], int]:
+    """POST a file as multipart/form-data with auth token."""
+    import os
+    url = f'{BASE_URL}{path}'
+    token = get_access_token()
+    boundary = 'PyroWarfareReplayBoundary'
+    filename = os.path.basename(file_path)
+    with open(file_path, 'rb') as f:
+        file_data = f.read()
+    body = (
+        f'--{boundary}\r\n'
+        f'Content-Disposition: form-data; name="{field_name}"; filename="{filename}"\r\n'
+        f'Content-Type: application/octet-stream\r\n\r\n'
+    ).encode('utf-8') + file_data + f'\r\n--{boundary}--\r\n'.encode('utf-8')
+    headers: dict = {
+        'Content-Type': f'multipart/form-data; boundary={boundary}',
+        'User-Agent': _UA,
+    }
+    if token:
+        headers['Authorization'] = f'Bearer {token}'
+    req = urllib.request.Request(url, data=body, headers=headers, method='POST')
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            raw = resp.read().decode('utf-8')
+            return (json.loads(raw) if raw.strip() else {}), resp.status
+    except urllib.error.HTTPError as e:
+        try:
+            return json.loads(e.read().decode('utf-8')), e.code
+        except Exception:
+            return {}, e.code
+    except Exception as exc:
+        return {'error': str(exc)}, 0
+
+
+def authenticated_download_replay(path: str) -> tuple[Optional[bytes], int]:
+    """GET raw bytes (replay file download) with auth token."""
+    url = f'{BASE_URL}{path}'
+    token = get_access_token()
+    headers: dict = {'User-Agent': _UA}
+    if token:
+        headers['Authorization'] = f'Bearer {token}'
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            return resp.read(), resp.status
+    except urllib.error.HTTPError as e:
+        return None, e.code
+    except Exception:
+        return None, 0
+
+
+def _parse_ppm_for_ui(file_path: str, grid_size: int = 20) -> Optional[list]:
+    """Parse P6 PPM file → list of (r,g,b) 0-1 tuples, downscaled to grid_size x grid_size."""
+    from math import floor
+    try:
+        with open(file_path, 'rb') as f:
+            magic = f.readline().strip()
+            if magic != b'P6':
+                return None
+            ow = oh = 0
+            mv: Optional[int] = None
+            while ow == 0 or oh == 0 or mv is None:
+                line = f.readline().strip()
+                if line.startswith(b'#'):
+                    continue
+                parts = line.split()
+                if ow == 0 and len(parts) >= 2:
+                    ow, oh = int(parts[0]), int(parts[1])
+                    if len(parts) >= 3:
+                        mv = int(parts[2])
+                elif mv is None and parts:
+                    mv = int(parts[0])
+            raw = f.read(ow * oh * 3)
+        if len(raw) < ow * oh * 3:
+            return None
+        tw = th = grid_size
+        xsf = ow / tw
+        ysf = oh / th
+        mv_f = max(mv or 255, 1)
+        pixels = []
+        for ty in range(th):
+            for tx in range(tw):
+                ox = min(ow - 1, floor(tx * xsf))
+                oy = min(oh - 1, floor(ty * ysf))
+                idx = (oy * ow + ox) * 3
+                pixels.append((raw[idx] / mv_f, raw[idx + 1] / mv_f, raw[idx + 2] / mv_f))
+        return pixels
+    except Exception as e:
+        print(f'[PPM] parse error: {e}')
+        return None
+
+
 def sync_my_role() -> None:
     """Fetch /auth/me and update session role if it changed. Call from a background thread."""
     body, status = authenticated_get('/auth/me')
@@ -6058,6 +6421,7 @@ class FriendsSession:
         self._dm_listeners: dict = {}
         self._all_dm_listeners: list = []
         self._server_invite_listeners: list = []
+        self._replay_listeners: list = []
         self._heartbeat_timer: Optional[threading.Timer] = None
 
     def start(self) -> None:
@@ -6131,6 +6495,16 @@ class FriendsSession:
     def remove_server_invite_listener(self, cb) -> None:
         try:
             self._server_invite_listeners.remove(cb)
+        except ValueError:
+            pass
+
+    def add_replay_listener(self, cb) -> None:
+        if cb not in self._replay_listeners:
+            self._replay_listeners.append(cb)
+
+    def remove_replay_listener(self, cb) -> None:
+        try:
+            self._replay_listeners.remove(cb)
         except ValueError:
             pass
 
@@ -6274,6 +6648,17 @@ class FriendsSession:
                             else:
                                 _online_friend_ids.discard(int(uid))
                             babase.pushcall(_notify_online_status_listeners, from_other_thread=True)
+                    elif isinstance(data, list) and data[0] == 'replayTransfer':
+                        transfer_info = data[1] if len(data) > 1 else {}
+
+                        def _dispatch_replay(t=transfer_info) -> None:
+                            for cb in list(self._replay_listeners):
+                                try:
+                                    cb(t)
+                                except Exception as e:
+                                    print(f'[DM] replay listener error: {e}')
+
+                        babase.pushcall(_dispatch_replay, from_other_thread=True)
                 except Exception as e:
                     print(f'[DM] Friends packet parse error: {e}')
 
@@ -6334,6 +6719,8 @@ def ensure_friends_session() -> FriendsSession:
 def _ensure_remote_dir() -> None:
     if not os.path.exists(REMOTE_DIRECTORY):
         os.makedirs(REMOTE_DIRECTORY)
+    if not os.path.exists(MEDIA_DIRECTORY):
+        os.makedirs(MEDIA_DIRECTORY)
 
 
 def _get_my_user_id() -> Optional[str]:
@@ -6409,6 +6796,51 @@ def append_dm_message(friend_id: int, friend_nickname: str,
         'sender_id': sender_id,
         'nickname': sender_nick,
         'content': content,
+        'ts': datetime.now(timezone.utc).isoformat(),
+    })
+    _save_dm_msgs(data)
+
+
+def append_replay_message(friend_id: int, friend_nickname: str,
+                          sender_id: int, sender_nick: str,
+                          transfer_id: int, replay_name: str,
+                          is_mine: bool) -> None:
+    """Append a replay transfer entry to the conversation history."""
+    data = load_dm_msgs()
+    key = str(friend_id)
+    if key not in data:
+        data[key] = {'nickname': friend_nickname, 'messages': []}
+    else:
+        data[key]['nickname'] = friend_nickname
+    data[key]['messages'].append({
+        'sender_id': sender_id,
+        'nickname': sender_nick,
+        'type': 'replay',
+        'replay_name': replay_name,
+        'transfer_id': transfer_id,
+        'is_mine': is_mine,
+        'ts': datetime.now(timezone.utc).isoformat(),
+    })
+    _save_dm_msgs(data)
+
+
+def append_invite_message(friend_id: int, friend_nickname: str,
+                          sender_nick: str, server_name: str,
+                          server_ip: str, server_port: str) -> None:
+    """Append a server invite entry to the conversation history."""
+    data = load_dm_msgs()
+    key = str(friend_id)
+    if key not in data:
+        data[key] = {'nickname': friend_nickname, 'messages': []}
+    else:
+        data[key]['nickname'] = friend_nickname
+    data[key]['messages'].append({
+        'sender_id': friend_id,
+        'nickname': sender_nick,
+        'type': 'invite',
+        'server_name': server_name,
+        'server_ip': server_ip,
+        'server_port': server_port,
         'ts': datetime.now(timezone.utc).isoformat(),
     })
     _save_dm_msgs(data)
@@ -12044,8 +12476,11 @@ class DMWindow:
         w, h = self._width, self._height
         cx = 264
         cw = w - cx - 8
+        self._chat_cx = cx
+        self._chat_cw = cw
 
         self._chat_back_btn: bui.Widget | None = None
+        self._replay_btn: bui.Widget | None = None
 
         self._chat_title_widget = bui.textwidget(
             parent=self._root_widget,
@@ -12059,18 +12494,18 @@ class DMWindow:
         )
 
         send_w = 40
-        tf_w = cw - send_w - 21
+        tf_w_full = cw - send_w - 21
 
         self._chat_input = bui.textwidget(
             parent=self._root_widget,
             position=(cx, 10),
-            size=(tf_w, 40),
+            size=(tf_w_full, 40),
             text='',
             h_align='left',
             v_align='center',
             editable=True,
             max_chars=500,
-            maxwidth=tf_w - 8,
+            maxwidth=tf_w_full - 8,
             color=(0.9, 0.9, 0.9, 1.0),
             padding=4,
             description='Message...',
@@ -12079,7 +12514,7 @@ class DMWindow:
 
         self._send_btn = bui.buttonwidget(
             parent=self._root_widget,
-            position=(cx + tf_w + 5, 12),
+            position=(cx + tf_w_full + 5, 12),
             size=(send_w, send_w),
             label='',
             texture=bui.gettexture('rightButton'),
@@ -12102,7 +12537,7 @@ class DMWindow:
         self._chat_column = bui.columnwidget(
             parent=self._chat_scroll,
             border=2,
-            left_border=-160,
+            left_border=-150,
             margin=0,
         )
 
@@ -12433,6 +12868,633 @@ class DMWindow:
         if self._root_widget.exists():
             self._add_chat_message(msg)
 
+    def _update_replay_btn(self) -> None:
+        if not hasattr(self, '_chat_cx'):
+            return
+        cx = self._chat_cx
+        cw = self._chat_cw
+        send_w = 40
+        replay_w = 33
+        gap = 5
+
+        should_show = (
+            self._chat_friend is not None
+            and self._chat_friend.get('friend_id') in get_online_friend_ids()
+        )
+        btn_exists = self._replay_btn is not None and self._replay_btn.exists()
+
+        if should_show and not btn_exists:
+            tf_w = cw - send_w - replay_w - gap * 2 - 21
+            self._replay_btn = bui.buttonwidget(
+                parent=self._root_widget,
+                position=(cx - 5, 15),
+                size=(replay_w, replay_w),
+                label='',
+                texture=bui.gettexture('achievementStayinAlive'),
+                color=(1, 1, 1),
+                enable_sound=True,
+                on_activate_call=self._pick_replay,
+            )
+            bui.textwidget(
+                edit=self._chat_input,
+                position=(cx + replay_w + gap, 10),
+                size=(tf_w, 40),
+                maxwidth=tf_w - 8,
+            )
+            bui.buttonwidget(
+                edit=self._send_btn,
+                position=(cx + replay_w + gap + tf_w + gap, 12),
+            )
+        elif not should_show and btn_exists:
+            tf_w_full = cw - send_w - 21
+            self._replay_btn.delete()
+            self._replay_btn = None
+            bui.textwidget(
+                edit=self._chat_input,
+                position=(cx, 10),
+                size=(tf_w_full, 40),
+                maxwidth=tf_w_full - 8,
+            )
+            bui.buttonwidget(
+                edit=self._send_btn,
+                position=(cx + tf_w_full + 5, 12),
+            )
+
+    def _pick_replay(self) -> None:
+        if self._chat_friend is None:
+            bui.screenmessage('Select a friend first.', color=(1, 0.5, 0))
+            return
+        FileSendSelectorPopup(
+            on_replay=lambda: ReplayPickerPopup(on_done=self._on_replay_picked),
+            on_mod=lambda: ModPickerPopup(on_done=self._on_replay_picked),
+            on_image=lambda: ImagePickerPopup(on_done=self._on_replay_picked),
+        )
+
+    def _on_replay_picked(self, replay_name: str) -> None:
+        content = cast(str, bui.textwidget(query=self._chat_input))
+        if content and content.strip():
+            self._send_message()
+        self._send_replay_file(replay_name)
+
+    def _send_replay_file(self, replay_name: str) -> None:
+        import os
+        if self._chat_friend is None:
+            return
+        friend = self._chat_friend
+        friend_id = friend.get('friend_id')
+        fnick = friend.get('friend_nickname', '?')
+        lower_name = replay_name.lower()
+        if lower_name.endswith('.py'):
+            replay_path = os.path.join(_babase.env().get('python_directory_user', ''), replay_name)
+        elif lower_name.endswith('.ppm'):
+            replay_path = os.path.join(MEDIA_DIRECTORY, replay_name)
+        else:
+            replay_path = os.path.join(bui.get_replays_dir(), replay_name)
+        user = get_session().get('user', {})
+        my_id = user.get('id', 0)
+        my_nick = user.get('nickname', '?')
+
+        def _run() -> None:
+            body, status = authenticated_upload_file(
+                f'/replays/send/{friend_id}', replay_path, 'replay'
+            )
+            def _apply() -> None:
+                if not self._root_widget.exists():
+                    return
+                if status == 201 and isinstance(body, dict):
+                    transfer_id = body.get('id', 0)
+                    append_replay_message(friend_id, fnick, my_id, my_nick,
+                                          transfer_id, replay_name, is_mine=True)
+                    self._add_replay_widget(replay_name, transfer_id, is_mine=True)
+                else:
+                    bui.screenmessage(get_lang_text('Replay.failSend'), color=(1, 0.3, 0.3))
+                    bui.getsound('error').play()
+            babase.pushcall(_apply, from_other_thread=True)
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _add_replay_widget(self, replay_name: str, transfer_id: int, is_mine: bool) -> None:
+        import os
+        if replay_name.lower().endswith('.ppm'):
+            self._add_image_widget(replay_name, transfer_id, is_mine)
+            return
+        is_mod = replay_name.lower().endswith('.py')
+        icon = '⬡' if is_mod else '▶'
+        if is_mine:
+            label = f'{icon} {replay_name}  ✓'
+            color = (0.3, 0.2, 0.05) if is_mod else (0.15, 0.3, 0.15)
+            textcolor = (1.0, 0.75, 0.3) if is_mod else (0.5, 0.85, 0.5)
+        else:
+            label = f'{icon} {replay_name}'
+            color = (0.25, 0.15, 0.35) if is_mod else (0.1, 0.25, 0.45)
+            textcolor = (0.85, 0.55, 1.0) if is_mod else (0.5, 0.8, 1.0)
+
+        if is_mine:
+            if is_mod:
+                mods_dir = _babase.env().get('python_directory_user', '')
+                local_path = os.path.join(mods_dir, replay_name)
+            else:
+                local_path = os.path.join(bui.get_replays_dir(), replay_name)
+            on_activate = bui.CallPartial(self._open_own_replay, local_path, replay_name)
+        else:
+            on_activate = bui.CallPartial(self._confirm_download_replay, transfer_id, replay_name)
+
+        nick = (
+            get_session().get('user', {}).get('nickname', '?')
+            if is_mine else
+            (self._chat_friend.get('friend_nickname', '?') if self._chat_friend else '?')
+        )
+
+        row = bui.containerwidget(
+            parent=self._chat_column,
+            size=(500, 53),
+            background=False,
+        )
+        bui.textwidget(
+            parent=row,
+            position=(158, 43),
+            size=(0, 0),
+            h_align='left', v_align='center',
+            text=f'{nick}:',
+            scale=0.6,
+            color=(1.0, 1.0, 1.0),
+            maxwidth=200,
+        )
+        bui.buttonwidget(
+            parent=row,
+            position=(153, 1),
+            size=(220, 28),
+            label=label,
+            button_type='square',
+            color=color,
+            textcolor=textcolor,
+            text_scale=0.62,
+            enable_sound=True,
+            on_activate_call=on_activate,
+        )
+
+        self._chat_texts.append(row)
+        if len(self._chat_texts) > 60:
+            self._chat_texts.pop(0).delete()
+        bui.containerwidget(edit=self._chat_column, visible_child=row)
+
+    def _open_own_replay(self, path: str, replay_name: str) -> None:
+        import os
+        if not os.path.exists(path):
+            bui.screenmessage(get_lang_text('Replay.failDownload'), color=(1, 0.3, 0.3))
+            return
+        display = replay_name[:-4] if replay_name.endswith('.brp') else replay_name
+        uiscale = bui.app.ui_v1.uiscale
+        cw, ch = 300, 150
+        cnt = bui.containerwidget(
+            size=(cw, ch),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            scale=(2.1 if uiscale is babase.UIScale.SMALL else
+                   1.5 if uiscale is babase.UIScale.MEDIUM else 1.0),
+        )
+        is_mod = replay_name.lower().endswith('.py')
+        confirm_text = get_lang_text('Mod.confirmInstall') if is_mod else get_lang_text('Replay.confirmOpen')
+        action_label = get_lang_text('Mod.install') if is_mod else get_lang_text('Replay.open')
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 35),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=confirm_text,
+            scale=0.75,
+            color=_theme.get_color('COLOR_PRIMARY'),
+            maxwidth=cw - 20,
+        )
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 62),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=replay_name,
+            scale=0.62,
+            color=(0.7, 0.7, 0.7),
+            maxwidth=cw - 20,
+        )
+
+        def _yes() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+            if is_mod:
+                self._show_mod_options_popup(path, replay_name)
+            else:
+                self._play_downloaded_replay(path)
+
+        def _no() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+
+        no_btn = bui.buttonwidget(
+            parent=cnt, position=(16, 16), size=(120, 42),
+            label=get_lang_text('Replay.cancel'),
+            color=(0.4, 0.2, 0.2), textcolor=(1, 0.5, 0.5),
+            on_activate_call=_no,
+        )
+        yes_btn = bui.buttonwidget(
+            parent=cnt, position=(cw - 136, 16), size=(120, 42),
+            label=action_label,
+            color=(0.2, 0.5, 0.2), textcolor=(0.5, 1, 0.5),
+            on_activate_call=_yes,
+        )
+        bui.containerwidget(edit=cnt, cancel_button=no_btn, start_button=yes_btn)
+
+    def _show_mod_options_popup(self, save_path: str, mod_name: str) -> None:
+        module_name = mod_name[:-3] if mod_name.endswith('.py') else mod_name
+        uiscale = bui.app.ui_v1.uiscale
+        cw, ch = 320, 210
+
+        cnt = bui.containerwidget(
+            size=(cw, ch),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            scale=(2.1 if uiscale is babase.UIScale.SMALL else
+                   1.5 if uiscale is babase.UIScale.MEDIUM else 1.0),
+        )
+
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 22),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=mod_name[:24] + ('...' if len(mod_name) > 24 else ''),
+            scale=0.75,
+            color=_theme.get_color('COLOR_PRIMARY'),
+            maxwidth=cw - 20,
+        )
+
+        # Find plugin specs matching this module
+        specs = []
+        try:
+            for class_path, spec in bui.app.plugins.plugin_specs.items():
+                if class_path.startswith(f'{module_name}.'):
+                    specs.append((class_path, spec))
+        except Exception:
+            pass
+
+        # Default: disable on first install if specs found and not yet in config
+        plugstates: dict = bui.app.config.setdefault('Plugins', {})
+        for class_path, _ in specs:
+            if class_path not in plugstates:
+                plugstates[class_path] = {'enabled': False}
+        if specs:
+            bui.app.config.commit()
+
+        def _toggle(class_path: str, enabled: bool) -> None:
+            ps: dict = bui.app.config.setdefault('Plugins', {})
+            ps.setdefault(class_path, {})['enabled'] = enabled
+            bui.app.config.commit()
+            bui.screenmessage(
+                bui.Lstr(resource='settingsWindowAdvanced.mustRestartText'),
+                color=(1.0, 0.5, 0.0),
+            )
+
+        if specs:
+            class_path, spec = specs[0]
+            current_enabled = plugstates.get(class_path, {}).get('enabled', True)
+            y = ch - 58
+            bui.textwidget(
+                parent=cnt,
+                position=(cw * 0.5, y),
+                size=(0, 0),
+                h_align='center', v_align='center',
+                text=get_lang_text('Mod.restartRequired'),
+                scale=0.58,
+                color=(0.9, 0.65, 0.2),
+                maxwidth=cw - 16,
+            )
+            y -= 36
+            btn_w = 90
+            bui.buttonwidget(
+                parent=cnt,
+                position=(cw * 0.5 - btn_w - 4, y),
+                size=(btn_w, 34),
+                label=get_lang_text('Mod.enable'),
+                color=(0.1, 0.4, 0.1) if not current_enabled else (0.2, 0.6, 0.2),
+                textcolor=(0.5, 1.0, 0.5),
+                text_scale=0.75,
+                on_activate_call=lambda cp=class_path: _toggle(cp, True),
+            )
+            bui.buttonwidget(
+                parent=cnt,
+                position=(cw * 0.5 + 4, y),
+                size=(btn_w, 34),
+                label=get_lang_text('Mod.disable'),
+                color=(0.4, 0.1, 0.1) if current_enabled else (0.6, 0.2, 0.2),
+                textcolor=(1.0, 0.5, 0.5),
+                text_scale=0.75,
+                on_activate_call=lambda cp=class_path: _toggle(cp, False),
+            )
+            hint_y = y - 36
+        else:
+            hint_y = ch - 72
+            bui.textwidget(
+                parent=cnt,
+                position=(cw * 0.5, hint_y + 18),
+                size=(0, 0),
+                h_align='center', v_align='center',
+                text=get_lang_text('Mod.notDetected'),
+                scale=0.6,
+                color=(0.9, 0.65, 0.2),
+                maxwidth=cw - 16,
+            )
+            hint_y -= 10
+
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, hint_y - 4),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=get_lang_text('Mod.settingsHint'),
+            scale=0.52,
+            color=(0.55, 0.55, 0.55),
+            maxwidth=cw - 12,
+        )
+
+        close_btn = bui.buttonwidget(
+            parent=cnt,
+            position=(cw * 0.5 - 45, 12),
+            size=(90, 32),
+            label=get_lang_text('Replay.cancel'),
+            color=(0.25, 0.25, 0.25),
+            textcolor=(0.7, 0.7, 0.7),
+            text_scale=0.75,
+            on_activate_call=lambda: bui.containerwidget(edit=cnt, transition='out_scale'),
+        )
+
+        show_btn = bui.buttonwidget(
+            parent=cnt,
+            position=(cw - 106, 12),
+            size=(90, 32),
+            label=get_lang_text('Mod.showPath'),
+            color=(0.15, 0.3, 0.45),
+            textcolor=(0.5, 0.8, 1.0),
+            text_scale=0.75,
+            on_activate_call=lambda: bui.screenmessage(save_path, color=(0.6, 0.9, 1.0)),
+        )
+
+        bui.containerwidget(edit=cnt, cancel_button=close_btn, start_button=show_btn)
+
+    def _add_image_widget(self, image_name: str, transfer_id: int, is_mine: bool) -> None:
+        import os
+        GRID = 25
+        CELL_W = 14
+        CELL_H = 10
+        IMG_W = GRID * CELL_W  # 350
+        IMG_H = GRID * CELL_H  # 250
+
+        nick = (
+            get_session().get('user', {}).get('nickname', '?')
+            if is_mine else
+            (self._chat_friend.get('friend_nickname', '?') if self._chat_friend else '?')
+        )
+
+        row = bui.containerwidget(
+            parent=self._chat_column,
+            size=(500, IMG_H + 27),
+            background=False,
+        )
+
+        bui.textwidget(
+            parent=row,
+            position=(158, IMG_H + 20),
+            size=(0, 0),
+            h_align='left', v_align='center',
+            text=f'{nick}:',
+            scale=0.6,
+            color=(1.0, 1.0, 1.0),
+            maxwidth=200,
+        )
+
+        img_cnt = bui.containerwidget(
+            parent=row,
+            position=(158, 4),
+            size=(IMG_W, IMG_H),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+        )
+
+        loading_txt = bui.textwidget(
+            parent=img_cnt,
+            position=(IMG_W * 0.5, IMG_H * 0.5),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text='...',
+            scale=0.65,
+            color=(0.4, 0.4, 0.4),
+        )
+
+        self._chat_texts.append(row)
+        if len(self._chat_texts) > 60:
+            self._chat_texts.pop(0).delete()
+        bui.containerwidget(edit=self._chat_column, visible_child=row)
+
+        def _load() -> None:
+            file_path = os.path.join(MEDIA_DIRECTORY, image_name)
+            if not os.path.exists(file_path) and transfer_id > 0:
+                data, status = authenticated_download_replay(f'/replays/{transfer_id}/download')
+                if status == 200 and data:
+                    try:
+                        os.makedirs(MEDIA_DIRECTORY, exist_ok=True)
+                        with open(file_path, 'wb') as ff:
+                            ff.write(data)
+                    except Exception:
+                        pass
+
+            pixels = _parse_ppm_for_ui(file_path, GRID) if os.path.exists(file_path) else None
+
+            def _render() -> None:
+                if not img_cnt.exists():
+                    return
+                loading_txt.delete()
+                if not pixels:
+                    bui.textwidget(
+                        parent=img_cnt,
+                        position=(IMG_W * 0.5, IMG_H * 0.5),
+                        size=(0, 0),
+                        h_align='center', v_align='center',
+                        text=get_lang_text('Image.unavailable'),
+                        scale=0.55,
+                        color=(1, 0.4, 0.4),
+                    )
+                    return
+                for i, (r, g, b) in enumerate(pixels):
+                    tx_i = i % GRID
+                    ty_i = GRID - 1 - (i // GRID)
+                    bui.textwidget(
+                        parent=img_cnt,
+                        position=(tx_i * CELL_W + CELL_W // 2, ty_i * CELL_H + CELL_H // 2),
+                        size=(0, 0),
+                        text='■',
+                        scale=0.95,
+                        h_align='center',
+                        v_align='center',
+                        flatness=1.0,
+                        shadow=0.0,
+                        color=(r, g, b),
+                    )
+
+            babase.pushcall(_render, from_other_thread=True)
+
+        threading.Thread(target=_load, daemon=True).start()
+
+    def _on_replay_transfer(self, transfer: dict) -> None:
+        sender_id = transfer.get('senderId')
+        transfer_id = transfer.get('transferId', 0)
+        replay_name = transfer.get('originalName', 'replay.brp')
+        sender_nick = transfer.get('senderNickname', '?')
+
+        if self._chat_friend is None or self._chat_friend.get('friend_id') != sender_id:
+            bui.screenmessage(
+                f'{sender_nick}: ▶ {replay_name}',
+                color=(0.5, 0.8, 1.0),
+            )
+        else:
+            self._add_replay_widget(replay_name, transfer_id, is_mine=False)
+
+        # persist regardless of whether chat is open
+        user = get_session().get('user', {})
+        my_id = user.get('id', 0)
+        if sender_id is not None:
+            friend_nick = (
+                self._chat_friend.get('friend_nickname', sender_nick)
+                if self._chat_friend is not None
+                else sender_nick
+            )
+            append_replay_message(sender_id, friend_nick, sender_id, sender_nick,
+                                   transfer_id, replay_name, is_mine=False)
+
+    def _confirm_download_replay(self, transfer_id: int, replay_name: str) -> None:
+        display = replay_name[:-4] if replay_name.endswith('.brp') else replay_name
+        uiscale = bui.app.ui_v1.uiscale
+        cw, ch = 300, 150
+        cnt = bui.containerwidget(
+            size=(cw, ch),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            scale=(2.1 if uiscale is babase.UIScale.SMALL else
+                   1.5 if uiscale is babase.UIScale.MEDIUM else 1.0),
+        )
+        is_mod = replay_name.lower().endswith('.py')
+        confirm_text = get_lang_text('Mod.confirmInstall') if is_mod else get_lang_text('Replay.confirmOpen')
+        action_label = get_lang_text('Mod.install') if is_mod else get_lang_text('Replay.open')
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 35),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=confirm_text,
+            scale=0.75,
+            color=_theme.get_color('COLOR_PRIMARY'),
+            maxwidth=cw - 20,
+        )
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 62),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=replay_name,
+            scale=0.62,
+            color=(0.7, 0.7, 0.7),
+            maxwidth=cw - 20,
+        )
+
+        def _yes() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+            self._download_and_play_replay(transfer_id, replay_name)
+
+        def _no() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+
+        no_btn = bui.buttonwidget(
+            parent=cnt, position=(16, 16), size=(120, 42),
+            label=get_lang_text('Replay.cancel'),
+            color=(0.4, 0.2, 0.2), textcolor=(1, 0.5, 0.5),
+            on_activate_call=_no,
+        )
+        yes_btn = bui.buttonwidget(
+            parent=cnt, position=(cw - 136, 16), size=(120, 42),
+            label=action_label,
+            color=(0.2, 0.5, 0.2), textcolor=(0.5, 1, 0.5),
+            on_activate_call=_yes,
+        )
+        bui.containerwidget(edit=cnt, cancel_button=no_btn, start_button=yes_btn)
+
+    def _download_and_play_replay(self, transfer_id: int, replay_name: str) -> None:
+        import os
+        bui.screenmessage(get_lang_text('Replay.downloading'), color=(0.5, 0.8, 1.0))
+
+        def _run() -> None:
+            data, status = authenticated_download_replay(f'/replays/{transfer_id}/download')
+
+            if status != 200 or data is None:
+                babase.pushcall(
+                    lambda: bui.screenmessage(get_lang_text('Replay.failDownload'), color=(1, 0.3, 0.3)),
+                    from_other_thread=True,
+                )
+                return
+
+            lower_rn = replay_name.lower()
+            is_mod = lower_rn.endswith('.py')
+            is_ppm = lower_rn.endswith('.ppm')
+            if is_mod:
+                save_dir = _babase.env().get('python_directory_user', bui.get_replays_dir())
+                save_path = os.path.join(save_dir, replay_name)
+            elif is_ppm:
+                os.makedirs(MEDIA_DIRECTORY, exist_ok=True)
+                save_path = os.path.join(MEDIA_DIRECTORY, replay_name)
+            else:
+                save_path = os.path.join(bui.get_replays_dir(), f'received_{transfer_id}_{replay_name}')
+            try:
+                with open(save_path, 'wb') as f:
+                    f.write(data)
+            except Exception as exc:
+                babase.pushcall(
+                    lambda: bui.screenmessage(f'Could not save file: {exc}', color=(1, 0.3, 0.3)),
+                    from_other_thread=True,
+                )
+                return
+
+            if is_mod:
+                babase.pushcall(
+                    lambda sp=save_path, rn=replay_name: self._show_mod_options_popup(sp, rn),
+                    from_other_thread=True,
+                )
+            elif is_ppm:
+                # Image already saved locally; _add_image_widget already rendered it
+                pass
+            else:
+                babase.pushcall(
+                    lambda: self._play_downloaded_replay(save_path),
+                    from_other_thread=True,
+                )
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _play_downloaded_replay(self, path: str) -> None:
+        import bascenev1 as bs
+        if bui.app.classic is not None:
+            bui.app.classic.save_ui_state()
+
+        def do_it() -> None:
+            try:
+                bs.set_replay_speed_exponent(0)
+                bui.fade_screen(True)
+                bs.new_replay_session(path)
+            except Exception:
+                from bascenev1lib import mainmenu
+                bs.new_host_session(mainmenu.MainMenuSession)
+
+        self._close()
+        bui.fade_screen(False, endcall=bui.CallStrict(bui.pushcall, do_it))
+
     def _split_message(self, text: str) -> list[str]:
         chunks: list[str] = []
         while len(text) > 64:
@@ -12541,6 +13603,7 @@ class DMWindow:
 
         is_online = fid in get_online_friend_ids()
         bui.buttonwidget(edit=self._send_btn, color=(1, 1, 1) if is_online else (0.4, 0.4, 0.4))
+        self._update_replay_btn()
         bui.textwidget(edit=self._chat_title_widget, text=nick)
         if self._chat_back_btn is None or not self._chat_back_btn.exists():
             self._chat_back_btn = bui.buttonwidget(
@@ -12562,10 +13625,25 @@ class DMWindow:
 
         if fid is not None:
             for msg in get_conversation_msgs(fid):
-                self._add_chat_message({
-                    'nickname': msg.get('nickname', '?'),
-                    'content': msg.get('content', ''),
-                })
+                msg_type = msg.get('type')
+                if msg_type == 'replay':
+                    self._add_replay_widget(
+                        msg.get('replay_name', 'replay.brp'),
+                        msg.get('transfer_id', 0),
+                        msg.get('is_mine', False),
+                    )
+                elif msg_type == 'invite':
+                    self._add_invite_widget(
+                        msg.get('nickname', '?'),
+                        msg.get('server_name', '?'),
+                        msg.get('server_ip', ''),
+                        msg.get('server_port', '0'),
+                    )
+                else:
+                    self._add_chat_message({
+                        'nickname': msg.get('nickname', '?'),
+                        'content': msg.get('content', ''),
+                    })
 
         def _cancel_load_popup() -> None:
             self._msg_select_seq += 1
@@ -12574,6 +13652,7 @@ class DMWindow:
         ensure_global_session().remove_listener(self._on_realtime_message)
         if fid is not None:
             ensure_friends_session().add_dm_listener(fid, self._on_dm_message)
+        ensure_friends_session().add_replay_listener(self._on_replay_transfer)
 
     def _switch_to_global(self) -> None:
         set_dm_chat_target({'type': 'global'})
@@ -12582,9 +13661,11 @@ class DMWindow:
             fid = self._chat_friend.get('friend_id')
             if fid is not None:
                 ensure_friends_session().remove_dm_listener(fid, self._on_dm_message)
+            ensure_friends_session().remove_replay_listener(self._on_replay_transfer)
             self._chat_friend = None
 
         bui.buttonwidget(edit=self._send_btn, color=(1, 1, 1))
+        self._update_replay_btn()
         bui.textwidget(edit=self._chat_title_widget, text=get_lang_text('DM.globalChat'))
         if self._chat_back_btn is not None and self._chat_back_btn.exists():
             self._chat_back_btn.delete()
@@ -12604,7 +13685,74 @@ class DMWindow:
         babase.apptimer(0.05, _cancel_load_popup)
 
     def _on_server_invite(self, invite: dict) -> None:
-        pass  # handled by global _on_global_server_invite listener
+        pass  # handled by ServerInvitePopup via _active_dm_window_ref
+
+    def _add_invite_widget(self, sender_nick: str, server_name: str,
+                           server_ip: str, server_port: str) -> None:
+        cw, ch = 240, 80
+
+        row = bui.containerwidget(
+            parent=self._chat_column,
+            size=(500, ch + 25),
+            background=False,
+        )
+
+        bui.textwidget(
+            parent=row,
+            position=(158, ch + 13),
+            size=(0, 0),
+            h_align='left', v_align='center',
+            text=f'{sender_nick}:',
+            scale=0.6,
+            color=_theme.get_color('COLOR_PRIMARY'),
+            maxwidth=200,
+        )
+
+        cnt = bui.containerwidget(
+            parent=row,
+            position=(158, 4),
+            size=(cw, ch),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+        )
+
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 16),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=get_lang_text('Invite.serverInvite'),
+            scale=0.55,
+            color=(0.6, 0.6, 0.6),
+            maxwidth=cw - 10,
+        )
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 38),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=server_name,
+            scale=0.72,
+            color=(1.0, 1.0, 1.0),
+            maxwidth=cw - 10,
+        )
+        bui.buttonwidget(
+            parent=cnt,
+            position=(cw * 0.5 - 45, 6),
+            size=(90, 26),
+            label=get_lang_text('Invite.join'),
+            color=(0.2, 0.55, 0.2),
+            textcolor=(0.5, 1.0, 0.5),
+            text_scale=0.75,
+            enable_sound=True,
+            on_activate_call=bui.CallPartial(
+                _open_invite_queue, server_ip, int(server_port)
+            ),
+        )
+
+        self._chat_texts.append(row)
+        if len(self._chat_texts) > 60:
+            self._chat_texts.pop(0).delete()
+        bui.containerwidget(edit=self._chat_column, visible_child=row)
 
     def _on_dm_message(self, msg: dict) -> None:
         # saving is handled by the global listener; here we only update the chat display
@@ -12653,6 +13801,7 @@ class DMWindow:
             fid = self._chat_friend.get('friend_id')
             is_online = fid in get_online_friend_ids()
             bui.buttonwidget(edit=self._send_btn, color=(1, 1, 1) if is_online else (0.4, 0.4, 0.4))
+        self._update_replay_btn()
 
     def _open_admin_users(self) -> None:
         AdminUsersWindow()
@@ -12669,6 +13818,7 @@ class DMWindow:
             try:
                 ensure_global_session().remove_listener(self._on_realtime_message)
                 ensure_friends_session().remove_server_invite_listener(self._on_server_invite)
+                ensure_friends_session().remove_replay_listener(self._on_replay_transfer)
                 if self._chat_friend is not None:
                     fid = self._chat_friend.get('friend_id')
                     if fid is not None:
@@ -12678,6 +13828,531 @@ class DMWindow:
         if self._root_widget.exists():
             bui.containerwidget(edit=self._root_widget, transition='out_scale')
         bui.getsound('swish').play()
+
+
+class FileSendSelectorPopup:
+    """Small popup to choose between sending a Replay, Mod, or Image."""
+
+    def __init__(self, on_replay, on_mod, on_image) -> None:
+        uiscale = bui.app.ui_v1.uiscale
+        self._width = 250
+        self._height = 160
+
+        self._root_widget = bui.containerwidget(
+            size=(self._width, self._height),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            on_outside_click_call=self._close,
+            scale=(2.1 if uiscale is babase.UIScale.SMALL else
+                   1.5 if uiscale is babase.UIScale.MEDIUM else 1.0),
+        )
+
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height - 20),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=get_lang_text('Send.selectType'),
+            scale=0.85,
+            color=_theme.get_color('COLOR_PRIMARY'),
+        )
+
+        btn_w, btn_h = 100, 46
+        rep_w = 95
+        gap = (self._width - btn_w * 2 - 8) // 2
+        y_top = self._height - 85
+        y_bot = y_top - btn_h - 8
+
+        bui.buttonwidget(
+            parent=self._root_widget,
+            position=(gap, y_top),
+            size=(rep_w, btn_h),
+            label=f'▶  {get_lang_text("Send.replay")}',
+            color=(0.1, 0.25, 0.45),
+            textcolor=(0.5, 0.8, 1.0),
+            text_scale=0.75,
+            on_activate_call=lambda: (self._close(), on_replay()),
+        )
+        bui.buttonwidget(
+            parent=self._root_widget,
+            position=(gap + rep_w + 15, y_top),
+            size=(btn_w, btn_h),
+            label=f'⬡  {get_lang_text("Send.mod")}',
+            color=(0.25, 0.15, 0.35),
+            textcolor=(0.85, 0.55, 1.0),
+            text_scale=0.75,
+            on_activate_call=lambda: (self._close(), on_mod()),
+        )
+        bui.buttonwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5 - btn_w * 0.5, y_bot),
+            size=(btn_w, btn_h),
+            label=f'■  {get_lang_text("Send.image")}',
+            color=(0.1, 0.25, 0.15),
+            textcolor=(0.4, 1.0, 0.6),
+            text_scale=0.75,
+            on_activate_call=lambda: (self._close(), on_image()),
+        )
+
+    def _close(self) -> None:
+        if self._root_widget.exists():
+            bui.containerwidget(edit=self._root_widget, transition='out_scale')
+
+
+class ModPickerPopup:
+    """Popup to pick a local .py mod file and send it to a friend."""
+
+    def __init__(self, on_done) -> None:
+        import os
+        self._on_done = on_done
+        uiscale = bui.app.ui_v1.uiscale
+        self._width = 300
+        self._height = 240
+
+        self._root_widget = bui.containerwidget(
+            size=(self._width, self._height),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            on_outside_click_call=self._close,
+            scale=(2.1 if uiscale is babase.UIScale.SMALL else
+                   1.5 if uiscale is babase.UIScale.MEDIUM else 1.0),
+        )
+
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height - 22),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=get_lang_text('Mod.sendTitle'),
+            scale=0.9,
+            color=_theme.get_color('COLOR_PRIMARY'),
+        )
+
+        back_btn = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(30, self._height - 40),
+            size=(28, 28),
+            label=babase.charstr(babase.SpecialChar.BACK),
+            button_type='backSmall',
+            color=_theme.get_color('COLOR_BUTTON'),
+            textcolor=_theme.get_color('COLOR_PRIMARY'),
+            on_activate_call=self._close,
+        )
+        bui.containerwidget(edit=self._root_widget, cancel_button=back_btn)
+
+        scroll_w = self._width - 60
+        scroll = bui.scrollwidget(
+            parent=self._root_widget,
+            position=(30, 20),
+            size=(scroll_w, self._height - 70),
+            background=False,
+            highlight=False,
+            capture_arrows=True,
+            color=_theme.get_color('COLOR_ACCENT'),
+        )
+
+        col = bui.columnwidget(parent=scroll, border=2, margin=0, left_border=-25)
+
+        mods_dir = _babase.env().get('python_directory_user', '')
+        try:
+            names = [n for n in os.listdir(mods_dir) if n.endswith('.py')] if mods_dir else []
+            names.sort(key=lambda x: x.lower())
+        except Exception:
+            names = []
+
+        if not names:
+            bui.textwidget(
+                parent=col,
+                size=(scroll_w - 20, 30),
+                h_align='center', v_align='center',
+                text=get_lang_text('Mod.noMods'),
+                scale=0.7,
+                color=(0.5, 0.5, 0.5),
+            )
+        else:
+            t_scale = 1.3
+            row_w = (scroll_w - 60) / t_scale
+            for name in names:
+                display = name[:-3] if name.endswith('.py') else name
+                display = display[:20] + '...' if len(display) > 20 else display
+                bui.textwidget(
+                    parent=col,
+                    size=(row_w, 30),
+                    selectable=True,
+                    always_highlight=True,
+                    text=display,
+                    h_align='left', v_align='center',
+                    corner_scale=t_scale,
+                    maxwidth=row_w * 0.93,
+                    on_activate_call=bui.CallPartial(self._confirm_send, name),
+                    color=(0.9, 0.7, 1.0),
+                    scale=0.72,
+                )
+
+    def _confirm_send(self, name: str) -> None:
+        display = name[:-3] if name.endswith('.py') else name
+        uiscale = bui.app.ui_v1.uiscale
+        cw, ch = 300, 150
+        cnt = bui.containerwidget(
+            size=(cw, ch),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            scale=(2.1 if uiscale is babase.UIScale.SMALL else
+                   1.5 if uiscale is babase.UIScale.MEDIUM else 1.0),
+        )
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 35),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=get_lang_text('Replay.confirmSend').format(name=f'{display}.py'),
+            scale=0.75,
+            color=_theme.get_color('COLOR_PRIMARY'),
+            maxwidth=cw - 20,
+        )
+
+        def _yes() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+            self._pick_and_close(name)
+
+        def _no() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+
+        no_btn = bui.buttonwidget(
+            parent=cnt, position=(16, 16), size=(120, 42),
+            label=get_lang_text('Replay.cancel'),
+            color=(0.4, 0.2, 0.2), textcolor=(1, 0.5, 0.5),
+            on_activate_call=_no,
+        )
+        yes_btn = bui.buttonwidget(
+            parent=cnt, position=(cw - 136, 16), size=(120, 42),
+            label=get_lang_text('Replay.send'),
+            color=(0.2, 0.5, 0.2), textcolor=(0.5, 1, 0.5),
+            on_activate_call=_yes,
+        )
+        bui.containerwidget(edit=cnt, cancel_button=no_btn, start_button=yes_btn)
+
+    def _pick_and_close(self, name: str) -> None:
+        self._close()
+        if self._on_done:
+            self._on_done(name)
+
+    def _close(self) -> None:
+        if self._root_widget.exists():
+            bui.containerwidget(edit=self._root_widget, transition='out_scale')
+
+
+class ImagePickerPopup:
+    """Popup to pick a local .ppm image file from MEDIA_DIRECTORY and send it to a friend."""
+
+    def __init__(self, on_done) -> None:
+        import os
+        self._on_done = on_done
+        uiscale = bui.app.ui_v1.uiscale
+        self._width = 300
+        self._height = 240
+
+        self._root_widget = bui.containerwidget(
+            size=(self._width, self._height),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            on_outside_click_call=self._close,
+            scale=(2.1 if uiscale is babase.UIScale.SMALL else
+                   1.5 if uiscale is babase.UIScale.MEDIUM else 1.0),
+        )
+
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height - 22),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=get_lang_text('Image.sendTitle'),
+            scale=0.9,
+            color=_theme.get_color('COLOR_PRIMARY'),
+        )
+
+        back_btn = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(30, self._height - 40),
+            size=(28, 28),
+            label=babase.charstr(babase.SpecialChar.BACK),
+            button_type='backSmall',
+            color=_theme.get_color('COLOR_BUTTON'),
+            textcolor=_theme.get_color('COLOR_PRIMARY'),
+            on_activate_call=self._close,
+        )
+        bui.containerwidget(edit=self._root_widget, cancel_button=back_btn)
+
+        scroll_w = self._width - 60
+        scroll = bui.scrollwidget(
+            parent=self._root_widget,
+            position=(30, 20),
+            size=(scroll_w, self._height - 70),
+            background=False,
+            highlight=False,
+            capture_arrows=True,
+            color=_theme.get_color('COLOR_ACCENT'),
+        )
+
+        col = bui.columnwidget(parent=scroll, border=2, margin=0, left_border=-30)
+
+        os.makedirs(MEDIA_DIRECTORY, exist_ok=True)
+        try:
+            names = [n for n in os.listdir(MEDIA_DIRECTORY) if n.lower().endswith('.ppm')]
+            names.sort(key=lambda x: x.lower())
+        except Exception:
+            names = []
+
+        if not names:
+            bui.textwidget(
+                parent=col,
+                size=(scroll_w - 20, 30),
+                h_align='center', v_align='center',
+                text=get_lang_text('Image.noImages'),
+                scale=0.7,
+                color=(0.5, 0.5, 0.5),
+            )
+        else:
+            t_scale = 1.3
+            row_w = (scroll_w - 60) / t_scale
+            for name in names:
+                display = name[:-4] if name.lower().endswith('.ppm') else name
+                display = display[:20] + '...' if len(display) > 20 else display
+                bui.textwidget(
+                    parent=col,
+                    size=(row_w, 30),
+                    selectable=True,
+                    always_highlight=True,
+                    text=display,
+                    h_align='left', v_align='center',
+                    corner_scale=t_scale,
+                    maxwidth=row_w * 0.93,
+                    on_activate_call=bui.CallPartial(self._confirm_send, name),
+                    color=(0.4, 1.0, 0.6),
+                    scale=0.72,
+                )
+
+    def _confirm_send(self, name: str) -> None:
+        display = name[:-4] if name.lower().endswith('.ppm') else name
+        uiscale = bui.app.ui_v1.uiscale
+        cw, ch = 300, 150
+        cnt = bui.containerwidget(
+            size=(cw, ch),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            scale=(2.1 if uiscale is babase.UIScale.SMALL else
+                   1.5 if uiscale is babase.UIScale.MEDIUM else 1.0),
+        )
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 35),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=get_lang_text('Replay.confirmSend').format(name=f'{display}.ppm'),
+            scale=0.75,
+            color=_theme.get_color('COLOR_PRIMARY'),
+            maxwidth=cw - 20,
+        )
+
+        def _yes() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+            self._pick_and_close(name)
+
+        def _no() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+
+        no_btn = bui.buttonwidget(
+            parent=cnt, position=(16, 16), size=(120, 42),
+            label=get_lang_text('Replay.cancel'),
+            color=(0.4, 0.2, 0.2), textcolor=(1, 0.5, 0.5),
+            on_activate_call=_no,
+        )
+        yes_btn = bui.buttonwidget(
+            parent=cnt, position=(cw - 136, 16), size=(120, 42),
+            label=get_lang_text('Replay.send'),
+            color=(0.2, 0.5, 0.2), textcolor=(0.5, 1, 0.5),
+            on_activate_call=_yes,
+        )
+        bui.containerwidget(edit=cnt, cancel_button=no_btn, start_button=yes_btn)
+
+    def _pick_and_close(self, name: str) -> None:
+        self._close()
+        if self._on_done:
+            self._on_done(name)
+
+    def _close(self) -> None:
+        if self._root_widget.exists():
+            bui.containerwidget(edit=self._root_widget, transition='out_scale')
+
+
+class ReplayPickerPopup:
+    """Popup to pick a local .brp replay file and send it to a friend."""
+
+    def __init__(self, on_done) -> None:
+        import os
+        self._on_done = on_done
+        uiscale = bui.app.ui_v1.uiscale
+        self._width = 300
+        self._height = 240
+
+        self._root_widget = bui.containerwidget(
+            size=(self._width, self._height),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            on_outside_click_call=self._close,
+            scale=(
+                2.1 if uiscale is babase.UIScale.SMALL else
+                1.5 if uiscale is babase.UIScale.MEDIUM else 1.0
+            ),
+        )
+
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height - 22),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text=get_lang_text('Replay.sendTitle'),
+            scale=0.9,
+            color=_theme.get_color('COLOR_PRIMARY'),
+        )
+
+        back_btn = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(30, self._height - 40),
+            size=(28, 28),
+            label=babase.charstr(babase.SpecialChar.BACK),
+            button_type='backSmall',
+            color=_theme.get_color('COLOR_BUTTON'),
+            textcolor=_theme.get_color('COLOR_PRIMARY'),
+            on_activate_call=self._close,
+        )
+        bui.containerwidget(edit=self._root_widget, cancel_button=back_btn)
+
+        scroll_w = self._width - 60
+        scroll = bui.scrollwidget(
+            parent=self._root_widget,
+            position=(30, 20),
+            size=(scroll_w, self._height - 70),
+            background=False,
+            highlight=False,
+            capture_arrows=True,
+            color=_theme.get_color('COLOR_ACCENT'),
+        )
+
+        col = bui.columnwidget(parent=scroll, border=2, margin=0, left_border=-25)
+
+        try:
+            names = [n for n in os.listdir(bui.get_replays_dir()) if n.endswith('.brp')]
+            names.sort(key=lambda x: x.lower())
+        except Exception:
+            names = []
+
+        if not names:
+            bui.textwidget(
+                parent=col,
+                size=(scroll_w - 20, 30),
+                h_align='center',
+                v_align='center',
+                text=get_lang_text('Replay.noReplays'),
+                scale=0.7,
+                color=(0.5, 0.5, 0.5),
+            )
+        else:
+            t_scale = 1.3
+            row_w = (scroll_w - 60) / t_scale
+            for name in names:
+                display = name[:-4] if name.endswith('.brp') else name
+                display = display[:20] + '...' if len(display) > 20 else display
+                bui.textwidget(
+                    parent=col,
+                    size=(row_w, 30),
+                    selectable=True,
+                    always_highlight=True,
+                    text=display,
+                    h_align='left',
+                    v_align='center',
+                    corner_scale=t_scale,
+                    maxwidth=row_w * 0.93,
+                    on_activate_call=bui.CallPartial(self._confirm_send, name),
+                    color=(1, 1, 1),
+                    scale=0.72,
+                )
+
+    def _confirm_send(self, name: str) -> None:
+        display = name[:-4] if name.endswith('.brp') else name
+        uiscale = bui.app.ui_v1.uiscale
+        cw, ch = 300, 150
+        cnt = bui.containerwidget(
+            size=(cw, ch),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            scale=(
+                2.1 if uiscale is babase.UIScale.SMALL else
+                1.5 if uiscale is babase.UIScale.MEDIUM else 1.0
+            ),
+        )
+        bui.textwidget(
+            parent=cnt,
+            position=(cw * 0.5, ch - 35),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text=get_lang_text('Replay.confirmSend').format(name=f'{display}.brp'),
+            scale=0.75,
+            color=_theme.get_color('COLOR_PRIMARY'),
+            maxwidth=cw - 20,
+        )
+
+        def _yes() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+            self._pick_and_close(name)
+
+        def _no() -> None:
+            bui.containerwidget(edit=cnt, transition='out_scale')
+
+        no_btn = bui.buttonwidget(
+            parent=cnt,
+            position=(16, 16),
+            size=(120, 42),
+            label=get_lang_text('Replay.cancel'),
+            color=(0.4, 0.2, 0.2),
+            textcolor=(1, 0.5, 0.5),
+            on_activate_call=_no,
+        )
+        yes_btn = bui.buttonwidget(
+            parent=cnt,
+            position=(cw - 136, 16),
+            size=(120, 42),
+            label=get_lang_text('Replay.send'),
+            color=(0.2, 0.5, 0.2),
+            textcolor=(0.5, 1, 0.5),
+            on_activate_call=_yes,
+        )
+        bui.containerwidget(edit=cnt, cancel_button=no_btn, start_button=yes_btn)
+
+    def _pick_and_close(self, name: str) -> None:
+        self._close()
+        if self._on_done:
+            self._on_done(name)
+
+    def _close(self) -> None:
+        if self._root_widget.exists():
+            bui.containerwidget(edit=self._root_widget, transition='out_scale')
 
 
 class AddFriendPopup:
@@ -13341,7 +15016,29 @@ class ServerInvitePopup:
         ip = invite.get('serverIp', '')
         port = invite.get('serverPort', '')
         sender = invite.get('senderNickname', '?')
+        sender_id = invite.get('senderId')
         self._sender_nick = sender
+
+        # Save to DM history and show in chat widget
+        if sender_id is not None:
+            try:
+                # Find friend entry to get proper nickname
+                dm = _active_dm_window_ref() if _active_dm_window_ref is not None else None
+                friends_list = dm._friends if dm is not None else []
+                friend_nick = sender
+                for f in friends_list:
+                    if f.get('friend_id') == sender_id:
+                        friend_nick = f.get('friend_nickname', sender)
+                        break
+                append_invite_message(sender_id, friend_nick, sender,
+                                      server_name, ip, str(port))
+                # Show in chat if DM window is open and viewing this friend
+                if (dm is not None and dm._root_widget.exists() and
+                        dm._chat_friend is not None and
+                        dm._chat_friend.get('friend_id') == sender_id):
+                    dm._add_invite_widget(sender, server_name, ip, str(port))
+            except Exception:
+                pass
 
         bui.textwidget(
             parent=self._root_widget,
