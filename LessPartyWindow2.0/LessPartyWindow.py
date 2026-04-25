@@ -1379,6 +1379,24 @@ Translate_Texts: Dict[str, Dict[str, str]] = {
         'ml': 'Last Game Replay Save Cheyyuka',
         'id': 'Simpan Game Replay Terakhir',
     },
+    'Menu.addToFavorites': {
+        'en': 'Add to Favorites',
+        'es': 'Agregar a Favoritos',
+        'pt': 'Adicionar aos Favoritos',
+        'ru': 'Добавить в избранное',
+        'hi': 'Favorites mein add karein',
+        'ml': 'Favorites-il add cheyyuka',
+        'id': 'Tambahkan ke Favorit',
+    },
+    'Menu.addedToFavorites': {
+        'en': 'Server {name} added successfully!',
+        'es': '¡Servidor {name} agregado con éxito!',
+        'pt': 'Servidor {name} adicionado com sucesso!',
+        'ru': 'Сервер {name} успешно добавлен!',
+        'hi': 'Server {name} add ho gaya!',
+        'ml': 'Server {name} add aayi!',
+        'id': 'Server {name} berhasil ditambahkan!',
+    },
     'Menu.replaySaved': {
         'en': 'Replay saved!',
         'es': '¡Repetición guardada!',
@@ -4119,10 +4137,6 @@ def _uiscale_start_monitor() -> None:
     log_uiscale('monitor_start')
     babase.apptimer(1.0, _uiscale_poll)
 
-
-
-
-
 def _safe_dirname(name: str) -> str:
     """Strip filesystem-unsafe characters from a server name."""
     unsafe = set('<>:"/\\|?*')
@@ -4250,7 +4264,8 @@ def _chat_poll() -> None:
                     daemon=True,
                 ).start()
     except Exception:
-        babase.print_exception()
+        pass
+        #babase.print_exception()
     babase.apptimer(1.0, _chat_poll)
 
 
@@ -4380,7 +4395,8 @@ def _notify_joins(roster: list, new_display_strings: frozenset) -> None:
                     name=real_name, nickname=nickname[:12])
                 screenmessage(msg, color=(1.0, 0.6, 0.2))
     except Exception:
-        babase.print_exception()
+        pass
+        #babase.print_exception()
 
 
 def _roster_poll() -> None:
@@ -4408,9 +4424,9 @@ def _roster_poll() -> None:
                     daemon=True,
                 ).start()
     except Exception:
-        babase.print_exception()
+        pass
+        #babase.print_exception()
     babase.apptimer(1.0, _roster_poll)
-
 
 def _run_sync(roster: list, server_name: str, new_display_strings: frozenset = frozenset()) -> None:
     sync_from_roster(roster, server_name, logmsg=True, new_display_strings=new_display_strings)
@@ -4717,7 +4733,7 @@ def cw(*, size=None, oac=None, **k):
     return (p,)
 
 
-def TIP(text: str, color: tuple | None = None) -> None:
+def TIP(text: str, color: tuple | None = None, sound: str | None = 'ding') -> None:
     """Display a screen message. Uses theme COLOR_TERTIARY if no color given."""
     if color is None:
         try:
@@ -4725,7 +4741,8 @@ def TIP(text: str, color: tuple | None = None) -> None:
         except Exception:
             color = (1.0, 1.0, 1.0)
     push(text, color)
-    bui.getsound('ding').play()
+    if sound:
+        bui.getsound(sound).play()
 
 
 # Spinner animation state keyed by widget id
@@ -5278,6 +5295,7 @@ _theme = theme
 
 _SESSION_START = datetime.now(timezone.utc)
 _dm_window_open = False
+_active_dm_window_ref: '_weakref.ref[DMWindow] | None' = None
 _SCREENMSG_CFG_KEY = 'dm_screenmsg_enabled'
 _server_online: bool | None = None
 _online_friend_ids: set = set()
@@ -6298,8 +6316,8 @@ def _on_global_server_invite(invite: dict) -> None:
     try:
         import bauiv1 as bui
         ServerInvitePopup(invite=invite)
-    except Exception as e:
-        print(f'[DM] Could not show server invite popup: {e}')
+    except Exception:
+        pass
 
 
 def ensure_friends_session() -> FriendsSession:
@@ -6735,6 +6753,9 @@ def _ping_color(ms: float) -> tuple[float, float, float]:
 _zombie_party_window: 'LPartyWindow | None' = None
 
 
+
+
+
 class _ThemedPopupMenu(PopupMenuWindow):
     """PopupMenuWindow with custom bg and text colors."""
 
@@ -6803,7 +6824,7 @@ class LPartyWindow(party.PartyWindow):
         global _zombie_party_window
         if _zombie_party_window is not None:
             try:
-                _zombie_party_window._uiopenstate = None  # type: ignore[attr-defined]
+                _zombie_party_window._uiopenstate = None
             except Exception:
                 pass
             _zombie_party_window = None
@@ -6849,6 +6870,12 @@ class LPartyWindow(party.PartyWindow):
         super().__init__(origin)
         bui.buttonwidget = _orig_bw
         bui.containerwidget = _orig_cw
+
+        # Always keep game chat muted so C++ routes messages through on_chat_message.
+        cfg = babase.app.config
+        if not cfg.get('Chat Muted', False):
+            cfg['Chat Muted'] = True
+            cfg.apply_and_commit()
 
         if bui.app.ui_v1.uiscale is babase.UIScale.SMALL:
             bui.textwidget(edit=self._text_field, size=(595, 60), maxwidth=559, position=(44, 24))
@@ -7391,20 +7418,28 @@ class LPartyWindow(party.PartyWindow):
     def _update(self) -> None:
         if not self._root_widget or not self._root_widget.exists():
             return
-        is_muted = babase.app.config.get(_CFG_CHAT_MUTED, False)
-        # prevent stock from loading old messages when we're muted
-        if is_muted:
+        is_muted = bui.app.config.get(_CFG_CHAT_MUTED, False)
+
+        # Load old messages on first update, filtering blocked senders
+        if self._display_old_msgs and not is_muted:
             self._display_old_msgs = False
+            for msg in bs.get_chat_messages():
+                sender = msg.partition(': ')[0] if ': ' in msg else None
+                if sender and self._is_sender_blocked(sender):
+                    continue
+                self._add_msg(msg)
+        else:
+            self._display_old_msgs = False
+
+        # Swap lists so parent can't touch our messages
+        _t, _r, _s = self._chat_texts, self._chat_raw_msgs, self._chat_senders
+        self._chat_texts, self._chat_raw_msgs, self._chat_senders = [], [], []
         super()._update()
-        # always hide the stock muted text; we use our own
+        self._chat_texts, self._chat_raw_msgs, self._chat_senders = _t, _r, _s
+
+        # Hide stock muted text; use our own indicator only when explicitly muted
         if self._muted_text.exists():
             bui.textwidget(edit=self._muted_text, color=(0, 0, 0, 0))
-        if is_muted:
-            for w in list(self._chat_texts):
-                if w.exists():
-                    w.delete()
-            self._chat_texts.clear()
-            self._chat_senders.clear()
         w = getattr(self, '_lparty_muted_text', None)
         if w and w.exists():
             bui.textwidget(
@@ -7590,36 +7625,39 @@ class LPartyWindow(party.PartyWindow):
             bs.chatmessage(fmt.format(round(self._ping_ms)))
 
     def on_chat_message(self, msg: str) -> None:
-        zombie = not self._root_widget or not self._root_widget.exists()
+        if bui.app.config.get(_CFG_CHAT_MUTED, False):
+            return
         sender = msg.partition(': ')[0] if ': ' in msg else None
-        v2 = self._get_v2_account(sender) if sender else None
-        blocked = is_blocked(v2) if v2 else is_blocked(sender) if sender else False
-
-        # Zombie path: window closed but object kept alive for UIOpenState.
-        if zombie:
-            if ': ' not in msg:
-                return
-            _, _, body = msg.partition(': ')
-            if blocked:
-                return
-            formatted = _format_sender_global(sender) + ': ' + body
-            color: tuple | None = None
-            base = _chat_color_tracker.get(sender)
-            if base is not None:
-                intensity = finder_config.get(CFG_NAME_CHAT_COLOR_INTENSITY, 'strong')
-                if intensity == 'strong':
-                    color = tuple(min(1.0, c + 0.3) for c in base)  # type: ignore[assignment]
-                elif intensity == 'soft':
-                    color = tuple((c + 1.0) / 2.0 for c in base)  # type: ignore[assignment]
-            if color:
-                babase.screenmessage(formatted, color=color)
-            else:
-                babase.screenmessage(formatted)
+        if sender and self._is_sender_blocked(sender):
             return
-        if blocked:
-            return
-        if not babase.app.config.get(_CFG_CHAT_MUTED, False):
+        if self._window_open:
             self._add_msg(msg)
+        else:
+            if ': ' in msg:
+                raw_sender, _, body = msg.partition(': ')
+                display = self._format_chat_sender(raw_sender) + ': ' + body
+            else:
+                display = msg
+            intensity = finder_config.get(CFG_NAME_CHAT_COLOR_INTENSITY, 'strong')
+            color: tuple[float, float, float] = (1.0, 1.0, 1.0)
+            if intensity != 'off' and sender:
+                base = _chat_color_tracker.get(sender)
+                if base is not None:
+                    if intensity == 'strong':
+                        color = tuple(min(1.0, c + 0.3) for c in base)  # type: ignore[assignment]
+                    else:
+                        color = tuple((c + 1.0) / 2.0 for c in base)  # type: ignore[assignment]
+            babase.screenmessage(display, color=color)
+            _is_friend = False
+            if sender:
+                _friend_names: set[str] = set()
+                for _f in friends_list:
+                    _n = _f.get('name', '')
+                    _friend_names.add(_n)
+                    _friend_names.add(_normalize_account_name(_n))
+                _is_friend = (sender in _friend_names
+                              or _normalize_account_name(sender) in _friend_names)
+            bui.getsound('ding' if _is_friend else 'tap').play()
 
     def _add_msg(self, msg: str) -> None:
         # Format sender
@@ -7966,6 +8004,11 @@ class LPartyWindow(party.PartyWindow):
 
         choices.append('saveLastGameReplay')
         choices_display.append(babase.Lstr(value=get_lang_text('Menu.saveReplay')))
+
+        server_info = bs.get_connection_to_host_info_2()
+        if server_info is not None and not server_info.name.startswith('Private Party '):
+            choices.append('addToFavorites')
+            choices_display.append(babase.Lstr(value=get_lang_text('Menu.addToFavorites')))
 
         _ThemedPopupMenu(
             position=self._menu_button.get_screen_space_center(),
@@ -8711,7 +8754,8 @@ class LPartyWindow(party.PartyWindow):
                     elif type in ('account', 'displaystring'):
                         return entry['display_string']
                 except Exception:
-                    babase.print_exception()
+                    pass
+                    #babase.print_exception()
 
         return None if not output else output
 
@@ -8863,6 +8907,10 @@ class LPartyWindow(party.PartyWindow):
                 RecentPlayersWindow()
             elif choice == 'saveLastGameReplay':
                 self._save_last_game_replay()
+            elif choice == 'addToFavorites':
+                info = bs.get_connection_to_host_info_2()
+                if info is not None:
+                    self._add_to_favorites(info.name, info.address, info.port)
             elif choice == 'tint':
                 TintWindow()
             return
@@ -8870,17 +8918,17 @@ class LPartyWindow(party.PartyWindow):
         if self._popup_type == 'mute':
             if choice in ('muteChat', 'unmuteChat'):
                 muting = (choice == 'muteChat')
-                babase.app.config[_CFG_CHAT_MUTED] = muting
-                babase.app.config.commit()
-                if muting:
-                    for w in list(self._chat_texts):
-                        if w.exists():
-                            w.delete()
-                    self._chat_texts.clear()
-                    self._chat_senders.clear()
-                else:
-                    self._display_old_msgs = True
-                    self._update()
+                cfg = babase.app.config
+                cfg[_CFG_CHAT_MUTED] = muting
+                # always keep game muted so C++ routes through on_chat_message
+                cfg['Chat Muted'] = True
+                cfg.apply_and_commit()
+                for w in list(self._chat_texts):
+                    if w.exists():
+                        w.delete()
+                self._chat_texts.clear()
+                self._chat_senders.clear()
+                self._chat_raw_msgs.clear()
             elif choice == 'muteUsers':
                 MuteUsersWindow(self.get_root_widget())
             return
@@ -8965,21 +9013,24 @@ class LPartyWindow(party.PartyWindow):
                 acc = getattr(self, '_popup_account', '') or self._getObjectByID('account') or ''
                 if acc:
                     set_blocked(acc, True)
-                    TIP(f'{acc} {get_lang_text("Global.addedSuccessfully")}')
+                    TIP(f'{acc} {get_lang_text("Global.addedSuccessfully")}', sound=None)
+                    bui.getsound('boo').play()
                     self._refresh_chat()
                     self._roster = None
             elif choice == 'remove_blacklist':
                 acc = getattr(self, '_popup_account', '') or self._getObjectByID('account') or ''
                 if acc:
                     set_blocked(acc, False)
-                    TIP(f'{acc} {get_lang_text("Global.removedSuccessfully")}')
+                    TIP(f'{acc} {get_lang_text("Global.removedSuccessfully")}', sound=None)
+                    bui.getsound('aww').play()
                     self._refresh_chat()
                     self._roster = None
             elif choice == 'remove_friend_local':
                 fe = getattr(self, '_popup_friend_entry', None)
                 if fe:
                     remove_friend(fe['id'])
-                    TIP(f'{fe["name"]} {get_lang_text("Global.removedSuccessfully")}')
+                    TIP(f'{fe["name"]} {get_lang_text("Global.removedSuccessfully")}', sound=None)
+                    bui.getsound('boo').play()
                     self._roster = None
 
     def _add_friend(self, friend: str) -> None:
@@ -9006,7 +9057,8 @@ class LPartyWindow(party.PartyWindow):
             account_pb=None,
             account_id=None
         )
-        TIP(f'{prefixed_friend} {get_lang_text("Global.addedSuccessfully")}')
+        TIP(f'{prefixed_friend} {get_lang_text("Global.addedSuccessfully")}', sound=None)
+        bui.getsound('aww').play()
         self._roster = None  # force color refresh on next tick
 
     def _kick_selected_player(self) -> None:
@@ -9073,6 +9125,38 @@ class LPartyWindow(party.PartyWindow):
     def _save_last_game_replay(self) -> None:
         ReplayNameSavingPopup()
 
+    def _add_to_favorites(self, name: str, address: str | None, port: int | None) -> None:
+        addr = address or ''
+        if not addr:
+            bui.screenmessage(
+                babase.Lstr(resource='internal.invalidAddressErrorText'),
+                color=(1, 0, 0),
+            )
+            bui.getsound('error').play()
+            return
+        p = port if port is not None else -1
+        if p > 65535 or p < 0:
+            bui.screenmessage(
+                babase.Lstr(resource='internal.invalidPortErrorText'),
+                color=(1, 0, 0),
+            )
+            bui.getsound('error').play()
+            return
+        if not name:
+            name = f'{addr}@{p}'
+        config = babase.app.config
+        if not isinstance(config.get('Saved Servers'), dict):
+            config['Saved Servers'] = {}
+        config['Saved Servers'][f'{addr}@{p}'] = {
+            'addr': addr,
+            'port': p,
+            'name': name,
+        }
+        config.commit()
+        bui.getsound('gunCocking').play()
+        msg = get_lang_text('Menu.addedToFavorites').replace('{name}', name)
+        bui.screenmessage(msg, color=(0, 1, 0))
+
     def color_picker_selected_color(self, picker: object, color: tuple) -> None:
         """Called on every color change for live preview."""
         tag = picker.get_tag()  # type: ignore[attr-defined]
@@ -9125,16 +9209,17 @@ class LPartyWindow(party.PartyWindow):
             bui.screenmessage('Not connected to any server.', color=(1, 0.6, 0.2))
             return
         receiver_id = friend.get('friend_id')
-        name = friend.get('friend_nickname', '?')
+        server_name = info.name or 'BombSquad Server'
+        friend_nick = friend.get('friend_nickname', '?')
         ip = info.address
         port = str(info.port)
 
         def _run() -> None:
-            ok = ensure_friends_session().send_server_invite(receiver_id, name, ip, port)
+            ok = ensure_friends_session().send_server_invite(receiver_id, server_name, ip, port)
 
             def _apply() -> None:
                 if ok:
-                    bui.screenmessage(f'Invited {name}!', color=(0, 1, 0.5))
+                    bui.screenmessage(f'Invited {friend_nick}!', color=(0, 1, 0.5))
                     bui.getsound('cashRegister').play()
                 else:
                     bui.screenmessage('Failed to send invite.', color=(1, 0.3, 0.3))
@@ -9329,6 +9414,8 @@ class GatherModified(GatherWindow):
     _filter_hide_full: bool = False
     _filter_hide_empty: bool = False
     _filter_only_empty: bool = False
+    _filter_ffa: bool = False
+    _filter_teams: bool = False
 
     # Saved originals so we can unpatch if needed
     _orig_clear: object = None
@@ -9378,16 +9465,6 @@ class GatherModified(GatherWindow):
                     source_widget=btn, name=name,
                 )
 
-        def _truncate(text: str) -> str:
-            uiscale = bui.app.ui_v1.uiscale
-            if uiscale is bui.UIScale.SMALL:
-                limit = 22
-            elif uiscale is bui.UIScale.MEDIUM:
-                limit = 26
-            else:
-                limit = 30
-            return text if len(text) <= limit else text[:limit] + '...'
-
         def patched_clear(self_row: UIRow) -> None:
             _orig_clear(self_row)
             w = getattr(self_row, '_peek_button', None)
@@ -9409,17 +9486,20 @@ class GatherModified(GatherWindow):
             tab: PublicGatherTab,
         ) -> None:
             needs_update = party.clean_display_index != index
-            # Truncate name before passing to original renderer
-            original_name = party.name
-            party.name = _truncate(original_name)
             _orig_update(
                 self_row, index, party, sub_scroll_width, sub_scroll_height,
                 lineheight, columnwidget, join_text, filter_text,
                 existing_selection, tab,
             )
-            party.name = original_name
             if not needs_update:
                 return
+
+            uiscale = bui.app.ui_v1.uiscale
+            mw = (250 if uiscale is bui.UIScale.SMALL
+                  else 300 if uiscale is bui.UIScale.MEDIUM else 350)
+            name_w = getattr(self_row, '_name_widget', None)
+            if name_w is not None and name_w.exists():
+                bui.textwidget(edit=name_w, maxwidth=mw)
 
             vpos = sub_scroll_height - lineheight * index - 50
 
@@ -9492,6 +9572,16 @@ class GatherModified(GatherWindow):
                     k: v for k, v in self_tab._parties_displayed.items()
                     if v.size == 0
                 }
+            if GatherModified._filter_ffa:
+                self_tab._parties_displayed = {
+                    k: v for k, v in self_tab._parties_displayed.items()
+                    if 'ffa' in v.name.lower()
+                }
+            if GatherModified._filter_teams:
+                self_tab._parties_displayed = {
+                    k: v for k, v in self_tab._parties_displayed.items()
+                    if 'team' in v.name.lower()
+                }
 
         PublicGatherTab._update_party_lists = patched_update_lists
 
@@ -9548,25 +9638,53 @@ class FilterWindow:
             1.3 if uiscale is bui.UIScale.MEDIUM else 1.0
         )
 
-        w, h = 300, 260
+        bg = _global_theme.get_color('COLOR_BACKGROUND')
+        btn_color = _global_theme.get_color('COLOR_BUTTON')
+        text_color = _global_theme.get_color('COLOR_PRIMARY')
+        ffa_active = (0.15, 0.65, 0.2)
+        teams_active = (0.15, 0.35, 0.8)
+
+        w, h = 300, 280
         self._root = bui.containerwidget(
             size=(w, h),
             scale=scale,
             transition='in_scale',
             parent=bui.get_special_widget('overlay_stack'),
             on_outside_click_call=self._close,
+            color=bg,
         )
 
         bui.textwidget(
             parent=self._root,
-            position=(w * 0.5, h - 24),
+            position=(w * 0.08, h - 24),
             size=(0, 0),
             text=get_lang_text('gatherFilterTitle'),
             scale=0.9,
-            color=(1.0, 1.0, 0.8),
-            h_align='center',
+            color=text_color,
+            h_align='left',
             v_align='center',
-            maxwidth=w - 20,
+            maxwidth=140,
+        )
+
+        self._ffa_btn = bui.buttonwidget(
+            parent=self._root,
+            position=(174, h - 37),
+            size=(45, 26),
+            label='FFA',
+            autoselect=True,
+            color=ffa_active if GatherModified._filter_ffa else btn_color,
+            textcolor=text_color,
+            on_activate_call=self._toggle_ffa,
+        )
+        self._teams_btn = bui.buttonwidget(
+            parent=self._root,
+            position=(234, h - 37),
+            size=(48, 26),
+            label='TEAMS',
+            autoselect=True,
+            color=teams_active if GatherModified._filter_teams else btn_color,
+            textcolor=text_color,
+            on_activate_call=self._toggle_teams,
         )
 
         x = w * 0.08
@@ -9629,6 +9747,30 @@ class FilterWindow:
             value=GatherModified._filter_only_empty,
             on_value_change_call=self._toggle_only_empty,
         )
+
+    def _toggle_ffa(self) -> None:
+        btn_color = _global_theme.get_color('COLOR_BUTTON')
+        GatherModified._filter_ffa = not GatherModified._filter_ffa
+        if GatherModified._filter_ffa:
+            GatherModified._filter_teams = False
+            bui.buttonwidget(edit=self._teams_btn, color=btn_color)
+        bui.buttonwidget(
+            edit=self._ffa_btn,
+            color=(0.15, 0.65, 0.2) if GatherModified._filter_ffa else btn_color,
+        )
+        self._tab._party_lists_dirty = True
+
+    def _toggle_teams(self) -> None:
+        btn_color = _global_theme.get_color('COLOR_BUTTON')
+        GatherModified._filter_teams = not GatherModified._filter_teams
+        if GatherModified._filter_teams:
+            GatherModified._filter_ffa = False
+            bui.buttonwidget(edit=self._ffa_btn, color=btn_color)
+        bui.buttonwidget(
+            edit=self._teams_btn,
+            color=(0.15, 0.35, 0.8) if GatherModified._filter_teams else btn_color,
+        )
+        self._tab._party_lists_dirty = True
 
     def _toggle_freeze(self, val: bool) -> None:
         GatherModified._filter_frozen = val
@@ -9859,9 +10001,8 @@ class ServerViewOverlay:
             return m.group(1) if m else ''
 
     def _do_connect(self) -> None:
-        from bascenev1 import connect_to_party
-        connect_to_party(self._address, self._port, False)
         self._close()
+        _open_invite_queue(self._address, self._port)
 
     def _clear_rows(self) -> None:
         for w in self._row_widgets:
@@ -10492,11 +10633,8 @@ class FinderWindow:
         return sound
 
     def _connect(self, address: str, port: int, name: str = '', *_) -> None:
-        party_window = self._party_window
         self.close_interface()
-        if party_window is not None:
-            party_window.close()
-        CON(address, port, False)
+        _open_invite_queue(address, port)
 
     def close_interface(self) -> None:
         self.background_sound.stop()
@@ -11737,6 +11875,8 @@ class DMWindow:
                 LoginWindow()
             return
 
+        global _active_dm_window_ref
+        _active_dm_window_ref = _weakref.ref(self)
         set_dm_window_open(True)
         self._build_ui()
         self._load_friends()
@@ -12464,9 +12604,7 @@ class DMWindow:
         babase.apptimer(0.05, _cancel_load_popup)
 
     def _on_server_invite(self, invite: dict) -> None:
-        if self._root_widget.exists():
-            if not is_invite_blocked(invite.get('senderNickname', '?')):
-                ServerInvitePopup(invite=invite)
+        pass  # handled by global _on_global_server_invite listener
 
     def _on_dm_message(self, msg: dict) -> None:
         # saving is handled by the global listener; here we only update the chat display
@@ -12520,6 +12658,8 @@ class DMWindow:
         AdminUsersWindow()
 
     def _close(self) -> None:
+        global _active_dm_window_ref
+        _active_dm_window_ref = None
         set_dm_window_open(False)
         set_active_dm_chat(None)
         remove_online_status_listener(self._on_online_status_change)
@@ -13122,6 +13262,58 @@ class FriendMenuPopup:
             self._on_done()
 
 
+_active_invite_queue_window: object = None
+
+
+def _open_invite_queue(address: str, port: int) -> None:
+    """Close active windows then show connecting queue and retry until connected."""
+    pw = get_active_party_window()
+    if pw is not None and getattr(pw, '_window_open', False):
+        try:
+            pw.close_with_sound()
+        except Exception:
+            pass
+
+    if _active_dm_window_ref is not None:
+        dm = _active_dm_window_ref()
+        if dm is not None:
+            try:
+                dm._close()
+            except Exception:
+                pass
+
+    def _show_queue() -> None:
+        global _active_invite_queue_window
+        import bascenev1 as bs
+        from bauiv1lib.partyqueue import PartyQueueWindow
+        import time as _time
+
+        class InviteQueueWindow(PartyQueueWindow):
+            _last_connect_try: float = 0.0
+            _inv_address: str = address
+            _inv_port: int = port
+
+            def __del__(self) -> None:
+                pass  # skip PARTY_QUEUE_REMOVE transaction
+
+            def update(self) -> None:
+                if not self._root_widget:
+                    return
+                for dude in self._dudes:
+                    dude.step(self._smoothing)
+                now = _time.time()
+                if now - self._last_connect_try >= 5.0:
+                    self._last_connect_try = now
+                    try:
+                        bs.connect_to_party(self._inv_address, self._inv_port, False)
+                    except Exception:
+                        pass
+
+        _active_invite_queue_window = InviteQueueWindow(queue_id='invite', address=address, port=port)
+
+    babase.apptimer(0.3, _show_queue)
+
+
 class ServerInvitePopup:
     """Popup shown when a friend sends a game server invitation."""
 
@@ -13232,8 +13424,7 @@ class ServerInvitePopup:
         ip = self._invite.get('serverIp', '')
         port = self._invite.get('serverPort', '0')
         try:
-            from bascenev1 import connect_to_party
-            connect_to_party(ip, int(port), False)
+            _open_invite_queue(ip, int(port))
         except Exception as e:
             bui.screenmessage(f'Could not connect: {e}', color=(1, 0.3, 0.3))
         self._close_widget()
@@ -18262,7 +18453,7 @@ class ReplayNameSavingPopup(PopupWindow):
             else:
                 self._do_save(dest)
         except Exception:
-            babase.print_exception()
+            #babase.print_exception()
             babase.screenmessage(
                 get_lang_text('Menu.replaySaveFailed'), color=(1.0, 0.3, 0.3))
 
@@ -18283,7 +18474,7 @@ class ReplayNameSavingPopup(PopupWindow):
                 get_lang_text('Menu.replaySaved'), color=(0.0, 1.0, 0.5))
             bui.getsound('gunCocking').play()
         except Exception:
-            babase.print_exception()
+            #babase.print_exception()
             babase.screenmessage(
                 get_lang_text('Menu.replaySaveFailed'), color=(1.0, 0.3, 0.3))
 
@@ -21594,25 +21785,15 @@ _install_chat_screenmessage_interceptor()
 
 def _patch_chat_hooks() -> None:
     import logging
-    import bascenev1._hooks as _bs_hooks
     import baclassic._appsubsystem as _appsub
 
-    # Patch local_chat_message to log all incoming messages.
-    _orig_local_chat = _bs_hooks.local_chat_message
-
-    def _patched_local_chat(msg: str) -> None:
-        _orig_local_chat(msg)
-
-    _bs_hooks.local_chat_message = _patched_local_chat
-
-    # Patch party_icon_activate so zombie is released before toggling party window.
     _orig_activate = _appsub.ClassicAppSubsystem.party_icon_activate
 
     def _patched_activate(self, origin):
         global _zombie_party_window
         if _zombie_party_window is not None:
             try:
-                _zombie_party_window._uiopenstate = None  # type: ignore[attr-defined]
+                _zombie_party_window._uiopenstate = None
             except Exception:
                 pass
             _zombie_party_window = None
