@@ -6705,6 +6705,48 @@ def _on_global_server_invite(invite: dict) -> None:
         pass
 
 
+def _on_global_replay_transfer(transfer: dict) -> None:
+    """Persist replay/mod/image transfers and notify regardless of DM window state."""
+    sender_id = transfer.get('senderId')
+    transfer_id = transfer.get('transferId', 0)
+    replay_name = transfer.get('originalName', 'replay.brp')
+    sender_nick = transfer.get('senderNickname', '?')
+
+    if sender_id is None:
+        return
+
+    friend_nick = sender_nick
+    dm = _active_dm_window_ref() if _active_dm_window_ref is not None else None
+    if dm is not None:
+        for f in getattr(dm, '_friends', []):
+            if f.get('friend_id') == sender_id:
+                friend_nick = f.get('friend_nickname', sender_nick)
+                break
+
+    try:
+        append_replay_message(sender_id, friend_nick, sender_id, sender_nick,
+                               transfer_id, replay_name, is_mine=False)
+    except Exception as e:
+        print(f'[DM] global replay save error: {e}')
+
+    chat_open = (dm is not None and dm._root_widget.exists() and
+                 dm._chat_friend is not None and
+                 dm._chat_friend.get('friend_id') == sender_id)
+
+    if chat_open:
+        try:
+            dm._add_replay_widget(replay_name, transfer_id, is_mine=False)
+        except Exception as e:
+            print(f'[DM] replay widget add error: {e}')
+    else:
+        try:
+            lower = replay_name.lower()
+            icon = '⬡' if lower.endswith('.py') else ('\U0001f5bc' if lower.endswith('.ppm') else '▶')
+            bui.screenmessage(f'{sender_nick}: {icon} {replay_name}', color=(0.5, 0.8, 1.0))
+        except Exception:
+            pass
+
+
 def ensure_friends_session() -> FriendsSession:
     """Return the singleton friends session, starting it if needed."""
     global _friends_session
@@ -6713,6 +6755,7 @@ def ensure_friends_session() -> FriendsSession:
         _friends_session.start()
         _friends_session.add_all_dm_listener(_on_global_dm_receive)
         _friends_session.add_server_invite_listener(_on_global_server_invite)
+        _friends_session.add_replay_listener(_on_global_replay_transfer)
     return _friends_session
 
 
@@ -13242,13 +13285,6 @@ class DMWindow:
         bui.containerwidget(edit=cnt, cancel_button=close_btn, start_button=show_btn)
 
     def _add_image_widget(self, image_name: str, transfer_id: int, is_mine: bool) -> None:
-        import os
-        GRID = 25
-        CELL_W = 14
-        CELL_H = 10
-        IMG_W = GRID * CELL_W  # 350
-        IMG_H = GRID * CELL_H  # 250
-
         nick = (
             get_session().get('user', {}).get('nickname', '?')
             if is_mine else
@@ -13257,13 +13293,13 @@ class DMWindow:
 
         row = bui.containerwidget(
             parent=self._chat_column,
-            size=(500, IMG_H + 27),
+            size=(500, 53),
             background=False,
         )
 
-        bui.textwidget(
+        nick_lbl = bui.textwidget(
             parent=row,
-            position=(158, IMG_H + 20),
+            position=(158, 43),
             size=(0, 0),
             h_align='left', v_align='center',
             text=f'{nick}:',
@@ -13271,6 +13307,44 @@ class DMWindow:
             color=(1.0, 1.0, 1.0),
             maxwidth=200,
         )
+
+        display_name = image_name if len(image_name) <= 22 else image_name[:20] + '...'
+        btn_holder: list = [None]
+
+        def _on_reveal() -> None:
+            if btn_holder[0] is not None and btn_holder[0].exists():
+                btn_holder[0].delete()
+            self._load_image_into(row, nick_lbl, image_name, transfer_id)
+
+        btn_holder[0] = bui.buttonwidget(
+            parent=row,
+            position=(153, -4),
+            size=(220, 36),
+            label=display_name,
+            button_type='square',
+            color=(0.1, 0.25, 0.15),
+            textcolor=(0.4, 1.0, 0.6),
+            text_scale=0.68,
+            enable_sound=True,
+            on_activate_call=_on_reveal,
+        )
+
+        self._chat_texts.append(row)
+        if len(self._chat_texts) > 60:
+            self._chat_texts.pop(0).delete()
+        bui.containerwidget(edit=self._chat_column, visible_child=row)
+
+    def _load_image_into(self, row: bui.Widget, nick_lbl: bui.Widget,
+                         image_name: str, transfer_id: int) -> None:
+        import os
+        GRID = 25
+        CELL_W = 14
+        CELL_H = 10
+        IMG_W = GRID * CELL_W
+        IMG_H = GRID * CELL_H
+
+        bui.containerwidget(edit=row, size=(500, IMG_H + 27))
+        bui.textwidget(edit=nick_lbl, position=(158, IMG_H + 20))
 
         img_cnt = bui.containerwidget(
             parent=row,
@@ -13288,11 +13362,6 @@ class DMWindow:
             scale=0.65,
             color=(0.4, 0.4, 0.4),
         )
-
-        self._chat_texts.append(row)
-        if len(self._chat_texts) > 60:
-            self._chat_texts.pop(0).delete()
-        bui.containerwidget(edit=self._chat_column, visible_child=row)
 
         def _load() -> None:
             file_path = os.path.join(MEDIA_DIRECTORY, image_name)
@@ -13342,32 +13411,6 @@ class DMWindow:
             babase.pushcall(_render, from_other_thread=True)
 
         threading.Thread(target=_load, daemon=True).start()
-
-    def _on_replay_transfer(self, transfer: dict) -> None:
-        sender_id = transfer.get('senderId')
-        transfer_id = transfer.get('transferId', 0)
-        replay_name = transfer.get('originalName', 'replay.brp')
-        sender_nick = transfer.get('senderNickname', '?')
-
-        if self._chat_friend is None or self._chat_friend.get('friend_id') != sender_id:
-            bui.screenmessage(
-                f'{sender_nick}: ▶ {replay_name}',
-                color=(0.5, 0.8, 1.0),
-            )
-        else:
-            self._add_replay_widget(replay_name, transfer_id, is_mine=False)
-
-        # persist regardless of whether chat is open
-        user = get_session().get('user', {})
-        my_id = user.get('id', 0)
-        if sender_id is not None:
-            friend_nick = (
-                self._chat_friend.get('friend_nickname', sender_nick)
-                if self._chat_friend is not None
-                else sender_nick
-            )
-            append_replay_message(sender_id, friend_nick, sender_id, sender_nick,
-                                   transfer_id, replay_name, is_mine=False)
 
     def _confirm_download_replay(self, transfer_id: int, replay_name: str) -> None:
         display = replay_name[:-4] if replay_name.endswith('.brp') else replay_name
@@ -13652,7 +13695,6 @@ class DMWindow:
         ensure_global_session().remove_listener(self._on_realtime_message)
         if fid is not None:
             ensure_friends_session().add_dm_listener(fid, self._on_dm_message)
-        ensure_friends_session().add_replay_listener(self._on_replay_transfer)
 
     def _switch_to_global(self) -> None:
         set_dm_chat_target({'type': 'global'})
@@ -13661,7 +13703,6 @@ class DMWindow:
             fid = self._chat_friend.get('friend_id')
             if fid is not None:
                 ensure_friends_session().remove_dm_listener(fid, self._on_dm_message)
-            ensure_friends_session().remove_replay_listener(self._on_replay_transfer)
             self._chat_friend = None
 
         bui.buttonwidget(edit=self._send_btn, color=(1, 1, 1))
@@ -13818,7 +13859,6 @@ class DMWindow:
             try:
                 ensure_global_session().remove_listener(self._on_realtime_message)
                 ensure_friends_session().remove_server_invite_listener(self._on_server_invite)
-                ensure_friends_session().remove_replay_listener(self._on_replay_transfer)
                 if self._chat_friend is not None:
                     fid = self._chat_friend.get('friend_id')
                     if fid is not None:
