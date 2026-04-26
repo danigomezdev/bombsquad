@@ -72,7 +72,7 @@ from bauiv1lib.tabs import TabRow
 
 
 
-BASE_URL = "https://api.bombsquad.lat" #  http://localhost:3333
+BASE_URL = "https://api.bombsquad.lat" #  http://localhost:3333 https://api.bombsquad.lat
 V2_LOGO = "\ue063"
 CREATOR = "\ue043Less"
 
@@ -3439,13 +3439,13 @@ Translate_Texts: Dict[str, Dict[str, str]] = {
         'id': 'Balas Cepat',
     },
     'Admin.title': {
-        'en': 'Users',
-        'es': 'Usuarios',
-        'pt': 'Usuários',
-        'ru': 'Пользователи',
-        'hi': 'उपयोगकर्ता',
-        'ml': 'ഉപയോക്താക്കൾ',
-        'id': 'Pengguna',
+        'en': 'Dashboard',
+        'es': 'Dashboard',
+        'pt': 'Dashboard',
+        'ru': 'Dashboard',
+        'hi': 'Dashboard',
+        'ml': 'Dashboard',
+        'id': 'Dashboard',
     },
     'Admin.banUser': {
         'en': 'Ban User',
@@ -3574,13 +3574,40 @@ Translate_Texts: Dict[str, Dict[str, str]] = {
         'id': 'Ubah peran {nick} menjadi {role}?',
     },
     'Admin.viewAllUsers': {
-        'en': 'Users',
-        'es': 'Usuarios',
-        'pt': 'Usuários',
-        'ru': 'Пользователи',
-        'hi': 'उपयोगकर्ता',
-        'ml': 'ഉപയോക്താക്കൾ',
-        'id': 'Pengguna',
+        'en': 'Dashboard',
+        'es': 'Dashboard',
+        'pt': 'Dashboard',
+        'ru': 'Dashboard',
+        'hi': 'Dashboard',
+        'ml': 'Dashboard',
+        'id': 'Dashboard',
+    },
+    'Admin.logsButton': {
+        'en': 'LOGS',
+        'es': 'LOGS',
+        'pt': 'LOGS',
+        'ru': 'LOGS',
+        'hi': 'LOGS',
+        'ml': 'LOGS',
+        'id': 'LOGS',
+    },
+    'Admin.logsTitle': {
+        'en': 'Activity Logs',
+        'es': 'Registro de Actividad',
+        'pt': 'Registro de Atividade',
+        'ru': 'Журнал активности',
+        'hi': 'गतिविधि लॉग',
+        'ml': 'ആക്ടിവിറ്റി ലോഗ്',
+        'id': 'Log Aktivitas',
+    },
+    'Admin.noLogs': {
+        'en': 'No logs found',
+        'es': 'Sin registros',
+        'pt': 'Sem registros',
+        'ru': 'Записи не найдены',
+        'hi': 'कोई लॉग नहीं',
+        'ml': 'ലോഗ് ഇല്ല',
+        'id': 'Tidak ada log',
     },
     'Admin.noUsers': {
         'en': 'No users found',
@@ -17196,6 +17223,19 @@ class AdminUsersWindow:
             on_activate_call=self._show_role_filter_popup,
         )
 
+        filter_btn_x = search_btn_x + 50 + filter_gap + 10
+        bui.buttonwidget(
+            parent=self._root_widget,
+            position=(filter_btn_x, field_y + 30),
+            size=(filter_btn_w, 20),
+            label=get_lang_text('Admin.logsButton'),
+            color=(0.12, 0.25, 0.45),
+            textcolor=(0.45, 0.75, 1.0),
+            text_scale=0.58,
+            enable_sound=True,
+            on_activate_call=self._open_logs,
+        )
+
         self._scroll_h = self._height - 78 - 6 - 44 - 10
         self._scroll: Optional[bui.Widget] = None
 
@@ -17528,8 +17568,377 @@ class AdminUsersWindow:
     def _open_actions(self, friend: dict, ban: Optional[dict]) -> None:
         AdminActionsPopup(friend=friend, ban=ban, on_done=self._reload)
 
+    def _open_logs(self) -> None:
+        LogsWindow()
+
     def _close(self) -> None:
         self._countdown_timer = None
+        bui.containerwidget(edit=self._root_widget, transition='out_scale')
+        bui.getsound('swish').play()
+
+
+class LogsWindow:
+    """Admin activity log viewer. Shows GAME_JOIN/LEAVE, account events, and auth events."""
+
+    _ACTION_STYLES: dict = {
+        'GAME_JOIN':       ('JOIN',    (0.10, 0.38, 0.10), (0.35, 1.0,  0.35)),
+        'GAME_LEAVE':      ('LEAVE',   (0.42, 0.25, 0.05), (1.0,  0.72, 0.22)),
+        'ACCOUNT_CREATED': ('CREATED', (0.08, 0.22, 0.50), (0.42, 0.72, 1.0 )),
+        'ACCOUNT_DELETED': ('DELETED', (0.48, 0.07, 0.07), (1.0,  0.32, 0.32)),
+        'USER_LOGIN':      ('LOGIN',   (0.07, 0.38, 0.28), (0.28, 0.88, 0.62)),
+        'USER_LOGOUT':     ('LOGOUT',  (0.22, 0.22, 0.22), (0.62, 0.62, 0.62)),
+    }
+
+    def __init__(self) -> None:
+        uiscale = bui.app.ui_v1.uiscale
+        self._width = 420
+        self._height = 445
+        self._action_filter: str = 'ALL'
+        self._current_page = 0
+        self._page_size = 15
+        self._total_pages = 1
+
+        self._root_widget = bui.containerwidget(
+            size=(self._width, self._height),
+            color=_theme.get_color('COLOR_BACKGROUND'),
+            transition='in_scale',
+            toolbar_visibility='menu_minimal_no_back',
+            parent=bui.get_special_widget('overlay_stack'),
+            on_outside_click_call=self._close,
+            scale=(
+                1.44 if uiscale is babase.UIScale.SMALL else
+                1.3 if uiscale is babase.UIScale.MEDIUM else 1.0
+            ),
+        )
+
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height - 26),
+            size=(0, 0),
+            h_align='center',
+            v_align='center',
+            text=get_lang_text('Admin.logsTitle'),
+            scale=1.0,
+            color=_theme.get_color('COLOR_PRIMARY'),
+        )
+
+        field_y = self._height - 78
+        btn_h = 28
+        filter_btn_w = 80
+
+        bui.buttonwidget(
+            parent=self._root_widget,
+            position=(15, field_y - 5),
+            size=(30, btn_h),
+            label=babase.charstr(babase.SpecialChar.BACK),
+            button_type='backSmall',
+            color=_theme.get_color('COLOR_BUTTON'),
+            textcolor=_theme.get_color('COLOR_PRIMARY'),
+            on_activate_call=self._close,
+        )
+
+        self._filter_btn = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(self._width - 15 - filter_btn_w, field_y - 5),
+            size=(filter_btn_w, btn_h),
+            label='ALL',
+            color=_theme.get_color('COLOR_BUTTON'),
+            textcolor=_theme.get_color('COLOR_PRIMARY'),
+            text_scale=0.6,
+            enable_sound=True,
+            on_activate_call=self._show_filter_popup,
+        )
+
+        self._scroll_h = self._height - 78 - 6 - 44 - 10
+        self._scroll: Optional[bui.Widget] = None
+        self._list_container: Optional[bui.Widget] = None
+
+        self._pagination_widget = bui.containerwidget(
+            parent=self._root_widget,
+            size=(self._width - 20, 34),
+            position=(10, 5),
+            background=False,
+        )
+
+        self._loading_spinner: Optional[bui.Widget] = None
+        try:
+            self._loading_spinner = spinner(
+                parent=self._root_widget,
+                position=(self._width * 0.5 - 25, self._height * 0.5 - 25),
+                size=(50, 50),
+                color=(1, 1, 1),
+                visible=True,
+            )
+        except Exception as e:
+            print(f'Error creating spinner: {e}')
+
+        threading.Thread(target=lambda: self._fetch_logs(0), daemon=True).start()
+
+    def _fetch_logs(self, page: int) -> None:
+        path = f'/admin/logs?page={page + 1}&pageSize={self._page_size}'
+        if self._action_filter != 'ALL':
+            path += f'&action={self._action_filter}'
+        body, status = authenticated_get(path)
+
+        def _apply() -> None:
+            if not self._root_widget.exists():
+                return
+            if self._loading_spinner and self._loading_spinner.exists():
+                self._loading_spinner.delete()
+                self._loading_spinner = None
+
+            if status != 200 or not isinstance(body, dict):
+                if self._scroll and self._scroll.exists():
+                    self._scroll.delete()
+                bui.textwidget(
+                    parent=self._root_widget,
+                    position=(self._width * 0.5, self._height * 0.5),
+                    size=(0, 0),
+                    h_align='center',
+                    v_align='center',
+                    text=get_lang_text('Admin.noLogs'),
+                    scale=0.85,
+                    color=(0.7, 0.4, 0.4),
+                )
+                return
+
+            logs = body.get('logs', [])
+            total = body.get('total', 0)
+            self._total_pages = max(1, (total + self._page_size - 1) // self._page_size)
+            self._current_page = page
+            self._show_page(logs)
+
+        babase.pushcall(_apply, from_other_thread=True)
+
+    def _show_filter_popup(self) -> None:
+        choices = ['ALL', 'GAME_JOIN', 'GAME_LEAVE', 'ACCOUNT_CREATED', 'ACCOUNT_DELETED', 'USER_LOGIN', 'USER_LOGOUT']
+        _ThemedPopupMenu(
+            position=self._filter_btn.get_screen_space_center(),
+            scale=_get_popup_window_scale(),
+            choices=choices,
+            choices_display=[bui.Lstr(value=c) for c in choices],
+            current_choice=self._action_filter,
+            delegate=self,
+            width=170.0,
+            bg_color=_theme.get_color('COLOR_BACKGROUND'),
+            text_color=_theme.get_color('COLOR_PRIMARY'),
+        )
+
+    def popup_menu_selected_choice(self, _: 'PopupMenuWindow', choice: str) -> None:
+        self._action_filter = choice
+        style = self._ACTION_STYLES.get(choice)
+        label = style[0] if style else choice
+        bui.buttonwidget(edit=self._filter_btn, label=label)
+        self._current_page = 0
+        self._show_loading()
+        threading.Thread(target=lambda: self._fetch_logs(0), daemon=True).start()
+
+    def popup_menu_closing(self, _: 'PopupMenuWindow') -> None:
+        pass
+
+    def _show_loading(self) -> None:
+        if self._scroll and self._scroll.exists():
+            self._scroll.delete()
+        try:
+            self._loading_spinner = spinner(
+                parent=self._root_widget,
+                position=(self._width * 0.5 - 25, self._height * 0.5 - 25),
+                size=(50, 50),
+                color=(1, 1, 1),
+                visible=True,
+            )
+        except Exception:
+            pass
+
+    def _show_page(self, logs: list) -> None:
+        if not self._root_widget.exists():
+            return
+
+        if self._list_container and self._list_container.exists():
+            self._list_container.delete()
+
+        scroll_w = self._width - 40
+        if self._scroll and self._scroll.exists():
+            self._scroll.delete()
+
+        self._scroll = bui.scrollwidget(
+            parent=self._root_widget,
+            position=(20, 44),
+            size=(scroll_w, self._scroll_h),
+            simple_culling_v=50,
+            color=_theme.get_color('COLOR_ACCENT'),
+        )
+
+        row_h = 42
+        content_h = max(row_h, len(logs) * row_h + 6)
+        self._list_container = bui.containerwidget(
+            parent=self._scroll,
+            size=(scroll_w - 10, content_h),
+            background=False,
+        )
+
+        if not logs:
+            bui.textwidget(
+                parent=self._list_container,
+                position=((scroll_w - 10) * 0.5, content_h * 0.5),
+                size=(0, 0),
+                h_align='center',
+                v_align='center',
+                text=get_lang_text('Admin.noLogs'),
+                scale=0.78,
+                color=(0.5, 0.5, 0.5),
+            )
+        else:
+            role_colors = {
+                'ADMIN':   (1.0, 0.3, 0.3),
+                'MANAGER': (0.9, 0.7, 0.2),
+                'USER':    (0.6, 0.6, 0.6),
+            }
+            total = len(logs)
+            for i, log in enumerate(logs):
+                y = (total - 1 - i) * row_h + 3
+                action = log.get('action', '')
+                name = log.get('name', '?')
+                role = log.get('role', 'USER')
+                ip = log.get('ip') or ''
+                ts_raw = log.get('created_at', '')
+
+                style = self._ACTION_STYLES.get(action, (action, (0.28, 0.28, 0.28), (0.75, 0.75, 0.75)))
+                badge_label, badge_bg, badge_fg = style
+
+                try:
+                    dt = datetime.fromisoformat(ts_raw.replace('Z', '+00:00'))
+                    ts = dt.astimezone().strftime('%m/%d %H:%M')
+                except Exception:
+                    ts = ts_raw[:16] if ts_raw else ''
+
+                rw = scroll_w - 14
+                row = bui.containerwidget(
+                    parent=self._list_container,
+                    size=(rw, row_h - 4),
+                    position=(0, y),
+                    background=False,
+                )
+
+                badge_w = 58
+                bui.textwidget(
+                    parent=row,
+                    position=(badge_w * 0.5 + 2, (row_h - 4) * 0.5 + 1),
+                    size=(0, 0),
+                    h_align='center',
+                    v_align='center',
+                    text=badge_label,
+                    scale=0.52,
+                    color=badge_fg,
+                    maxwidth=badge_w - 4,
+                )
+
+                role_color = role_colors.get(role, (0.6, 0.6, 0.6))
+                bui.textwidget(
+                    parent=row,
+                    position=(badge_w + 8, (row_h - 4) * 0.5 + 5),
+                    size=(0, 0),
+                    h_align='left',
+                    v_align='center',
+                    text=name,
+                    scale=0.72,
+                    color=(0.9, 0.9, 0.9),
+                    maxwidth=115,
+                )
+                bui.textwidget(
+                    parent=row,
+                    position=(badge_w + 8, (row_h - 4) * 0.5 - 9),
+                    size=(0, 0),
+                    h_align='left',
+                    v_align='center',
+                    text=role,
+                    scale=0.50,
+                    color=role_color,
+                    maxwidth=80,
+                )
+
+                bui.textwidget(
+                    parent=row,
+                    position=(rw - 15, (row_h - 4) * 0.5 + 5),
+                    size=(0, 0),
+                    h_align='right',
+                    v_align='center',
+                    text=ts,
+                    scale=0.58,
+                    color=(0.6, 0.6, 0.72),
+                    maxwidth=92,
+                )
+                if ip:
+                    bui.textwidget(
+                        parent=row,
+                        position=(rw - 15, (row_h - 4) * 0.5 - 9),
+                        size=(0, 0),
+                        h_align='right',
+                        v_align='center',
+                        text=ip,
+                        scale=0.46,
+                        color=(0.38, 0.38, 0.44),
+                        maxwidth=92,
+                    )
+
+        self._build_pagination()
+
+    def _build_pagination(self) -> None:
+        if self._pagination_widget and self._pagination_widget.exists():
+            self._pagination_widget.delete()
+
+        pw = self._width - 20
+        self._pagination_widget = bui.containerwidget(
+            parent=self._root_widget,
+            size=(pw, 34),
+            position=(10, 10),
+            background=False,
+        )
+
+        nav_w = 32
+        gap = 8
+        label_w = 60
+        total_w = nav_w + gap + label_w + gap + nav_w
+        cx = (pw - total_w) / 2
+
+        prev_page = max(0, self._current_page - 1)
+        next_page = min(self._total_pages - 1, self._current_page + 1)
+
+        bui.buttonwidget(
+            parent=self._pagination_widget,
+            position=(cx, 4), size=(nav_w, 26),
+            label='<',
+            color=_theme.get_color('COLOR_BUTTON'),
+            textcolor=_theme.get_color('COLOR_PRIMARY'),
+            autoselect=True, scale=0.85,
+            on_activate_call=babase.Call(self._go_to_page, prev_page),
+        )
+
+        bui.textwidget(
+            parent=self._pagination_widget,
+            position=(cx + nav_w + gap + label_w * 0.5, 17),
+            size=(0, 0),
+            h_align='center', v_align='center',
+            text=f'({self._current_page + 1}/{self._total_pages})',
+            scale=0.72,
+            color=_theme.get_color('COLOR_SECONDARY'),
+        )
+
+        bui.buttonwidget(
+            parent=self._pagination_widget,
+            position=(cx + nav_w + gap + label_w + gap, 4), size=(nav_w, 26),
+            label='>',
+            color=_theme.get_color('COLOR_BUTTON'),
+            textcolor=_theme.get_color('COLOR_PRIMARY'),
+            autoselect=True, scale=0.85,
+            on_activate_call=babase.Call(self._go_to_page, next_page),
+        )
+
+    def _go_to_page(self, page: int) -> None:
+        self._show_loading()
+        threading.Thread(target=lambda: self._fetch_logs(page), daemon=True).start()
+
+    def _close(self) -> None:
         bui.containerwidget(edit=self._root_widget, transition='out_scale')
         bui.getsound('swish').play()
 
