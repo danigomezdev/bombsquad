@@ -118,6 +118,7 @@ CFG_NAME_PING_MSG_FORMAT = 'Ping Message Format'
 CFG_NAME_MAX_CHAT_LOGS = 'Max Chat Logs'
 CFG_NAME_MAX_PLAYERINFO = 'Max Player Info'
 CFG_NAME_CHAT_COLOR_INTENSITY = 'Chat Color Intensity'
+CFG_NAME_IMAGE_RESOLUTION = 'Image Resolution'
 
 CHAT_VIEW_TYPE_PROFILE = 'profile'
 CHAT_VIEW_TYPE_ACCOUNT = 'account'
@@ -3824,6 +3825,69 @@ Translate_Texts: Dict[str, Dict[str, str]] = {
         'hi': 'छवि अनुपलब्ध।',
         'ml': 'ചിത്രം ലഭ്യമല്ല.',
         'id': 'Gambar tidak tersedia.',
+    },
+    'Image.resolution': {
+        'en': 'Image resolution',
+        'es': 'Resolución de imágenes',
+        'pt': 'Resolução de imagem',
+        'ru': 'Разрешение изображений',
+        'hi': 'Image resolution',
+        'ml': 'Image resolution',
+        'id': 'Resolusi gambar',
+    },
+    'Image.resolution10': {
+        'en': 'Very Low (10×10)',
+        'es': 'Muy baja (10×10)',
+        'pt': 'Muito baixa (10×10)',
+        'ru': 'Очень низкое (10×10)',
+        'hi': 'Very Low (10×10)',
+        'ml': 'Very Low (10×10)',
+        'id': 'Sangat rendah (10×10)',
+    },
+    'Image.resolution35': {
+        'en': 'Low (35×35)',
+        'es': 'Baja (35×35)',
+        'pt': 'Baixa (35×35)',
+        'ru': 'Низкое (35×35)',
+        'hi': 'Low (35×35)',
+        'ml': 'Low (35×35)',
+        'id': 'Rendah (35×35)',
+    },
+    'Image.resolution50': {
+        'en': 'Medium (50×50)',
+        'es': 'Media (50×50)',
+        'pt': 'Média (50×50)',
+        'ru': 'Среднее (50×50)',
+        'hi': 'Medium (50×50)',
+        'ml': 'Medium (50×50)',
+        'id': 'Sedang (50×50)',
+    },
+    'Image.resolution80': {
+        'en': 'High (80×80)',
+        'es': 'Alta (80×80)',
+        'pt': 'Alta (80×80)',
+        'ru': 'Высокое (80×80)',
+        'hi': 'High (80×80)',
+        'ml': 'High (80×80)',
+        'id': 'Tinggi (80×80)',
+    },
+    'Image.resolution120': {
+        'en': 'Very High (120×120)',
+        'es': 'Muy alta (120×120)',
+        'pt': 'Muito alta (120×120)',
+        'ru': 'Очень высокое (120×120)',
+        'hi': 'Very High (120×120)',
+        'ml': 'Very High (120×120)',
+        'id': 'Sangat tinggi (120×120)',
+    },
+    'Image.resolution200': {
+        'en': 'Ultra (200×200)',
+        'es': 'Ultra (200×200)',
+        'pt': 'Ultra (200×200)',
+        'ru': 'Ультра (200×200)',
+        'hi': 'Ultra (200×200)',
+        'ml': 'Ultra (200×200)',
+        'id': 'Ultra (200×200)',
     },
     'Mod.enable': {
         'en': 'Enable',
@@ -13364,11 +13428,14 @@ class DMWindow:
     def _load_image_into(self, row: bui.Widget, nick_lbl: bui.Widget,
                          image_name: str, transfer_id: int) -> None:
         import os
-        GRID = 25
-        CELL_W = 14
-        CELL_H = 10
-        IMG_W = GRID * CELL_W
-        IMG_H = GRID * CELL_H
+        _res = str(finder_config.get(CFG_NAME_IMAGE_RESOLUTION, '35'))
+        GRID = int(_res) if _res in ('10', '35', '50', '80', '120', '200') else 35
+        CELL_W = 350.0 / GRID
+        CELL_H = 250.0 / GRID
+        _SCALE_MAP = {'10': 2.0, '35': 0.72, '50': 0.52, '80': 0.32, '120': 0.21, '200': 0.13}
+        _SCALE = _SCALE_MAP.get(_res, 0.72)
+        IMG_W = 350
+        IMG_H = 250
 
         bui.containerwidget(edit=row, size=(500, IMG_H + 27))
         bui.textwidget(edit=nick_lbl, position=(158, IMG_H + 20))
@@ -13424,10 +13491,10 @@ class DMWindow:
                     ty_i = GRID - 1 - (i // GRID)
                     bui.textwidget(
                         parent=img_cnt,
-                        position=(tx_i * CELL_W + CELL_W // 2, ty_i * CELL_H + CELL_H // 2),
+                        position=(tx_i * CELL_W + CELL_W / 2, ty_i * CELL_H + CELL_H / 2),
                         size=(0, 0),
                         text='■',
-                        scale=0.95,
+                        scale=_SCALE,
                         h_align='center',
                         v_align='center',
                         flatness=1.0,
@@ -20869,6 +20936,29 @@ class SettingsWindow:
         )
         self._add_spacer()
 
+        self._add_label(get_lang_text('Image.resolution'))
+        res_choices = ['10', '35', '50', '80', '120', '200']
+        res_labels = [
+            get_lang_text('Image.resolution10'),
+            get_lang_text('Image.resolution35'),
+            get_lang_text('Image.resolution50'),
+            get_lang_text('Image.resolution80'),
+            get_lang_text('Image.resolution120'),
+            get_lang_text('Image.resolution200'),
+        ]
+        current_res = str(finder_config.get(CFG_NAME_IMAGE_RESOLUTION, '35'))
+        if current_res not in res_choices:
+            current_res = '35'
+        self._add_popup(
+            width=200,
+            scale=popup_scale,
+            current_choice=current_res,
+            choices=res_choices,
+            choices_display=[babase.Lstr(value=l) for l in res_labels],
+            on_value_change_call=self._on_image_resolution_change,
+        )
+        self._add_spacer()
+
         self._add_checkbox(
             get_lang_text('Settings.globalGather'),
             bool(finder_config.get(CFG_NAME_GLOBAL_GATHER, False)),
@@ -21174,6 +21264,22 @@ class SettingsWindow:
             'COLOR_ACCENT': tuple(finder_config[CFG_NAME_COLOR_ACCENT]),
         })
         self._rebuild_content()
+
+    def _on_image_resolution_change(self, val: str) -> None:
+        finder_config[CFG_NAME_IMAGE_RESOLUTION] = val
+        save_finder_config(finder_config)
+        label_key = {
+            '10': 'Image.resolution10',
+            '35': 'Image.resolution35',
+            '50': 'Image.resolution50',
+            '80': 'Image.resolution80',
+            '120': 'Image.resolution120',
+            '200': 'Image.resolution200',
+        }.get(val, val)
+        babase.screenmessage(
+            f"{get_lang_text('Image.resolution')}: {get_lang_text(label_key)}",
+            color=_theme.get_color('COLOR_ACCENT'),
+        )
 
     def _on_chat_color_intensity_change(self, val: str) -> None:
         finder_config[CFG_NAME_CHAT_COLOR_INTENSITY] = val
