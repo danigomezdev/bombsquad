@@ -1,0 +1,64 @@
+{
+    "cmd1": {
+      "recents": "Muestra la lista de jugadores recientes.",
+      "info": "Muestra información sobre el servidor o jugadores.",
+      "showid": "Muestra el ID de los jugadores.",
+      "hideid": "Oculta el ID de los jugadores.",
+      "lm": "Muestra los últimos mensajes (log).",
+      "gp": "Muestra información de la partida actual.",
+      "party": "Muestra o gestiona la sala/party del servidor.",
+      "lobbytime": "Configura el tiempo de espera en la sala (lobby)."
+    },
+    "cmd2": {
+      "createteam": "Crea un nuevo equipo en la partida.",
+      "add": "Agrega a un jugador al servidor o equipo.",
+      "spectators": "Muestra o cambia a los espectadores.",
+      "maxplayers": "Define el número máximo de jugadores permitidos.",
+      "playlist": "Configura o muestra la lista de mapas/modos.",
+      "end": "Termina la partida actual.",
+      "quit": "Sale del juego o fuerza la salida de un jugador.",
+      "restart": "Reinicia la partida actual.",
+      "next": "Pasa al siguiente mapa/partida."
+    },
+    "cmd3": {
+      "pause": "Pausa la partida.",
+      "pausegame": "Atajo para 'pause'.",
+      "slowmo": "Activa el modo cámara lenta.",
+      "sm": "Atajo para 'slowmo'.",
+      "slow": "Atajo para 'slowmo'.",
+      "nv": "Activa el modo visión nocturna.",
+      "dv": "Activa el modo día.",
+      "night": "Atajo para 'nv'.",
+      "day": "Atajo para 'dv'.",
+      "tint": "Cambia el color de la pantalla (filtro).",
+      "customeffect": "Agrega un efecto visual a un jugador.",
+      "removeeffect": "Quita un efecto visual de un jugador.",
+      "effect": "Atajo para 'customeffect'.",
+      "cameramode": "Cambia el modo de la cámara.",
+      "camera_mode": "Atajo para 'cameramode'.",
+      "rotate_camera": "Cambia la rotación de la cámara."
+    },
+    "cmd4": {
+      "ban": "Banea a un jugador.",
+      "unban": "Desbloquea a un jugador previamente baneado.",
+      "kick": "Expulsa a un jugador de la partida.",
+      "remove": "Elimina a un jugador de la partida o equipo.",
+      "kickvote": "Inicia una votación para expulsar a un jugador.",
+      "mute": "Silencia a un jugador en el chat.",
+      "unmute": "Quita el silencio a un jugador.",
+      "mutechat": "Silencia el chat global.",
+      "unmutechat": "Activa el chat global.",
+      "createrole": "Crea un rol personalizado.",
+      "addrole": "Asigna un rol a un jugador.",
+      "removerole": "Elimina un rol de un jugador.",
+      "getroles": "Muestra los roles existentes.",
+      "addcommand": "Agrega un nuevo comando personalizado.",
+      "addcmd": "Alias para agregar comando personalizado.",
+      "removecommand": "Elimina un comando personalizado.",
+      "removecmd": "Alias para eliminar comando.",
+      "changetag": "Cambia el tag de un jugador.",
+      "customtag": "Asigna un tag personalizado.",
+      "removetag": "Elimina un tag personalizado."
+    }
+  }
+  

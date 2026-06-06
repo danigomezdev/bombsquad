@@ -1,0 +1,24 @@
+services:
+  bombsquad-server:
+    build:
+      context: .
+    container_name: "bombsquad-server"
+    restart: unless-stopped
+    ports:
+      - "${PORT:-43210}:${PORT:-43210}/udp"
+    volumes:
+      - ./config.toml:/app/config.toml
+      - bombsquad-data:/app/dist/ba_root
+    environment:
+      - TZ=UTC
+      - BA_API_URL=${BA_API_URL:-https://api.bombsquad.lat}
+    networks:
+      - bombsquad-network
+
+volumes:
+  bombsquad-data:
+    driver: local
+
+networks:
+  bombsquad-network:
+    driver: bridge

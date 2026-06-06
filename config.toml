@@ -1,0 +1,10 @@
+# BombSquad Server Configuration
+party_name = "Teams @ Less East 1"
+port = 6666
+max_party_size = 7
+session_type = "teams"
+team_names = ["Azul", "Rojo"]
+team_colors = [[0.1, 0.25, 1.0], [1.0, 0.25, 0.2]]
+protocol_version = 33
+public_ipv4_address = "3.16.90.182"
+authenticate_clients = false

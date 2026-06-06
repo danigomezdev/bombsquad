@@ -1,0 +1,43 @@
+{
+ "Port": 6666,
+ "Auto Balance Teams": true,
+ "Show Tutorial": false,
+ "SceneV1 Host Protocol": 33,
+ "Custom Team Names": [
+  "Azul",
+  "Rojo"
+ ],
+ "Custom Team Colors": [
+  [
+   0.1,
+   0.25,
+   1.0
+  ],
+  [
+   1.0,
+   0.25,
+   0.2
+  ]
+ ],
+ "Idle Exit Minutes": null,
+ "Use Native Python REPL": false,
+ "BallApiKey": "bsac-cd7b4f072f6a6194002d195cf4b428f72b84c1747c52c949",
+ "_install_uuid": "547a868d-ee07-411b-9bb1-de8a60613b90",
+ "AccountTag": "BS Less Server",
+ "lc14173": 1,
+ "lc14292": 1,
+ "launchCount": 28,
+ "Plugins": {
+  "custom_hooks.modSetup": {
+   "enabled": true
+  },
+  "plugins.Init": {
+   "enabled": true
+  }
+ },
+ "Team Tournament Playlist Selection": "__default__",
+ "Team Tournament Playlist Randomize": true,
+ "Teams Series Length": 7,
+ "FFA Series Length": 24,
+ "Default Player Profiles": {}
+}

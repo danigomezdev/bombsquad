@@ -1,0 +1,17 @@
+{
+    "customtag": {
+        "pb-id": "smoothy",
+        "pb-45": "something",
+        "pb-IF4TVWwZUQ==": "proowner"
+    },
+    "customeffects": {
+        "pb-IF4TVWwZUQ==": [
+            "spark"
+        ],
+        "pb-IF4lUxA_Ng==": [
+            "rainbow",
+            "metal",
+            "slime"
+        ]
+    }
+}
