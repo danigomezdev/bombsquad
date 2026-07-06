@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "name": "Less Party Window",
+    "file_name": "LessPartyWindow.py",
+    "description-es": "Un mod que reemplaza y mejora la ventana de party con chat global, mensajes privados, perfiles de jugadores, temas de colores y mucho más",
+    "description-en": "A mod that replaces and enhances the party window with global chat, private messaging, player profiles, color themes, and much more",
+    "createdAt": "2025-12-28T20:00:00.000Z",
+    "lastActivityAt": "2026-05-11T20:00:00.000Z",
+    "api": 9,
+    "version": "2.0.0",
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "lesspartywindow",
+      "party window",
+      "chat",
+      "social",
+      "friends",
+      "color themes",
+      "multilanguage",
+      "ping",
+      "profiles",
+      "dm",
+      "invitations"
+    ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/banner.webp",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_01.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_04.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_05.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_06.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_07.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_08.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_09.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_10.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_11.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_12.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_13.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_14.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_15.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_17.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow/media/image_19.png"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/LessPartyWindow/LessPartyWindow.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/LessPartyWindow/LessPartyWindow.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessPartyWindow/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/LessPartyWindow/README.md"
+  },
+  "content": "A mod that fully replaces the default party window, adding a social layer, real-time match data, global and private messaging, and deep customization options.\n\n## Features\n\n### Chat\n- Real-time ping display during matches\n- Match data: IP address and port visible in-game\n- Block specific players from the current match\n- Block the entire match chat\n\n### Social\n- Search for player profiles\n- Add friends and manage incoming friend requests\n- Set custom nicknames for friends or known players\n- View player profiles: play time, trophies, and linked accounts\n\n### Messaging\n- Global chat: talk with anyone, no friend required\n- Private DMs (friends only)\n  - Send text messages, images, mods, and game replays\n- Game invitations\n  - Invite friends directly to your current match\n  - Block unwanted invitations\n- Change your in-game username and nickname\n  - Subject to availability and allowed values\n\n### Preferences\n- Color themes: set the party window to any custom color\n- Language support\n  - Spanish, English, Portuguese, Russian, Hindi, Malayalam, Indonesian"
+}
