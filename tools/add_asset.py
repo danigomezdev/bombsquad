@@ -4,10 +4,10 @@ Usage:
   python3 tools/add_asset.py <file> <platform_dir> <cache_map_path>
 
 Example - adding a new audio file:
-  python3 tools/add_asset.py minuevo.ogg common/audio build/assets/ba_data/audio/minuevo.ogg
+  python3 tools/add_asset.py minuevo.ogg common/audio build/assets/lux_data/audio/minuevo.ogg
 
 Example - adding a new DDS texture:
-  python3 tools/add_asset.py minuevo.dds desktop/textures build/assets/ba_data/textures/minuevo.dds
+  python3 tools/add_asset.py minuevo.dds desktop/textures build/assets/lux_data/textures/minuevo.dds
 """
 import hashlib
 import json
@@ -38,7 +38,7 @@ def main():
 
     src_file = sys.argv[1]
     dst_dir = sys.argv[2]  # e.g. "common/audio" or "desktop/textures"
-    cache_path = sys.argv[3]  # e.g. "build/assets/ba_data/audio/minuevo.ogg"
+    cache_path = sys.argv[3]  # e.g. "build/assets/lux_data/audio/minuevo.ogg"
 
     if not os.path.isfile(src_file):
         print(f"ERROR: file not found: {src_file}")

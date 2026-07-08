@@ -44,7 +44,7 @@ On the ballistica side, `.lesscachemap` maps project paths to MD5 hashes:
 ```json
 {
   "build/assets/windows/x64/discord_partner_sdk.dll": "5c8d0dda1045115b5b019eeefad10d5f",
-  "build/assets/ba_data/textures/white.dds": "a1b2c3d4..."
+  "build/assets/lux_data/textures/white.dds": "a1b2c3d4..."
 }
 ```
 
