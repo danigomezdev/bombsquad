@@ -1,0 +1,122 @@
+name: Release Assets
+
+on:
+  push:
+    tags:
+      - "assets-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Generate hash-based links
+        run: |
+          python3 << 'PYEOF'
+          import json, os, zlib, hashlib
+
+          CACHE_HEADER = b"efca"
+
+          with open(".lesscachemap") as f:
+              cachemap = json.load(f)
+
+          os.makedirs("hashes", exist_ok=True)
+
+          count = 0
+          for map_path, expected_hash in cachemap.items():
+              fname = os.path.basename(map_path)
+              found = None
+              for platform_dir in ["common", "desktop", "mobile", "android",
+                                   "windows", "previews", "ios"]:
+                  if not os.path.isdir(platform_dir):
+                      continue
+                  for root, dirs, files in os.walk(platform_dir):
+                      if fname in files:
+                          found = os.path.join(root, fname)
+                          break
+                  if found:
+                      break
+
+              if not found:
+                  continue
+
+              # Read source file and encode into lesscache format
+              with open(found, "rb") as f:
+                  raw_data = f.read()
+
+              executable = os.access(found, os.X_OK)
+              meta_json = ('{"e":true}' if executable else '{"e":false}').encode()
+              metalen = len(meta_json)
+              prefix = CACHE_HEADER + metalen.to_bytes(1, "big") + meta_json
+
+              # Verify hash matches
+              md5 = hashlib.md5()
+              md5.update(prefix + raw_data)
+              computed_hash = md5.hexdigest()
+              if computed_hash != expected_hash:
+                  print(f"  HASH MISMATCH: {fname} (got {computed_hash[:12]}..., expected {expected_hash[:12]}...)")
+                  continue
+
+              # Store encoded file
+              hash_dir = os.path.join("hashes", computed_hash[:2], computed_hash[2:4])
+              os.makedirs(hash_dir, exist_ok=True)
+              dst = os.path.join(hash_dir, computed_hash[4:])
+              if not os.path.exists(dst):
+                  with open(dst, "wb") as f:
+                      f.write(prefix + zlib.compress(raw_data))
+              count += 1
+
+          print(f"Generated {count} hash links")
+          PYEOF
+
+      - name: Create hashes tarball
+        run: |
+          set -e
+          mkdir -p release
+          echo "Packaging hashes..."
+          tar -czf "release/hashes-${GITHUB_REF_NAME}.tar.gz" hashes/
+          size=$(du -h "release/hashes-${GITHUB_REF_NAME}.tar.gz" | cut -f1)
+          echo "  -> hashes-${GITHUB_REF_NAME}.tar.gz ($size)"
+
+          # Also create hashes-assets-latest.tar.gz for the permanent release
+          cp "release/hashes-${GITHUB_REF_NAME}.tar.gz" "release/hashes-assets-latest.tar.gz"
+
+          echo "--- Release files ---"
+          ls -lh release/
+
+      - name: Upload to GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "release/*.tar.gz"
+          allowUpdates: true
+          omitBody: false
+          body: |
+            Game assets for version ${GITHUB_REF_NAME}.
+
+            | File | Contents |
+            |------|----------|
+            | `hashes-${GITHUB_REF_NAME}.tar.gz` | All assets, content-addressed by MD5 hash |
+
+            ### Usage
+            ```json
+            "lesscache_repository_url": "https://github.com/danigomezdev/bombsquad/releases/download/${GITHUB_REF_NAME}"
+            ```
+
+      - name: Update assets-latest release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: assets-latest
+          artifacts: "release/hashes-assets-latest.tar.gz"
+          allowUpdates: true
+          omitBody: true
+          omitName: true
