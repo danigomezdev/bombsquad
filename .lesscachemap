@@ -1705,6 +1705,7 @@
   "build/assets/lux_data/textures/lux_logo.dds": "4c57a4f504e32c10f313005dfdec5604",
   "build/assets/lux_data/textures/lux_logo.ktx": "90cab73541a4b33554c2a0d1c90309b4",
   "build/assets/lux_data/textures/lux_logo.png": "d88fe3dc3790474e0136b780ab13caac",
+  "build/assets/lux_data/textures/lux_logo_preview.png": "352ceb26824517560438fea6aa244d41",
   "build/assets/lux_data/textures/mapPreviewMask.dds": "e0cbcfbd2542c72a1a87d9f54ae7a2a0",
   "build/assets/lux_data/textures/mapPreviewMask.ktx": "62e3e9cce209340cc8782e73849f0f64",
   "build/assets/lux_data/textures/mapPreviewMask_preview.png": "2dd8c67d174a994818e00164812fb0e4",
