@@ -2267,7 +2267,7 @@ class UpdateWindow(bui.Window):
 # ba_meta export babase.Plugin
 class byLess(Plugin):
     def has_settings_ui(s): return True
-    def show_settings_ui(s, w): UpdateWindow()
+    def show_settings_ui(s, w): UpdateWindow()  #only_updates
 
     def on_app_running(self) -> None:
         """Plugin start point."""

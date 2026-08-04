@@ -137,7 +137,7 @@ class UpdateWindow(bui.Window):
 # ba_meta export babase.Plugin
 class Main(babase.Plugin):
     def has_settings_ui(s): return True
-    def show_settings_ui(s, w): UpdateWindow()
+    def show_settings_ui(s, w): UpdateWindow()  #only_updates
 
     def on_app_running(self) -> None:
         bui.app.classic.store.get_store_layout = modified_get_store_layout

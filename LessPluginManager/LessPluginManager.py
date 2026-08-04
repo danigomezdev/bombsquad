@@ -14,6 +14,7 @@ import _babase
 import babase
 import bauiv1 as bui
 from bauiv1lib.settings.plugins import PluginWindow, Category
+from bauiv1lib.settings.pluginsettings import PluginSettingsWindow
 from bauiv1lib import popup
 
 if TYPE_CHECKING:
@@ -23,6 +24,24 @@ _MODS_API_URL = "https://api.luxkit.net/mods"
 _env = _babase.env()
 _HEADERS = {"User-Agent": _env["legacy_user_agent_string"]}
 _plugin_has_update_cache: dict[str, bool] = {}
+_only_updates_cache: dict[str, bool] = {}
+
+
+def _is_settings_only_updates(class_path: str) -> bool:
+    module_name = class_path.split('.')[0]
+    if module_name in _only_updates_cache:
+        return _only_updates_cache[module_name]
+    try:
+        mod_path = os.path.join(
+            _env["python_directory_user"], f"{module_name}.py"
+        )
+        with open(mod_path, "r") as f:
+            content = f.read()
+        result = "#only_updates" in content
+    except Exception:
+        result = False
+    _only_updates_cache[module_name] = result
+    return result
 _mods_api_cache: list[dict] | None = None
 
 
@@ -394,10 +413,17 @@ class LessPluginWindow(PluginWindow):
             has_settings = (
                 plugin is not None and plugin.has_settings_ui()
             )
-            has_update = _plugin_has_update(classpath)
+            has_update = (
+                _plugin_has_update(classpath)
+                and not classpath.startswith('LessPluginManager.')
+            )
 
             if has_settings and has_update:
-                maxwidth_offset = 300
+                if _is_settings_only_updates(classpath):
+                    has_settings = False
+                    maxwidth_offset = 200
+                else:
+                    maxwidth_offset = 300
             elif has_settings or has_update:
                 maxwidth_offset = 200
             else:
@@ -527,6 +553,35 @@ class LessPluginWindow(PluginWindow):
             )
             bui.getsound('error').play()
 
+    def _open_settings(self) -> None:
+        self.main_window_replace(
+            lambda: LessPluginSettingsWindow(transition='in_right')
+        )
+
+
+class LessPluginSettingsWindow(PluginSettingsWindow):
+
+    def __init__(
+        self,
+        transition: str | None = 'in_right',
+        origin_widget: bui.Widget | None = None,
+    ):
+        super().__init__(transition=transition, origin_widget=origin_widget)
+
+        bui.textwidget(edit=self._title_text, maxwidth=195)
+
+        uiscale = bui.app.ui_v1.uiscale
+        self._updates_button = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(self._width - 130, self._yoffs - 30),
+            size=(100, 40),
+            autoselect=True,
+            label='Updates',
+            color=(0.55, 0.35, 0.75),
+            textcolor=(0.9, 0.85, 1.0),
+            on_activate_call=lambda: UpdateWindow(),
+        )
+
 
 _pending_updates: list[str] = []
 
@@ -535,7 +590,8 @@ def _check_mod_version(class_path: str) -> dict | None:
     module_name = class_path.split('.')[0]
     try:
         module = importlib.import_module(module_name)
-        for fn_name in ('_cv', 'check_version_blocking', 'check_version'):
+        for fn_name in ('_cv', 'check_version_blocking', 'check_version',
+                        '_lpm_check_version'):
             func = getattr(module, fn_name, None)
             if func is not None:
                 return func()
@@ -549,7 +605,9 @@ def _check_all_updates_background() -> None:
     _pending_updates = []
     plugspecs = bui.app.plugins.plugin_specs
     for classpath, plugspec in plugspecs.items():
-        if not plugspec.enabled or not _plugin_has_update(classpath):
+        if (not plugspec.enabled
+                or not _plugin_has_update(classpath)
+                or classpath.startswith('LessPluginManager.')):
             continue
         info = _check_mod_version(classpath)
         if info and info.get('update_available'):
@@ -568,6 +626,186 @@ def _show_updates_notification() -> None:
         bui.screenmessage(
             f'Update available: {update}',
             color=(0.0, 1.0, 0.5),
+        )
+
+
+_LPM_VERSION = "1.0"
+_LPM_UPDATE_URL = (
+    "https://raw.githubusercontent.com/danigomezdev/bombsquad/"
+    "refs/heads/main/LessPluginManager/LessPluginManager.json"
+)
+
+
+def _lpm_fetch_json():
+    req = urllib.request.Request(_LPM_UPDATE_URL, headers=_HEADERS)
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def _lpm_check_version():
+    try:
+        d = _lpm_fetch_json()
+        rv = d.get("metadata", {}).get("version", "")
+        ru = d.get("metadata", {}).get("url_raw_mod", "")
+        return {
+            "update_available": str(rv) != _LPM_VERSION,
+            "remote_version": str(rv),
+            "url_raw_mod": ru,
+        }
+    except Exception:
+        return {
+            "update_available": False,
+            "remote_version": None,
+            "url_raw_mod": "",
+        }
+
+
+def _lpm_sut(w, t, c):
+    if w and w.exists():
+        bui.textwidget(w, text=t, color=c)
+
+
+class UpdateWindow(bui.Window):
+    def __init__(s, start_check=True):
+        w, h = 400, 230
+        us = bui.app.ui_v1.uiscale
+        sc = (
+            1.8 if us is babase.UIScale.SMALL else
+            1.3 if us is babase.UIScale.MEDIUM else 0.9
+        )
+        super().__init__(
+            root_widget=bui.containerwidget(
+                parent=bui.get_special_widget("overlay_stack"),
+                size=(w, h), scale=sc, color=(0.4, 0.37, 0.49),
+                stack_offset=(0, 0), on_outside_click_call=s.close,
+            ),
+            prevent_main_window_auto_recreate=False,
+        )
+        s._updating = False
+        bui.textwidget(
+            parent=s._root_widget, position=(w/2, h-26), size=(0, 0),
+            text="LessPluginManager Updates", scale=0.78,
+            color=(0.9, 0.9, 0.9),
+            h_align="center", v_align="center", maxwidth=w-40,
+        )
+        bui.buttonwidget(
+            parent=s._root_widget, position=(17, h-42), size=(36, 36),
+            label=babase.charstr(babase.SpecialChar.BACK),
+            button_type="backSmall",
+            color=(0.5, 0.4, 0.6), textcolor=(0.9, 0.9, 0.9),
+            on_activate_call=s.close,
+        )
+        bui.textwidget(
+            parent=s._root_widget, position=(w/2, h-70), size=(0, 0),
+            text=f"Current: v{_LPM_VERSION}", scale=0.72,
+            color=(0.9, 0.9, 0.9),
+            h_align="center", v_align="center", maxwidth=w-40,
+        )
+        s._st = bui.textwidget(
+            parent=s._root_widget, position=(w/2, h-100), size=(0, 0),
+            text="Checking...", scale=0.65, color=(0.5, 0.5, 0.5),
+            h_align="center", v_align="center", maxwidth=w-40,
+        )
+        s._ab = bui.buttonwidget(
+            parent=s._root_widget, position=(w/2-50, 40), size=(100, 34),
+            label="Check", color=(0.5, 0.4, 0.6), textcolor=(0.9, 0.9, 0.9),
+            on_activate_call=s._sc,
+        )
+        if start_check:
+            s._sc()
+
+    def close(s):
+        if s._root_widget.exists():
+            s._root_widget.delete()
+
+    def _sc(s):
+        if s._updating:
+            return
+        bui.textwidget(
+            s._st, text="Checking...", color=(0.5, 0.5, 0.5)
+        )
+        bui.buttonwidget(
+            s._ab, label="...", color=(0.4, 0.4, 0.4)
+        )
+        threading.Thread(target=s._rc, daemon=True).start()
+
+    def _rc(s):
+        info = _lpm_check_version()
+        r = info.get("remote_version")
+        if info.get("update_available") and r:
+            s._info = info
+            babase.pushcall(s._sua, from_other_thread=True)
+        elif r:
+            babase.pushcall(s._su2d, from_other_thread=True)
+        else:
+            babase.pushcall(s._ser, from_other_thread=True)
+
+    def _sua(s):
+        rv = s._info.get("remote_version", "?")
+        bui.textwidget(
+            s._st, text=f"Latest: v{rv}", color=(0.3, 0.9, 0.3)
+        )
+        bui.buttonwidget(
+            s._ab, label="Update",
+            color=(0.2, 0.6, 0.2), textcolor=(1, 1, 1),
+            on_activate_call=s._du,
+        )
+
+    def _su2d(s):
+        bui.textwidget(
+            s._st, text="You have the latest version.",
+            color=(0.3, 0.9, 0.3),
+        )
+        bui.buttonwidget(
+            s._ab, label="OK",
+            color=(0.2, 0.6, 0.2), textcolor=(1, 1, 1),
+        )
+
+    def _ser(s):
+        bui.textwidget(
+            s._st, text="Could not check for updates.",
+            color=(1, 0.5, 0.5),
+        )
+        bui.buttonwidget(
+            s._ab, label="Retry",
+            color=(0.5, 0.4, 0.6), textcolor=(1, 1, 1),
+        )
+
+    def _du(s):
+        if s._updating:
+            return
+        s._updating = True
+        bui.textwidget(
+            s._st, text="Downloading...", color=(0.5, 0.5, 1)
+        )
+        bui.buttonwidget(
+            s._ab, label="...", color=(0.4, 0.4, 0.4)
+        )
+        threading.Thread(
+            target=s._rd, args=(s._info,), daemon=True
+        ).start()
+
+    def _rd(s, info):
+        url = info.get("url_raw_mod", "")
+        if not url:
+            return s._ss("No download URL.", (1, 0.5, 0.5))
+        try:
+            req = urllib.request.Request(url, headers=_HEADERS)
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                c = resp.read()
+            mp = os.path.join(
+                _env["python_directory_user"], "LessPluginManager.py"
+            )
+            with open(mp, "wb") as f:
+                f.write(c)
+            s._ss("Updated! Restart BombSquad.", (0, 1, 0))
+        except Exception as e:
+            s._ss(f"Error: {e}", (1, 0.5, 0.5))
+
+    def _ss(s, t, c):
+        babase.pushcall(
+            lambda: _lpm_sut(s._st, t, c),
+            from_other_thread=True,
         )
 
 

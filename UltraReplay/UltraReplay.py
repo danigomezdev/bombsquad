@@ -1637,4 +1637,4 @@ class byLess(Plugin):
         )
 
     def has_settings_ui(s): return True
-    def show_settings_ui(s, w): UpdateWindow()
+    def show_settings_ui(s, w): UpdateWindow()  #only_updates

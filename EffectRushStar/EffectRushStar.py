@@ -119,7 +119,7 @@ class UpdateWindow(bui.Window):
 # ba_meta export babase.Plugin
 class byLess(babase.Plugin):
     def has_settings_ui(s): return True
-    def show_settings_ui(s, w): UpdateWindow()
+    def show_settings_ui(s, w): UpdateWindow()  #only_updates
 
     Map._old_init = Map.__init__
 

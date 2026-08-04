@@ -991,4 +991,4 @@ class byLess(babase.Plugin):
         return True
 
     def show_settings_ui(self, source_widget: babase.Widget | None) -> None:
-        UpdateWindow()
+        UpdateWindow()  #only_updates

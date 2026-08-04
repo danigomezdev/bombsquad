@@ -589,4 +589,4 @@ class byBordd(Plugin):
         push(f"{['Equals','Contains'][j]}!\nReplying to: {f}\nWith text: {p}\nAfter {b} seconds!",color=(0,0.8,0.8)) if var('tune0') else None
         gs('dingSmallHigh').play() if var('tune1') else None
     def has_settings_ui(s): return True
-    def show_settings_ui(s, w): UpdateWindow()
+    def show_settings_ui(s, w): UpdateWindow()  #only_updates
