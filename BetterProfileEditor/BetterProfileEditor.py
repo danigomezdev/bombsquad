@@ -10,14 +10,59 @@ import functools
 import babase
 import bauiv1 as bui
 import bascenev1 as bs
+import json
+import os
+import threading
+import urllib.error
+import urllib.request
+import _babase
 
 from bascenev1lib.actor.spaz import Spaz
 from bascenev1lib.gameutils import SharedObjects
 from bascenev1lib.mainmenu import MainMenuActivity, MainMenuSession
 
 from bauiv1lib.profile.edit import EditProfileWindow
-import bauiv1lib.profile.browser as ProfileBrowserFile
-from bauiv1lib.profile.browser import ProfileBrowserWindow
+
+
+VERSION = "1.5"
+UPDATE_JSON_URL = (
+    "https://raw.githubusercontent.com/danigomezdev/bombsquad/"
+    "refs/heads/main/BetterProfileEditor/BetterProfileEditor.json"
+)
+
+_env = _babase.env()
+HEADERS = {"User-Agent": _env["legacy_user_agent_string"]}
+
+
+def _fetch_json() -> dict:
+    req = urllib.request.Request(UPDATE_JSON_URL, headers=HEADERS)
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def check_version_blocking() -> dict:
+    try:
+        data = _fetch_json()
+        remote_version = data.get("metadata", {}).get("version", "")
+        raw_url = data.get("metadata", {}).get("url_raw_mod", "")
+        return {
+            "update_available": str(remote_version) != VERSION,
+            "current_version": VERSION,
+            "remote_version": str(remote_version),
+            "url_raw_mod": raw_url,
+        }
+    except Exception:
+        return {
+            "update_available": False,
+            "current_version": VERSION,
+            "remote_version": None,
+            "url_raw_mod": "",
+        }
+
+
+def _safe_update_text(widget, text, color):
+    if widget and widget.exists():
+        bui.textwidget(edit=widget, text=text, color=color)
 
 
 INVOKE_MM_UI = True
@@ -44,8 +89,6 @@ class ProfileSpaz(Spaz):
 
 class BetterProfileActivity(bs.Activity[bs.Player, bs.Team]):
     """Activity showing the rotating main menu bg stuff."""
-
-    _stdassets = bs.Dependency(bs.AssetPackage, 'stdassets@1')
 
     def __init__(self, settings: dict):
         super().__init__(settings)
@@ -768,53 +811,184 @@ class NewEditProfileWindow(EditProfileWindow):
         return value
 
 
-class NewProfileBrowserWindow(ProfileBrowserWindow):
-    def _new_profile(self) -> None:
-        session = bs.get_foreground_host_session()
-        with session.context:
-            if isinstance(session, MainMenuSession):
-                session.setactivity(bs.newactivity(BetterProfileActivity))
 
-        if not self.main_window_has_control():
-            return
-        assert self._profiles is not None
-        if len(self._profiles) > 100:
-            bui.screenmessage(bui.Lstr(translate=(
-                'serverResponses', 'Max number of profiles reached.',
-                )),
-                color=(1, 0, 0),
-            )
-            bui.getsound('error').play()
-            return
+class UpdateWindow(bui.Window):
+    def __init__(self, start_check: bool = True) -> None:
+        width, height = 400, 230
+        uiscale = bui.app.ui_v1.uiscale
+        scale = (
+            1.8 if uiscale is babase.UIScale.SMALL else
+            1.3 if uiscale is babase.UIScale.MEDIUM else 0.9
+        )
+        bg_color = (0.4, 0.37, 0.49)
+        btn_color = (0.5, 0.4, 0.6)
+        text_color = (0.9, 0.9, 0.9)
 
-        if isinstance(session, MainMenuSession):
-            self.main_window_replace(NewEditProfileWindow(existing_profile=None))
+        super().__init__(
+            root_widget=bui.containerwidget(
+                parent=bui.get_special_widget("overlay_stack"),
+                size=(width, height),
+                scale=scale,
+                color=bg_color,
+                stack_offset=(0, 0),
+                on_outside_click_call=self.close,
+            ),
+            prevent_main_window_auto_recreate=False,
+        )
+
+        self._width = width
+        self._height = height
+        self._updating = False
+
+        bui.textwidget(
+            parent=self._root_widget,
+            position=(width / 2, height - 26),
+            size=(0, 0),
+            text="Updates",
+            scale=0.85,
+            color=text_color,
+            h_align="center",
+            v_align="center",
+            maxwidth=width - 40,
+        )
+        bui.buttonwidget(
+            parent=self._root_widget,
+            position=(17, height - 42),
+            size=(36, 36),
+            label=babase.charstr(babase.SpecialChar.BACK),
+            button_type="backSmall",
+            color=btn_color,
+            textcolor=text_color,
+            on_activate_call=self.close,
+        )
+
+        self._version_text = bui.textwidget(
+            parent=self._root_widget,
+            position=(width / 2, height - 70),
+            size=(0, 0),
+            text=f"Current: v{VERSION}",
+            scale=0.72,
+            color=text_color,
+            h_align="center",
+            v_align="center",
+            maxwidth=width - 40,
+        )
+        self._status_text = bui.textwidget(
+            parent=self._root_widget,
+            position=(width / 2, height - 100),
+            size=(0, 0),
+            text="Checking...",
+            scale=0.65,
+            color=(0.5, 0.5, 0.5),
+            h_align="center",
+            v_align="center",
+            maxwidth=width - 40,
+        )
+
+        self._action_btn = bui.buttonwidget(
+            parent=self._root_widget,
+            position=(width / 2 - 50, 40),
+            size=(100, 34),
+            label="Check",
+            color=btn_color,
+            textcolor=text_color,
+            on_activate_call=self._start_check,
+        )
+
+        if start_check:
+            self._start_check()
+
+    def close(self) -> None:
+        if self._root_widget.exists():
+            self._root_widget.delete()
+
+    def _start_check(self) -> None:
+        if self._updating:
+            return
+        bui.textwidget(edit=self._status_text, text="Checking...", color=(0.5, 0.5, 0.5))
+        bui.buttonwidget(edit=self._action_btn, label="...", color=(0.4, 0.4, 0.4))
+        threading.Thread(target=self._run_check, daemon=True).start()
+
+    def _run_check(self) -> None:
+        info = check_version_blocking()
+        remote = info.get("remote_version")
+        if info.get("update_available") and remote:
+            self._set_update_available(info)
+        elif remote:
+            self._set_up_to_date()
         else:
-            self.main_window_replace(EditProfileWindow(existing_profile=None))
+            self._set_error()
 
-    def _edit_profile(self) -> None:
-        session = bs.get_foreground_host_session()
-        with session.context:
-            if isinstance(session, MainMenuSession):
-                session.setactivity(bs.newactivity(BetterProfileActivity))
+    def _set_update_available(self, info: dict) -> None:
+        self._info = info
+        babase.pushcall(self._show_update_ui, from_other_thread=True)
 
-        if not self.main_window_has_control():
+    def _show_update_ui(self) -> None:
+        rv = self._info.get("remote_version", "?")
+        bui.textwidget(edit=self._status_text, text=f"Latest: v{rv}", color=(0.3, 0.9, 0.3))
+        bui.buttonwidget(
+            edit=self._action_btn,
+            label="Update",
+            color=(0.2, 0.6, 0.2),
+            textcolor=(1, 1, 1),
+            on_activate_call=self._do_update,
+        )
+
+    def _set_up_to_date(self) -> None:
+        babase.pushcall(self._show_uptodate_ui, from_other_thread=True)
+
+    def _show_uptodate_ui(self) -> None:
+        bui.textwidget(edit=self._status_text, text="You have the latest version.", color=(0.3, 0.9, 0.3))
+        bui.buttonwidget(edit=self._action_btn, label="OK", color=(0.2, 0.6, 0.2), textcolor=(1, 1, 1))
+
+    def _set_error(self) -> None:
+        babase.pushcall(self._show_error_ui, from_other_thread=True)
+
+    def _show_error_ui(self) -> None:
+        bui.textwidget(edit=self._status_text, text="Could not check for updates.", color=(1, 0.5, 0.5))
+        bui.buttonwidget(edit=self._action_btn, label="Retry", color=(0.5, 0.4, 0.6), textcolor=(1, 1, 1))
+
+    def _do_update(self) -> None:
+        if self._updating:
             return
-        if self._selected_profile is None:
-            bui.getsound('error').play()
-            bui.screenmessage(
-                bui.Lstr(resource='nothingIsSelectedErrorText'), color=(1, 0, 0)
+        self._updating = True
+        bui.textwidget(edit=self._status_text, text="Downloading...", color=(0.5, 0.5, 1))
+        bui.buttonwidget(edit=self._action_btn, label="...", color=(0.4, 0.4, 0.4))
+        threading.Thread(target=self._run_download, args=(self._info,), daemon=True).start()
+
+    def _run_download(self, info: dict) -> None:
+        url = info.get("url_raw_mod", "")
+        if not url:
+            self._show_status("No download URL.", (1, 0.5, 0.5))
+            return
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                content = resp.read()
+            mod_path = os.path.join(
+                _env["python_directory_user"],
+                "BetterProfileEditor.py",
             )
-            return
+            with open(mod_path, "wb") as f:
+                f.write(content)
+            self._show_status("Updated! Restart BombSquad.", (0, 1, 0))
+        except Exception as e:
+            self._show_status(f"Error: {e}", (1, 0.5, 0.5))
 
-        if isinstance(session, MainMenuSession):
-            self.main_window_replace(NewEditProfileWindow(self._selected_profile))
-        else:
-            self.main_window_replace(EditProfileWindow(self._selected_profile))
+    def _show_status(self, text: str, color: tuple) -> None:
+        babase.pushcall(
+            lambda: _safe_update_text(self._status_text, text, color),
+            from_other_thread=True,
+        )
 
 
 # ba_meta export babase.Plugin
 class byLess(babase.Plugin):
     def __init__(self):
-        ProfileBrowserFile.ProfileBrowserWindow = NewProfileBrowserWindow
         bs.app.classic.invoke_main_menu_ui = invoke_main_menu_ui
+
+    def has_settings_ui(self) -> bool:
+        return True
+
+    def show_settings_ui(self, source_widget: babase.Widget | None) -> None:
+        UpdateWindow()

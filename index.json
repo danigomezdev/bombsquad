@@ -20,26 +20,6 @@
     }
 ,
     {
-        "name": "Discord Rich Presence",
-        "description": "A mod that allows you to update your gaming activity on Discord specifically for BombSquad",
-        "description-es": "Un mod que te permite actualizar tu actividad de juego en Discord específicamente para BombSquad",
-        "file_name": "DiscordRichPresence.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/DiscordRichPresence/media/banner.webp",
-        "createdAt": "2024-12-11T22:36:00.000Z",
-        "lastActivityAt": "2025-11-11T16:36:00.000Z",
-        "category": "mod",
-        "tags": ["viewer","profile","discord","partys","servers","mainwindow","presence","rpc","richpresence"],
-        "path": "DiscordRichPresence/DiscordRichPresence.py",
-        "api_version": 9,
-        "version": "1.1.4",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/DiscordRichPresence/DiscordRichPresence.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/DiscordRichPresence/DiscordRichPresence.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/DiscordRichPresence/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/DiscordRichPresence/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/DiscordRichPresence/DiscordRichPresence.json"
-    }
-,
-    {
         "name": "Effect Rush Star",
         "description": "A mod that creates a flashy star that floats around the map",
         "description-es": "Un mod que crea una estrella llamativa que flota por el mapa",
@@ -117,6 +97,26 @@
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/BetterProfileEditor/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/BetterProfileEditor/README.md",
         "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/BetterProfileEditor.json"
+    }
+,
+    {
+        "name": "LessPluginManager",
+        "description": "An enhanced plugin manager that adds update buttons, mod downloads from the online store, and category filters",
+        "description-es": "Un gestor de plugins mejorado que añade botones de actualización, descarga de mods desde la tienda online y filtros por categoría",
+        "file_name": "LessPluginManager.py",
+        "banner": "",
+        "createdAt": "2026-08-04T20:00:00.000Z",
+        "lastActivityAt": "2026-08-04T20:00:00.000Z",
+        "category": "mod",
+        "tags": ["plugin","manager","update","download","store","mods","less"],
+        "path": "LessPluginManager/LessPluginManager.py",
+        "api_version": 9,
+        "version": "1.0.0",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/LessPluginManager/LessPluginManager.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/LessPluginManager/LessPluginManager.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessPluginManager/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/LessPluginManager/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPluginManager/LessPluginManager.json"
     }
 ,
     {

@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "LessPluginManager",
+    "file_name": "LessPluginManager.py",
+    "description-es": "Un gestor de plugins mejorado que añade botones de actualización, descarga de mods desde la tienda online y filtros por categoría",
+    "description-en": "An enhanced plugin manager that adds update buttons, mod downloads from the online store, and category filters",
+    "createdAt": "2026-08-04T20:00:00.000Z",
+    "lastActivityAt": "2026-08-04T20:00:00.000Z",
+    "api": 9,
+    "version": "1.0.0",
+    "show": true,
+    "category": "mod",
+    "tags": [
+      "plugin",
+      "manager",
+      "update",
+      "download",
+      "store",
+      "mods",
+      "less"
+    ],
+    "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/LessPluginManager/LessPluginManager.py",
+    "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/LessPluginManager/LessPluginManager.py",
+    "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessPluginManager/README.md",
+    "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/LessPluginManager/README.md"
+  },
+  "content": "An enhanced plugin manager for BombSquad that extends the built-in plugin window with additional functionality.\n\n## Features\n\n### Update System\n- Detects mods that support the `UpdateWindow` class and adds an **Update** button next to the Settings button\n- Opens a version checker that compares the local version with the online repository\n- One-click download and replacement of updated mod files\n\n### Mod Downloads\n- Browse mods from the online store directly within BombSquad\n- Filter by category: All, Mods, Minigames\n- Shows which mods are already installed\n- Download and install mods with a single click\n\n### Plugin List\n- Preserves the original plugin enable/disable functionality\n- Adds update detection caching for fast loading\n- Seamless integration with the existing plugin window"
+}
