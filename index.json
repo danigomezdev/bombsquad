@@ -60,6 +60,26 @@
     }
 ,
     {
+        "name": "LessPartyWindow",
+        "description": "A mod that replaces and enhances the party window with global chat, private messaging, player profiles, color themes, and much more",
+        "description-es": "Un mod que reemplaza y mejora la ventana de party con chat global, mensajes privados, perfiles de jugadores, temas de colores y mucho más",
+        "file_name": "LessPartyWindow.py",
+        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPartyWindow2/media/banner.webp",
+        "createdAt": "2025-12-28T20:00:00.000Z",
+        "lastActivityAt": "2026-05-11T20:00:00.000Z",
+        "category": "mod",
+        "tags": ["lesspartywindow","party window","chat","social","friends","color themes","multilanguage","ping","profiles","dm","invitations"],
+        "path": "LessPartyWindow2/LessPartyWindow.py",
+        "api_version": 9,
+        "version": "2.0.50",
+        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/LessPartyWindow2/LessPartyWindow.py",
+        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/LessPartyWindow2/LessPartyWindow.py",
+        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessPartyWindow2/README.md",
+        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/LessPartyWindow2/README.md",
+        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow2/LessPartyWindow.json"
+    }
+,
+    {
         "name": "Practice Tools",
         "description": "A mod that allows you to deploy different entities so you can practice",
         "description-es": "Un mod que te permite desplegar diferentes entidades para que puedas practicar",
