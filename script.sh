@@ -46,7 +46,7 @@ should_show_mod() {
     local json_path="$1"
     
     if [ -f "$json_path" ]; then
-        local show=$(jq -r '.metadata.show // "true"' "$json_path" 2>/dev/null)
+        local show=$(jq -r 'if .metadata.show == false then "false" else "true" end' "$json_path" 2>/dev/null)
         if [ "$show" = "false" ]; then
             return 1
         fi
