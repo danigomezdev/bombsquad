@@ -167,15 +167,6 @@ This mod extends BombSquad's core character systems:
 - Default settings restore if configuration is corrupted
 - Manual reset by deleting config section in BombSquad config file
 
-## Screenshots
-
-<img width="401" height="267" alt="Image" src="https://github.com/user-attachments/assets/3bb51126-4619-46b4-aa6b-0ae49cc038bb" />
-<img width="401" height="267" alt="Image" src="https://github.com/user-attachments/assets/9c178614-a75e-4ff2-bef8-4e2cded5f5f8" />
-
-## Video
-
-https://github.com/user-attachments/assets/0f4e9646-a0b5-422b-8820-7020a7be9f48
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  

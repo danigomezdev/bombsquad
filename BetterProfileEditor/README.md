@@ -40,19 +40,6 @@ This mod replaces the standard `EditProfileWindow` and `ProfileBrowserWindow` cl
 - `ProfileSpaz` class for the preview character with proper bounds handling
 - Modified UI elements that sync with the live preview
 
-## Screenshots
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/6d887c84-2776-4444-a61c-35fb22beea8a" />
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/18d1d0de-42be-4201-adb1-975b9120780e" />
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/ccf2c60c-e3cc-487f-ad0d-a2426c56ed5e" />
-
-
-## Video
-
-https://github.com/user-attachments/assets/5e3d54ad-ee35-4a6a-9049-fdfac0b29a37
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  

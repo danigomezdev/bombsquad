@@ -132,16 +132,6 @@ Accessible through the mod settings menu:
 - **Transparent operation**: Open source code for verification
 - **User control**: Can disable specific features
 
-## Screenshots
-
-<img width="286" height="508" alt="Image" src="https://github.com/user-attachments/assets/ef14a56a-a8f8-4219-ace1-481339500ced" />
-
-<img width="286" height="508" alt="Image" src="https://github.com/user-attachments/assets/dc49b967-4f3c-46c9-a973-08ffdae9c292" />
-
-## Video
-
-*Demonstration of real-time status updates and join functionality(This will remain pending...)*
-
 ## Credits
 
 Created by the @brostos & @Dliwk

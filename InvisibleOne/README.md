@@ -111,16 +111,6 @@ All maps compatible with "keep_away" game mode including:
 - Respawn times affect how quickly hunters can rejoin the chase
 - Epic mode creates cinematic slow-motion moments
 
-## Screenshots
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/1da1f5a7-a67b-44bd-aa6d-86630a49c6f2" />
-<img width="433" height="397" alt="Image" src="https://github.com/user-attachments/assets/d12ada45-cd33-4891-98ed-2a01688f6c55" />
-
-
-## Video
-
-https://github.com/user-attachments/assets/ab99a96f-3178-443f-946c-676deccb4d93
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  

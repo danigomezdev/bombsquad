@@ -74,14 +74,6 @@ You can easily modify the following constants in the code:
 - No conflicts with game mechanics or physics
 - Performance-friendly design
 
-## Screenshots
-
-<img width="341" height="192" alt="Image" src="https://github.com/user-attachments/assets/694f7387-6024-4e5a-924a-baae0f4e5e85" />
-
-## Video
-
-https://github.com/user-attachments/assets/94df65fa-a865-40ac-82cc-d54c67129736
-
 ## Credits
 
 Originally created by Taha_OstadSharif  

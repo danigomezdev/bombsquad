@@ -108,14 +108,6 @@ The mod creates:
 - Enable only during gameplay for match-specific moods
 - Combine with night maps for enhanced atmosphere
 
-## Screenshots
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/d7ffaf07-78bd-4611-9fc0-63284ab238a2" />
-
-## Video
-
-https://github.com/user-attachments/assets/3a73f069-251a-4a97-84ea-fc6750992346
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  

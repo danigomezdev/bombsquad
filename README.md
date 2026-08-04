@@ -187,19 +187,6 @@ The mod includes DNS workarounds for common ISP blocks. If you experience connec
 - Report problematic mods through the appropriate channels
 - The mod manager only manages mods installed through its system
 
-## Screenshots
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/fe199c0a-7b2b-442b-aae1-41616cbe19a2" width="49%" height="300px" />
-  <img src="https://github.com/user-attachments/assets/a39dfbdc-5618-49cc-94fd-dfc20d7841bb" width="49%" height="300px" />
-  <br>
-</p>
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/90bf7602-edd9-4f0b-9891-89b444e7e092" />
-
-## Video
-
-https://github.com/user-attachments/assets/cfd88288-e5a8-42bf-a3a7-765b4aa2d935
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  

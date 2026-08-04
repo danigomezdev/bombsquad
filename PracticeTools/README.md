@@ -109,21 +109,6 @@ The mod automatically creates configuration entries for:
 - Check that no other mods are causing conflicts
 - Restart the game if features don't appear initially
 
-## Screenshots
-
-<img width="425" height="669" alt="Image" src="https://github.com/user-attachments/assets/1fa4849a-1332-48d2-a6ac-543d69a037ac" />
-<img width="425" height="669" alt="Image" src="https://github.com/user-attachments/assets/26eb8300-85f5-4103-a675-ba9f39ba9e40" />
-<img width="425" height="669" alt="Image" src="https://github.com/user-attachments/assets/b3485de2-82fd-4d36-b3e6-416dc81f31bb" />
-<img width="425" height="669" alt="Image" src="https://github.com/user-attachments/assets/32771954-af07-4c5e-81d9-da07915f12a7" />
-<div align="center">
-  <img width="425" height="669" alt="Image" src="https://github.com/user-attachments/assets/3ba05bc6-901a-4a5a-bea4-2cc6aa07aa6e" />
-</div>
-
-
-## Video
-
-https://github.com/user-attachments/assets/c179e341-6f3c-4a97-8375-1acbce26b026
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  

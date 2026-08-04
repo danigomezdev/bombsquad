@@ -207,11 +207,6 @@ This mod implements a sophisticated chat monitoring system:
 - All processing happens locally on your device
 - Respect other players - use automation responsibly
 
-## Screenshots
-
-<img width="368" height="368" alt="Image" src="https://github.com/user-attachments/assets/f5e4ed33-eb39-47af-80b2-cba2c696b5f0" />
-<img width="368" height="368" alt="Image" src="https://github.com/user-attachments/assets/7d4da7fc-6c1a-4c42-9976-0731152ad87c" />
-
 ## Credits
 
 Created by the [BrotherBoard](https://github.com/BrotherBoard)  

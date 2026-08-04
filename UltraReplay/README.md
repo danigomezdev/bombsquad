@@ -132,18 +132,6 @@ Watch your matches from any angle, at any speed, with broadcast-quality controls
 
 ---
 
-## Screenshots
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/1a9e1273-0e0e-440a-976c-9dcc15eae3f4" />
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/a15cca37-9047-4243-ad11-f0df15a21cb7" />
-<img width="289" height="470" alt="Image" src="https://github.com/user-attachments/assets/37b7878b-c31c-411a-9ce3-680fad8b0d24" />
-
-## Video
-
-https://github.com/user-attachments/assets/43250f77-9502-4079-98d8-b1f48a7ea544
-
-https://github.com/user-attachments/assets/d6709c5a-1eb7-40cf-8a26-6f4447c2534e
-
 ## Credits
 
 Created by the [BrotherBoard](https://github.com/BrotherBoard)  

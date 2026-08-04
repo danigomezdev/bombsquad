@@ -70,16 +70,6 @@ These visuals help players:
 - Compatible with all game modes
 - No known conflicts with other visual or gameplay mods
 
-## Screenshots
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/335a3b1e-b01c-41a7-9c27-418f6fe16912" />
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/5f026773-f2fd-4607-ac5f-57a7666bce54" />
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/952e6ee6-3b92-4340-8e7f-ea4ea48ed1b4" />
-
-## Video
-
-https://github.com/user-attachments/assets/bfeae51c-d86b-4c35-9247-53e0d50e5b39
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  

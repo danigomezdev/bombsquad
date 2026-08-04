@@ -115,12 +115,6 @@ set_camera_target((x2, y2, z2))
 - Some game modes may override camera settings
 - Export commands work in the developer console
 
-## Screenshots
-<img width="2408" height="1080" alt="Image" src="https://github.com/user-attachments/assets/05831378-00b9-4f49-8844-1ba082d0dd9b" />
-
-## Video
-https://github.com/user-attachments/assets/1f9ee924-0438-4424-aeee-75a805e44bac
-
 ## Credits
 
 Created by the [[BrotherBoard](https://github.com/BrotherBoard)](https://github.com/BrotherBoard)  

@@ -219,23 +219,6 @@ Polish implements a sophisticated object-oriented system:
 6. **Export**: Generate Python code for your mod
 7. **Integrate**: Add the generated `make()` function to your mod
 
-## Screenshots
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/e5a0b385-0672-451a-8414-413b3dff86f0" width="49%" />
-  <img src="https://github.com/user-attachments/assets/70aed00c-d71a-42fc-8f0e-307eea39a5cd" width="49%" />
-  <br>
-  <img src="https://github.com/user-attachments/assets/993e4012-3cdf-4e37-8b76-d90f20a58cd2" width="49%" />
-  <img src="https://github.com/user-attachments/assets/e937fd20-01ac-4529-8e6c-31848551e131" width="49%" />
-  <br>
-  <img src="https://github.com/user-attachments/assets/86dc8fc7-c151-434f-b9ab-c2f5675483be" width="49%" />
-  <img src="https://github.com/user-attachments/assets/9e4e48a5-e843-4b0a-9ffd-83d0ab5fa6a5" width="49%" />
-</p>
-
-## Video
-
-https://github.com/user-attachments/assets/69d13dfe-98bf-4b65-8c59-58c433534b90
-
 ## Credits
 
 Created by the [BrotherBoard](https://github.com/BrotherBoard)  

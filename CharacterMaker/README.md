@@ -87,15 +87,6 @@ Custom characters are saved to:
 - No conflicts with existing character data
 - Preserves all original game characters
 
-## Screenshots
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/9d6263dc-2178-4529-817e-932a26077dea" />
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/0a319ec2-a1bb-4644-acdb-47f59697b064" />
-
-## Video
-
-https://github.com/user-attachments/assets/05868efe-1c29-4cdd-b4ca-a2b984a38e4f
-
 ## Credits
 
 Originally created by HeySmoothy  

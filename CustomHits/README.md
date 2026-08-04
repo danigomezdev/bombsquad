@@ -111,10 +111,6 @@ You can easily modify the mod by changing the constants:
 - **Competitive Play**: Provides immediate visual confirmation of hit effectiveness
 - **Training**: Helps players understand damage values and hit strength
 
-## Video
-
-https://github.com/user-attachments/assets/997ccbb8-8fda-442f-afc0-df314391200e
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  

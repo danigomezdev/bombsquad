@@ -65,10 +65,6 @@ This mod uses function replacement to modify the store layout:
 - No conflicts with existing save data or profiles
 - Maintains original pricing and purchase mechanics
 
-## Screenshots
-
-<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/adb62254-7fe4-4bbf-bac7-d8c982a2a2fe" />
-
 ## Credits
 
 Created by the [BombSquad modding community](https://github.com/bombsquad-community)  
