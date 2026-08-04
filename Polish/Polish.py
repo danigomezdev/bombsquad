@@ -4,6 +4,7 @@ from babase import (
     clipboard_set_text as COPY,
     PluginSubsystem as SUB,
     Plugin,
+    pushcall,
     env
 )
 from _babase import (
@@ -28,8 +29,11 @@ from bauiv1 import (
     getsound as gs,
     charstr as cs,
     app as APP,
+    Window as Wnd,
     Call
 )
+import json as js, threading as th, os
+import urllib.error, urllib.request
 from contextlib import redirect_stdout as REMAP
 from random import choice as CH, uniform as uf
 from io import StringIO as SIO
@@ -2155,6 +2159,213 @@ def fade(w,i=0,j=0.025,a=0.1):
     if not w.exists(): return
     iw(w,opacity=i)
     teck(j,Call(fade,w,i+a,j,a))
+
+VERSION = "1.1.2"
+UPDATE_URL = (
+    "https://raw.githubusercontent.com/danigomezdev/bombsquad/"
+    "refs/heads/main/Polish/Polish.json"
+)
+_E = env()
+HEADERS = {"User-Agent": _E["legacy_user_agent_string"]}
+
+
+def _fetch_json():
+    req = urllib.request.Request(UPDATE_URL, headers=HEADERS)
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return js.loads(resp.read().decode("utf-8"))
+
+
+def check_version():
+    try:
+        data = _fetch_json()
+        rv = data.get("metadata", {}).get("version", "")
+        ru = data.get("metadata", {}).get("url_raw_mod", "")
+        return {
+            "update_available": str(rv) != VERSION,
+            "current_version": VERSION,
+            "remote_version": str(rv),
+            "url_raw_mod": ru,
+        }
+    except Exception:
+        return {
+            "update_available": False,
+            "current_version": VERSION,
+            "remote_version": None,
+            "url_raw_mod": "",
+        }
+
+
+def _sut(w, t, c):
+    if w and w.exists():
+        tw(w, text=t, color=c)
+
+
+class UpdateWindow(Wnd):
+    def __init__(s, start_check=True):
+        w, h = 455, 180
+        us = APP.ui_v1.uiscale
+        sca = (
+            1.8 if us is scl.SMALL else
+            1.3 if us is scl.MEDIUM else 0.9
+        )
+        bg = (0.4, 0.37, 0.49)
+        bc = (0.5, 0.4, 0.6)
+        tc = (0.9, 0.9, 0.9)
+
+        lpm_installed = os.path.exists(join(_E["python_directory_user"], "LessPluginManager.py"))
+
+        super().__init__(
+            root_widget=cw(
+                parent=gsw("overlay_stack"),
+                size=(w, h),
+                scale=sca,
+                color=bg,
+                stack_offset=(0, 0),
+                on_outside_click_call=s.close,
+            ),
+            prevent_main_window_auto_recreate=False,
+        )
+
+        s._w, s._h, s._updating = w, h, False
+
+        tw(
+            parent=s._root_widget,
+            position=(w / 2, h - 26), size=(0, 0),
+            text="Updates", scale=0.85, color=tc,
+            h_align="center", v_align="center", maxwidth=w - (130 if not lpm_installed else 40),
+        )
+        bw(
+            parent=s._root_widget,
+            position=(27, h - 42), size=(36, 36),
+            label=cs(sc.BACK), button_type="backSmall",
+            color=bc, textcolor=tc,
+            on_activate_call=s.close,
+        )
+
+        s._vt = tw(
+            parent=s._root_widget,
+            position=(w / 2, h - 70), size=(0, 0),
+            text=f"Current: v{VERSION}", scale=0.72, color=tc,
+            h_align="center", v_align="center", maxwidth=w - 40,
+        )
+        s._st = tw(
+            parent=s._root_widget,
+            position=(w / 2, h - 100), size=(0, 0),
+            text="Checking...", scale=0.65, color=(0.5, 0.5, 0.5),
+            h_align="center", v_align="center", maxwidth=w - 40,
+        )
+
+        s._ab = bw(
+            parent=s._root_widget,
+            position=(w / 2 - 50, 30), size=(100, 34),
+            label="Check", color=bc, textcolor=tc,
+            on_activate_call=s._sc,
+        )
+
+        if not lpm_installed:
+            s._lpmb = bw(
+                parent=s._root_widget,
+                position=(w - 161, h - 38), size=(140, 30),
+                label="LessPluginManager", color=bc, textcolor=tc,
+                on_activate_call=s._show_lpm,
+            )
+
+        if start_check:
+            s._sc()
+
+    def close(s):
+        if s._root_widget.exists():
+            s._root_widget.delete()
+
+    def _sc(s):
+        if s._updating: return
+        tw(s._st, text="Checking...", color=(0.5, 0.5, 0.5))
+        bw(s._ab, label="...", color=(0.4, 0.4, 0.4))
+        th.Thread(target=s._rc, daemon=True).start()
+
+    def _rc(s):
+        info = check_version()
+        r = info.get("remote_version")
+        if info.get("update_available") and r:
+            s._info = info
+            pushcall(s._sua, from_other_thread=True)
+        elif r:
+            pushcall(s._su2d, from_other_thread=True)
+        else:
+            pushcall(s._ser, from_other_thread=True)
+
+    def _sua(s):
+        rv = s._info.get("remote_version", "?")
+        tw(s._st, text=f"Latest: v{rv}", color=(0.3, 0.9, 0.3))
+        bw(
+            s._ab, label="Update",
+            color=(0.2, 0.6, 0.2), textcolor=(1, 1, 1),
+            on_activate_call=s._du,
+        )
+
+    def _su2d(s):
+        tw(s._st, text="You have the latest version.", color=(0.3, 0.9, 0.3))
+        bw(s._ab, label="OK", color=(0.2, 0.6, 0.2), textcolor=(1, 1, 1))
+
+    def _ser(s):
+        tw(s._st, text="Could not check for updates.", color=(1, 0.5, 0.5))
+        bw(s._ab, label="Retry", color=(0.5, 0.4, 0.6), textcolor=(1, 1, 1))
+
+    def _du(s):
+        if s._updating: return
+        s._updating = True
+        tw(s._st, text="Downloading...", color=(0.5, 0.5, 1))
+        bw(s._ab, label="...", color=(0.4, 0.4, 0.4))
+        th.Thread(target=s._rd, args=(s._info,), daemon=True).start()
+
+    def _rd(s, info):
+        url = info.get("url_raw_mod", "")
+        if not url:
+            s._ss("No download URL.", (1, 0.5, 0.5))
+            return
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                content = resp.read()
+            mp = join(_E["python_directory_user"], "Polish.py")
+            with open(mp, "wb") as f:
+                f.write(content)
+            s._ss("Updated! Restart BombSquad.", (0, 1, 0))
+        except Exception as e:
+            s._ss(f"Error: {e}", (1, 0.5, 0.5))
+
+    def _ss(s, t, c):
+        pushcall(
+            lambda: _sut(s._st, t, c),
+            from_other_thread=True,
+        )
+
+    def _show_lpm(s):
+        bw(s._lpmb, label="...", color=(0.4, 0.4, 0.4))
+        s._download_lpm()
+
+    def _download_lpm(s):
+        th.Thread(target=s._dl_lpm_thread, daemon=True).start()
+
+    def _dl_lpm_thread(s):
+        url = "https://github.com/danigomezdev/bombsquad/raw/main/LessPluginManager/LessPluginManager.py"
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                content = resp.read()
+            mp = join(_E["python_directory_user"], "LessPluginManager.py")
+            with open(mp, "wb") as f:
+                f.write(content)
+            pushcall(lambda: s._lpm_done(True), from_other_thread=True)
+        except Exception:
+            pushcall(lambda: s._lpm_done(False), from_other_thread=True)
+
+    def _lpm_done(s, ok):
+        if ok:
+            bw(s._lpmb, label="Installed!", color=(0.2, 0.6, 0.2), textcolor=(1, 1, 1))
+        else:
+            bw(s._lpmb, label="Failed", color=(0.8, 0.2, 0.2), textcolor=(1, 1, 1))
+
 
 # ba_meta export babase.Plugin
 class byLess(Plugin):

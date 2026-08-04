@@ -814,7 +814,7 @@ class NewEditProfileWindow(EditProfileWindow):
 
 class UpdateWindow(bui.Window):
     def __init__(self, start_check: bool = True) -> None:
-        width, height = 400, 230
+        width, height = 455, 180
         uiscale = bui.app.ui_v1.uiscale
         scale = (
             1.8 if uiscale is babase.UIScale.SMALL else
@@ -823,6 +823,7 @@ class UpdateWindow(bui.Window):
         bg_color = (0.4, 0.37, 0.49)
         btn_color = (0.5, 0.4, 0.6)
         text_color = (0.9, 0.9, 0.9)
+        lpm_installed = os.path.exists(os.path.join(_env["python_directory_user"], "LessPluginManager.py"))
 
         super().__init__(
             root_widget=bui.containerwidget(
@@ -849,11 +850,11 @@ class UpdateWindow(bui.Window):
             color=text_color,
             h_align="center",
             v_align="center",
-            maxwidth=width - 40,
+            maxwidth=width - (130 if not lpm_installed else 40),
         )
         bui.buttonwidget(
             parent=self._root_widget,
-            position=(17, height - 42),
+            position=(27, height - 42),
             size=(36, 36),
             label=babase.charstr(babase.SpecialChar.BACK),
             button_type="backSmall",
@@ -861,6 +862,17 @@ class UpdateWindow(bui.Window):
             textcolor=text_color,
             on_activate_call=self.close,
         )
+        if not lpm_installed:
+            bui.buttonwidget(
+                parent=self._root_widget,
+                position=(width - 161, height - 38),
+                size=(140, 30),
+                label="LessPluginManager",
+                autoselect=True,
+                color=(0.55, 0.35, 0.75),
+                textcolor=(0.9, 0.85, 1.0),
+                on_activate_call=self._show_lpm,
+            )
 
         self._version_text = bui.textwidget(
             parent=self._root_widget,
@@ -887,7 +899,7 @@ class UpdateWindow(bui.Window):
 
         self._action_btn = bui.buttonwidget(
             parent=self._root_widget,
-            position=(width / 2 - 50, 40),
+            position=(width / 2 - 50, 30),
             size=(100, 34),
             label="Check",
             color=btn_color,
@@ -897,6 +909,52 @@ class UpdateWindow(bui.Window):
 
         if start_check:
             self._start_check()
+
+    def _show_lpm(self) -> None:
+        w2, h2 = 360, 180
+        sc2 = 1.3 if bui.app.ui_v1.uiscale is babase.UIScale.MEDIUM else 0.9
+        r = bui.containerwidget(
+            parent=bui.get_special_widget("overlay_stack"),
+            size=(w2, h2), scale=sc2, color=(0.4, 0.37, 0.49),
+            stack_offset=(0, 0),
+            on_outside_click_call=lambda: r.delete(),
+        )
+        bui.textwidget(parent=r, position=(w2/2, h2-27), size=(0,0),
+            text="LessPluginManager", scale=0.8, color=(0.9,0.9,0.9),
+            h_align="center", v_align="center", maxwidth=w2-40)
+        bui.buttonwidget(parent=r, position=(27, h2-43), size=(36,36),
+            label=babase.charstr(babase.SpecialChar.BACK), button_type="backSmall",
+            color=(0.5,0.4,0.6), textcolor=(0.9,0.9,0.9),
+            on_activate_call=lambda: r.delete())
+        bui.textwidget(parent=r, position=(w2/2, h2-78), size=(0,0),
+            text="Enhanced plugin manager with\nupdate buttons, mod downloads\nand category filters.",
+            scale=0.55, color=(0.8,0.8,0.8),
+            h_align="center", v_align="center", maxwidth=w2-30)
+        self._lpm_st = bui.textwidget(parent=r, position=(w2/2, 65), size=(0,0),
+            text="", scale=0.5, color=(0.5,0.5,0.5),
+            h_align="center", v_align="center")
+        bui.buttonwidget(parent=r, position=(w2/2-68, 18), size=(136, 40),
+            label="Download v1.0", color=(0.25, 0.45, 0.75), textcolor=(1,1,1),
+            on_activate_call=self._download_lpm)
+
+    def _download_lpm(self) -> None:
+        bui.textwidget(self._lpm_st, text="Downloading...", color=(0.5,0.5,1))
+        threading.Thread(target=self._dl_lpm_thread, daemon=True).start()
+
+    def _dl_lpm_thread(self) -> None:
+        try:
+            req = urllib.request.Request(
+                "https://github.com/danigomezdev/bombsquad/raw/main/LessPluginManager/LessPluginManager.py",
+                headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=60) as resp: c = resp.read()
+            mp = os.path.join(_env["python_directory_user"], "LessPluginManager.py")
+            with open(mp, "wb") as f: f.write(c)
+            self._lpm_done("Downloaded! Restart BombSquad.", (0,1,0))
+        except Exception as e:
+            self._lpm_done(f"Error: {e}", (1,0.5,0.5))
+
+    def _lpm_done(self, t: str, c: tuple) -> None:
+        babase.pushcall(lambda: _safe_update_text(self._lpm_st, t, c), from_other_thread=True)
 
     def close(self) -> None:
         if self._root_widget.exists():
@@ -965,11 +1023,7 @@ class UpdateWindow(bui.Window):
             req = urllib.request.Request(url, headers=HEADERS)
             with urllib.request.urlopen(req, timeout=60) as resp:
                 content = resp.read()
-            mod_path = os.path.join(
-                _env["python_directory_user"],
-                "BetterProfileEditor.py",
-            )
-            with open(mod_path, "wb") as f:
+            with open(os.path.join(_env["python_directory_user"], "BetterProfileEditor.py"), "wb") as f:
                 f.write(content)
             self._show_status("Updated! Restart BombSquad.", (0, 1, 0))
         except Exception as e:
