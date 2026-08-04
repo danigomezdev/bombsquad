@@ -19,6 +19,11 @@
       "mods",
       "less"
     ],
+    "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPluginManager/media/banner.webp",
+    "media": [
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPluginManager/media/image_02.png",
+      "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/LessPluginManager/media/image_02.png"
+    ],
     "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/LessPluginManager/LessPluginManager.py",
     "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/LessPluginManager/LessPluginManager.py",
     "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessPluginManager/README.md",

@@ -629,7 +629,7 @@ def _show_updates_notification() -> None:
         )
 
 
-_LPM_VERSION = "1.0"
+_LPM_VERSION = "1.0.0"
 _LPM_UPDATE_URL = (
     "https://raw.githubusercontent.com/danigomezdev/bombsquad/"
     "refs/heads/main/LessPluginManager/LessPluginManager.json"
