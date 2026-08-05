@@ -840,6 +840,8 @@ class UpdateWindow(bui.Window):
         self._width = width
         self._height = height
         self._updating = False
+        self._auto_key = "AutoUpdate_BetterProfileEditor"
+        self._auto_update = bui.app.config.get(self._auto_key, False)
 
         bui.textwidget(
             parent=self._root_widget,
@@ -873,6 +875,17 @@ class UpdateWindow(bui.Window):
                 textcolor=(0.9, 0.85, 1.0),
                 on_activate_call=self._show_lpm,
             )
+
+        bui.checkboxwidget(
+            parent=self._root_widget,
+            position=(width - 150, 42),
+            size=(140, 30),
+            text="Auto Update",
+            textcolor=(0.9, 0.9, 0.9),
+            autoselect=True,
+            value=self._auto_update,
+            on_value_change_call=self._set_auto,
+        )
 
         self._version_text = bui.textwidget(
             parent=self._root_widget,
@@ -956,6 +969,12 @@ class UpdateWindow(bui.Window):
     def _lpm_done(self, t: str, c: tuple) -> None:
         babase.pushcall(lambda: _safe_update_text(self._lpm_st, t, c), from_other_thread=True)
 
+    def _set_auto(self, val: bool) -> None:
+        self._auto_update = val
+        cfg = bui.app.config
+        cfg[self._auto_key] = val
+        cfg.apply_and_commit()
+
     def close(self) -> None:
         if self._root_widget.exists():
             self._root_widget.delete()
@@ -971,7 +990,11 @@ class UpdateWindow(bui.Window):
         info = check_version_blocking()
         remote = info.get("remote_version")
         if info.get("update_available") and remote:
-            self._set_update_available(info)
+            self._info = info
+            if self._auto_update:
+                self._do_update()
+            else:
+                self._set_update_available(info)
         elif remote:
             self._set_up_to_date()
         else:

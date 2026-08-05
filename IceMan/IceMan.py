@@ -334,6 +334,7 @@ class UpdateWindow(bauiv1.Window):
                 stack_offset=(0, 0), on_outside_click_call=s.close),
             prevent_main_window_auto_recreate=False)
         s._updating = False
+        s._auto_update = bauiv1.app.config.get("AutoUpdate_IceMan", False)
         lpm_installed = os.path.exists(os.path.join(_E["python_directory_user"], "LessPluginManager.py"))
         bauiv1.textwidget(parent=s._root_widget, position=(w/2, h-26), size=(0,0),
             text="Updates", scale=0.85, color=(0.9,0.9,0.9), h_align="center", v_align="center", maxwidth=w-130 if not lpm_installed else w-40)
@@ -345,6 +346,9 @@ class UpdateWindow(bauiv1.Window):
                 label="LessPluginManager", autoselect=True,
                 color=(0.55, 0.35, 0.75), textcolor=(0.9, 0.85, 1.0),
                 on_activate_call=s._show_lpm)
+        bauiv1.checkboxwidget(parent=s._root_widget, position=(w-150, 42), size=(140, 30),
+            text="Auto Update", textcolor=(0.9, 0.9, 0.9), autoselect=True,
+            value=s._auto_update, on_value_change_call=s._set_auto)
         bauiv1.textwidget(parent=s._root_widget, position=(w/2, h-70), size=(0,0),
             text=f"Current: v{VERSION}", scale=0.72, color=(0.9,0.9,0.9),
             h_align="center", v_align="center", maxwidth=w-40)
@@ -400,6 +404,12 @@ class UpdateWindow(bauiv1.Window):
     def _lpm_done(s, t, c):
         babase.pushcall(lambda: _sut(s._lpm_st, t, c), from_other_thread=True)
 
+    def _set_auto(s, val):
+        s._auto_update = val
+        cfg = bauiv1.app.config
+        cfg["AutoUpdate_IceMan"] = val
+        cfg.apply_and_commit()
+
     def close(s):
         if s._root_widget.exists(): s._root_widget.delete()
     def _sc(s):
@@ -411,7 +421,10 @@ class UpdateWindow(bauiv1.Window):
         info = _cv(); r = info.get("remote_version")
         if info.get("update_available") and r:
             s._info = info
-            babase.pushcall(s._sua, from_other_thread=True)
+            if s._auto_update:
+                s._du()
+            else:
+                babase.pushcall(s._sua, from_other_thread=True)
         elif r: babase.pushcall(s._su2d, from_other_thread=True)
         else: babase.pushcall(s._ser, from_other_thread=True)
     def _sua(s):

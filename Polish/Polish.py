@@ -21,6 +21,7 @@ from bauiv1 import (
     scrollwidget as sw,
     buttonwidget as bw,
     imagewidget as iw,
+    checkboxwidget as cbw,
     SpecialChar as sc,
     textwidget as tw,
     gettexture as gt,
@@ -2227,6 +2228,7 @@ class UpdateWindow(Wnd):
         )
 
         s._w, s._h, s._updating = w, h, False
+        s._auto_update = APP.config.get("AutoUpdate_Polish", False)
 
         tw(
             parent=s._root_widget,
@@ -2270,8 +2272,22 @@ class UpdateWindow(Wnd):
                 on_activate_call=s._show_lpm,
             )
 
+        cbw(
+            parent=s._root_widget,
+            position=(w - 150, 42), size=(140, 30),
+            text="Auto Update", textcolor=tc, autoselect=True,
+            value=s._auto_update,
+            on_value_change_call=s._set_auto,
+        )
+
         if start_check:
             s._sc()
+
+    def _set_auto(s, val):
+        s._auto_update = val
+        cfg = APP.config
+        cfg["AutoUpdate_Polish"] = val
+        cfg.apply_and_commit()
 
     def close(s):
         if s._root_widget.exists():
@@ -2288,7 +2304,10 @@ class UpdateWindow(Wnd):
         r = info.get("remote_version")
         if info.get("update_available") and r:
             s._info = info
-            pushcall(s._sua, from_other_thread=True)
+            if s._auto_update:
+                s._du()
+            else:
+                pushcall(s._sua, from_other_thread=True)
         elif r:
             pushcall(s._su2d, from_other_thread=True)
         else:

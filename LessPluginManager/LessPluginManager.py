@@ -670,6 +670,7 @@ def _show_updates_notification() -> None:
 def _auto_download_update(info: dict) -> None:
     url = info.get('url_raw_mod', '')
     file_name = info.get('file_name', '')
+    cp = info.get('class_path', '')
     if not url or not file_name:
         return
     try:
@@ -679,6 +680,11 @@ def _auto_download_update(info: dict) -> None:
         mp = os.path.join(_env["python_directory_user"], file_name)
         with open(mp, "wb") as f:
             f.write(c)
+        babase.pushcall(
+            lambda: bui.screenmessage(
+                f'Auto-updated: {cp}',
+                color=(0.0, 1.0, 0.5),
+            ), from_other_thread=True)
     except Exception:
         pass
 

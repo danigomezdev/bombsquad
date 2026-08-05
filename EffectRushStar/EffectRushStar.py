@@ -71,6 +71,22 @@ class UpdateWindow(bui.Window):
                 label="LessPluginManager", autoselect=True,
                 color=(0.55, 0.35, 0.75), textcolor=(0.9, 0.85, 1.0),
                 on_activate_call=s._show_lpm)
+        lpm_manages = False
+        if lpm_installed:
+            ps = bui.app.config.get('Plugins', {})
+            lpm_st = ps.get('LessPluginManager.byLess', {})
+            if lpm_st.get('enabled', False):
+                lpm_ac = bui.app.config.get('LessPluginManager Auto Update', {})
+                if lpm_ac.get('enabled', True):
+                    lpm_manages = True
+        s._auto_update = False
+        if not lpm_manages:
+            s._auto_key = 'AutoUpdate_EffectRushStar'
+            s._auto_update = bui.app.config.get(s._auto_key, {}).get('enabled', False)
+            s._auto_cb = bui.checkboxwidget(parent=s._root_widget,
+                position=(15, 8), size=(200, 30), text='Auto Update',
+                value=s._auto_update, scale=0.6, maxwidth=180,
+                on_value_change_call=lambda v: s._set_auto(v))
         bui.textwidget(parent=s._root_widget, position=(w/2, h-70), size=(0,0),
             text=f"Current: v{VERSION}", scale=0.72, color=(0.9,0.9,0.9),
             h_align="center", v_align="center", maxwidth=w-40)
@@ -79,6 +95,12 @@ class UpdateWindow(bui.Window):
         s._ab = bui.buttonwidget(parent=s._root_widget, position=(w/2-50, 30), size=(100,34),
             label="Check", color=(0.5,0.4,0.6), textcolor=(0.9,0.9,0.9), on_activate_call=s._sc)
         if start_check: s._sc()
+
+    def _set_auto(s, val):
+        s._auto_update = val
+        cfg = bui.app.config
+        cfg[s._auto_key] = {'enabled': val}
+        cfg.apply_and_commit()
 
     def _show_lpm(s):
         w2, h2 = 360, 180
@@ -136,8 +158,13 @@ class UpdateWindow(bui.Window):
     def _rc(s):
         info = _cv(); r = info.get("remote_version")
         if info.get("update_available") and r:
-            s._info = info
-            babase.pushcall(s._sua, from_other_thread=True)
+            if s._auto_update:
+                bui.textwidget(s._st, text="Auto-updating...", color=(0.5,0.5,1))
+                threading.Thread(target=s._rd, args=(info,), daemon=True).start()
+                bui.screenmessage("Auto-updated: EffectRushStar", color=(0,1,0))
+            else:
+                s._info = info
+                babase.pushcall(s._sua, from_other_thread=True)
         elif r: babase.pushcall(s._su2d, from_other_thread=True)
         else: babase.pushcall(s._ser, from_other_thread=True)
     def _sua(s):
@@ -172,7 +199,7 @@ class UpdateWindow(bui.Window):
 # ba_meta export babase.Plugin
 class byLess(babase.Plugin):
     def has_settings_ui(s): return True
-    def show_settings_ui(s, w): UpdateWindow()  #only_updates
+    def show_settings_ui(s, w): UpdateWindow()  #only_updates  #auto-update
 
     Map._old_init = Map.__init__
 
