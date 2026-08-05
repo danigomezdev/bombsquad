@@ -443,12 +443,16 @@ class LessPluginWindow(PluginWindow):
                     self._check_value_changed, plugspec
                 ),
                 textcolor=(
-                    (0.8, 0.3, 0.3)
-                    if (plugspec.attempted_load and plugspec.plugin is None)
+                    (1.0, 0.6, 0.0)
+                    if classpath in _mods_with_updates
                     else (
-                        (0.6, 0.6, 0.6)
-                        if plugspec.plugin is None
-                        else (0, 1, 0)
+                        (0.8, 0.3, 0.3)
+                        if (plugspec.attempted_load and plugspec.plugin is None)
+                        else (
+                            (0.6, 0.6, 0.6)
+                            if plugspec.plugin is None
+                            else (0, 1, 0)
+                        )
                     )
                 ),
             )
@@ -582,8 +586,34 @@ class LessPluginSettingsWindow(PluginSettingsWindow):
             on_activate_call=lambda: UpdateWindow(),
         )
 
+        x = self._width * 0.5 - 175
+        y = self._height * 0.5 - 150
+        self._auto_update_check = bui.checkboxwidget(
+            parent=self._root_widget,
+            position=(x, y),
+            size=(350, 60),
+            value=_auto_update_enabled(),
+            text='Auto Update Mods',
+            scale=1.0,
+            maxwidth=308,
+            on_value_change_call=lambda val: _set_auto_update(val),
+        )
 
-_pending_updates: list[str] = []
+
+_pending_updates: list[dict] = []
+_mods_with_updates: set[str] = set()
+_AUTO_UPDATE_KEY = 'LessPluginManager Auto Update'
+
+
+def _auto_update_enabled() -> bool:
+    cfg = bui.app.config.get(_AUTO_UPDATE_KEY, {})
+    return cfg.get('enabled', True)
+
+
+def _set_auto_update(val: bool) -> None:
+    cfg = bui.app.config
+    cfg[_AUTO_UPDATE_KEY] = {'enabled': val}
+    cfg.apply_and_commit()
 
 
 def _check_mod_version(class_path: str) -> dict | None:
@@ -601,9 +631,11 @@ def _check_mod_version(class_path: str) -> dict | None:
 
 
 def _check_all_updates_background() -> None:
-    global _pending_updates
+    global _pending_updates, _mods_with_updates
     _pending_updates = []
+    _mods_with_updates = set()
     plugspecs = bui.app.plugins.plugin_specs
+    auto = _auto_update_enabled()
     for classpath, plugspec in plugspecs.items():
         if (not plugspec.enabled
                 or not _plugin_has_update(classpath)
@@ -611,10 +643,13 @@ def _check_all_updates_background() -> None:
             continue
         info = _check_mod_version(classpath)
         if info and info.get('update_available'):
-            _pending_updates.append(
-                f"{classpath} (v{info.get('current_version')} → "
-                f"v{info.get('remote_version')})"
-            )
+            info['class_path'] = classpath
+            info['file_name'] = classpath.split('.')[0] + '.py'
+            _mods_with_updates.add(classpath)
+            if auto:
+                _auto_download_update(info)
+            else:
+                _pending_updates.append(info)
     if _pending_updates:
         babase.pushcall(_show_updates_notification,
                         from_other_thread=True)
@@ -622,14 +657,33 @@ def _check_all_updates_background() -> None:
 
 def _show_updates_notification() -> None:
     bui.getsound('dingSmallHigh').play()
-    for update in _pending_updates:
+    for info in _pending_updates:
+        cp = info.get('class_path', '')
+        cv = info.get('current_version', '')
+        rv = info.get('remote_version', '')
         bui.screenmessage(
-            f'Update available: {update}',
+            f'Update available: {cp} (v{cv} → v{rv})',
             color=(0.0, 1.0, 0.5),
         )
 
 
-_LPM_VERSION = "1.0.0"
+def _auto_download_update(info: dict) -> None:
+    url = info.get('url_raw_mod', '')
+    file_name = info.get('file_name', '')
+    if not url or not file_name:
+        return
+    try:
+        req = urllib.request.Request(url, headers=_HEADERS)
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            c = resp.read()
+        mp = os.path.join(_env["python_directory_user"], file_name)
+        with open(mp, "wb") as f:
+            f.write(c)
+    except Exception:
+        pass
+
+
+_LPM_VERSION = "1.0"
 _LPM_UPDATE_URL = (
     "https://raw.githubusercontent.com/danigomezdev/bombsquad/"
     "refs/heads/main/LessPluginManager/LessPluginManager.json"
