@@ -31,32 +31,12 @@
         "tags": ["lesspartywindow","party window","chat","social","friends","color themes","multilanguage","ping","profiles","dm","invitations"],
         "path": "LessPartyWindow2/LessPartyWindow.py",
         "api_version": 9,
-        "version": "2.2.6",
+        "version": "2.2.7",
         "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/LessPartyWindow2/LessPartyWindow.py",
         "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/LessPartyWindow2/LessPartyWindow.py",
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessPartyWindow2/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/LessPartyWindow2/README.md",
         "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPartyWindow2/LessPartyWindow.json"
-    }
-,
-    {
-        "name": "Better Profile Editor",
-        "description": "Advanced viewer of your Bombsquad profiles, with a live character that updates based on your profile choices",
-        "description-es": "Visor avanzado de tus perfiles de Bombsquad, con un personaje interactivo que se actualiza según las opciones de tu perfil",
-        "file_name": "BetterProfileEditor.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BetterProfileEditor/media/banner.webp",
-        "createdAt": "2025-04-29T21:29:00.000Z",
-        "lastActivityAt": "2025-11-10T22:32:00.000Z",
-        "category": "mod",
-        "tags": ["viewer","profile","characters","editor"],
-        "path": "BetterProfileEditor/BetterProfileEditor.py",
-        "api_version": 9,
-        "version": "1.5",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/BetterProfileEditor/BetterProfileEditor.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/BetterProfileEditor/BetterProfileEditor.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/BetterProfileEditor/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/BetterProfileEditor/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BetterProfileEditor/BetterProfileEditor.json"
     }
 ,
     {
@@ -77,26 +57,6 @@
         "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/LessPluginManager/README.md",
         "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/LessPluginManager/README.md",
         "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/LessPluginManager/LessPluginManager.json"
-    }
-,
-    {
-        "name": "Bomb Radius Visualizer",
-        "description": "A mod that displays dynamic visual indicators showing the blast radius of all explosives in BombSquad with colorful animations",
-        "description-es": "Un mod que muestra indicadores visuales dinámicos que indican el radio de explosión de todos los explosivos en BombSquad con animaciones coloridas",
-        "file_name": "BombRadiusVisualizer.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/BombRadiusVisualizer/media/banner.webp",
-        "createdAt": "2022-11-12T02:38:00.000Z",
-        "lastActivityAt": "2025-11-11T21:32:00.000Z",
-        "category": "mod",
-        "tags": ["bomb","colors","map","game","partys","servers"],
-        "path": "BombRadiusVisualizer/BombRadiusVisualizer.py",
-        "api_version": 9,
-        "version": "1.5",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/BombRadiusVisualizer/BombRadiusVisualizer.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/BombRadiusVisualizer/BombRadiusVisualizer.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/BombRadiusVisualizer/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/BombRadiusVisualizer/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/BombRadiusVisualizer/BombRadiusVisualizer.json"
     }
 ,
     {
