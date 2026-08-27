@@ -40,26 +40,6 @@
     }
 ,
     {
-        "name": "Custom Hits",
-        "description": "A mod that shows reactions to real-time gameplay, for example when you hit a player multiple times",
-        "description-es": "Un mod que muestra reacciones a la jugabilidad en tiempo real, por ejemplo, cuando golpeas a un jugador varias veces",
-        "file_name": "CustomHits.py",
-        "banner": "https://raw.githubusercontent.com/danigomezdev/bombsquad/main/CustomHits/media/banner.webp",
-        "createdAt": "2022-11-12T00:44:00.000Z",
-        "lastActivityAt": "2025-11-11T16:40:00.000Z",
-        "category": "mod",
-        "tags": ["spazmod","characters","hits","colors","cool","partys","servers"],
-        "path": "CustomHits/CustomHits.py",
-        "api_version": 9,
-        "version": "1.1.8",
-        "url_mod": "https://github.com/danigomezdev/bombsquad/blob/main/CustomHits/CustomHits.py",
-        "url_raw_mod": "https://github.com/danigomezdev/bombsquad/raw/main/CustomHits/CustomHits.py",
-        "url_readme": "https://github.com/danigomezdev/bombsquad/blob/main/CustomHits/README.md",
-        "url_raw_readme": "https://github.com/danigomezdev/bombsquad/raw/main/CustomHits/README.md",
-        "more_url": "https://raw.githubusercontent.com/danigomezdev/bombsquad/modmanager/CustomHits/CustomHits.json"
-    }
-,
-    {
         "name": "Less Finder",
         "description": "A mod that allows you to search for accounts, add friends, and inspect their accounts",
         "description-es": "Un mod que te permite realizar busquedas de cuentas, agregar amigos e inspeccionar sus cuentas",
