@@ -20,14 +20,8 @@ from party._updater import UpdateWindow, check_version_blocking
 class byLess(babase.Plugin):
  def has_settings_ui(s): return True
  def show_settings_ui(s, w): UpdateWindow()  #only_updates
- def on_app_shutdown(s):
-  try:
-   from party._network import _stop_social_sessions
-   _stop_social_sessions()
-  except Exception:
-   pass
 _me=__file__
-_light="""# ba_meta require api 9\nimport sys as _sys,os as _os\n_d=_os.path.dirname(_os.path.abspath(__file__))\n_r=_os.path.join(_d,"LessPartyWindow")\nif _r not in _sys.path:_sys.path.insert(0,_r)\nimport party.party\nfrom party._updater import UpdateWindow, check_version_blocking\nimport babase\n# ba_meta export babase.Plugin\nclass byLess(babase.Plugin):\n def has_settings_ui(s): return True\n def show_settings_ui(s, w): UpdateWindow()  #only_updates\n def on_app_shutdown(s):\n  try:\n   from party._network import _stop_social_sessions\n   _stop_social_sessions()\n  except Exception:\n   pass\n"""
+_light="""# ba_meta require api 9\nimport sys as _sys,os as _os\n_d=_os.path.dirname(_os.path.abspath(__file__))\n_r=_os.path.join(_d,"LessPartyWindow")\nif _r not in _sys.path:_sys.path.insert(0,_r)\nimport party.party\nfrom party._updater import UpdateWindow, check_version_blocking\nimport babase\n# ba_meta export babase.Plugin\nclass byLess(babase.Plugin):\n def has_settings_ui(s): return True\n def show_settings_ui(s, w): UpdateWindow()  #only_updates\n"""
 try:
  if _os.path.exists(_os.path.join(_r,"party","__init__.py")):
   with open(_me,"w")as _x:_x.write(_light)
