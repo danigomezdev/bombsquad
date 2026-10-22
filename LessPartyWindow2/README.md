@@ -87,3 +87,17 @@ A mod that takes the default party window of the game and rebuilds it with the s
 - Updates
   - Enable or disable auto-updates to update the mod manually or automatically when new updates come out. This option is enabled by default
   - Changelog: check it every time there is an update to keep up with what new features were included
+
+### Auto-Kicker
+
+- Automatically kick players who repeatedly rejoin after being kicked, helping prevent them from avoiding moderation by leaving the match.
+
+### Player Stats
+
+- `/ping all`: check the ping of all players using a customizable command.
+- View kills, scores, and other available match statistics on supported servers running updated versions of BombSquad.
+
+### BS Remote (Experimental)
+
+- Experimental integration of BS Remote, configurable in the mod settings under the **Developers** section.
+- Customize in-game music, randomize maps, change map colors, and more.
